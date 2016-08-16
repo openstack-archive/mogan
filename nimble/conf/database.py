@@ -15,10 +15,14 @@
 
 from oslo_config import cfg
 
-from nimble.conf import api
-from nimble.conf import database
+from nimble.common.i18n import _
 
-CONF = cfg.CONF
+opts = [
+    cfg.StrOpt('mysql_engine',
+               default='InnoDB',
+               help=_('MySQL engine to use.'))
+]
 
-api.register_opts(CONF)
-database.register_opts(CONF)
+
+def register_opts(conf):
+    conf.register_opts(opts, group='database')

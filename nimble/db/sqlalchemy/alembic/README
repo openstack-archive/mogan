@@ -1,0 +1,12 @@
+Please see https://alembic.readthedocs.org/en/latest/index.html for general documentation
+
+To create alembic migrations use:
+$ nimble-dbsync revision --message --autogenerate
+
+Stamp db with most recent migration version, without actually running migrations
+$ nimble-dbsync stamp --revision head
+
+Upgrade can be performed by:
+$ nimble-dbsync - for backward compatibility
+$ nimble-dbsync upgrade
+# nimble-dbsync upgrade --revision head
