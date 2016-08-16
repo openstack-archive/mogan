@@ -45,3 +45,12 @@ def setup_app(pecan_config=None, extra_hooks=None):
     )
 
     return app
+
+
+class VersionSelectorApplication(object):
+    def __init__(self):
+        pc = get_pecan_config()
+        self.v1 = setup_app(pecan_config=pc)
+
+    def __call__(self, environ, start_response):
+        return self.v1(environ, start_response)

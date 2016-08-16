@@ -114,3 +114,7 @@ class TemporaryFailure(NimbleException):
 class NotAcceptable(NimbleException):
     _msg_fmt = _("Request not acceptable.")
     code = http_client.NOT_ACCEPTABLE
+
+
+class ConfigInvalid(NimbleException):
+    _msg_fmt = _("Invalid configuration file. %(error_msg)s")
