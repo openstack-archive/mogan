@@ -17,8 +17,10 @@ from oslo_config import cfg
 
 from nimble.conf import api
 from nimble.conf import database
+from nimble.conf import default
 
 CONF = cfg.CONF
 
 api.register_opts(CONF)
 database.register_opts(CONF)
+default.register_opts(CONF)
