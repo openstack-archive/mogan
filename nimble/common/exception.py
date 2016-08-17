@@ -118,3 +118,7 @@ class NotAcceptable(NimbleException):
 
 class ConfigInvalid(NimbleException):
     _msg_fmt = _("Invalid configuration file. %(error_msg)s")
+
+
+class InvalidMAC(Invalid):
+    _msg_fmt = _("Expected a MAC address but received %(mac)s.")
