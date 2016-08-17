@@ -89,6 +89,10 @@ class RequestContext(context.RequestContext):
         self.update_store()
 
 
+def get_context(*args, **kwargs):
+    return RequestContext(*args, **kwargs)
+
+
 def get_admin_context():
     """Create an administrator context."""
 

@@ -13,10 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
 import pecan
 
 from nimble.api import config
+from nimble.api import hooks
 from nimble.api import middleware
+from nimble.api.middleware import auth_token
 
 
 def get_pecan_config():
@@ -26,7 +29,11 @@ def get_pecan_config():
 
 
 def setup_app(pecan_config=None, extra_hooks=None):
-    app_hooks = []
+    app_hooks = [hooks.ConfigHook(),
+                 hooks.DBHook(),
+                 hooks.ContextHook(pecan_config.app.acl_public_routes),
+                 hooks.NoExceptionTracebackHook(),
+                 hooks.PublicUrlHook()]
     if extra_hooks:
         app_hooks.extend(extra_hooks)
 
@@ -43,6 +50,10 @@ def setup_app(pecan_config=None, extra_hooks=None):
         hooks=app_hooks,
         wrap_app=middleware.ParsableErrorMiddleware,
     )
+
+    app = auth_token.AuthTokenMiddleware(
+        app, dict(cfg.CONF),
+        public_api_routes=pecan_config.app.acl_public_routes)
 
     return app
 
