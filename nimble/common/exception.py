@@ -122,3 +122,7 @@ class ConfigInvalid(NimbleException):
 
 class InvalidMAC(Invalid):
     _msg_fmt = _("Expected a MAC address but received %(mac)s.")
+
+
+class FlavorAlreadyExists(NimbleException):
+    _msg_fmt = _("Flavor with name %(name)s already exists.")

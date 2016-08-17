@@ -17,10 +17,13 @@
 
 import threading
 
+from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_log import log
 
+from nimble.common import exception
 from nimble.db import api
+from nimble.db.sqlalchemy import models
 
 LOG = log.getLogger(__name__)
 
@@ -57,3 +60,18 @@ class Connection(api.Connection):
 
     def __init__(self):
         pass
+
+    def flavor_create(self, values):
+        instance_type = models.InstanceTypes()
+        instance_type.update(values)
+
+        with _session_for_write() as session:
+            try:
+                session.add(instance_type)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.FlavorAlreadyExists(name=values['name'])
+            return instance_type
+
+    def flavor_get_all(self):
+        return model_query(models.InstanceTypes)
