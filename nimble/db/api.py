@@ -46,11 +46,11 @@ class Connection(object):
         """Create a new instance type."""
 
     @abc.abstractmethod
-    def flavor_get_by_name(name):
+    def flavor_get(uuid):
         """Get instance type by name."""
 
     def flavor_get_all():
-        """Get all instance flavors."""
+        """Get all instance types."""
 
     @abc.abstractmethod
     def flavor_destroy(name):

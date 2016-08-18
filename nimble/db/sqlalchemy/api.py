@@ -20,6 +20,9 @@ import threading
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_log import log
+from oslo_utils import strutils
+from oslo_utils import uuidutils
+from sqlalchemy.orm.exc import NoResultFound
 
 from nimble.common import exception
 from nimble.db import api
@@ -55,6 +58,24 @@ def model_query(model, *args, **kwargs):
         return query
 
 
+def add_identity_filter(query, value):
+    """Adds an identity filter to a query.
+
+    Filters results by ID, if supplied value is a valid integer.
+    Otherwise attempts to filter results by UUID.
+
+    :param query: Initial query to add filter to.
+    :param value: Value for filtering results by.
+    :return: Modified query.
+    """
+    if strutils.is_int_like(value):
+        return query.filter_by(id=value)
+    elif uuidutils.is_uuid_like(value):
+        return query.filter_by(uuid=value)
+    else:
+        raise exception.InvalidIdentity(identity=value)
+
+
 class Connection(api.Connection):
     """SqlAlchemy connection."""
 
@@ -62,6 +83,9 @@ class Connection(api.Connection):
         pass
 
     def flavor_create(self, values):
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
         instance_type = models.InstanceTypes()
         instance_type.update(values)
 
@@ -73,5 +97,21 @@ class Connection(api.Connection):
                 raise exception.FlavorAlreadyExists(name=values['name'])
             return instance_type
 
+    def flavor_get(self, flavor_id):
+        query = model_query(models.InstanceTypes).filter_by(uuid=flavor_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.FlavorNotFound(flavor=flavor_id)
+
     def flavor_get_all(self):
         return model_query(models.InstanceTypes)
+
+    def flavor_destroy(self, flavor_id):
+        with _session_for_write():
+            query = model_query(models.InstanceTypes)
+            query = add_identity_filter(query, flavor_id)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.FlavorNotFound(flavor=flavor_id)

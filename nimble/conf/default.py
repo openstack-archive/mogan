@@ -20,6 +20,14 @@ from oslo_config import cfg
 
 from nimble.common.i18n import _
 
+api_opts = [
+    cfg.BoolOpt('debug_tracebacks_in_api',
+                default=False,
+                help=_('Return server tracebacks in the API response for any '
+                       'error responses. WARNING: this is insecure '
+                       'and should not be used in a production environment.')),
+]
+
 exc_log_opts = [
     cfg.BoolOpt('fatal_exception_format_errors',
                 default=False,
@@ -57,6 +65,7 @@ service_opts = [
 
 
 def register_opts(conf):
+    conf.register_opts(api_opts)
     conf.register_opts(exc_log_opts)
     conf.register_opts(service_opts)
     conf.register_opts(path_opts)

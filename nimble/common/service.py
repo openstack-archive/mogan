@@ -22,6 +22,7 @@ from nimble.common import config
 from nimble.common import exception
 from nimble.common.i18n import _
 from nimble.conf import CONF
+from nimble import objects
 
 LOG = log.getLogger(__name__)
 
@@ -47,6 +48,7 @@ def prepare_service(argv=None):
                                          ])
     config.parse_args(argv)
     log.setup(CONF, 'nimble')
+    objects.register_all()
 
 
 def process_launcher():

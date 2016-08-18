@@ -65,8 +65,9 @@ class InstanceTypes(Base):
         table_args()
     )
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=True)
-    description = Column(String(255), nullable=True)
+    uuid = Column(String(36), nullable=True)
+    name = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
     is_public = Column(Boolean, default=True)
 
 
