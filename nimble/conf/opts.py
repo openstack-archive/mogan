@@ -17,6 +17,7 @@ import nimble.conf.database
 import nimble.conf.default
 
 _default_opt_lists = [
+    nimble.conf.default.api_opts,
     nimble.conf.default.exc_log_opts,
     nimble.conf.default.path_opts,
     nimble.conf.default.service_opts,

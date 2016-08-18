@@ -33,10 +33,12 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(length=255), nullable=True),
-        sa.Column('description', sa.String(length=255), nullable=True),
+        sa.Column('uuid', sa.String(length=36), nullable=True),
+        sa.Column('name', sa.String(length=255), nullable=False),
+        sa.Column('description', sa.String(length=255), nullable=False),
         sa.Column('is_public', sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('name', name='uniq_instance_types0name'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )

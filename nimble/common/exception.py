@@ -96,6 +96,11 @@ class OperationNotPermitted(NotAuthorized):
     _msg_fmt = _("Operation not permitted.")
 
 
+class NotFound(NimbleException):
+    _msg_fmt = _("Resource could not be found.")
+    code = http_client.NOT_FOUND
+
+
 class Invalid(NimbleException):
     _msg_fmt = _("Unacceptable parameters.")
     code = http_client.BAD_REQUEST
@@ -124,5 +129,13 @@ class InvalidMAC(Invalid):
     _msg_fmt = _("Expected a MAC address but received %(mac)s.")
 
 
+class InvalidUUID(Invalid):
+    msg_fmt = _("Expected a uuid but received %(uuid)s.")
+
+
 class FlavorAlreadyExists(NimbleException):
     _msg_fmt = _("Flavor with name %(name)s already exists.")
+
+
+class FlavorNotFound(NotFound):
+    msg_fmt = _("Flavor %(flavor)s could not be found.")

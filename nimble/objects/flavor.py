@@ -30,6 +30,7 @@ class Flavor(base.NimbleObject, object_base.VersionedObjectDictCompat):
 
     fields = {
         'id': object_fields.IntegerField(),
+        'uuid': object_fields.UUIDField(nullable=True),
         'name': object_fields.StringField(nullable=True),
         'description': object_fields.StringField(nullable=True),
         'is_public': object_fields.BooleanField(),
@@ -47,8 +48,20 @@ class Flavor(base.NimbleObject, object_base.VersionedObjectDictCompat):
         db_flavors = cls.dbapi.flavor_get_all()
         return Flavor._from_db_object_list(db_flavors, cls, context)
 
+    @classmethod
+    def get(cls, context, flavor_id):
+        """Find a flavor and return a Flavor object."""
+        db_flavor = cls.dbapi.flavor_get(flavor_id)
+        flavor = Flavor._from_db_object(cls(context), db_flavor)
+        return flavor
+
     def create(self, context=None):
         """Create a Flavor record in the DB."""
         values = self.obj_get_changes()
         db_flavor = self.dbapi.flavor_create(values)
         self._from_db_object(self, db_flavor)
+
+    def destroy(self, context=None):
+        """Delete the Flavor from the DB."""
+        self.dbapi.flavor_destroy(self.uuid)
+        self.obj_reset_changes()
