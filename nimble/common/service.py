@@ -12,8 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import signal
-
 from oslo_concurrency import processutils
 from oslo_log import log
 import oslo_messaging as messaging
@@ -46,7 +44,6 @@ class RPCService(service.Service):
         self.manager = manager_class(host, manager_module.MANAGER_TOPIC)
         self.topic = self.manager.topic
         self.rpcserver = None
-        self.deregister = True
 
     def start(self):
         super(RPCService, self).start()
@@ -58,7 +55,6 @@ class RPCService(service.Service):
         self.rpcserver = rpc.get_server(target, endpoints, serializer)
         self.rpcserver.start()
 
-        self.handle_signal()
         self.manager.init_host(admin_context)
 
         LOG.info(_LI('Created RPC server for service %(service)s on host '
@@ -73,7 +69,7 @@ class RPCService(service.Service):
             LOG.exception(_LE('Service error occurred when stopping the '
                               'RPC server. Error: %s'), e)
         try:
-            self.manager.del_host(deregister=self.deregister)
+            self.manager.del_host()
         except Exception as e:
             LOG.exception(_LE('Service error occurred when cleaning up '
                               'the RPC manager. Error: %s'), e)
@@ -82,20 +78,6 @@ class RPCService(service.Service):
         LOG.info(_LI('Stopped RPC server for service %(service)s on host '
                      '%(host)s.'),
                  {'service': self.topic, 'host': self.host})
-
-    def _handle_signal(self, signo, frame):
-        LOG.info(_LI('Got signal SIGUSR1. Not deregistering on next shutdown '
-                     'of service %(service)s on host %(host)s.'),
-                 {'service': self.topic, 'host': self.host})
-        self.deregister = False
-
-    def handle_signal(self):
-        """Add a signal handler for SIGUSR1.
-
-        The handler ensures that the manager is not deregistered when it is
-        shutdown.
-        """
-        signal.signal(signal.SIGUSR1, self._handle_signal)
 
 
 def prepare_service(argv=None):

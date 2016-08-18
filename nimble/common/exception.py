@@ -139,3 +139,9 @@ class FlavorAlreadyExists(NimbleException):
 
 class FlavorNotFound(NotFound):
     msg_fmt = _("Flavor %(flavor)s could not be found.")
+
+
+class NoFreeEngineWorker(TemporaryFailure):
+    _msg_fmt = _('Requested action cannot be performed due to lack of free '
+                 'engine workers.')
+    code = http_client.SERVICE_UNAVAILABLE

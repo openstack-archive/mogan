@@ -15,6 +15,7 @@ import itertools
 import nimble.conf.api
 import nimble.conf.database
 import nimble.conf.default
+import nimble.conf.engine
 
 _default_opt_lists = [
     nimble.conf.default.api_opts,
@@ -27,6 +28,7 @@ _opts = [
     ('DEFAULT', itertools.chain(*_default_opt_lists)),
     ('api', nimble.conf.api.opts),
     ('database', nimble.conf.database.opts),
+    ('engine', nimble.conf.engine.opts),
 ]
 
 
