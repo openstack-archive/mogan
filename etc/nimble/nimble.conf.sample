@@ -4,6 +4,11 @@
 # From nimble
 #
 
+# Return server tracebacks in the API response for any error
+# responses. WARNING: this is insecure and should not be used
+# in a production environment. (boolean value)
+#debug_tracebacks_in_api = false
+
 # Used if there is a formatting error when generating an
 # exception message (a programming error). If True, raise an
 # exception; if False, use the unformatted message. (boolean
@@ -530,6 +535,29 @@
 # error before error is raised. Set to -1 to specify an
 # infinite retry count. (integer value)
 #db_max_retries = 20
+
+
+[engine]
+
+#
+# From nimble
+#
+
+# The size of the workers greenthread pool. Note that 1
+# threads will be reserved by the engine itself for handling
+# periodic tasks. (integer value)
+# Minimum value: 2
+#workers_pool_size = 100
+
+# URL of Nimble API service. If not set nimble can get the
+# current value from the keystone service catalog. (string
+# value)
+#api_url = <None>
+
+# Maximum number of worker threads that can be started
+# simultaneously by a periodic task. Should be less than RPC
+# thread pool size. (integer value)
+#periodic_max_workers = 8
 
 
 [matchmaker_redis]

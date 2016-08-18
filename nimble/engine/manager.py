@@ -13,16 +13,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
+from futurist import periodics
+from oslo_log import log
+import oslo_messaging as messaging
 
-from nimble.conf import api
-from nimble.conf import database
-from nimble.conf import default
-from nimble.conf import engine
+from nimble.common.i18n import _LI
+from nimble.conf import CONF
+from nimble.engine import base_manager
 
-CONF = cfg.CONF
+MANAGER_TOPIC = 'nimble.engine_manager'
 
-api.register_opts(CONF)
-database.register_opts(CONF)
-default.register_opts(CONF)
-engine.register_opts(CONF)
+LOG = log.getLogger(__name__)
+
+
+class EngineManager(base_manager.BaseEngineManager):
+    """Nimble Engine manager main class."""
+
+    RPC_API_VERSION = '1.0'
+
+    target = messaging.Target(version=RPC_API_VERSION)
+
+    @periodics.periodic(spacing=CONF.engine.sync_node_resource_interval)
+    def _sync_node_resources(self, context):
+        LOG.info(_LI("During sync_node_resources."))
