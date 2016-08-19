@@ -13,23 +13,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Version 1 of the Nimble API
-
-Specification can be found at doc/source/webapi/v1.rst
-"""
-
+import pecan
 from pecan import rest
+from six.moves import http_client
 
-from nimble.api.controllers.v1 import flavor
-from nimble.api.controllers.v1 import instance
-
-
-class Controller(rest.RestController):
-    """Version 1 API controller root."""
-
-    flavor = flavor.FlavorController()
-    instance = instance.InstanceController()
+from nimble.api.controllers.v1 import types
+from nimble.api import expose
 
 
-__all__ = ('Controller',)
+class InstanceController(rest.RestController):
+    """REST controller for Chassis."""
+
+    @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)
+    def delete(self, instance_uuid):
+        """Delete a instance.
+
+        :param instance_uuid: UUID of a instance.
+        """
+        pecan.request.rpcapi.do_node_deploy(pecan.request.context)
