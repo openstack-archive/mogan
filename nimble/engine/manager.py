@@ -37,3 +37,7 @@ class EngineManager(base_manager.BaseEngineManager):
         spacing=CONF.engine.sync_node_resource_interval)
     def _sync_node_resources(self, context):
         LOG.info(_LI("During sync_node_resources."))
+
+    def do_node_deploy(self, context):
+        """Signal to engine service to perform a deployment."""
+        LOG.debug("XXXXXXXXXXXXX during do node deploy.")
