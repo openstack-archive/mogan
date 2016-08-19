@@ -19,10 +19,8 @@ from nimble.common.i18n import _
 
 opts = [
     cfg.IntOpt('workers_pool_size',
-               default=100, min=2,
-               help=_('The size of the workers greenthread pool. '
-                      'Note that 1 threads will be reserved by the engine '
-                      'itself for handling periodic tasks.')),
+               default=100,
+               help=_('The size of the workers greenthread pool.')),
     cfg.StrOpt('api_url',
                help=_('URL of Nimble API service. If not set nimble can '
                       'get the current value from the keystone service '

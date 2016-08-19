@@ -55,7 +55,11 @@ class RPCService(service.Service):
         self.rpcserver = rpc.get_server(target, endpoints, serializer)
         self.rpcserver.start()
 
-        self.manager.init_host(admin_context)
+        self.manager.init_host()
+        self.tg.add_dynamic_timer(
+            self.manager.periodic_tasks,
+            periodic_interval_max=CONF.periodic_interval,
+            context=admin_context)
 
         LOG.info(_LI('Created RPC server for service %(service)s on host '
                      '%(host)s.'),

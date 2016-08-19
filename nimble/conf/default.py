@@ -53,6 +53,10 @@ path_opts = [
 ]
 
 service_opts = [
+    cfg.IntOpt('periodic_interval',
+               default=60,
+               help=_('Default interval (in seconds) for running periodic '
+                      'tasks.')),
     cfg.StrOpt('host',
                default=socket.getfqdn(),
                sample_default='localhost',

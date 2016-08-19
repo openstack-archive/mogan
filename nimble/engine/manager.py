@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from futurist import periodics
 from oslo_log import log
 import oslo_messaging as messaging
+from oslo_service import periodic_task
 
 from nimble.common.i18n import _LI
 from nimble.conf import CONF
@@ -33,6 +33,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
     target = messaging.Target(version=RPC_API_VERSION)
 
-    @periodics.periodic(spacing=CONF.engine.sync_node_resource_interval)
+    @periodic_task.periodic_task(
+        spacing=CONF.engine.sync_node_resource_interval)
     def _sync_node_resources(self, context):
         LOG.info(_LI("During sync_node_resources."))

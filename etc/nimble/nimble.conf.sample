@@ -27,6 +27,10 @@
 # value)
 #state_path = $pybasedir
 
+# Default interval (in seconds) for running periodic tasks.
+# (integer value)
+#periodic_interval = 60
+
 # Name of this node. This can be an opaque identifier. It is
 # not necessarily a hostname, FQDN, or IP address. However,
 # the node name must be valid within an AMQP key, and if using
@@ -543,10 +547,7 @@
 # From nimble
 #
 
-# The size of the workers greenthread pool. Note that 1
-# threads will be reserved by the engine itself for handling
-# periodic tasks. (integer value)
-# Minimum value: 2
+# The size of the workers greenthread pool. (integer value)
 #workers_pool_size = 100
 
 # URL of Nimble API service. If not set nimble can get the
@@ -558,6 +559,10 @@
 # simultaneously by a periodic task. Should be less than RPC
 # thread pool size. (integer value)
 #periodic_max_workers = 8
+
+# Interval between syncing the node resources from ironic, in
+# seconds. (integer value)
+#sync_node_resource_interval = 60
 
 
 [matchmaker_redis]
