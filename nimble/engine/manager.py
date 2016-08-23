@@ -38,6 +38,9 @@ class EngineManager(base_manager.BaseEngineManager):
     def _sync_node_resources(self, context):
         LOG.info(_LI("During sync_node_resources."))
 
-    def do_node_deploy(self, context):
+    def create_instance(self, context, instance):
         """Signal to engine service to perform a deployment."""
-        LOG.debug("During do node deploy.")
+        LOG.debug("During create instance.")
+        instance.task_state = 'deploying'
+        instance.save()
+        return instance

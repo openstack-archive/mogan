@@ -115,3 +115,37 @@ class Connection(api.Connection):
             count = query.delete()
             if count != 1:
                 raise exception.FlavorNotFound(flavor=flavor_id)
+
+    def instance_create(self, values):
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        instance = models.Instance()
+        instance.update(values)
+
+        with _session_for_write() as session:
+            try:
+                session.add(instance)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.InstanceAlreadyExists(name=values['name'])
+            return instance
+
+    def instance_get(self, instance_id):
+        query = model_query(models.Instance).filter_by(uuid=instance_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.InstanceNotFound(instance=instance_id)
+
+    def instance_get_all(self):
+        return model_query(models.Instance)
+
+    def instance_destroy(self, instance_id):
+        with _session_for_write():
+            query = model_query(models.Instance)
+            query = add_identity_filter(query, instance_id)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.InstanceNotFound(instance=instance_id)

@@ -49,7 +49,7 @@ class EngineAPI(object):
                                      version_cap=self.RPC_API_VERSION,
                                      serializer=serializer)
 
-    def do_node_deploy(self, context):
+    def create_instance(self, context, instance):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.cast(context, 'do_node_deploy')
+        return cctxt.cast(context, 'create_instance', instance)

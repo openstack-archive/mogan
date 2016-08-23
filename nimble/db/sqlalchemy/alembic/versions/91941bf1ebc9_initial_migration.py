@@ -67,7 +67,7 @@ def upgrade():
         sa.Column('status', sa.String(length=255), nullable=True),
         sa.Column('power_state', sa.String(length=255), nullable=True),
         sa.Column('task_state', sa.String(length=255), nullable=True),
-        sa.Column('instance_type_id', sa.Integer(), nullable=False),
+        sa.Column('instance_type_id', sa.Integer(), nullable=True),
         sa.Column('launched_at', sa.DateTime(), nullable=True),
         sa.Column('terminated_at', sa.DateTime(), nullable=True),
         sa.Column('availability_zone', sa.String(length=255), nullable=True),

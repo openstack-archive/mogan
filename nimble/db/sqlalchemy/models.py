@@ -21,7 +21,7 @@ from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
 import six.moves.urllib.parse as urlparse
 from sqlalchemy import Boolean, Column
-from sqlalchemy import schema, String, Integer
+from sqlalchemy import schema, String, Integer, Text
 from sqlalchemy.ext.declarative import declarative_base
 
 from nimble.common import paths
@@ -85,3 +85,24 @@ class InstanceTypeProjects(Base):
     id = Column(Integer, primary_key=True)
     instance_type_id = Column(Integer, nullable=True)
     project_id = Column(String(36), nullable=True)
+
+
+class Instance(Base):
+    """Represents possible types for instances."""
+
+    __tablename__ = 'instances'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_instances0uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=True)
+    name = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=True)
+    status = Column(String(255), nullable=True)
+    power_state = Column(String(255), nullable=True)
+    task_state = Column(String(255), nullable=True)
+    instance_type_id = Column(Integer, nullable=True)
+    availability_zone = Column(String(255), nullable=True)
+    node_uuid = Column(String(36), nullable=True)
+    extra = Column(Text, nullable=True)
