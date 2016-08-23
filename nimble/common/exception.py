@@ -106,6 +106,12 @@ class Invalid(NimbleException):
     code = http_client.BAD_REQUEST
 
 
+# Cannot be templated as the error syntax varies.
+# msg needs to be constructed when raised.
+class InvalidParameterValue(Invalid):
+    _msg_fmt = _("%(err)s")
+
+
 class Conflict(NimbleException):
     _msg_fmt = _('Conflict.')
     code = http_client.CONFLICT
@@ -141,7 +147,19 @@ class FlavorNotFound(NotFound):
     msg_fmt = _("Flavor %(flavor)s could not be found.")
 
 
+class InstanceAlreadyExists(NimbleException):
+    _msg_fmt = _("Instance with name %(name)s already exists.")
+
+
+class InstanceNotFound(NotFound):
+    msg_fmt = _("Instance %(instance)s could not be found.")
+
+
 class NoFreeEngineWorker(TemporaryFailure):
     _msg_fmt = _('Requested action cannot be performed due to lack of free '
                  'engine workers.')
     code = http_client.SERVICE_UNAVAILABLE
+
+
+class DuplicateName(Conflict):
+    _msg_fmt = _("A instance with name %(name)s already exists.")

@@ -41,6 +41,7 @@ class Connection(object):
     def __init__(self):
         """Constructor."""
 
+    # Flavors
     @abc.abstractmethod
     def flavor_create(self, values):
         """Create a new instance type."""
@@ -55,3 +56,19 @@ class Connection(object):
     @abc.abstractmethod
     def flavor_destroy(name):
         """Delete an instance type."""
+
+    # Instances
+    @abc.abstractmethod
+    def instance_create(self, values):
+        """Create a new instance."""
+
+    @abc.abstractmethod
+    def instance_get(uuid):
+        """Get instance by name."""
+
+    def instance_get_all():
+        """Get all instances."""
+
+    @abc.abstractmethod
+    def instance_destroy(name):
+        """Delete an instance."""

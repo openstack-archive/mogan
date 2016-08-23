@@ -67,7 +67,7 @@ def upgrade():
         sa.Column('status', sa.String(length=255), nullable=True),
         sa.Column('power_state', sa.String(length=255), nullable=True),
         sa.Column('task_state', sa.String(length=255), nullable=True),
-        sa.Column('instance_type_id', sa.Integer(), nullable=False),
+        sa.Column('instance_type_id', sa.Integer(), nullable=True),
         sa.Column('launched_at', sa.DateTime(), nullable=True),
         sa.Column('terminated_at', sa.DateTime(), nullable=True),
         sa.Column('availability_zone', sa.String(length=255), nullable=True),
@@ -75,6 +75,7 @@ def upgrade():
         sa.Column('extra', sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('uuid', name='uniq_instances0uuid'),
+        sa.UniqueConstraint('name', name='uniq_instances0name'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )

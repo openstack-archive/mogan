@@ -115,3 +115,60 @@ class Connection(api.Connection):
             count = query.delete()
             if count != 1:
                 raise exception.FlavorNotFound(flavor=flavor_id)
+
+    def instance_create(self, values):
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        instance = models.Instance()
+        instance.update(values)
+
+        with _session_for_write() as session:
+            try:
+                session.add(instance)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.InstanceAlreadyExists(name=values['name'])
+            return instance
+
+    def instance_get(self, instance_id):
+        query = model_query(models.Instance).filter_by(uuid=instance_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.InstanceNotFound(instance=instance_id)
+
+    def instance_get_all(self):
+        return model_query(models.Instance)
+
+    def instance_destroy(self, instance_id):
+        with _session_for_write():
+            query = model_query(models.Instance)
+            query = add_identity_filter(query, instance_id)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.InstanceNotFound(instance=instance_id)
+
+    def update_instance(self, instance_id, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing Instance.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            return self._do_update_instance(instance_id, values)
+        except db_exc.DBDuplicateEntry as e:
+            if 'name' in e.columns:
+                raise exception.DuplicateName(name=values['name'])
+
+    def _do_update_instance(self, instance_id, values):
+        with _session_for_write():
+            query = model_query(models.Instance)
+            query = add_identity_filter(query, instance_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.InstanceNotFound(instance=instance_id)
+
+            ref.update(values)
+        return ref
