@@ -33,6 +33,8 @@ class Flavor(base.APIBase):
     between the internal object model and the API representation of
     a flavor.
     """
+    id = wsme.wsattr(wtypes.IntegerType(minimum=1))
+    """The ID of the flavor"""
 
     uuid = types.uuid
     """The UUID of the flavor"""
