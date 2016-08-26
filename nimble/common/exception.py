@@ -59,7 +59,7 @@ class NimbleException(Exception):
             try:
                 message = self._msg_fmt % kwargs
 
-            except Exception as e:
+            except Exception:
                 # kwargs doesn't match a variable in self._msg_fmt
                 # log the issue and the kwargs
                 LOG.exception(_LE('Exception in string format operation'))
@@ -67,7 +67,7 @@ class NimbleException(Exception):
                     LOG.error("%s: %s" % (name, value))
 
                 if CONF.fatal_exception_format_errors:
-                    raise e
+                    raise
                 else:
                     # at least get the core self._msg_fmt out if something
                     # happened
