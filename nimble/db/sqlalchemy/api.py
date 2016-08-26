@@ -19,7 +19,6 @@ import threading
 
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
-from oslo_log import log
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 from sqlalchemy.orm.exc import NoResultFound
@@ -27,8 +26,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from nimble.common import exception
 from nimble.db import api
 from nimble.db.sqlalchemy import models
-
-LOG = log.getLogger(__name__)
 
 
 _CONTEXT = threading.local()

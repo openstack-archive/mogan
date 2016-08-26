@@ -16,16 +16,12 @@
 """Base engine manager functionality."""
 
 from eventlet import greenpool
-from oslo_log import log
 from oslo_service import periodic_task
 
 from nimble.common.i18n import _
 from nimble.common import rpc
 from nimble.conf import CONF
 from nimble.db import api as dbapi
-
-
-LOG = log.getLogger(__name__)
 
 
 class BaseEngineManager(periodic_task.PeriodicTasks):
