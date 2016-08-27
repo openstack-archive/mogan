@@ -155,6 +155,10 @@ class InstanceNotFound(NotFound):
     msg_fmt = _("Instance %(instance)s could not be found.")
 
 
+class InstanceDeployFailure(Invalid):
+    msg_fmt = _("Failed to deploy instance: %(reason)s")
+
+
 class NoFreeEngineWorker(TemporaryFailure):
     _msg_fmt = _('Requested action cannot be performed due to lack of free '
                  'engine workers.')
