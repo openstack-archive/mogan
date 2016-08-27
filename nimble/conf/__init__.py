@@ -19,6 +19,9 @@ from nimble.conf import api
 from nimble.conf import database
 from nimble.conf import default
 from nimble.conf import engine
+from nimble.conf import ironic
+from nimble.conf import keystone
+from nimble.conf import neutron
 
 CONF = cfg.CONF
 
@@ -26,3 +29,6 @@ api.register_opts(CONF)
 database.register_opts(CONF)
 default.register_opts(CONF)
 engine.register_opts(CONF)
+ironic.register_opts(CONF)
+keystone.register_opts(CONF)
+neutron.register_opts(CONF)

@@ -15,10 +15,15 @@
 
 from oslo_log import log
 import oslo_messaging as messaging
+from oslo_service import loopingcall
 from oslo_service import periodic_task
 
+from nimble.common import exception
 from nimble.common.i18n import _LI
+from nimble.common import neutron
 from nimble.conf import CONF
+from nimble.engine.baremetal import ironic
+from nimble.engine.baremetal import ironic_states
 from nimble.engine import base_manager
 
 MANAGER_TOPIC = 'nimble.engine_manager'
@@ -38,9 +43,74 @@ class EngineManager(base_manager.BaseEngineManager):
     def _sync_node_resources(self, context):
         LOG.info(_LI("During sync_node_resources."))
 
+    def _build_networks(self, context, instance):
+        macs = ironic.get_macs_from_node(instance.node_uuid)
+        port = neutron.create_ports(context, instance.network_uuid, macs[0])
+        ironic.plug_vifs(instance.node_uuid, port['port']['id'])
+
+    def _wait_for_active(self, instance):
+        """Wait for the node to be marked as ACTIVE in Ironic."""
+
+        node = ironic.get_node_by_instance(instance.uuid)
+        LOG.debug('Current ironic node state is %s', node.provision_state)
+        if node.provision_state == ironic_states.ACTIVE:
+            # job is done
+            LOG.debug("Ironic node %(node)s is now ACTIVE",
+                      dict(node=node.uuid))
+            instance.status = ironic_states.ACTIVE
+            instance.save()
+            raise loopingcall.LoopingCallDone()
+
+        if node.target_provision_state in (ironic_states.DELETED,
+                                           ironic_states.AVAILABLE):
+            # ironic is trying to delete it now
+            raise exception.InstanceNotFound(instance_id=instance.uuid)
+
+        if node.provision_state in (ironic_states.NOSTATE,
+                                    ironic_states.AVAILABLE):
+            # ironic already deleted it
+            raise exception.InstanceNotFound(instance_id=instance.uuid)
+
+        if node.provision_state == ironic_states.DEPLOYFAIL:
+            # ironic failed to deploy
+            msg = (_("Failed to provision instance %(inst)s: %(reason)s")
+                   % {'inst': instance.uuid, 'reason': node.last_error})
+            raise exception.InstanceDeployFailure(msg)
+
+    def _build_instance(self, context, instance):
+        ironic.set_instance_info(instance)
+        ironic.do_node_deploy(instance.node_uuid)
+
+        timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
+                                                     instance)
+        timer.start(interval=CONF.ironic.api_retry_interval).wait()
+        LOG.info(_LI('Successfully provisioned Ironic node %s'),
+                 instance.node_uuid)
+
+    def _destroy_instance(self, context, instance):
+        ironic.destroy_node(instance.node_uuid)
+        LOG.info(_LI('Successfully destroyed Ironic node %s'),
+                 instance.node_uuid)
+
     def create_instance(self, context, instance):
         """Signal to engine service to perform a deployment."""
-        LOG.debug("During create instance.")
-        instance.task_state = 'deploying'
+        LOG.debug("Strating instance...")
+        instance.status = 'building'
+
+        # Scheduling...
+        # instance.node_uuid = '8d22309b-b47a-41a7-80e3-e758fae9dedd'
         instance.save()
+
+        self._build_networks(context, instance)
+
+        self._build_instance(context, instance)
+
         return instance
+
+    def delete_instance(self, context, instance):
+        """Signal to engine service to delete an instance."""
+        LOG.debug("Deleting instance...")
+
+        self._destroy_instance(context, instance)
+
+        instance.destroy()
