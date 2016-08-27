@@ -33,6 +33,8 @@ class Instance(base.APIBase):
     between the internal object model and the API representation of
     a instance.
     """
+    id = wsme.wsattr(wtypes.IntegerType(minimum=1))
+    """The ID of the instance"""
 
     uuid = types.uuid
     """The UUID of the instance"""
@@ -54,6 +56,15 @@ class Instance(base.APIBase):
 
     availability_zone = wtypes.text
     """The availability zone of the instance"""
+
+    instance_type_id = wsme.wsattr(wtypes.IntegerType(minimum=1))
+    """The instance type ID of the instance"""
+
+    image_uuid = types.uuid
+    """The image UUID of the instance"""
+
+    network_uuid = types.uuid
+    """The network UUID of the instance"""
 
     links = wsme.wsattr([link.Link], readonly=True)
     """A list containing a self link"""

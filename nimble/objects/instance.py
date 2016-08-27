@@ -38,6 +38,8 @@ class Instance(base.NimbleObject, object_base.VersionedObjectDictCompat):
         'task_state': object_fields.StringField(nullable=True),
         'instance_type_id': object_fields.IntegerField(nullable=True),
         'availability_zone': object_fields.StringField(nullable=True),
+        'image_uuid': object_fields.UUIDField(nullable=True),
+        'network_uuid': object_fields.UUIDField(nullable=True),
         'node_uuid': object_fields.UUIDField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),
     }
