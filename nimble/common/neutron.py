@@ -11,52 +11,36 @@
 # under the License.
 
 from neutronclient.v2_0 import client as clientv20
+from oslo_log import log as logging
 
-from nimble.common import keystone
 from nimble.conf import CONF
 
-DEFAULT_NEUTRON_URL = 'http://%s:9696' % CONF.my_ip
-
-_NEUTRON_SESSION = None
-
-
-def _get_neutron_session():
-    global _NEUTRON_SESSION
-    if not _NEUTRON_SESSION:
-        _NEUTRON_SESSION = keystone.get_session('neutron')
-    return _NEUTRON_SESSION
+LOG = logging.getLogger(__name__)
 
 
 def get_client(token=None):
     params = {'retries': CONF.neutron.retries}
-    url = CONF.neutron.url
-    if CONF.neutron.auth_strategy == 'noauth':
-        params['endpoint_url'] = url or DEFAULT_NEUTRON_URL
-        params['auth_strategy'] = 'noauth'
-        params.update({
-            'timeout': CONF.neutron.url_timeout or CONF.neutron.timeout,
-            'insecure': CONF.neutron.insecure,
-            'ca_cert': CONF.neutron.cafile})
-    else:
-        session = _get_neutron_session()
-        if token is None:
-            params['session'] = session
-            # NOTE(pas-ha) endpoint_override==None will auto-discover
-            # endpoint from Keystone catalog.
-            # Region is needed only in this case.
-            # SSL related options are ignored as they are already embedded
-            # in keystoneauth Session object
-            if url:
-                params['endpoint_override'] = url
-            else:
-                params['region_name'] = CONF.keystone.region_name
-        else:
-            params['token'] = token
-            params['endpoint_url'] = url or keystone.get_service_url(
-                session, service_type='network')
-            params.update({
-                'timeout': CONF.neutron.url_timeout or CONF.neutron.timeout,
-                'insecure': CONF.neutron.insecure,
-                'ca_cert': CONF.neutron.cafile})
+    params['token'] = token
+    params['endpoint_url'] = 'http://192.168.168.248:9696'
+    params['timeout'] = CONF.neutron.url_timeout
+    params['auth_url'] = 'http://192.168.168.248/identity'
 
     return clientv20.Client(**params)
+
+
+def create_ports(context, network_uuid, macs):
+    """Create neutron port."""
+
+    LOG.info('XXXXXXXXXXXXXXXXXX %s', network_uuid)
+
+    client = get_client(context.auth_token)
+    body = {
+        'port': {
+            'network_id': network_uuid,
+            'mac_address': macs
+        }
+    }
+
+    port = client.create_port(body)
+
+    return port

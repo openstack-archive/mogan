@@ -16,6 +16,8 @@ import nimble.conf.api
 import nimble.conf.database
 import nimble.conf.default
 import nimble.conf.engine
+import nimble.conf.ironic
+import nimble.conf.neutron
 
 _default_opt_lists = [
     nimble.conf.default.api_opts,
@@ -29,6 +31,8 @@ _opts = [
     ('api', nimble.conf.api.opts),
     ('database', nimble.conf.database.opts),
     ('engine', nimble.conf.engine.opts),
+    ('ironic', nimble.conf.ironic.opts),
+    ('neutron', nimble.conf.neutron.opts),
 ]
 
 

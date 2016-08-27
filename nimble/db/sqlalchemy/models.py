@@ -104,5 +104,7 @@ class Instance(Base):
     task_state = Column(String(255), nullable=True)
     instance_type_id = Column(Integer, nullable=True)
     availability_zone = Column(String(255), nullable=True)
+    image_uuid = Column(String(36), nullable=True)
+    network_uuid = Column(String(36), nullable=True)
     node_uuid = Column(String(36), nullable=True)
     extra = Column(Text, nullable=True)

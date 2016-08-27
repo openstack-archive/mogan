@@ -52,4 +52,9 @@ class EngineAPI(object):
     def create_instance(self, context, instance):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.call(context, 'create_instance', instance=instance)
+        return cctxt.cast(context, 'create_instance', instance=instance)
+
+    def delete_instance(self, context, instance):
+        """Signal to engine service to delete an instance."""
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        return cctxt.call(context, 'delete_instance', instance=instance)
