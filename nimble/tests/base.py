@@ -24,6 +24,7 @@ import pecan
 import testscenarios
 
 from nimble.common import config as nimble_config
+from nimble.common import context as nimble_context
 
 
 CONF = cfg.CONF
@@ -47,6 +48,7 @@ class TestCase(base.BaseTestCase):
 
     def setUp(self):
         super(TestCase, self).setUp()
+        self.context = nimble_context.get_admin_context()
 
         self._set_config()
 

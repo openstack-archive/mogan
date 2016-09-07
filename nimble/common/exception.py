@@ -167,3 +167,16 @@ class NoFreeEngineWorker(TemporaryFailure):
 
 class DuplicateName(Conflict):
     _msg_fmt = _("A instance with name %(name)s already exists.")
+
+
+class KeystoneUnauthorized(NimbleException):
+    _msg_fmt = _("Not authorized in Keystone.")
+
+
+class KeystoneFailure(NimbleException):
+    pass
+
+
+class CatalogNotFound(NimbleException):
+    _msg_fmt = _("Service type %(service_type)s with endpoint type "
+                 "%(endpoint_type)s not found in keystone service catalog.")
