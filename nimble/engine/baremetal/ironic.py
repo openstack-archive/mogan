@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from nimble.common import exception
 from nimble.common import ironic
 from nimble.engine.baremetal import ironic_states
 
@@ -81,3 +82,19 @@ def destroy_node(node_uuid):
     ironicclient = ironic.IronicClientWrapper()
     ironicclient.call("node.set_provision_state", node_uuid,
                       ironic_states.DELETED)
+
+
+def get_node_list(**kwargs):
+    """Helper function to return the list of nodes.
+
+    If unable to connect ironic server, an empty list is returned.
+
+    :returns: a list of raw node from ironic
+
+    """
+    ironicclient = ironic.IronicClientWrapper()
+    try:
+        node_list = ironicclient.call("node.list", **kwargs)
+    except exception.NimbleException:
+        node_list = []
+    return node_list

@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import time
+
 from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import loopingcall
@@ -38,10 +40,21 @@ class EngineManager(base_manager.BaseEngineManager):
 
     target = messaging.Target(version=RPC_API_VERSION)
 
+    def _refresh_cache(self):
+        node_cache = {}
+        nodes = ironic.get_node_list(detail=True, maintenance=False,
+                                     provision_state=ironic_states.AVAILABLE,
+                                     associated=False, limit=0)
+        for node in nodes:
+            node_cache[node.uuid] = node
+
+        self.node_cache = node_cache
+        self.node_cache_time = time.time()
+
     @periodic_task.periodic_task(
         spacing=CONF.engine.sync_node_resource_interval)
     def _sync_node_resources(self, context):
-        LOG.info(_LI("During sync_node_resources."))
+        self._refresh_cache()
 
     def _build_networks(self, context, instance):
         macs = ironic.get_macs_from_node(instance.node_uuid)

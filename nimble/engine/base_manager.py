@@ -32,6 +32,8 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
             host = CONF.host
         self.host = host
         self.topic = topic
+        self.node_cache = {}
+        self.node_cache_time = 0
         self.notifier = rpc.get_notifier()
         self._started = False
 
