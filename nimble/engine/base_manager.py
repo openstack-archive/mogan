@@ -52,8 +52,11 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self._worker_pool = greenpool.GreenPool(
             size=CONF.engine.workers_pool_size)
 
+        self._started = True
+
     def del_host(self):
         self._worker_pool.waitall()
+        self._started = False
 
     def periodic_tasks(self, context, raise_on_error=False):
         return self.run_periodic_tasks(context, raise_on_error=raise_on_error)
