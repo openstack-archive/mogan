@@ -1,0 +1,63 @@
+# variables in header
+x-openstack-request-id:
+  description: >
+    A unique ID for tracking the request. The request ID associated with the request
+    appears in the log lines for that request. By default, the middleware configuration
+    ensures that the request ID appears in the log files.
+  in: header
+  required: true
+  type: string
+
+# variables in path
+api_version:
+  in: path
+  required: true
+  type: string
+  description: >
+    The API version as returned in the links from the ``GET /`` call.
+attachment_id:
+  description: |
+    The UUID of the attachment.
+  in: path
+  required: true
+  type: string
+flavor_id:
+  description: |
+    The ID of the flavor.
+  in: path
+  required: true
+  type: string
+instance_id:
+  description: |
+    The UUID of the instance.
+  in: path
+  required: true
+  type: string
+ip:
+  description: |
+    The IP address.
+  in: path
+  required: true
+  type: string
+
+# variables in query
+user_id:
+  description: |
+    Filters the response by a user, by ID.
+  in: query
+  required: false
+  type: string
+
+# variables in body
+flavorRef:
+  description: |
+    The flavor reference, as a UUID or full URL, for the flavor for your server instance.
+  in: body
+  required: true
+  type: string
+flavors:
+  description: |
+    An array of flavor objects.
+  in: body
+  required: true
+  type: array
