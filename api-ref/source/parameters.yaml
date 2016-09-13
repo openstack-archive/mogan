@@ -1,0 +1,138 @@
+# variables in header
+openstack-request-id:
+  description: >
+    A unique ID for tracking the request. The request ID associated with the request
+    appears in the log lines for that request. By default, the middleware configuration
+    ensures that the request ID appears in the log files.
+  in: header
+  required: true
+  type: string
+
+# variables in path
+api_version:
+  in: path
+  required: true
+  type: string
+  description: >
+    The API version as returned in the links from the ``GET /`` call.
+type_uuid_path:
+  description: |
+    The UUID of the type.
+  in: path
+  required: true
+  type: string
+spec_key_path
+  description: |
+    The key of the extra spec.
+  in: path
+  required: true
+  type: string
+
+# variables in query
+user_id:
+  description: |
+    Filters the response by a user, by ID.
+  in: query
+  required: false
+  type: string
+
+# variables in body
+
+created_at:
+  description: |
+    The date and time when the resource was created. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+    ::
+
+      CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``. The ``±hh:mm``
+    value, if included, is the time zone as an offset from UTC.  In
+    the previous example, the offset value is ``-05:00``.
+  in: body
+  required: true
+  type: string
+typeRef:
+  description: |
+    The type reference, as a UUID or full URL, for the type for your server instance.
+  in: body
+  required: true
+  type: string
+types:
+  description: |
+    An array of type objects.
+  in: body
+  required: true
+  type: array
+type_extra_specs
+  description: |
+    Extra spec key and value pairs associate with the type.
+  in: body
+  required: true
+  type: object
+type_id_body:
+  description: |
+    The ID of the type.
+  in: body
+  required: true
+  type: string
+type_id_body_not_required:
+  description: |
+    The ID of the type.
+  in: body
+  required: false
+  type: string
+type_is_public:
+  description: |
+    Whether the type is public (available to all projects) or scoped
+    to a set of projects. Default is True if not specified.
+  in: body
+  required: true
+  type: boolean
+type_is_public_not_required:
+  description: |
+    Whether the type is public (available to all projects) or scoped
+    to a set of projects. Default is True if not specified.
+  in: body
+  required: true
+  type: boolean
+type_name:
+  description: |
+    The name of the type.
+  in: body
+  required: true
+  type: string
+type_uuid:
+  description: |
+    The UUID of the type.
+  in: body
+  required: true
+  type: string
+type_uuid_not_required:
+  description: |
+    The UUID of the type.
+  in: body
+  required: false
+  type: string
+links:
+  description: |
+    Links to the resources in question.
+  in: body
+  required: true
+  type: array
+updated_at:
+  description: |
+    The date and time when the resource was updated. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+    ::
+
+      CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``. The ``±hh:mm``
+    value, if included, is the time zone as an offset from UTC.  In
+    the previous example, the offset value is ``-05:00``.
+  in: body
+  required: true
+  type: string
