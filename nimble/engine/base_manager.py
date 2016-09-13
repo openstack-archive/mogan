@@ -17,6 +17,7 @@
 
 from eventlet import greenpool
 from oslo_service import periodic_task
+from oslo_utils import importutils
 
 from nimble.common.i18n import _
 from nimble.common import rpc
@@ -34,6 +35,8 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self.topic = topic
         self.node_cache = {}
         self.node_cache_time = 0
+        scheduler_driver = CONF.scheduler.scheduler_driver
+        self.scheduler_driver = importutils.import_object(scheduler_driver)
         self.notifier = rpc.get_notifier()
         self._started = False
 
@@ -52,8 +55,11 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self._worker_pool = greenpool.GreenPool(
             size=CONF.engine.workers_pool_size)
 
+        self._started = True
+
     def del_host(self):
         self._worker_pool.waitall()
+        self._started = False
 
     def periodic_tasks(self, context, raise_on_error=False):
         return self.run_periodic_tasks(context, raise_on_error=raise_on_error)

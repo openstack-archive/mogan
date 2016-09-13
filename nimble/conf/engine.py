@@ -34,6 +34,10 @@ opts = [
                default=60,
                help=_('Interval between syncing the node resources from '
                       'ironic, in seconds.')),
+    cfg.StrOpt('scheduler_driver',
+               default='nimble.engine.scheduler.filter_scheduler.'
+                       'FilterScheduler',
+               help='Default scheduler driver to use')
 ]
 
 
