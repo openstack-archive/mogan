@@ -21,15 +21,15 @@ Specification can be found at doc/source/webapi/v1.rst
 
 from pecan import rest
 
-from nimble.api.controllers.v1 import flavor
-from nimble.api.controllers.v1 import instance
+from nimble.api.controllers.v1 import flavors
+from nimble.api.controllers.v1 import instances
 
 
 class Controller(rest.RestController):
     """Version 1 API controller root."""
 
-    flavor = flavor.FlavorController()
-    instance = instance.InstanceController()
+    flavors = flavors.FlavorController()
+    instances = instances.InstanceController()
 
 
 __all__ = ('Controller',)
