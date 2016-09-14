@@ -1,0 +1,37 @@
+# Devstack settings
+
+# We have to add Nimble to enabled services for run_process to work
+# "nimble" should be always enabled
+# To run services in separate processes and screens need to write:
+# enable_service nimble nimble-api nimble-engine
+# To run all services in one screen as a one process need to write:
+# enable_service nimble
+# All other combinations of services like 'nimble nimble-api' or 'nimble nimble-engine'
+# is an incorrect way to run services and all services by default will run in one screen
+
+
+enable_service nimble nimble-api nimble-engine
+
+
+# Set up default repos
+NIMBLE_REPO=${NIMBLE_REPO:-${GIT_BASE}/openstack/nimble.git}
+NIMBLE_BRANCH=${NIMBLE_BRANCH:-master}
+#NIMBLE_DASHBOARD_REPO=${NIMBLE_DASHBOARD_REPO:-${GIT_BASE}/openstack/nimble-dashboard.git}
+#NIMBLE_DASHBOARD_BRANCH=${NIMBLE_DASHBOARD_BRANCH:-${NIMBLE_BRANCH}}
+
+#NIMBLE_PYTHONCLIENT_REPO=${NIMBLE_PYTHONCLIENT_REPO:-${GIT_BASE}/openstack/python-nimbleclient.git}
+#NIMBLE_PYTHONCLIENT_BRANCH=${NIMBLE_PYTHONCLIENT_BRANCH:-master}
+#NIMBLE_PYTHONCLIENT_DIR=$DEST/python-nimbleclient
+
+# Set up default directories
+NIMBLE_DIR=$DEST/nimble
+NIMBLE_DASHBOARD_DIR=$DEST/nimble-dashboard
+NIMBLE_CONF_DIR=${NIMBLE_CONF_DIR:-/etc/nimble}
+NIMBLE_CONF_FILE=${NIMBLE_CONF_FILE}/nimble.conf
+NIMBLE_DEBUG=${NIMBLE_DEBUG:-True}
+
+NIMBLE_SERVICE_HOST=${NIMBLE_SERVICE_HOST:-$SERVICE_HOST}
+NIMBLE_SERVICE_PORT=${NIMBLE_SERVICE_PORT:-6688}
+NIMBLE_SERVICE_PROTOCOL=${NIMBLE_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
+
+NIMBLE_ADMIN_USER=${NIMBLE_ADMIN_USER:-nimble}
