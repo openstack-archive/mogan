@@ -22,6 +22,7 @@ from nimble.conf import engine
 from nimble.conf import ironic
 from nimble.conf import keystone
 from nimble.conf import neutron
+from nimble.conf import scheduler
 
 CONF = cfg.CONF
 
@@ -32,3 +33,4 @@ engine.register_opts(CONF)
 ironic.register_opts(CONF)
 keystone.register_opts(CONF)
 neutron.register_opts(CONF)
+scheduler.register_opts(CONF)

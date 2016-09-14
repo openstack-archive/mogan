@@ -19,6 +19,7 @@ import nimble.conf.engine
 import nimble.conf.ironic
 import nimble.conf.keystone
 import nimble.conf.neutron
+import nimble.conf.scheduler
 
 _default_opt_lists = [
     nimble.conf.default.api_opts,
@@ -35,6 +36,7 @@ _opts = [
     ('ironic', nimble.conf.ironic.opts),
     ('keystone', nimble.conf.keystone.opts),
     ('neutron', nimble.conf.neutron.opts),
+    ('scheduler', nimble.conf.scheduler.opts),
 ]
 
 
