@@ -97,14 +97,14 @@ class Instance(base.APIBase):
 class InstanceCollection(base.APIBase):
     """API representation of a collection of instance."""
 
-    instance = [Instance]
+    instances = [Instance]
     """A list containing instance objects"""
 
     @staticmethod
     def convert_with_links(instance, url=None, **kwargs):
         collection = InstanceCollection()
-        collection.instance = [Instance.convert_with_links(inst)
-                               for inst in instance]
+        collection.instances = [Instance.convert_with_links(inst)
+                                for inst in instances]
         return collection
 
 
@@ -115,8 +115,8 @@ class InstanceController(rest.RestController):
     def get_all(self):
         """Retrieve a list of instance."""
 
-        instance = objects.Instance.list(pecan.request.context)
-        return InstanceCollection.convert_with_links(instance)
+        instances = objects.Instance.list(pecan.request.context)
+        return InstanceCollection.convert_with_links(instances)
 
     @expose.expose(Instance, types.uuid)
     def get_one(self, instance_uuid):

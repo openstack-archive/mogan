@@ -79,14 +79,14 @@ class Flavor(base.APIBase):
 class FlavorCollection(base.APIBase):
     """API representation of a collection of flavor."""
 
-    flavor = [Flavor]
+    flavors = [Flavor]
     """A list containing flavor objects"""
 
     @staticmethod
-    def convert_with_links(flavor, url=None, **kwargs):
+    def convert_with_links(flavors, url=None, **kwargs):
         collection = FlavorCollection()
-        collection.flavor = [Flavor.convert_with_links(fl)
-                             for fl in flavor]
+        collection.flavors = [Flavor.convert_with_links(fl)
+                              for fl in flavors]
         return collection
 
 
@@ -97,8 +97,8 @@ class FlavorController(rest.RestController):
     def get_all(self):
         """Retrieve a list of flavor."""
 
-        flavor = objects.Flavor.list(pecan.request.context)
-        return FlavorCollection.convert_with_links(flavor)
+        flavors = objects.Flavor.list(pecan.request.context)
+        return FlavorCollection.convert_with_links(flavors)
 
     @expose.expose(Flavor, types.uuid)
     def get_one(self, flavor_uuid):
