@@ -36,7 +36,7 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self.node_cache = {}
         self.node_cache_time = 0
         scheduler_driver = CONF.scheduler.scheduler_driver
-        self.scheduler_driver = importutils.import_object(scheduler_driver)
+        self.scheduler = importutils.import_object(scheduler_driver)
         self.notifier = rpc.get_notifier()
         self._started = False
 
