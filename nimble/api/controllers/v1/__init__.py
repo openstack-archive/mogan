@@ -19,16 +19,17 @@ Version 1 of the Nimble API
 Specification can be found at doc/source/webapi/v1.rst
 """
 
+import pecan
 from pecan import rest
 
-from nimble.api.controllers.v1 import flavors
+from nimble.api.controllers.v1 import instance_types
 from nimble.api.controllers.v1 import instances
 
 
 class Controller(rest.RestController):
     """Version 1 API controller root."""
 
-    flavors = flavors.FlavorController()
+    types = instance_types.InstanceTypeController()
     instances = instances.InstanceController()
 
 
