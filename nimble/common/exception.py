@@ -180,3 +180,6 @@ class KeystoneFailure(NimbleException):
 class CatalogNotFound(NimbleException):
     _msg_fmt = _("Service type %(service_type)s with endpoint type "
                  "%(endpoint_type)s not found in keystone service catalog.")
+
+class SchedulerNodeFilterNotFound(NotFound):
+    message = _("Scheduler Node Filter %(filter_name)s could not be found.")
