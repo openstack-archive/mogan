@@ -110,8 +110,24 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.debug("Strating instance...")
         instance.status = 'building'
 
-        # Scheduling...
-        # instance.node_uuid = '8d22309b-b47a-41a7-80e3-e758fae9dedd'
+        # Populate request spec
+        instance_type_id = instance.instance_type_id
+        instance_type = instance.instance_type
+        request_spec = {
+            'instance_id': instance.id,
+            'instance_properties': {
+                'availability_zone': instance.availability_zone,
+                'instance_type_id': instance_type_id,
+            },
+            'instance_type': dict(instance_type),
+        }
+
+        # TODO(zhenguo): Add retry
+        top_node = self.scheduler.schedule(context,
+                                           request_spec,
+                                           self.node_cache)
+        instance.node_uuid = top_node.to_dict()['node']
+
         instance.save()
 
         self._build_networks(context, instance)
