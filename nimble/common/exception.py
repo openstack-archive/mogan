@@ -139,12 +139,12 @@ class InvalidUUID(Invalid):
     msg_fmt = _("Expected a uuid but received %(uuid)s.")
 
 
-class FlavorAlreadyExists(NimbleException):
-    _msg_fmt = _("Flavor with name %(name)s already exists.")
+class InstanceTypeAlreadyExists(NimbleException):
+    _msg_fmt = _("InstanceType with name %(name)s already exists.")
 
 
-class FlavorNotFound(NotFound):
-    msg_fmt = _("Flavor %(flavor)s could not be found.")
+class InstanceTypeNotFound(NotFound):
+    msg_fmt = _("InstanceType %(instance_type)s could not be found.")
 
 
 class InstanceAlreadyExists(NimbleException):
