@@ -79,7 +79,7 @@ class Connection(api.Connection):
     def __init__(self):
         pass
 
-    def flavor_create(self, values):
+    def instance_type_create(self, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
@@ -91,27 +91,30 @@ class Connection(api.Connection):
                 session.add(instance_type)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise exception.FlavorAlreadyExists(name=values['name'])
+                raise exception.InstanceTypeAlreadyExists(name=values['name'])
             return instance_type
 
-    def flavor_get(self, flavor_id):
-        query = model_query(models.InstanceTypes).filter_by(uuid=flavor_id)
+    def instance_type_get(self, instance_type_uuid):
+        query = model_query(models.InstanceTypes).filter_by(
+            uuid=instance_type_uuid)
         try:
             return query.one()
         except NoResultFound:
-            raise exception.FlavorNotFound(flavor=flavor_id)
+            raise exception.InstanceTypeNotFound(
+                instance_type=instance_type_uuid)
 
-    def flavor_get_all(self):
+    def instance_type_get_all(self):
         return model_query(models.InstanceTypes)
 
-    def flavor_destroy(self, flavor_id):
+    def instance_type_destroy(self, instance_type_uuid):
         with _session_for_write():
             query = model_query(models.InstanceTypes)
-            query = add_identity_filter(query, flavor_id)
+            query = add_identity_filter(query, instance_type_uuid)
 
             count = query.delete()
             if count != 1:
-                raise exception.FlavorNotFound(flavor=flavor_id)
+                raise exception.InstanceTypeNotFound(
+                    instance_type=instance_type_uuid)
 
     def instance_create(self, values):
         if not values.get('uuid'):
