@@ -188,3 +188,7 @@ class SchedulerNodeFilterNotFound(NotFound):
 
 class SchedulerNodeWeigherNotFound(NotFound):
     message = _("Scheduler Node Weigher %(weigher_name)s could not be found.")
+
+
+class NoValidNode(NimbleException):
+    message = _("No valid host was found. %(reason)s")
