@@ -108,8 +108,17 @@ class InstanceCollection(base.APIBase):
         return collection
 
 
+class InstanceActionController(rest.RestController):
+
+    _custom_actions = {
+        'power': ['PUT'],
+    }
+
+
 class InstanceController(rest.RestController):
     """REST controller for Instance."""
+
+    action = InstanceActionController()
 
     @expose.expose(InstanceCollection)
     def get_all(self):
