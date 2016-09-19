@@ -34,6 +34,7 @@ opts = [
     cfg.ListOpt('scheduler_default_filters',
                 default=[
                     'AvailabilityZoneFilter',
+                    'InstanceTypeFilter',
                     'CapabilitiesFilter'
                 ],
                 help=_('Which filter class names to use for filtering nodes '
