@@ -34,9 +34,9 @@ class NodeState(object):
 
     def __init__(self, node):
         self.node = node.uuid
-        self.capabilities = node.capabilities
-        self.availability_zone = node.extra.get('availability_zone', None)
-        self.instance_type = node.extra.get('instance_type', None)
+        self.capabilities = node.properties.get('capabilities')
+        self.availability_zone = node.properties.get('availability_zone')
+        self.instance_type = node.properties.get('instance_type')
 
 
 class NodeManager(object):
