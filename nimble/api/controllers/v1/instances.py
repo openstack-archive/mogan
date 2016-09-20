@@ -19,11 +19,106 @@ from six.moves import http_client
 import wsme
 from wsme import types as wtypes
 
+# from ironicclient.openstack.common.apiclient import exceptions as ir_e
 from nimble.api.controllers import base
 from nimble.api.controllers import link
 from nimble.api.controllers.v1 import types
 from nimble.api import expose
+from nimble.common import exception
+from nimble.engine.baremetal import ironic_states as ir_states
 from nimble import objects
+
+
+class NodeStates(base.APIBase):
+    """API representation of the states of a node."""
+    # Just support power state at present.
+    # We can expend other fields for other type state.
+    power_state = wtypes.text
+    """Represent the current (not transition) power state of the node"""
+
+    target_power_state = wtypes.text
+    """The user modified desired power state of the node."""
+
+    last_error = wtypes.text
+    """Any error from the most recent (last) asynchronous transaction that
+    started but failed to finish."""
+
+    @staticmethod
+    def convert(node_states):
+        attr_list = ['last_error', 'power_state', 'target_power_state']
+        states = NodeStates()
+        for attr in attr_list:
+            setattr(states, attr, getattr(node_states, attr))
+        return states
+
+    @classmethod
+    def sample(cls):
+        sample = cls(target_power_state=ir_states.POWER_ON,
+                     last_error=None,
+                     power_state=ir_states.POWER_ON)
+        return sample
+
+
+class NodeStatesController(rest.RestController):
+    # Note(Shaohe Feng) we follow ironic restful api define.
+    # We can refactor this API, if we do not like ironic pattern.
+
+    _custom_actions = {
+        'power': ['PUT'],
+    }
+
+    @expose.expose(NodeStates, types.uuid)
+    def get(self, instance_uuid):
+        """List the states of the node, just support power state at present.
+
+        :param instance_uuid: the UUID of a instance.
+        """
+        rpc_instance = objects.Instance.get(pecan.request.context,
+                                            instance_uuid)
+
+        rpc_node = pecan.request.rpcapi.set_power_state(pecan.request.context,
+                                                        rpc_instance)
+        return NodeStates.convert(rpc_node.to_dict())
+
+    @expose.expose(None, types.uuid, wtypes.text,
+                   status_code=http_client.ACCEPTED)
+    def power(self, instance_uuid, action):
+        """Set the power state of the node.
+
+        :param instance_uuid: the UUID of a instance.
+        :param action: the desired action to change power state,
+                       on, off or "reboot".
+        :raises: ClientSideError (HTTP 409) if a power operation is
+                 already in progress.
+        :raises: InvalidStateRequested (HTTP 400) if the requested target
+                 state is not valid or if the node is in CLEANING state.
+
+        """
+        # No policy check at present.
+        rpc_instance = objects.Instance.get(pecan.request.context,
+                                            instance_uuid)
+
+        # The action can be "on" "power on" for ironicclient.
+        # "on" is abbreviation for "power on". same with "off" and "reboot".
+        if action not in ["on", "off", "reboot",
+                          ir_states.POWER_ON,
+                          ir_states.POWER_OFF,
+                          ir_states.REBOOT]:
+            # ironic will throw InvalidStateRequested
+            raise exception.InvalidActionParameterValue(
+                value=action, action="power",
+                instance=instance_uuid)
+        pecan.request.rpcapi.set_power_state(pecan.request.context,
+                                             rpc_instance)
+        # At present we do not catch the Exception from ironicclient.
+        # Such as Conflict and BadRequest.
+        # varify provision_state, if instance is being cleaned,
+        # don't change power state?
+
+        # Set the HTTP Location Header, user can get the power_state
+        # by locaton.
+        url_args = '/'.join([instance_uuid, 'states'])
+        pecan.response.location = link.build_url('instances', url_args)
 
 
 class Instance(base.APIBase):
@@ -108,17 +203,10 @@ class InstanceCollection(base.APIBase):
         return collection
 
 
-class InstanceActionController(rest.RestController):
-
-    _custom_actions = {
-        'power': ['PUT'],
-    }
-
-
 class InstanceController(rest.RestController):
     """REST controller for Instance."""
 
-    action = InstanceActionController()
+    states = NodeStatesController()
 
     @expose.expose(InstanceCollection)
     def get_all(self):
