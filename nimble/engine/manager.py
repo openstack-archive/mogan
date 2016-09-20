@@ -143,3 +143,26 @@ class EngineManager(base_manager.BaseEngineManager):
         self._destroy_instance(context, instance)
 
         instance.destroy()
+
+    def _instance_states(self, context, instance):
+        states = ironic.get_node_states(instance.node_uuid)
+        LOG.info(_LI('Successfully get ironic node states: %s'),
+                 states)
+        return states
+
+    def instance_states(self, context, instance):
+        """Signal to engine service to get an instance states."""
+        LOG.debug("get instance states")
+
+        return self._instance_states(context, instance)
+
+    def _set_power_state(self, context, instance, state):
+        ironic.set_power_state(instance.node_uuid)
+        LOG.info(_LI('Successfully set ironic node power state: %s'),
+                 state)
+
+    def set_power_state(self, context, instance, state):
+        """Signal to engine service to get an instance states."""
+        LOG.debug("set power state...")
+
+        return self.set_power_state(context, instance, state)

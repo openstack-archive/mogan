@@ -23,7 +23,92 @@ from nimble.api.controllers import base
 from nimble.api.controllers import link
 from nimble.api.controllers.v1 import types
 from nimble.api import expose
+from nimble.common import exception
+from nimble.engine.baremetal import ironic_states as ir_states
 from nimble import objects
+
+
+class InstanceStates(base.APIBase):
+    """API representation of the states of a instance."""
+    # Just support power state at present.
+    # We can expend other fields for other type state.
+    power_state = wtypes.text
+    """Represent the current (not transition) power state of the instance"""
+
+    target_power_state = wtypes.text
+    """The user modified desired power state of the instance."""
+
+    @staticmethod
+    def convert(instance_states):
+        attr_list = ['power_state', 'target_power_state']
+        states = InstanceStates()
+        for attr in attr_list:
+            setattr(states, attr, getattr(instance_states, attr))
+        return states
+
+    @classmethod
+    def sample(cls):
+        sample = cls(target_power_state=ir_states.POWER_ON,
+                     last_error=None,
+                     power_state=ir_states.POWER_ON)
+        return sample
+
+
+class InstanceStatesController(rest.RestController):
+    # Note(Shaohe Feng) we follow ironic restful api define.
+    # We can refactor this API, if we do not like ironic pattern.
+
+    _custom_actions = {
+        'power': ['PUT'],
+    }
+
+    @expose.expose(InstanceStates, types.uuid)
+    def get(self, instance_uuid):
+        """List the states of the instance, just support power state at present.
+
+        :param instance_uuid: the UUID of a instance.
+        """
+        rpc_instance = objects.Instance.get(pecan.request.context,
+                                            instance_uuid)
+
+        rpc_states = pecan.request.rpcapi.instance_states(
+            pecan.request.context, rpc_instance)
+        return InstanceStates.convert(rpc_states.to_dict())
+
+    @expose.expose(None, types.uuid, wtypes.text,
+                   status_code=http_client.ACCEPTED)
+    def power(self, instance_uuid, target):
+        """Set the power state of the instance.
+
+        :param instance_uuid: the UUID of a instance.
+        :param target: the desired target to change power state,
+                       on, off or reboot.
+        :raises: Conflict (HTTP 409) if a power operation is
+                 already in progress.
+        :raises: BadRequest (HTTP 400) if the requested target
+                 state is not valid or if the instance is in CLEANING state.
+
+        """
+        # No policy check at present.
+        rpc_instance = objects.Instance.get(pecan.request.context,
+                                            instance_uuid)
+
+        if target not in ["on", "off", "reboot"]:
+            # ironic will throw InvalidStateRequested
+            raise exception.InvalidActionParameterValue(
+                value=target, action="power",
+                instance=instance_uuid)
+        pecan.request.rpcapi.set_power_state(pecan.request.context,
+                                             rpc_instance, target)
+        # At present we do not catch the Exception from ironicclient.
+        # Such as Conflict and BadRequest.
+        # varify provision_state, if instance is being cleaned,
+        # don't change power state?
+
+        # Set the HTTP Location Header, user can get the power_state
+        # by locaton.
+        url_args = '/'.join([instance_uuid, 'states'])
+        pecan.response.location = link.build_url('instances', url_args)
 
 
 class Instance(base.APIBase):
@@ -108,17 +193,10 @@ class InstanceCollection(base.APIBase):
         return collection
 
 
-class InstanceActionController(rest.RestController):
-
-    _custom_actions = {
-        'power': ['PUT'],
-    }
-
-
 class InstanceController(rest.RestController):
     """REST controller for Instance."""
 
-    action = InstanceActionController()
+    states = InstanceStatesController()
 
     @expose.expose(InstanceCollection)
     def get_all(self):
