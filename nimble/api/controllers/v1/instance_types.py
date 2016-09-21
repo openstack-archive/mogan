@@ -48,6 +48,9 @@ class InstanceType(base.APIBase):
     is_public = types.boolean
     """Indicates whether the instance type is public."""
 
+    extra_specs = {wtypes.text: types.jsontype}
+    """The extra specs of the instance type"""
+
     links = wsme.wsattr([link.Link], readonly=True)
     """A list containing a self link"""
 
@@ -85,13 +88,61 @@ class InstanceTypeCollection(base.APIBase):
     @staticmethod
     def convert_with_links(instance_types, url=None, **kwargs):
         collection = InstanceTypeCollection()
-        collection.instance_types = [InstanceType.convert_with_links(type1)
-                                     for type1 in instance_types]
+        collection.types = [InstanceType.convert_with_links(type1)
+                            for type1 in instance_types]
         return collection
+
+
+class TypeExtraSpecController(rest.RestController):
+    """REST controller for Instance Type extra spec."""
+
+    @expose.expose(wtypes.text, types.uuid)
+    def get_all(self, instance_type_uuid):
+        """Retrieve a list of extra specs of the queried instance type."""
+
+        instance_type = objects.InstanceType.get(pecan.request.context,
+                                                 instance_type_uuid)
+        return dict(extra_specs=instance_type.extra_specs)
+
+    @expose.expose(wtypes.text, types.uuid, body=wtypes.DictType,
+                   status_code=http_client.CREATED)
+    def post(self, instance_type_uuid, extra_spec):
+        """Create an extra specs for the given instance type."""
+
+        instance_type = objects.InstanceType.get(pecan.request.context,
+                                                 instance_type_uuid)
+        instance_type.extra_specs = dict(instance_type.extra_specs,
+                                         **extra_spec)
+        instance_type.save()
+        return dict(extra_specs=instance_type.extra_specs)
+
+    @expose.expose(wtypes.text, types.uuid, body=wtypes.DictType,
+                   status_code=http_client.CREATED)
+    def put(self, instance_type_uuid, extra_spec):
+        """Update an extra specs for the given instance type."""
+
+        instance_type = objects.InstanceType.get(pecan.request.context,
+                                                 instance_type_uuid)
+        instance_type.extra_specs = dict(instance_type.extra_specs,
+                                         **extra_spec)
+        instance_type.save()
+        return dict(extra_specs=instance_type.extra_specs)
+
+    @expose.expose(None, types.uuid, wtypes.text,
+                   status_code=http_client.NO_CONTENT)
+    def delete(self, instance_type_uuid, spec_name):
+        """Delete an extra specs for the given instance type."""
+
+        instance_type = objects.InstanceType.get(pecan.request.context,
+                                                 instance_type_uuid)
+        del instance_type.extra_specs[spec_name]
+        instance_type.save()
 
 
 class InstanceTypeController(rest.RestController):
     """REST controller for Instance Type."""
+
+    extraspecs = TypeExtraSpecController()
 
     @expose.expose(InstanceTypeCollection)
     def get_all(self):
