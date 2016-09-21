@@ -72,3 +72,19 @@ class Connection(object):
     @abc.abstractmethod
     def instance_destroy(name):
         """Delete an instance."""
+
+    @abc.abstractmethod
+    def extra_specs_update_or_create(instance_type_id, extra_specs):
+        """Create or update instance type extra specs.
+
+        This adds or modifies the key/value pairs specified in the
+        extra specs dict argument
+        """
+
+    @abc.abstractmethod
+    def type_extra_specs_delete(instance_type_id, key):
+        """Delete instance type extra specs.
+
+        This deletes the key/value pairs specified in the
+        extra specs dict argument
+        """
