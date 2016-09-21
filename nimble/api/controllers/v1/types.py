@@ -15,6 +15,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+import six
+
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 from wsme import types as wtypes
@@ -62,5 +65,31 @@ class BooleanType(wtypes.UserType):
         return BooleanType.validate(value)
 
 
+class JsonType(wtypes.UserType):
+    """A simple JSON type."""
+
+    basetype = wtypes.text
+    name = 'json'
+
+    def __str__(self):
+        # These are the json serializable native types
+        return ' | '.join(map(str, (wtypes.text, six.integer_types, float,
+                                    BooleanType, list, dict, None)))
+
+    @staticmethod
+    def validate(value):
+        try:
+            json.dumps(value)
+        except TypeError:
+            raise exception.Invalid(_('%s is not JSON serializable') % value)
+        else:
+            return value
+
+    @staticmethod
+    def frombasetype(value):
+        return JsonType.validate(value)
+
+
 boolean = BooleanType()
 uuid = UuidType()
+jsontype = JsonType()
