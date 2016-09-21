@@ -21,6 +21,7 @@ from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_utils import strutils
 from oslo_utils import uuidutils
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 
 from nimble.common import exception
@@ -96,7 +97,7 @@ class Connection(api.Connection):
 
     def instance_type_get(self, instance_type_uuid):
         query = model_query(models.InstanceTypes).filter_by(
-            uuid=instance_type_uuid)
+            uuid=instance_type_uuid).options(joinedload('extra_specs'))
         try:
             return query.one()
         except NoResultFound:
@@ -172,3 +173,74 @@ class Connection(api.Connection):
 
             ref.update(values)
         return ref
+
+    def extra_specs_update_or_create(self, instance_type_id, specs,
+                                     max_retries=10):
+        """Create or update instance type extra specs.
+
+        This adds or modifies the key/value pairs specified in the
+        extra specs dict argument
+        """
+        for attempt in range(max_retries):
+
+            try:
+                type_id = _type_get_id_from_type(instance_type_id)
+
+                spec_refs = model_query(models.InstanceTypeExtraSpecs,
+                                        read_deleted="no"). \
+                    filter_by(instance_type_id=type_id). \
+                    filter(models.InstanceTypeExtraSpecs.key.in_(specs.keys())). \
+                    all()
+
+                existing_keys = set()
+                for spec_ref in spec_refs:
+                    key = spec_ref["key"]
+                    existing_keys.add(key)
+                    spec_ref.update({"value": specs[key]})
+
+                for key, value in specs.items():
+                    if key in existing_keys:
+                        continue
+
+                return specs
+            except db_exc.DBDuplicateEntry:
+                # a concurrent transaction has been committed,
+                # try again unless this was the last attempt
+                if attempt == max_retries - 1:
+                    raise exception.InstanceTypeExtraSpecUpdateCreateFailed(
+                        id=instance_type_id, retries=max_retries)
+
+    def instance_type_extra_specs_get(self, type_id):
+        rows = _type_extra_specs_get_query(type_id).all()
+        return {row['key']: row['value'] for row in rows}
+
+    def type_extra_specs_delete(self, type_id, key):
+        result = _type_extra_specs_get_query(type_id). \
+            filter(models.InstanceTypeExtraSpecs.key == key). \
+            soft_delete(synchronize_session=False)
+        # did not find the extra spec
+        if result == 0:
+            raise exception.InstanceTypeExtraSpecsNotFound(
+                extra_specs_key=key, type_id=type_id)
+
+
+def _type_get_id_from_type_query(flavor_id):
+    return model_query(models.InstanceTypes,
+                       (models.InstanceTypes.id,),
+                       read_deleted="no"). \
+        filter_by(flavorid=flavor_id)
+
+
+def _type_get_id_from_type(flavor_id):
+    result = _type_get_id_from_type_query(flavor_id).first()
+    if not result:
+        raise exception.InstanceTypeNotFound(flavor_id=flavor_id)
+    return result[0]
+
+
+def _type_extra_specs_get_query(type_id):
+    instance_type_id_subq = _type_get_id_from_type_query(type_id)
+
+    return model_query(models.InstanceTypeExtraSpecs,
+                       read_deleted="no"). \
+        filter_by(instance_type_id=instance_type_id_subq)

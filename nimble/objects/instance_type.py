@@ -17,6 +17,7 @@
 from oslo_versionedobjects import base as object_base
 
 from nimble.db import api as dbapi
+from nimble.common import exception
 from nimble.objects import base
 from nimble.objects import fields as object_fields
 
@@ -34,7 +35,12 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
         'name': object_fields.StringField(nullable=True),
         'description': object_fields.StringField(nullable=True),
         'is_public': object_fields.BooleanField(),
+        'extra_specs': object_fields.DictOfStringsField(),
     }
+
+    def __init__(self, *args, **kwargs):
+        super(InstanceType, self).__init__(*args, **kwargs)
+        self._orig_extra_specs = {}
 
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
@@ -67,3 +73,41 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
         """Delete the Instance Type from the DB."""
         self.dbapi.instance_type_destroy(self.uuid)
         self.obj_reset_changes()
+
+    def save(self):
+        updates = self.obj_get_changes()
+        extra_specs = updates.pop('extra_specs', None)
+        if updates:
+            raise exception.ObjectActionError(
+                action='save', reason='read-only fields were changed')
+
+        if extra_specs is not None:
+            deleted_keys = (set(self._orig_extra_specs.keys()) -
+                            set(extra_specs.keys()))
+            added_keys = self.extra_specs
+        else:
+            added_keys = deleted_keys = None
+
+        if added_keys or deleted_keys:
+            self.save_extra_specs(self.extra_specs, deleted_keys)
+
+    def save_extra_specs(self, to_add=None, to_delete=None):
+        """Add or delete extra_specs.
+
+        :param:to_add: A dict of new keys to add/update
+        :param:to_delete: A list of keys to remove
+        """
+
+        add_fn = dbapi.extra_specs_update_or_create
+        del_fn = dbapi.extra_specs_delete
+        ident = self.id
+
+        to_add = to_add if to_add is not None else {}
+        to_delete = to_delete if to_delete is not None else []
+
+        if to_add:
+            add_fn(ident, to_add)
+
+        for key in to_delete:
+            del_fn(ident, key)
+        self.obj_reset_changes(['extra_specs'])
