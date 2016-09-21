@@ -16,10 +16,10 @@
 #    under the License.
 
 import json
+import six
 
 from oslo_utils import strutils
 from oslo_utils import uuidutils
-import six
 from wsme import types as wtypes
 
 from nimble.common import exception
