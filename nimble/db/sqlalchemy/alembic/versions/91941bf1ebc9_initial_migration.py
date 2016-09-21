@@ -55,6 +55,19 @@ def upgrade():
         mysql_DEFAULT_CHARSET='UTF8'
     )
     op.create_table(
+        'instance_type_extra_specs',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('instance_type_id', sa.Integer(), nullable=True),
+        sa.Column('key', sa.String(length=255), nullable=False),
+        sa.Column('value', sa.String(length=255), nullable=False),
+        sa.ForeignKeyConstraint(['instance_type_id'], ['instance_types.id'], ),
+        sa.PrimaryKeyConstraint('id'),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
         'instances',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),

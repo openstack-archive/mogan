@@ -85,13 +85,63 @@ class InstanceTypeCollection(base.APIBase):
     @staticmethod
     def convert_with_links(instance_types, url=None, **kwargs):
         collection = InstanceTypeCollection()
-        collection.instance_types = [InstanceType.convert_with_links(type1)
-                                     for type1 in instance_types]
+        collection.types = [InstanceType.convert_with_links(type1)
+                            for type1 in instance_types]
         return collection
+
+
+class InstanceTypeExtraSpecCollection(base.APIBase):
+    """API representation of a collection of instance type."""
+
+    def __init__(self, specs):
+        self.extra_spec = specs
+
+
+class TypeExtraSpecController(rest.RestController):
+    """REST controller for Instance Type extra spec."""
+
+    @expose.expose(InstanceTypeExtraSpecCollection, types.uuid)
+    def get_all(self, instance_type_uuid):
+        """Retrieve a list of extra specs of the queried instance type."""
+
+        instance_type = objects.InstanceType.get(pecan.request.context,
+                                                 instance_type_uuid)
+        return InstanceTypeExtraSpecCollection(instance_type.extra_specs)
+
+    @expose.expose()
+    def post(self, instance_type_uuid, extra_spec):
+        """Create an extra specs for the given instance type."""
+
+        instance_type = objects.InstanceType.get(pecan.request.context,
+                                                 instance_type_uuid)
+        instance_type.extra_specs = dict(instance_type.extra_specs,
+                                         **extra_spec)
+        instance_type.save()
+
+    @expose.expose()
+    def put(self, instance_type_uuid, extra_spec):
+        """Update an extra specs for the given instance type."""
+
+        instance_type = objects.InstanceType.get(pecan.request.context,
+                                                 instance_type_uuid)
+        instance_type.extra_specs = dict(instance_type.extra_specs,
+                                         **extra_spec)
+        instance_type.save()
+
+    @expose.expose()
+    def delete(self, instance_type_uuid, spec_name):
+        """Delete an extra specs for the given instance type."""
+
+        instance_type = objects.InstanceType.get(pecan.request.context,
+                                                 instance_type_uuid)
+        del instance_type.extra_specs[spec_name]
+        instance_type.save()
 
 
 class InstanceTypeController(rest.RestController):
     """REST controller for Instance Type."""
+
+    extraspec = TypeExtraSpecController()
 
     @expose.expose(InstanceTypeCollection)
     def get_all(self):
