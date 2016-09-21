@@ -144,7 +144,7 @@ class InstanceTypeAlreadyExists(NimbleException):
 
 
 class InstanceTypeNotFound(NotFound):
-    msg_fmt = _("InstanceType %(instance_type)s could not be found.")
+    msg_fmt = _("InstanceType %(type_id)s could not be found.")
 
 
 class InstanceAlreadyExists(NimbleException):
@@ -192,3 +192,13 @@ class SchedulerNodeWeigherNotFound(NotFound):
 
 class NoValidNode(NimbleException):
     message = _("No valid node was found. %(reason)s")
+
+
+class InstanceTypeExtraSpecUpdateCreateFailed(NimbleException):
+    msg_fmt = _("Instance Type %(id)s extra spec cannot be updated or"
+                "created after %(retries)d retries.")
+
+
+class InstanceTypeExtraSpecsNotFound(NotFound):
+    msg_fmt = _("Instance Type %(type_id)s has no extra specs with "
+                "key %(extra_specs_key)s.")
