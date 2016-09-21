@@ -20,7 +20,8 @@ SQLAlchemy models for baremetal compute service.
 from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
 import six.moves.urllib.parse as urlparse
-from sqlalchemy import Boolean, Column
+from sqlalchemy import Boolean, Column, ForeignKey
+from sqlalchemy import orm
 from sqlalchemy import schema, String, Integer, Text
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -85,6 +86,26 @@ class InstanceTypeProjects(Base):
     id = Column(Integer, primary_key=True)
     instance_type_id = Column(Integer, nullable=True)
     project_id = Column(String(36), nullable=True)
+
+
+class InstanceTypeExtraSpecs(Base):
+    """Represents additional specs as key/value pairs for an instance_type."""
+    __tablename__ = 'instance_type_extra_specs'
+    __table_args__ = (
+        schema.UniqueConstraint("instance_type_uuid", "key",
+                                name=("uniq_instance_type_extra_specs0"
+                                      "instance_type_uuid")),
+        {'mysql_collate': 'utf8_bin'},
+    )
+    id = Column(Integer, primary_key=True)
+    key = Column(String(255))
+    value = Column(String(255))
+    instance_type_uuid = Column(String(36), ForeignKey('instance_types.uuid'),
+                                nullable=False)
+    instance_type = orm.relationship(
+        InstanceTypes, backref="extra_specs", foreign_keys=instance_type_uuid,
+        primaryjoin='and_(InstanceTypeExtraSpecs.instance_type_uuid '
+                    '== InstanceTypes.uuid)')
 
 
 class Instance(Base):
