@@ -19,9 +19,10 @@ class RequestContext(context.RequestContext):
     """Extends security contexts from the oslo.context library."""
 
     def __init__(self, auth_token=None, domain_id=None, domain_name=None,
-                 user=None, tenant=None, is_admin=False, is_public_api=False,
+                 user_name=None, user_id=None, project_name=None,
+                 project_id=None, is_admin=False, is_public_api=False,
                  read_only=False, show_deleted=False, request_id=None,
-                 roles=None, show_password=True, overwrite=True):
+                 roles=None, show_password=True, overwrite=True, **kwargs):
         """Initialize the RequestContext
 
         :param auth_token: The authentication token of the current request.
@@ -41,12 +42,18 @@ class RequestContext(context.RequestContext):
                              copy of the index is not overwritten.
         """
         super(RequestContext, self).__init__(auth_token=auth_token,
-                                             user=user, tenant=tenant,
+                                             user=user_name,
+                                             tenant=project_name,
                                              is_admin=is_admin,
                                              read_only=read_only,
                                              show_deleted=show_deleted,
                                              request_id=request_id,
                                              overwrite=overwrite)
+
+        self.user_id = user_id
+        self.user_name = user_name
+        self.project_name = project_name
+        self.project_id = project_id
         self.is_public_api = is_public_api
         self.domain_id = domain_id
         self.domain_name = domain_name
@@ -57,23 +64,25 @@ class RequestContext(context.RequestContext):
         self.roles = roles or []
 
     def to_dict(self):
-        return {'auth_token': self.auth_token,
-                'user': self.user,
-                'tenant': self.tenant,
-                'is_admin': self.is_admin,
-                'read_only': self.read_only,
-                'show_deleted': self.show_deleted,
-                'request_id': self.request_id,
-                'domain_id': self.domain_id,
-                'roles': self.roles,
-                'domain_name': self.domain_name,
-                'show_password': self.show_password,
-                'is_public_api': self.is_public_api}
+        value = super(RequestContext, self).to_dict()
+        value.update({'auth_token': self.auth_token,
+                      'user_name': self.user_name,
+                      'user_id': self.user_id,
+                      'project_name': self.project_name,
+                      'project_id': self.project_id,
+                      'is_admin': self.is_admin,
+                      'read_only': self.read_only,
+                      'show_deleted': self.show_deleted,
+                      'request_id': self.request_id,
+                      'domain_id': self.domain_id,
+                      'roles': self.roles,
+                      'domain_name': self.domain_name,
+                      'show_password': self.show_password,
+                      'is_public_api': self.is_public_api})
+        return value
 
     @classmethod
     def from_dict(cls, values):
-        values.pop('user', None)
-        values.pop('tenant', None)
         return cls(**values)
 
     def ensure_thread_contain_context(self):
@@ -97,7 +106,7 @@ def get_admin_context():
     """Create an administrator context."""
 
     context = RequestContext(None,
-                             tenant=None,
+                             project_id=None,
                              is_admin=True,
                              overwrite=False)
     return context

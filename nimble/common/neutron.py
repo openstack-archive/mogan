@@ -55,14 +55,14 @@ def get_client(token=None):
     return clientv20.Client(**params)
 
 
-def create_ports(context, network_uuid, macs):
+def create_port(context, network_uuid, mac):
     """Create neutron port."""
 
     client = get_client(context.auth_token)
     body = {
         'port': {
             'network_id': network_uuid,
-            'mac_address': macs
+            'mac_address': mac,
         }
     }
 

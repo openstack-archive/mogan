@@ -100,8 +100,10 @@ class TestContextHook(base.BaseApiTest):
         context_hook.before(reqstate)
         mock_ctx.assert_called_with(
             auth_token=headers['X-Auth-Token'],
-            user=headers['X-User'],
-            tenant=headers['X-Tenant'],
+            user_id=headers['X-User-Id'],
+            user_name=headers['X-User-Name'],
+            project_id=headers['X-Project-Id'],
+            project_name=headers['X-Project-Name'],
             domain_id=headers['X-User-Domain-Id'],
             domain_name=headers['X-User-Domain-Name'],
             is_public_api=False,
@@ -116,8 +118,10 @@ class TestContextHook(base.BaseApiTest):
         context_hook.before(reqstate)
         mock_ctx.assert_called_with(
             auth_token=headers['X-Auth-Token'],
-            user=headers['X-User'],
-            tenant=headers['X-Tenant'],
+            user_id=headers['X-User-Id'],
+            user_name=headers['X-User-Name'],
+            project_id=headers['X-Project-Id'],
+            project_name=headers['X-Project-Name'],
             domain_id=headers['X-User-Domain-Id'],
             domain_name=headers['X-User-Domain-Name'],
             is_public_api=True,

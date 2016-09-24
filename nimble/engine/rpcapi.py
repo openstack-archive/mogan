@@ -49,10 +49,13 @@ class EngineAPI(object):
                                      version_cap=self.RPC_API_VERSION,
                                      serializer=serializer)
 
-    def create_instance(self, context, instance):
+    def create_instance(self, context, instance,
+                        requested_networks, instance_type):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.cast(context, 'create_instance', instance=instance)
+        return cctxt.cast(context, 'create_instance', instance=instance,
+                          requested_networks=requested_networks,
+                          instance_type=instance_type)
 
     def delete_instance(self, context, instance):
         """Signal to engine service to delete an instance."""

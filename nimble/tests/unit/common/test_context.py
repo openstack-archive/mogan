@@ -35,26 +35,26 @@ class RequestContextTestCase(tests_base.TestCase):
 
     def test_from_dict(self):
         dict = {
-            "user": "user1",
-            "tenant": "tenant1",
+            "user_name": "user1",
+            "project_name": "tenant1",
             "is_public_api": True,
             "domain_id": "domain_id1",
             "domain_name": "domain_name1",
             "roles": None
         }
         ctx = context.RequestContext.from_dict(dict)
-        self.assertIsNone(ctx.user)
-        self.assertIsNone(ctx.tenant)
         self.assertTrue(ctx.is_public_api)
         self.assertEqual("domain_id1", ctx.domain_id)
         self.assertEqual("domain_name1", ctx.domain_name)
+        self.assertEqual("user1", ctx.user_name)
+        self.assertEqual("tenant1", ctx.project_name)
         self.assertEqual([], ctx.roles)
 
     def test_to_dict(self):
         values = {
             'auth_token': 'auth_token1',
-            "user": "user1",
-            "tenant": "tenant1",
+            "user_name": "user1",
+            "project_name": "tenant1",
             'is_admin': True,
             'read_only': True,
             'show_deleted': True,
@@ -81,8 +81,8 @@ class RequestContextTestCase(tests_base.TestCase):
         self.assertNotIn('overwrite', ctx_dict)
 
         self.assertEqual('auth_token1', ctx_dict['auth_token'])
-        self.assertEqual('user1', ctx_dict['user'])
-        self.assertEqual('tenant1', ctx_dict['tenant'])
+        self.assertEqual('user1', ctx_dict['user_name'])
+        self.assertEqual('tenant1', ctx_dict['project_name'])
         self.assertTrue(ctx_dict['is_admin'])
         self.assertTrue(ctx_dict['read_only'])
         self.assertTrue(ctx_dict['show_deleted'])

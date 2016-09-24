@@ -202,3 +202,7 @@ class TypeExtraSpecUpdateCreateFailed(NimbleException):
 class InstanceTypeExtraSpecsNotFound(NotFound):
     msg_fmt = _("Instance Type %(type_id)s has no extra specs with "
                 "key %(extra_specs_key)s.")
+
+
+class InterfacePlugException(NimbleException):
+    msg_fmt = _("Interface plugin failed")

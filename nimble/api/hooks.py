@@ -67,8 +67,10 @@ class ContextHook(hooks.PecanHook):
         is_public_api = state.request.environ.get('is_public_api', False)
 
         creds = {
-            'user': headers.get('X-User') or headers.get('X-User-Id'),
-            'tenant': headers.get('X-Tenant') or headers.get('X-Tenant-Id'),
+            'user_name': headers.get('X-User-Name'),
+            'user_id': headers.get('X-User-Id'),
+            'project_name': headers.get('X-Project-Name'),
+            'project_id': headers.get('X-Project-Id'),
             'domain_id': headers.get('X-User-Domain-Id'),
             'domain_name': headers.get('X-User-Domain-Name'),
             'auth_token': headers.get('X-Auth-Token'),
