@@ -36,7 +36,7 @@ class Instance(base.NimbleObject, object_base.VersionedObjectDictCompat):
         'status': object_fields.StringField(nullable=True),
         'power_state': object_fields.StringField(nullable=True),
         'task_state': object_fields.StringField(nullable=True),
-        'instance_type_id': object_fields.IntegerField(nullable=True),
+        'instance_type_uuid': object_fields.UUIDField(nullable=True),
         'availability_zone': object_fields.StringField(nullable=True),
         'image_uuid': object_fields.UUIDField(nullable=True),
         'network_info': object_fields.FlexibleDictField(nullable=True),

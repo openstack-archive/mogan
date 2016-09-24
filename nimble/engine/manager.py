@@ -41,12 +41,12 @@ class EngineManager(base_manager.BaseEngineManager):
     target = messaging.Target(version=RPC_API_VERSION)
 
     def _refresh_cache(self):
-        node_cache = {}
+        node_cache = []
         nodes = ironic.get_node_list(detail=True, maintenance=False,
                                      provision_state=ironic_states.AVAILABLE,
                                      associated=False, limit=0)
         for node in nodes:
-            node_cache[node.uuid] = node
+            node_cache.append(node)
 
         self.node_cache = node_cache
         self.node_cache_time = time.time()
@@ -56,10 +56,35 @@ class EngineManager(base_manager.BaseEngineManager):
     def _sync_node_resources(self, context):
         self._refresh_cache()
 
-    def _build_networks(self, context, instance):
-        macs = ironic.get_macs_from_node(instance.node_uuid)
-        port = neutron.create_ports(context, instance.network_info, macs[0])
-        ironic.plug_vifs(instance.node_uuid, port['port']['id'])
+    def _build_networks(self, context, instance, requested_networks):
+        node_uuid = instance.node_uuid
+        ironic_ports = ironic.get_ports_from_node(node_uuid, detail=True)
+        LOG.debug(_('Find ports %(ports)s for node %(node)s') %
+                  {'ports': ironic_ports, 'node': node_uuid})
+        if len(requested_networks) > len(ironic_ports):
+            raise exception.InterfacePlugException(_(
+                "Ironic node: %(id)s virtual to physical interface count"
+                "  mismatch"
+                " (Vif count: %(vif_count)d, Pif count: %(pif_count)d)")
+                % {'id': instance.node_uuid,
+                   'vif_count': len(requested_networks),
+                   'pif_count': len(ironic_ports)})
+
+        network_info = {}
+        for vif in requested_networks:
+            for pif in ironic_ports:
+                # Match the specified port type with physical interface type
+                if vif.get('type') == pif.extra.get('type'):
+                    port = neutron.create_port(context, vif['uuid'],
+                                               pif.address)
+                    port_dict = port['port']
+                    network_info[port_dict['id']] = {
+                        'network': port_dict['network_id'],
+                        'mac_address': port_dict['mac_address'],
+                        'fixed_ips': port_dict['fixed_ips']}
+                    ironic.plug_vif(pif.uuid, port_dict['id'])
+
+        return network_info
 
     def _wait_for_active(self, instance):
         """Wait for the node to be marked as ACTIVE in Ironic."""
@@ -105,33 +130,42 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.info(_LI('Successfully destroyed Ironic node %s'),
                  instance.node_uuid)
 
-    def create_instance(self, context, instance):
+    def create_instance(self, context, instance,
+                        requested_networks, instance_type):
         """Signal to engine service to perform a deployment."""
         LOG.debug("Strating instance...")
-        instance.status = 'building'
 
         # Populate request spec
-        instance_type_id = instance.instance_type_id
-        instance_type = instance.instance_type
+        instance_type_uuid = instance.instance_type_uuid
         request_spec = {
-            'instance_id': instance.id,
+            'instance_id': instance.uuid,
             'instance_properties': {
                 'availability_zone': instance.availability_zone,
-                'instance_type_id': instance_type_id,
+                'instance_type_uuid': instance_type_uuid,
             },
             'instance_type': dict(instance_type),
         }
+        LOG.debug("Scheduling with request_spec: %s", request_spec)
 
         # TODO(zhenguo): Add retry
         top_node = self.scheduler.schedule(context,
                                            request_spec,
                                            self.node_cache)
+        if top_node is None:
+            instance.status = 'error'
+            instance.save()
+            raise exception.NoValidNode(
+                _('No valid node is found with request spec %s') %
+                request_spec)
         instance.node_uuid = top_node.to_dict()['node']
 
+        network_info = self._build_networks(context, instance,
+                                            requested_networks)
+
+        instance.network_info = network_info
+
+        instance.status = 'building'
         instance.save()
-
-        self._build_networks(context, instance)
-
         self._build_instance(context, instance)
 
         return instance

@@ -22,20 +22,19 @@ _NODE_FIELDS = ('uuid', 'power_state', 'target_power_state', 'provision_state',
                 'properties', 'instance_uuid')
 
 
-def get_macs_from_node(node_uuid):
-    """List the MAC addresses from a node."""
+def get_ports_from_node(node_uuid, detail=False):
+    """List the MAC addresses and the port types from a node."""
     ironicclient = ironic.IronicClientWrapper()
-    ports = ironicclient.call("node.list_ports", node_uuid)
-    return [p.address for p in ports]
+    ports = ironicclient.call("node.list_ports", node_uuid, detail=detail)
+    return ports
 
 
-def plug_vifs(node_uuid, port_id):
+def plug_vif(ironic_port_id, port_id):
     ironicclient = ironic.IronicClientWrapper()
-    ports = ironicclient.call("node.list_ports", node_uuid)
     patch = [{'op': 'add',
               'path': '/extra/vif_port_id',
               'value': port_id}]
-    ironicclient.call("port.update", ports[0].uuid, patch)
+    ironicclient.call("port.update", ironic_port_id, patch)
 
 
 def set_instance_info(instance):

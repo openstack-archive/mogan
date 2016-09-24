@@ -103,7 +103,7 @@ class Instance(Base):
     status = Column(String(255), nullable=True)
     power_state = Column(String(255), nullable=True)
     task_state = Column(String(255), nullable=True)
-    instance_type_id = Column(Integer, nullable=True)
+    instance_type_uuid = Column(String(36), nullable=True)
     availability_zone = Column(String(255), nullable=True)
     image_uuid = Column(String(36), nullable=True)
     network_info = Column(db_types.JsonEncodedDict)

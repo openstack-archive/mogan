@@ -176,7 +176,7 @@ class FilterScheduler(driver.Scheduler):
         if not weighed_nodes:
             LOG.warning(_LW('No weighed nodes found for instance '
                             'with properties: %s'),
-                        filter_properties['request_spec'].get('instance_type'))
+                        request_spec.get('instance_type'))
             return None
         return self._choose_top_node(weighed_nodes, request_spec)
 

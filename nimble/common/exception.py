@@ -192,3 +192,7 @@ class SchedulerNodeWeigherNotFound(NotFound):
 
 class NoValidNode(NimbleException):
     message = _("No valid node was found. %(reason)s")
+
+
+class InterfacePlugException(NimbleException):
+    msg_fmt = _("Virtual interface plugin failed")
