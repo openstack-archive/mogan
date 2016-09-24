@@ -137,22 +137,30 @@ class InstanceController(rest.RestController):
                                             instance_uuid)
         return Instance.convert_with_links(rpc_instance)
 
-    @expose.expose(Instance, body=Instance, status_code=http_client.CREATED)
+    @expose.expose(Instance, body=types.jsontype,
+                   status_code=http_client.CREATED)
     def post(self, instance):
         """Create a new instance.
 
         :param instance: a instance within the request body.
         """
+        # TODO(zhenguo): Add jsonschema validate here
+        requested_networks = instance.pop('networks', None)
+        instance_type_id = instance.get('instance_type_id')
+
+        instance_type = objects.InstanceType.get(pecan.request.context,
+                                                 instance_type_id)
         instance_obj = objects.Instance(pecan.request.context,
                                         **instance.as_dict())
         instance_obj.create()
+
+        # TODO(zhenguo): Catch exceptions
+        pecan.request.rpcapi.create_instance(pecan.request.context,
+                                             instance_obj,
+                                             requested_networks,
+                                             instance_type)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('instance', instance_obj.uuid)
-
-        pecan.request.rpcapi.create_instance(pecan.request.context,
-                                             instance_obj)
-        instance_obj.status = 'building'
-        instance_obj.save()
         return Instance.convert_with_links(instance_obj)
 
     @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)

@@ -56,7 +56,7 @@ class EngineManager(base_manager.BaseEngineManager):
     def _sync_node_resources(self, context):
         self._refresh_cache()
 
-    def _build_networks(self, context, instance):
+    def _build_networks(self, context, instance, requested_networks):
         macs = ironic.get_macs_from_node(instance.node_uuid)
         port = neutron.create_ports(context, instance.network_info, macs[0])
         ironic.plug_vifs(instance.node_uuid, port['port']['id'])
@@ -105,14 +105,14 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.info(_LI('Successfully destroyed Ironic node %s'),
                  instance.node_uuid)
 
-    def create_instance(self, context, instance):
+    def create_instance(self, context, instance,
+                        requested_networks, instance_type):
         """Signal to engine service to perform a deployment."""
         LOG.debug("Strating instance...")
         instance.status = 'building'
 
         # Populate request spec
         instance_type_id = instance.instance_type_id
-        instance_type = instance.instance_type
         request_spec = {
             'instance_id': instance.id,
             'instance_properties': {
@@ -128,9 +128,11 @@ class EngineManager(base_manager.BaseEngineManager):
                                            self.node_cache)
         instance.node_uuid = top_node.to_dict()['node']
 
-        instance.save()
+        network_info = self._build_networks(context, instance,
+                                            requested_networks)
 
-        self._build_networks(context, instance)
+        instance.network_info = network_info
+        instance.save()
 
         self._build_instance(context, instance)
 
