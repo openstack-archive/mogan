@@ -84,10 +84,10 @@ class Instance(base.APIBase):
         url = pecan.request.public_url
         instance.links = [link.Link.make_link('self',
                                               url,
-                                              'instance', instance.uuid),
+                                              'instances', instance.uuid),
                           link.Link.make_link('bookmark',
                                               url,
-                                              'instance', instance.uuid,
+                                              'instances', instance.uuid,
                                               bookmark=True)
                           ]
 
