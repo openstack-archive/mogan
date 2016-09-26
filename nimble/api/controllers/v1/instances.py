@@ -63,8 +63,8 @@ class Instance(base.APIBase):
     image_uuid = types.uuid
     """The image UUID of the instance"""
 
-    network_uuid = types.uuid
-    """The network UUID of the instance"""
+    network_info = {wtypes.text: types.jsontype}
+    """The network information of the instance"""
 
     links = wsme.wsattr([link.Link], readonly=True)
     """A list containing a self link"""

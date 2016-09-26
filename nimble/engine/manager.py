@@ -58,7 +58,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def _build_networks(self, context, instance):
         macs = ironic.get_macs_from_node(instance.node_uuid)
-        port = neutron.create_ports(context, instance.network_uuid, macs[0])
+        port = neutron.create_ports(context, instance.network_info, macs[0])
         ironic.plug_vifs(instance.node_uuid, port['port']['id'])
 
     def _wait_for_active(self, instance):

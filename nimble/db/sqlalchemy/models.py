@@ -19,6 +19,7 @@ SQLAlchemy models for baremetal compute service.
 
 from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
+from oslo_db.sqlalchemy import types as db_types
 import six.moves.urllib.parse as urlparse
 from sqlalchemy import Boolean, Column
 from sqlalchemy import schema, String, Integer, Text
@@ -105,6 +106,6 @@ class Instance(Base):
     instance_type_id = Column(Integer, nullable=True)
     availability_zone = Column(String(255), nullable=True)
     image_uuid = Column(String(36), nullable=True)
-    network_uuid = Column(String(36), nullable=True)
+    network_info = Column(db_types.JsonEncodedDict)
     node_uuid = Column(String(36), nullable=True)
     extra = Column(Text, nullable=True)
