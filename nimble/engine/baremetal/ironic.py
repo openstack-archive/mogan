@@ -13,7 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from nimble.common import exception
+from ironicclient.openstack.common.apiclient import exceptions as client_e
+
 from nimble.common import ironic
 from nimble.engine.baremetal import ironic_states
 
@@ -95,6 +96,6 @@ def get_node_list(**kwargs):
     ironicclient = ironic.IronicClientWrapper()
     try:
         node_list = ironicclient.call("node.list", **kwargs)
-    except exception.NimbleException:
+    except client_e.ClientException:
         node_list = []
     return node_list
