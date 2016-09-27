@@ -95,7 +95,7 @@ function configure_nimble {
     iniset ${NIMBLE_CONF_FILE} keystone region_name ${REGION_NAME}
 
     # Path of policy.json file.
-    iniset ${NIMBLE_CONF} oslo_policy policy_file ${NIMBLE_POLICY_FILE}
+    iniset ${NIMBLE_CONF_FILE} oslo_policy policy_file ${NIMBLE_POLICY_FILE}
 
     if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
         setup_colorized_logging ${NIMBLE_CONF_FILE} DEFAULT tenant user
