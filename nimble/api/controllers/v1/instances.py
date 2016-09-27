@@ -26,7 +26,11 @@ from nimble.api.controllers.v1 import types
 from nimble.api import expose
 from nimble.common import exception
 from nimble.common.i18n import _
+from nimble.engine.baremetal.ironic import get_node_by_instance
 from nimble import objects
+
+_DEFAULT_INSTANCE_RETURN_FIELDS = ('id', 'uuid', 'name', 'description',
+                                   'status')
 
 
 _CREATE_INSTANCE_SCHEMA = {
@@ -90,8 +94,25 @@ class Instance(base.APIBase):
     power_state = wtypes.text
     """The power state of the instance"""
 
-    task_state = wtypes.text
-    """The task state of the instance"""
+    target_power_state = wtypes.text
+    """The user modified desired power state of the instance"""
+
+    provision_state = wtypes.text
+    """The provision state of the instance"""
+
+    target_provision_state = wtypes.text
+    """The user modified desired provision state of the instance"""
+
+    last_error = wtypes.text
+    """Any error from the most recent transaction that started
+       but failed to finish
+    """
+
+    maintenance = wtypes.text
+    """Whether or not this node is currently in maintenance mode"""
+
+    properties = {wtypes.text: types.jsontype}
+    """The physical characteristics of this node"""
 
     availability_zone = wtypes.text
     """The availability zone of the instance"""
@@ -118,8 +139,9 @@ class Instance(base.APIBase):
             setattr(self, field, kwargs.get(field, wtypes.Unset))
 
     @classmethod
-    def convert_with_links(cls, rpc_instance):
-        instance = Instance(**rpc_instance.as_dict())
+    def convert_with_links(cls, instance_data, fields=None):
+        instance = Instance(**instance_data)
+        instance.unset_fields_except(fields)
         url = pecan.request.public_url
         instance.links = [link.Link.make_link('self',
                                               url,
@@ -140,9 +162,9 @@ class InstanceCollection(base.APIBase):
     """A list containing instance objects"""
 
     @staticmethod
-    def convert_with_links(instances, url=None, **kwargs):
+    def convert_with_links(instances, fields=None, **kwargs):
         collection = InstanceCollection()
-        collection.instances = [Instance.convert_with_links(inst)
+        collection.instances = [Instance.convert_with_links(inst, fields)
                                 for inst in instances]
         return collection
 
@@ -159,12 +181,43 @@ class InstanceController(rest.RestController):
 
     action = InstanceActionController()
 
-    @expose.expose(InstanceCollection)
-    def get_all(self):
-        """Retrieve a list of instance."""
+    _custom_actions = {
+        'detail': ['GET']
+    }
 
-        instances = objects.Instance.list(pecan.request.context)
-        return InstanceCollection.convert_with_links(instances)
+    def _get_instance_collection(self, instance_uuid,
+                                 detail=False, fields=None):
+        if instance_uuid:
+            instances = objects.Instance.get(pecan.request.context,
+                                             instance_uuid)
+        else:
+            instances = objects.Instance.list(pecan.request.context)
+        instance_data = []
+
+        if detail:
+            for instance in instances:
+                node_info = get_node_by_instance(instance.uuid)
+                instance_data.append(
+                    self._merge_node(instance.as_dict(), node_info))
+
+        return InstanceCollection.convert_with_links(instance_data,
+                                                     fields=fields)
+
+    def _merge_node(self, rpc_instance, node):
+        instance_data = rpc_instance.as_dict()
+        instance_data.update(node)
+        return instance_data
+
+    @expose.expose(InstanceCollection, types.uuid, types.listtype)
+    def get_all(self, instance_uuid=None, fields=None):
+        """Retrieve a list of instance.
+
+        :param fields: Optional, a list with a specified set of fields
+                       of the resource to be returned.
+        """
+        if fields is None:
+            fields = _DEFAULT_INSTANCE_RETURN_FIELDS
+        return self._get_instance_collection(instance_uuid, fields=fields)
 
     @expose.expose(Instance, types.uuid)
     def get_one(self, instance_uuid):
@@ -174,7 +227,22 @@ class InstanceController(rest.RestController):
         """
         rpc_instance = objects.Instance.get(pecan.request.context,
                                             instance_uuid)
-        return Instance.convert_with_links(rpc_instance)
+        node = get_node_by_instance(instance_uuid)
+        instance_data = self._merge_node(rpc_instance, node)
+        return Instance.convert_with_links(Instance(**instance_data), node)
+
+    @expose.expose(InstanceCollection, types.uuid)
+    def detail(self, instance_uuid=None):
+        """Retrieve detail of a list of instances.
+
+        :param instance_uuid: Optional UUID of an instance, to find the node
+                              associated with that instance.
+        """
+        # /detail should only work against collections
+        parent = pecan.request.path.split('/')[:-1][-1]
+        if parent != "instances":
+            raise exception.NotFound()
+        return self._get_instance_collection(instance_uuid, detail=True)
 
     @expose.expose(Instance, body=types.jsontype,
                    status_code=http_client.CREATED)
