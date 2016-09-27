@@ -13,6 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 import os
 
 from oslo_config import cfg
@@ -95,3 +96,25 @@ class TestCase(base.BaseTestCase):
             return os.path.join(root, project_file)
         else:
             return root
+
+    def mock_object(self, obj, attr_name, *args, **kwargs):
+        """Use python mock to mock an object attribute
+
+        Mocks the specified objects attribute with the given value.
+        Automatically performs 'addCleanup' for the mock.
+
+        """
+        patcher = mock.patch.object(obj, attr_name, *args, **kwargs)
+        result = patcher.start()
+        self.addCleanup(patcher.stop)
+        return result
+
+    def override_config(self, name, override, group=None):
+        """Cleanly override CONF variables."""
+        CONF.set_override(name, override, group)
+        self.addCleanup(CONF.clear_override, name, group)
+
+    def flags(self, **kw):
+        """Override CONF variables for a test."""
+        for k, v in kw.items():
+            self.override_config(k, v)
