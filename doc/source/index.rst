@@ -15,6 +15,7 @@ Contents:
    installation
    usage
    contributing
+   dev/dev-quickstart
 
 Indices and tables
 ==================
