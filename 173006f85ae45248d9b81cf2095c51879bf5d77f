@@ -1,0 +1,8 @@
+Code-Review+2: Rui Chen <chenrui.momo@gmail.com>
+Workflow+1: Rui Chen <chenrui.momo@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 27 Sep 2016 13:04:50 +0000
+Reviewed-on: https://review.openstack.org/377675
+Project: openstack/nimble
+Branch: refs/heads/master
