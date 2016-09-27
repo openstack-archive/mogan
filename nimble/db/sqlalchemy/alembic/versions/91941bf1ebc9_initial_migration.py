@@ -78,8 +78,6 @@ def upgrade():
         sa.Column('name', sa.String(length=255), nullable=True),
         sa.Column('description', sa.String(length=255), nullable=True),
         sa.Column('status', sa.String(length=255), nullable=True),
-        sa.Column('power_state', sa.String(length=255), nullable=True),
-        sa.Column('task_state', sa.String(length=255), nullable=True),
         sa.Column('instance_type_uuid', sa.String(length=36), nullable=True),
         sa.Column('image_uuid', sa.String(length=36), nullable=True),
         sa.Column('network_info', sa.Text(), nullable=True),

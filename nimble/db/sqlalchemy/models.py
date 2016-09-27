@@ -127,8 +127,6 @@ class Instance(Base):
     project_id = Column(String(36), nullable=True)
     user_id = Column(String(36), nullable=True)
     status = Column(String(255), nullable=True)
-    power_state = Column(String(255), nullable=True)
-    task_state = Column(String(255), nullable=True)
     instance_type_uuid = Column(String(36), nullable=True)
     availability_zone = Column(String(255), nullable=True)
     image_uuid = Column(String(36), nullable=True)
