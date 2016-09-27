@@ -36,8 +36,6 @@ class Instance(base.NimbleObject, object_base.VersionedObjectDictCompat):
         'project_id': object_fields.UUIDField(nullable=True),
         'user_id': object_fields.UUIDField(nullable=True),
         'status': object_fields.StringField(nullable=True),
-        'power_state': object_fields.StringField(nullable=True),
-        'task_state': object_fields.StringField(nullable=True),
         'instance_type_uuid': object_fields.UUIDField(nullable=True),
         'availability_zone': object_fields.StringField(nullable=True),
         'image_uuid': object_fields.UUIDField(nullable=True),
@@ -59,9 +57,9 @@ class Instance(base.NimbleObject, object_base.VersionedObjectDictCompat):
         return Instance._from_db_object_list(db_instances, cls, context)
 
     @classmethod
-    def get(cls, context, instance_id):
+    def get(cls, context, uuid):
         """Find a instance and return a Instance object."""
-        db_instance = cls.dbapi.instance_get(instance_id)
+        db_instance = cls.dbapi.instance_get(uuid)
         instance = Instance._from_db_object(cls(context), db_instance)
         return instance
 

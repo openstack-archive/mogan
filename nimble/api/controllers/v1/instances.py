@@ -14,6 +14,7 @@
 #    under the License.
 
 import jsonschema
+from oslo_log import log
 import pecan
 from pecan import rest
 from six.moves import http_client
@@ -26,9 +27,17 @@ from nimble.api.controllers.v1 import types
 from nimble.api import expose
 from nimble.common import exception
 from nimble.common.i18n import _
+from nimble.common.i18n import _LW
+from nimble.engine.baremetal.ironic import get_node_by_instance
+from nimble.engine.baremetal.ironic import get_node_list
 from nimble.engine.baremetal import ironic_states as ir_states
 from nimble import objects
 
+_DEFAULT_INSTANCE_RETURN_FIELDS = ('uuid', 'name', 'description',
+                                   'status')
+_NODE_FIELDS = ['power_state', 'instance_uuid']
+
+LOG = log.getLogger(__name__)
 
 _CREATE_INSTANCE_SCHEMA = {
     "$schema": "http://json-schema.org/schema#",
@@ -162,9 +171,6 @@ class Instance(base.APIBase):
     power_state = wtypes.text
     """The power state of the instance"""
 
-    task_state = wtypes.text
-    """The task state of the instance"""
-
     availability_zone = wtypes.text
     """The availability zone of the instance"""
 
@@ -181,6 +187,7 @@ class Instance(base.APIBase):
     """A list containing a self link"""
 
     def __init__(self, **kwargs):
+        super(Instance, self).__init__(**kwargs)
         self.fields = []
         for field in objects.Instance.fields:
             # Skip fields we do not expose.
@@ -190,18 +197,20 @@ class Instance(base.APIBase):
             setattr(self, field, kwargs.get(field, wtypes.Unset))
 
     @classmethod
-    def convert_with_links(cls, rpc_instance):
-        instance = Instance(**rpc_instance.as_dict())
+    def convert_with_links(cls, instance_data, fields=None):
+        instance = Instance(**instance_data)
+        instance_uuid = instance.uuid
+        if fields is not None:
+            instance.unset_fields_except(fields)
         url = pecan.request.public_url
         instance.links = [link.Link.make_link('self',
                                               url,
-                                              'instances', instance.uuid),
+                                              'instances', instance_uuid),
                           link.Link.make_link('bookmark',
                                               url,
-                                              'instances', instance.uuid,
+                                              'instances', instance_uuid,
                                               bookmark=True)
                           ]
-
         return instance
 
 
@@ -212,10 +221,10 @@ class InstanceCollection(base.APIBase):
     """A list containing instance objects"""
 
     @staticmethod
-    def convert_with_links(instances, url=None, **kwargs):
+    def convert_with_links(instances_data, fields=None):
         collection = InstanceCollection()
-        collection.instances = [Instance.convert_with_links(inst)
-                                for inst in instances]
+        collection.instances = [Instance.convert_with_links(inst, fields)
+                                for inst in instances_data]
         return collection
 
 
@@ -224,22 +233,84 @@ class InstanceController(rest.RestController):
 
     states = InstanceStatesController()
 
-    @expose.expose(InstanceCollection)
-    def get_all(self):
-        """Retrieve a list of instance."""
+    _custom_actions = {
+        'detail': ['GET']
+    }
 
+    def _get_instance_collection(self, fields=None):
         instances = objects.Instance.list(pecan.request.context)
-        return InstanceCollection.convert_with_links(instances)
+        instances_data = [instance.as_dict() for instance in instances]
 
-    @expose.expose(Instance, types.uuid)
-    def get_one(self, instance_uuid):
+        if fields is None or 'power_state' in fields:
+            try:
+                node_list = get_node_list(
+                    associated=True, limit=0,
+                    fields=_NODE_FIELDS)
+
+            except Exception as e:
+                LOG.warning(
+                    _LW("Failed to retrieve node list from"
+                        "ironic api: %(msg)s") % {"msg": e})
+                node_list = []
+
+            if node_list:
+                node_dict = {node.instance_uuid: node.to_dict()
+                             for node in node_list}
+                # Merge nimble instance info with ironic node power state
+                for instance_data in instances_data:
+                    uuid = instance_data['uuid']
+                    if uuid in node_dict:
+                        instance_data['power_state'] = \
+                            node_dict[uuid]['power_state']
+
+        return InstanceCollection.convert_with_links(instances_data,
+                                                     fields=fields)
+
+    @expose.expose(InstanceCollection, types.listtype)
+    def get_all(self, fields=None):
+        """Retrieve a list of instance.
+
+        :param fields: Optional, a list with a specified set of fields
+                       of the resource to be returned.
+        """
+        if fields is None:
+            fields = _DEFAULT_INSTANCE_RETURN_FIELDS
+        return self._get_instance_collection(fields=fields)
+
+    @expose.expose(Instance, types.uuid, types.listtype)
+    def get_one(self, instance_uuid, fields=None):
         """Retrieve information about the given instance.
 
         :param instance_uuid: UUID of a instance.
+        :param fields: Optional, a list with a specified set of fields
+                       of the resource to be returned.
         """
         rpc_instance = objects.Instance.get(pecan.request.context,
                                             instance_uuid)
-        return Instance.convert_with_links(rpc_instance)
+        instance_data = rpc_instance.as_dict()
+        if fields is None or 'power_state' in fields:
+            # Only fetch node info if fields parameter is not specified
+            # or node fields is not requested.
+            try:
+                node = get_node_by_instance(instance_uuid, _NODE_FIELDS)
+            except Exception as e:
+                LOG.warning(
+                    _LW("Failed to retrieve node by instance_uuid"
+                        " %(instance_uuid)s from ironic api: %(msg)s") % {
+                        "instance_uuid": instance_uuid,
+                        "msg": e})
+
+            instance_data['power_state'] = node.power_state
+        return Instance.convert_with_links(instance_data, fields=fields)
+
+    @expose.expose(InstanceCollection)
+    def detail(self):
+        """Retrieve detail of a list of instances."""
+        # /detail should only work against collections
+        parent = pecan.request.path.split('/')[:-1][-1]
+        if parent != "instances":
+            raise exception.NotFound()
+        return self._get_instance_collection()
 
     @expose.expose(Instance, body=types.jsontype,
                    status_code=http_client.CREATED)

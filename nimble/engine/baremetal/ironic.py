@@ -85,10 +85,12 @@ def do_node_deploy(node_uuid):
                       ironic_states.ACTIVE)
 
 
-def get_node_by_instance(instance_uuid):
+def get_node_by_instance(instance_uuid, fields=None):
+    if fields is None:
+        fields = _NODE_FIELDS
     ironicclient = ironic.IronicClientWrapper()
     return ironicclient.call('node.get_by_instance_uuid',
-                             instance_uuid, fields=_NODE_FIELDS)
+                             instance_uuid, fields=fields)
 
 
 def destroy_node(node_uuid):
