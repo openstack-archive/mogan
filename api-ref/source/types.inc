@@ -56,7 +56,7 @@ Creates a type.
 Creating a type is typically only available to administrators of a
 cloud because this has implications for scheduling efficiently in the cloud.
 
-Normal response codes: 200
+Normal response codes: 201
 
 Error response codes: badRequest(400), unauthorized(401), forbidden(403),
 conflict(409)
@@ -148,7 +148,7 @@ This is typically an admin only action. Deleting a type that is in use by
 existing instances is not recommended as it can cause incorrect data to
 be returned to the user under some operations.
 
-Normal response codes: 202
+Normal response codes: 204
 
 Error response codes: unauthorized(401), forbidden(403), itemNotFound(404)
 
@@ -203,7 +203,7 @@ Create Extra Spec
 
 Create extra specs to the given type.
 
-Normal response codes: 200
+Normal response codes: 201
 
 Error response codes: unauthorized(401), forbidden(403)
 
@@ -240,7 +240,7 @@ Update Extra Spec
 
 Updates extra specs to the given type.
 
-Normal response codes: 200
+Normal response codes: 202
 
 Error response codes: unauthorized(401), forbidden(403)
 
@@ -277,7 +277,7 @@ Delete Extra Spec
 
 Deletes an extra spec related to the specific type.
 
-Normal response codes: 202
+Normal response codes: 204
 
 Error response codes: unauthorized(401), forbidden(403), itemNotFound(404)
 
