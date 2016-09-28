@@ -52,7 +52,7 @@ class Link(base.APIBase):
 
     @classmethod
     def sample(cls):
-        sample = cls(href="http://localhost:6688/chassis/"
+        sample = cls(href="http://localhost:6688/types/"
                           "eaaca217-e7d8-47b4-bb41-3f99f20eed89",
                      rel="bookmark")
         return sample

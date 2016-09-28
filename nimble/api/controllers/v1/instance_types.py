@@ -68,10 +68,10 @@ class InstanceType(base.APIBase):
         instance_type = InstanceType(**rpc_instance_type.as_dict())
         url = pecan.request.public_url
         instance_type.links = [link.Link.make_link('self', url,
-                                                   'instance_type',
+                                                   'types',
                                                    instance_type.uuid),
                                link.Link.make_link('bookmark', url,
-                                                   'instance_type',
+                                                   'types',
                                                    instance_type.uuid,
                                                    bookmark=True)
                                ]
