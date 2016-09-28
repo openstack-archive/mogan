@@ -42,13 +42,13 @@ class EngineManager(base_manager.BaseEngineManager):
     target = messaging.Target(version=RPC_API_VERSION)
 
     def _refresh_cache(self):
-        node_cache = []
+        node_cache = {}
         nodes = ironic.get_node_list(self.ironicclient, detail=True,
                                      maintenance=False,
                                      provision_state=ironic_states.AVAILABLE,
                                      associated=False, limit=0)
         for node in nodes:
-            node_cache.append(node)
+            node_cache[node.uuid] = node
 
         self.node_cache = node_cache
 

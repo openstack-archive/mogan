@@ -128,7 +128,7 @@ class NodeManager(object):
         """Returns a list of all the nodes the NodeManager knows about."""
 
         node_states = []
-        for node in node_cache:
+        for node_uuid, node in node_cache.items():
             node_state = self.node_state_cls(node)
             node_states.append(node_state)
 
