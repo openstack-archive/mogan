@@ -313,8 +313,6 @@ Create devstack/local.conf with minimal settings required to enable Nimble::
     # To build your own IPA ramdisk from source, set this to True
     IRONIC_BUILD_DEPLOY_RAMDISK=False
 
-    VIRT_DRIVER=ironic
-
     # By default, DevStack creates a 10.0.0.0/24 network for instances.
     # If this overlaps with the hosts network, you may adjust with the
     # following.
