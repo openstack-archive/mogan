@@ -23,7 +23,7 @@ fi
 
 # create_nimble_accounts - Set up common required nimble accounts
 #
-# Tenant      User       Roles
+# Project     User       Roles
 # ------------------------------
 # service     nimble     admin
 function create_nimble_accounts {
@@ -67,7 +67,7 @@ function configure_nimble {
     # Setup keystone_authtoken section
     iniset ${NIMBLE_CONF_FILE} keystone_authtoken auth_uri ${KEYSTONE_SERVICE_URI}
     iniset ${NIMBLE_CONF_FILE} keystone_authtoken project_domain_name ${SERVICE_DOMAIN_NAME}
-    iniset ${NIMBLE_CONF_FILE} keystone_authtoken project_name ${SERVICE_TENANT_NAME}
+    iniset ${NIMBLE_CONF_FILE} keystone_authtoken project_name ${SERVICE_PROJECT_NAME}
     iniset ${NIMBLE_CONF_FILE} keystone_authtoken user_domain_name ${SERVICE_DOMAIN_NAME}
     iniset ${NIMBLE_CONF_FILE} keystone_authtoken username ${NIMBLE_ADMIN_USER}
     iniset ${NIMBLE_CONF_FILE} keystone_authtoken password ${SERVICE_PASSWORD}
@@ -82,7 +82,7 @@ function configure_nimble {
     iniset ${NIMBLE_CONF_FILE} database connection `database_connection_url nimble`
 
     # Setup ironic section
-    iniset ${NIMBLE_CONF_FILE} ironic admin_tenant_name ${SERVICE_TENANT_NAME}
+    iniset ${NIMBLE_CONF_FILE} ironic admin_tenant_name ${SERVICE_PROJECT_NAME}
     iniset ${NIMBLE_CONF_FILE} ironic admin_username "ironic"
     iniset ${NIMBLE_CONF_FILE} ironic admin_password ${SERVICE_PASSWORD}
     iniset ${NIMBLE_CONF_FILE} ironic admin_url "${KEYSTONE_AUTH_PROTOCOL}://${KEYSTONE_AUTH_HOST}:${KEYSTONE_SERVICE_PORT}/v2.0"
@@ -98,7 +98,7 @@ function configure_nimble {
     iniset ${NIMBLE_CONF_FILE} oslo_policy policy_file ${NIMBLE_POLICY_FILE}
 
     if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
-        setup_colorized_logging ${NIMBLE_CONF_FILE} DEFAULT tenant user
+        setup_colorized_logging ${NIMBLE_CONF_FILE} DEFAULT "project_id" "user_id"
     fi
 }
 
