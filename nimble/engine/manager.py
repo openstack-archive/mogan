@@ -74,7 +74,7 @@ class EngineManager(base_manager.BaseEngineManager):
         for vif in requested_networks:
             for pif in ironic_ports:
                 # Match the specified port type with physical interface type
-                if vif.get('type') == pif.extra.get('type'):
+                if vif.get('port_type') == pif.extra.get('port_type'):
                     port = neutron.create_port(context, vif['uuid'],
                                                pif.address)
                     port_dict = port['port']
