@@ -66,9 +66,6 @@ class Instance(base.APIBase):
     between the internal object model and the API representation of
     a instance.
     """
-    id = wsme.wsattr(wtypes.IntegerType(minimum=1))
-    """The ID of the instance"""
-
     uuid = types.uuid
     """The UUID of the instance"""
 
