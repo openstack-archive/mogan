@@ -38,7 +38,7 @@ well.
 
 - Ubuntu/Debian::
 
-    sudo apt-get install build-essential python-dev libssl-dev python-pip libmysqlclient-dev libxml2-dev libxslt-dev libpq-dev git git-review libffi-dev gettext ipmitool psmisc graphviz libjpeg-dev
+    sudo apt-get install build-essential python-dev libssl-dev python-pip libmysqlclient-dev libxml2-dev libxslt-dev libpq-dev git git-review libffi-dev gettext ipmitool psmisc graphviz libjpeg-dev xinetd tftpd tftp
 
 - Fedora 21/RHEL7/CentOS7::
 
@@ -239,7 +239,12 @@ Switch to the stack user and clone DevStack::
     sudo su - stack
     git clone https://git.openstack.org/openstack-dev/devstack.git devstack
 
-Create devstack/local.conf with minimal settings required to enable Nimble::
+Create devstack/local.conf with minimal settings required to enable Nimble
+
+.. note::
+    It's ok to enable Horizon, Nova and Cinder services, they don't impact
+    Nimble at all, disable them in the demo configuration to only deploy the
+    dependent services::
 
     cd devstack
     cat >local.conf <<END
@@ -261,7 +266,6 @@ Create devstack/local.conf with minimal settings required to enable Nimble::
 
     # Enable Neutron which is required by Ironic and disable nova-network.
     disable_service n-net
-    disable_service n-novnc
     enable_service q-svc
     enable_service q-agt
     enable_service q-dhcp
@@ -275,15 +279,10 @@ Create devstack/local.conf with minimal settings required to enable Nimble::
     enable_service s-container
     enable_service s-account
 
+    # Disable Horizon
+    disable_service Horizon
     # Disable Nova
     disable_service nova n-api n-cpu n-cond n-sch n-novnc n-cauth
-
-    # Disable Horizon
-    disable_service horizon
-
-    # Disable Heat
-    disable_service heat h-api h-api-cfn h-api-cw h-eng
-
     # Disable Cinder
     disable_service cinder c-sch c-api c-vol
 
@@ -302,23 +301,17 @@ Create devstack/local.conf with minimal settings required to enable Nimble::
     # This driver should be in the enabled list above.
     IRONIC_DEPLOY_DRIVER=agent_ipmitool
 
+    # Using Ironic agent deploy driver by default, so don't use whole disk
+    # image in tempest.
+    IRONIC_TEMPEST_WHOLE_DISK_IMAGE=False
+
     # The parameters below represent the minimum possible values to create
     # functional nodes.
     IRONIC_VM_SPECS_RAM=1280
     IRONIC_VM_SPECS_DISK=10
 
-    # Size of the ephemeral partition in GB. Use 0 for no ephemeral partition.
-    IRONIC_VM_EPHEMERAL_DISK=0
-
     # To build your own IPA ramdisk from source, set this to True
     IRONIC_BUILD_DEPLOY_RAMDISK=False
-
-    # By default, DevStack creates a 10.0.0.0/24 network for instances.
-    # If this overlaps with the hosts network, you may adjust with the
-    # following.
-    NETWORK_GATEWAY=10.1.0.1
-    FIXED_RANGE=10.1.0.0/24
-    FIXED_NETWORK_SIZE=256
 
     # Log all output to files
     LOGFILE=$HOME/devstack.log
