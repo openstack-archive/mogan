@@ -1,19 +1,28 @@
-===============================
-nimble
-===============================
+======
+Nimble
+======
 
-Standalone Baremetal Service with Ironic
+Nimble aims to separate bare metal computing management from Nova, which
+is designed specifically for BMs, so we can provide a more lightweight and
+convenient platform with more advanced features by leveraging Ironic. Besides
+this, we also plan to support RSD(Rack Scale Design), so we can not only
+provide Pre-set Configuration Servers but also Custom Servers.
 
-Please fill here a long description which must be at least 3 lines wrapped on
-80 cols, so that distribution package maintainers can use it in their packages.
-Note that this is a hard requirement.
+-----------------
+Project Resources
+-----------------
 
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/nimble
 * Source: http://git.openstack.org/cgit/openstack/nimble
 * Bugs: http://bugs.launchpad.net/nimble
+* Wiki: https://wiki.openstack.org/wiki/Nimble
 
-Features
---------
+Project status, bugs and BPs are tracked on Launchpad:
 
-* TODO
+  http://launchpad.net/nimble
+
+Anyone wishing to contribute to an OpenStack project should
+find a good reference here:
+
+  http://docs.openstack.org/infra/manual/developers.html
