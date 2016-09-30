@@ -15,6 +15,12 @@ api_version:
   type: string
   description: >
     The API version as returned in the links from the ``GET /`` call.
+instance_ident:
+  description: |
+    The UUID of the instance.
+  in: path
+  required: true
+  type: string
 spec_key_path:
   description: |
     The key of the extra spec.
@@ -142,9 +148,24 @@ networks:
   in: body
   required: true
   type: array
+power_state:
+  description: |
+    The current power state of this Instance. Usually, "power on" or
+    "power off", but may be "None" if Nimble is unable to determine the power
+    state (eg, due to hardware failure).
+  in: body
+  required: true
+  type: string
 project_id_body:
   description: |
     The UUID of the project in a multi-tenancy cloud.
+  in: body
+  required: true
+  type: string
+target_power_state:
+  description: |
+    If a power state transition has been requested, this field represents the
+    requested (ie, "target") state.
   in: body
   required: true
   type: string
