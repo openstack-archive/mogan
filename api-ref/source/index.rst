@@ -8,3 +8,4 @@
 
 .. include:: urls.inc
 .. include:: types.inc
+.. include:: instance_management.inc
