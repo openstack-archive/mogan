@@ -71,18 +71,6 @@ type_extra_specs:
   in: body
   required: true
   type: object
-type_id_body:
-  description: |
-    The ID of the type.
-  in: body
-  required: true
-  type: string
-type_id_body_not_required:
-  description: |
-    The ID of the type.
-  in: body
-  required: false
-  type: string
 type_is_public:
   description: |
     Whether the type is public (available to all projects) or scoped

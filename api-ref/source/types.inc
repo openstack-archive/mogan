@@ -31,7 +31,6 @@ Response
 .. rest_parameters:: parameters.yaml
 
    - types: types
-   - id: type_id_body
    - name: type_name
    - links: links
    - description: type_description
@@ -68,7 +67,6 @@ Request
 
    - name: type_name
    - description: type_description
-   - id: type_id_body_not_required
    - is_public: type_is_public_not_required
    - uuid: type_uuid_not_required
 
@@ -82,7 +80,6 @@ Response
 
 .. rest_parameters:: parameters.yaml
 
-   - id: type_id_body
    - name: type_name
    - links: links
    - description: type_description
@@ -121,7 +118,6 @@ Response
 
 .. rest_parameters:: parameters.yaml
 
-   - id: type_id_body
    - name: type_name
    - links: links
    - description: type_description

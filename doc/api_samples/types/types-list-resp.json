@@ -19,7 +19,6 @@
         "key": "value"
       },
       "is_public": true,
-      "id": 3,
       "name": "new_test1"
     },
     {
@@ -39,7 +38,6 @@
       "updated_at": null,
       "extra_specs": {},
       "is_public": true,
-      "id": 5,
       "name": "new_test2"
     }
   ]
