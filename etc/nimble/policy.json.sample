@@ -1,0 +1,30 @@
+# Legacy rule for cloud admin access
+"admin_api": "role:admin or role:administrator"
+# Internal flag for public API routes
+"public_api": "is_public_api:True"
+# Show or mask secrets within instance information in API responses
+"show_instance_secrets": "!"
+# May be used to restrict access to specific tenants
+"is_member": "tenant:demo or tenant:nimble"
+# Read-only API access
+"is_observer": "rule:is_member and (role:observer or role:nimble_observer)"
+# Full read/write API access
+"is_admin": "rule:admin_api or (rule:is_member and role:nimble_admin)"
+# Admin or owner API access
+"admin_or_owner": "is_admin:True or project_id:%(project_id)s"
+# Admin or user API access
+"admin_or_user": "is_admin:True or user_id:%(user_id)s"
+# Default API access rule
+"default": "rule:admin_or_owner"
+# Retrieve Instance records
+"nimble:instance:get": "rule:default"
+# View Instance power and provision state
+"nimble:instance:get_states": "rule:default"
+# Create Instance records
+"nimble:instance:create": "rule:is_admin"
+# Delete Instance records
+"nimble:instance:delete": "rule:default"
+# Update Instance records
+"nimble:instance:update": "rule:default"
+# Change Instance power status
+"nimble:instance:set_power_state": "rule:default"
