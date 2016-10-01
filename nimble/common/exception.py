@@ -96,6 +96,10 @@ class OperationNotPermitted(NotAuthorized):
     _msg_fmt = _("Operation not permitted.")
 
 
+class HTTPForbidden(NotAuthorized):
+    _msg_fmt = _("Access was denied to the following resource: %(resource)s")
+
+
 class NotFound(NimbleException):
     _msg_fmt = _("Resource could not be found.")
     code = http_client.NOT_FOUND
