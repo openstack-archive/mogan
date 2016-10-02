@@ -63,6 +63,15 @@ default_policies = [
     policy.RuleDefault('is_admin',
                        'rule:admin_api or (rule:is_member and role:nimble_admin)',  # noqa
                        description='Full read/write API access'),
+    policy.RuleDefault('admin_or_owner',
+                       'is_admin:True or project_id:%(project_id)s',
+                       description='Admin or owner API access'),
+    policy.RuleDefault('default',
+                       'rule:admin_or_owner',
+                       description='Default API access rule'),
+    policy.RuleDefault('admin_or_user',
+                       'is_admin:True or user_id:%(user_id)s',
+                       description='Admin or user API access'),
 ]
 
 # NOTE: to follow policy-in-code spec, we define defaults for
@@ -87,7 +96,7 @@ instance_policies = [
                        'rule:is_admin',
                        description='Update Instance records'),
     policy.RuleDefault('nimble:instance:set_power_state',
-                       'rule:is_admin',
+                       'rule:default',
                        description='Change Instance power status'),
 ]
 
@@ -167,6 +176,7 @@ def authorize(rule, target, creds, *args, **kwargs):
 # decorator) on an API method for it to work correctly
 def authorize_wsgi(api_name, act=None):
     """This is a decorator to simplify wsgi action policy rule check.
+
         :param api_name: The collection name to be evaluate.
         :param act: The function name of wsgi action.
 
