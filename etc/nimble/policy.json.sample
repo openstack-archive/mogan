@@ -13,6 +13,12 @@
 "is_observer": "rule:is_member and (role:observer or role:nimble_observer)"
 # Full read/write API access
 "is_admin": "rule:admin_api or (rule:is_member and role:nimble_admin)"
+# Admin or owner API access
+"admin_or_owner": "is_admin:True or project_id:%(project_id)s"
+# Default API access rule
+"default": "rule:admin_or_owner"
+# Admin or user API access
+"admin_or_user": "is_admin:True or user_id:%(user_id)s"
 # Retrieve Instance records
 "nimble:instance:get": "rule:is_admin or rule:is_observer"
 # View Instance power and provision state
@@ -24,4 +30,4 @@
 # Update Instance records
 "nimble:instance:update": "rule:is_admin"
 # Change Instance power status
-"nimble:instance:set_power_state": "rule:is_admin"
+"nimble:instance:set_power_state": "rule:default"
