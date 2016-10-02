@@ -26,6 +26,7 @@ from nimble.api.controllers.v1 import types
 from nimble.api import expose
 from nimble.common import exception
 from nimble.common.i18n import _
+from nimble.common import policy
 from nimble.engine.baremetal import ironic_states as ir_states
 from nimble import objects
 
@@ -101,6 +102,9 @@ class InstanceStatesController(rest.RestController):
         """
         rpc_instance = objects.Instance.get(pecan.request.context,
                                             instance_uuid)
+        cdict = pecan.request.context.to_dict()
+        policy.authorize('nimble:instance:get_states',
+                         rpc_instance.as_dict(), cdict)
 
         rpc_states = pecan.request.rpcapi.instance_states(
             pecan.request.context, rpc_instance)
@@ -123,6 +127,10 @@ class InstanceStatesController(rest.RestController):
         # No policy check at present.
         rpc_instance = objects.Instance.get(pecan.request.context,
                                             instance_uuid)
+
+        cdict = pecan.request.context.to_dict()
+        policy.authorize('nimble:instance:set_power_state',
+                         rpc_instance.as_dict(), cdict)
 
         if target not in ["on", "off", "reboot"]:
             # ironic will throw InvalidStateRequested
