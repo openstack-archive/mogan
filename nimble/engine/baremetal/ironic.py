@@ -98,3 +98,15 @@ def get_node_list(**kwargs):
     except client_e.ClientException:
         node_list = []
     return node_list
+
+
+def get_node_states(node_uuid):
+    ironicclient = ironic.IronicClientWrapper()
+    ironicclient.call("node.states", node_uuid)
+    # Do we need to catch NotFound exception.
+
+
+def set_power_state(node_uuid, state):
+    ironicclient = ironic.IronicClientWrapper()
+    ironicclient.call("node.set_power_state", node_uuid, state)
+    # Do we need to catch NotFound exception.
