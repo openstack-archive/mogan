@@ -77,7 +77,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 # Match the specified port type with physical interface type
                 if vif.get('port_type') == pif.extra.get('port_type'):
                     port = neutron.create_port(context, vif['uuid'],
-                                               pif.address)
+                                               pif.address, instance.uuid)
                     port_dict = port['port']
                     network_info[port_dict['id']] = {
                         'network': port_dict['network_id'],
@@ -86,6 +86,21 @@ class EngineManager(base_manager.BaseEngineManager):
                     ironic.plug_vif(pif.uuid, port_dict['id'])
 
         return network_info
+
+    def _destroy_networks(self, context, instance):
+        LOG.debug(_("unplug: instance_uuid=%(uuid)s vif=%(network_info)s") %
+                  {'uuid': instance.uuid,
+                   'network_info': str(instance.network_info)})
+
+        ports = instance.network_info.keys()
+        for port in ports:
+            neutron.delete_port(context, port, instance.uuid)
+
+        ironic_ports = ironic.get_ports_from_node(instance.node_uuid,
+                                                  detail=True)
+        for pif in ironic_ports:
+            if 'vif_port_id' in pif.extra:
+                ironic.unplug_vif(pif.uuid)
 
     def _wait_for_active(self, instance):
         """Wait for the node to be marked as ACTIVE in Ironic."""
@@ -188,6 +203,7 @@ class EngineManager(base_manager.BaseEngineManager):
         """Signal to engine service to delete an instance."""
         LOG.debug("Deleting instance...")
 
+        self._destroy_networks(context, instance)
         self._destroy_instance(context, instance)
 
         instance.destroy()

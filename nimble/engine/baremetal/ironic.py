@@ -38,6 +38,16 @@ def plug_vif(ironic_port_id, port_id):
     ironicclient.call("port.update", ironic_port_id, patch)
 
 
+def unplug_vif(ironic_port_id):
+    ironicclient = ironic.IronicClientWrapper()
+    patch = [{'op': 'remove',
+              'path': '/extra/vif_port_id'}]
+    try:
+        ironicclient.call("port.update", ironic_port_id, patch)
+    except client_e.BadRequest:
+        pass
+
+
 def set_instance_info(instance):
     ironicclient = ironic.IronicClientWrapper()
 
