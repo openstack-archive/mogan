@@ -159,6 +159,19 @@ class EngineManager(base_manager.BaseEngineManager):
                 request_spec)
         instance.node_uuid = top_node.to_dict()['node']
 
+        # validate we are ready to do the deploy
+        validate_chk = ironic.validate_node(instance.node_uuid)
+        if (not validate_chk.deploy.get('result')
+                or not validate_chk.power.get('result')):
+            instance.status = 'error'
+            instance.save()
+            raise exception.ValidationError(_(
+                "Ironic node: %(id)s failed to validate."
+                " (deploy: %(deploy)s, power: %(power)s)")
+                % {'id': instance.node_uuid,
+                   'deploy': validate_chk.deploy,
+                   'power': validate_chk.power})
+
         network_info = self._build_networks(context, instance,
                                             requested_networks)
 
