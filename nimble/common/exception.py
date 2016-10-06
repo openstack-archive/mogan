@@ -211,3 +211,7 @@ class InstanceTypeExtraSpecsNotFound(NotFound):
 
 class InterfacePlugException(NimbleException):
     msg_fmt = _("Interface plugin failed")
+
+
+class NetworkError(NimbleException):
+    _msg_fmt = _("Network operation failure.")
