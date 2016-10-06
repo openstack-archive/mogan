@@ -133,7 +133,7 @@ class EngineManager(base_manager.BaseEngineManager):
     def create_instance(self, context, instance,
                         requested_networks, instance_type):
         """Signal to engine service to perform a deployment."""
-        LOG.debug("Strating instance...")
+        LOG.debug("Starting instance...")
 
         # Populate request spec
         instance_type_uuid = instance.instance_type_uuid
