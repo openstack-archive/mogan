@@ -84,6 +84,11 @@ def destroy_node(node_uuid):
                       ironic_states.DELETED)
 
 
+def validate_node(node_uuid):
+    ironicclient = ironic.IronicClientWrapper()
+    ironicclient.call("node.validate", node_uuid)
+
+
 def get_node_list(**kwargs):
     """Helper function to return the list of nodes.
 

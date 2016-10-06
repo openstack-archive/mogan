@@ -27,6 +27,7 @@ from nimble.conf import CONF
 from nimble.engine.baremetal import ironic
 from nimble.engine.baremetal import ironic_states
 from nimble.engine import base_manager
+from nimble.engine import status
 
 MANAGER_TOPIC = 'nimble.engine_manager'
 
@@ -95,7 +96,7 @@ class EngineManager(base_manager.BaseEngineManager):
             # job is done
             LOG.debug("Ironic node %(node)s is now ACTIVE",
                       dict(node=node.uuid))
-            instance.status = ironic_states.ACTIVE
+            instance.status = status.ACTIVE
             instance.save()
             raise loopingcall.LoopingCallDone()
 
@@ -152,19 +153,32 @@ class EngineManager(base_manager.BaseEngineManager):
                                            request_spec,
                                            self.node_cache)
         if top_node is None:
-            instance.status = 'error'
+            instance.status = status.ERROR
             instance.save()
             raise exception.NoValidNode(
                 _('No valid node is found with request spec %s') %
                 request_spec)
         instance.node_uuid = top_node.to_dict()['node']
 
+        # validate we are ready to do the deploy
+        validate_chk = ironic.validate_node(instance.node_uuid)
+        if (not validate_chk.deploy.get('result')
+                or not validate_chk.power.get('result')):
+            instance.status = status.ERROR
+            instance.save()
+            raise exception.ValidationError(_(
+                "Ironic node: %(id)s failed to validate."
+                " (deploy: %(deploy)s, power: %(power)s)")
+                % {'id': instance.node_uuid,
+                   'deploy': validate_chk.deploy,
+                   'power': validate_chk.power})
+
         network_info = self._build_networks(context, instance,
                                             requested_networks)
 
         instance.network_info = network_info
 
-        instance.status = 'building'
+        instance.status = status.BUILDING
         instance.save()
         self._build_instance(context, instance)
 
