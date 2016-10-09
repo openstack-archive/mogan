@@ -183,6 +183,24 @@ function _nimble_cleanup_nimble_dashboard {
 }
 
 
+function create_instance_type {
+    TOKEN=$(openstack token issue -c id -f value)
+    curl -s -H "X-Auth-Token: $TOKEN" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -X POST ${NIMBLE_SERVICE_PROTOCOL}://${NIMBLE_SERVICE_HOST}:${NIMBLE_SERVICE_PORT}/v1/types \
+            -d '{"name": "small", "is_public": true, "description": ""}'
+}
+
+
+function update_ironic_node_type {
+    ironic_nodes=$(openstack baremetal node list -c UUID -f value)
+    for node in ${ironic_nodes};do
+        openstack baremetal node set --property instance_type=${DEFAULT_INSTANCE_TYPE} ${node}
+    done
+}
+
+
 if is_service_enabled nimble; then
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing nimble"
@@ -196,6 +214,10 @@ if is_service_enabled nimble; then
         echo_summary "Initializing nimble"
         init_nimble
         start_nimble
+        echo_summary "Creating instance type"
+        create_instance_type
+        echo_summary "Updating ironic node properties"
+        update_ironic_node_type
     fi
 
     if [[ "$1" == "unstack" ]]; then
