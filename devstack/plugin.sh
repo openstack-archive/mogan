@@ -140,12 +140,9 @@ function _install_nimble_dashboard {
 
 
 function install_nimble_pythonclient {
-    if use_library_from_git "python-nimbleclient"; then
-        # add it when nimble nimble-pythonclient is ready
-        :
-        #git_clone ${NIMBLE_PYTHONCLIENT_REPO} ${NIMBLE_PYTHONCLIENT_DIR} ${NIMBLE_PYTHONCLIENT_BRANCH}
-        #setup_develop ${NIMBLE_PYTHONCLIENT_DIR}
-    fi
+    echo_summary "Installing python-nimbleclient"
+    git_clone ${NIMBLE_PYTHONCLIENT_REPO} ${NIMBLE_PYTHONCLIENT_DIR} ${NIMBLE_PYTHONCLIENT_BRANCH}
+    setup_develop ${NIMBLE_PYTHONCLIENT_DIR}
 }
 
 
@@ -183,6 +180,19 @@ function _nimble_cleanup_nimble_dashboard {
 }
 
 
+function create_instance_type {
+    openstack baremetal compute type create ${NIMBLE_DEFAULT_INSTANCE_TYPE} --description ''
+}
+
+
+function update_ironic_node_type {
+    ironic_nodes=$(openstack baremetal node list -c UUID -f value)
+    for node in ${ironic_nodes};do
+        openstack baremetal node set --property instance_type=${NIMBLE_DEFAULT_INSTANCE_TYPE} ${node}
+    done
+}
+
+
 if is_service_enabled nimble; then
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing nimble"
@@ -196,6 +206,10 @@ if is_service_enabled nimble; then
         echo_summary "Initializing nimble"
         init_nimble
         start_nimble
+        echo_summary "Creating instance type"
+        create_instance_type
+        echo_summary "Updating ironic node properties"
+        update_ironic_node_type
     fi
 
     if [[ "$1" == "unstack" ]]; then
