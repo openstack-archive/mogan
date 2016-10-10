@@ -34,7 +34,7 @@ Request
   - description: instance_description
   - instance_type_uuid: typeRef
   - image_uuid: imageRef
-  - availability_zone: availability-zone
+  - availability_zone: availability_zone
   - networks: networks
   - networks.uuid: network_uuid
   - networks.port_type: network_port_type
@@ -53,7 +53,7 @@ Response
   - description: instance_description
   - instance_type_uuid: typeRef
   - image_uuid: imageRef
-  - availability_zone: availability-zone
+  - availability_zone: availability_zone
   - network_info: network_info
   - links: links
   - uuid: instance_uuid
