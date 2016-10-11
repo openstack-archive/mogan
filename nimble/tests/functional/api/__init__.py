@@ -16,18 +16,13 @@
 #    under the License.
 """Base classes for API tests."""
 
-# NOTE: Ported from ceilometer/tests/api.py (subsequently moved to
-#       ceilometer/tests/api/__init__.py). This should be oslo'ified:
-#       https://bugs.launchpad.net/ironic/+bug/1255115.
 
 from oslo_config import cfg
 import pecan
 import pecan.testing
-from six.moves.urllib import parse as urlparse
 
+from nimble import objects
 from nimble.tests.unit.db import base
-
-PATH_PREFIX = '/v1'
 
 cfg.CONF.import_group('keystone_authtoken', 'keystonemiddleware.auth_token')
 
@@ -40,7 +35,7 @@ class BaseApiTest(base.DbTestCase):
     framework.
     """
 
-    SOURCE_DATA = {'test_source': {'somekey': '666'}}
+    PATH_PREFIX = ''
 
     def setUp(self):
         super(BaseApiTest, self).setUp()
@@ -48,6 +43,8 @@ class BaseApiTest(base.DbTestCase):
                               group='keystone_authtoken')
         cfg.CONF.set_override("admin_user", "admin",
                               group='keystone_authtoken')
+
+        objects.register_all()
         self.app = self._make_app()
 
         def reset_pecan():
@@ -65,14 +62,13 @@ class BaseApiTest(base.DbTestCase):
                 'modules': ['nimble.api'],
                 'static_root': '%s/public' % root_dir,
                 'template_path': '%s/api/templates' % root_dir,
-                'acl_public_routes': ['/', '/v1'],
+                'acl_public_routes': ['/', '/v1/.*'],
             },
         }
         return pecan.testing.load_test_app(self.app_config)
 
     def _request_json(self, path, params, expect_errors=False, headers=None,
-                      method="post", extra_environ=None, status=None,
-                      path_prefix=PATH_PREFIX):
+                      method="post", extra_environ=None, status=None):
         """Sends simulated HTTP request to Pecan test app.
 
         :param path: url path of target service
@@ -87,17 +83,16 @@ class BaseApiTest(base.DbTestCase):
         :param status: expected status code of response
         :param path_prefix: prefix of the url path
         """
-        full_path = path_prefix + path
-        print('%s: %s %s' % (method.upper(), full_path, params))
         response = getattr(self.app, "%s_json" % method)(
-            str(full_path),
+            str(path),
             params=params,
             headers=headers,
             status=status,
             extra_environ=extra_environ,
             expect_errors=expect_errors
         )
-        print('GOT:%s' % response)
+        if not expect_errors:
+            response = response.json
         return response
 
     def put_json(self, path, params, expect_errors=False, headers=None,
@@ -113,7 +108,8 @@ class BaseApiTest(base.DbTestCase):
                               with the request
         :param status: expected status code of response
         """
-        return self._request_json(path=path, params=params,
+        full_path = self.PATH_PREFIX + path
+        return self._request_json(path=full_path, params=params,
                                   expect_errors=expect_errors,
                                   headers=headers, extra_environ=extra_environ,
                                   status=status, method="put")
@@ -131,7 +127,8 @@ class BaseApiTest(base.DbTestCase):
                               with the request
         :param status: expected status code of response
         """
-        return self._request_json(path=path, params=params,
+        full_path = self.PATH_PREFIX + path
+        return self._request_json(path=full_path, params=params,
                                   expect_errors=expect_errors,
                                   headers=headers, extra_environ=extra_environ,
                                   status=status, method="post")
@@ -149,13 +146,14 @@ class BaseApiTest(base.DbTestCase):
                               with the request
         :param status: expected status code of response
         """
-        return self._request_json(path=path, params=params,
+        full_path = self.PATH_PREFIX + path
+        return self._request_json(path=full_path, params=params,
                                   expect_errors=expect_errors,
                                   headers=headers, extra_environ=extra_environ,
                                   status=status, method="patch")
 
     def delete(self, path, expect_errors=False, headers=None,
-               extra_environ=None, status=None, path_prefix=PATH_PREFIX):
+               extra_environ=None, status=None):
         """Sends simulated HTTP DELETE request to Pecan test app.
 
         :param path: url path of target service
@@ -167,18 +165,16 @@ class BaseApiTest(base.DbTestCase):
         :param status: expected status code of response
         :param path_prefix: prefix of the url path
         """
-        full_path = path_prefix + path
-        print('DELETE: %s' % (full_path))
+        full_path = self.PATH_PREFIX + path
         response = self.app.delete(str(full_path),
                                    headers=headers,
                                    status=status,
                                    extra_environ=extra_environ,
                                    expect_errors=expect_errors)
-        print('GOT:%s' % response)
         return response
 
     def get_json(self, path, expect_errors=False, headers=None,
-                 extra_environ=None, q=[], path_prefix=PATH_PREFIX, **params):
+                 extra_environ=None, q=[], **params):
         """Sends simulated HTTP GET request to Pecan test app.
 
         :param path: url path of target service
@@ -192,7 +188,7 @@ class BaseApiTest(base.DbTestCase):
         :param path_prefix: prefix of the url path
         :param params: content for wsgi.input of request
         """
-        full_path = path_prefix + path
+        full_path = self.PATH_PREFIX + path
         query_params = {'q.field': [],
                         'q.value': [],
                         'q.op': [],
@@ -204,7 +200,6 @@ class BaseApiTest(base.DbTestCase):
         all_params.update(params)
         if q:
             all_params.update(query_params)
-        print('GET: %s %r' % (full_path, all_params))
         response = self.app.get(full_path,
                                 params=all_params,
                                 headers=headers,
@@ -212,22 +207,4 @@ class BaseApiTest(base.DbTestCase):
                                 expect_errors=expect_errors)
         if not expect_errors:
             response = response.json
-        print('GOT:%s' % response)
         return response
-
-    def validate_link(self, link, bookmark=False):
-        """Checks if the given link can get correct data."""
-        # removes the scheme and net location parts of the link
-        url_parts = list(urlparse.urlparse(link))
-        url_parts[0] = url_parts[1] = ''
-
-        # bookmark link should not have the version in the URL
-        if bookmark and url_parts[2].startswith(PATH_PREFIX):
-            return False
-
-        full_path = urlparse.urlunparse(url_parts)
-        try:
-            self.get_json(full_path, path_prefix='')
-            return True
-        except Exception:
-            return False

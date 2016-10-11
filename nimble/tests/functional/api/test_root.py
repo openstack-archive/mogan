@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from nimble.tests.unit.api import base
+from nimble.tests.functional import api
 
 
-class TestRoot(base.BaseApiTest):
+class TestRoot(api.BaseApiTest):
 
     def test_get_root(self):
-        response = self.get_json('/', path_prefix='')
+        response = self.get_json('/')
         # Check fields are not empty
         [self.assertNotIn(f, ['', []]) for f in response]
 
