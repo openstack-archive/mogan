@@ -102,21 +102,9 @@ class TypeExtraSpecController(rest.RestController):
         return dict(extra_specs=instance_type.extra_specs)
 
     @expose.expose(types.jsontype, types.uuid, body=types.jsontype,
-                   status_code=http_client.CREATED)
-    def post(self, instance_type_uuid, extra_spec):
-        """Create an extra specs for the given instance type."""
-
-        instance_type = objects.InstanceType.get(pecan.request.context,
-                                                 instance_type_uuid)
-        instance_type.extra_specs = dict(instance_type.extra_specs,
-                                         **extra_spec)
-        instance_type.save()
-        return dict(extra_specs=instance_type.extra_specs)
-
-    @expose.expose(types.jsontype, types.uuid, body=types.jsontype,
                    status_code=http_client.ACCEPTED)
-    def put(self, instance_type_uuid, extra_spec):
-        """Update an extra specs for the given instance type."""
+    def patch(self, instance_type_uuid, extra_spec):
+        """Create/update extra specs for the given instance type."""
 
         instance_type = objects.InstanceType.get(pecan.request.context,
                                                  instance_type_uuid)
