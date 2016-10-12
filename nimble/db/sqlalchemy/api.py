@@ -93,6 +93,9 @@ class Connection(api.Connection):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
+        if not values.get('description'):
+            values['description'] = ""
+
         instance_type = models.InstanceTypes()
         instance_type.update(values)
 
