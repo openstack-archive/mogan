@@ -14,9 +14,13 @@
 #    under the License.
 
 from ironicclient import exceptions as client_e
+from oslo_log import log as logging
 
+from nimble.common.i18n import _LE
 from nimble.common import ironic
 from nimble.engine.baremetal import ironic_states
+
+LOG = logging.getLogger(__name__)
 
 _NODE_FIELDS = ('uuid', 'power_state', 'target_power_state', 'provision_state',
                 'target_provision_state', 'last_error', 'maintenance',
@@ -110,7 +114,9 @@ def get_node_list(**kwargs):
     ironicclient = ironic.IronicClientWrapper()
     try:
         node_list = ironicclient.call("node.list", **kwargs)
-    except client_e.ClientException:
+    except client_e.ClientException as e:
+        LOG.exception(_LE("Could not get nodes from ironic. Reason: "
+                          "%(detail)s"), {'detail': e.message})
         node_list = []
     return node_list
 
