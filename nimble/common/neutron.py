@@ -10,9 +10,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from neutronclient.common import exceptions as neutron_exceptions
 from neutronclient.v2_0 import client as clientv20
 from oslo_log import log as logging
 
+from nimble.common import exception
+from nimble.common.i18n import _
 from nimble.common import keystone
 from nimble.conf import CONF
 
@@ -55,7 +58,7 @@ def get_client(token=None):
     return clientv20.Client(**params)
 
 
-def create_port(context, network_uuid, mac):
+def create_port(context, network_uuid, mac, instance_uuid):
     """Create neutron port."""
 
     client = get_client(context.auth_token)
@@ -66,6 +69,26 @@ def create_port(context, network_uuid, mac):
         }
     }
 
-    port = client.create_port(body)
-
+    try:
+        port = client.create_port(body)
+    except neutron_exceptions.NeutronClientException as e:
+        msg = (_("Could not create neutron port on network %(net)s for "
+                 "instance %(instance)s. %(exc)s"),
+               {'net': network_uuid, 'instance': instance_uuid, 'exc': e})
+        LOG.exception(msg)
+        raise exception.NetworkError(msg)
     return port
+
+
+def delete_port(context, port_id, instance_uuid):
+    """Delete neutron port."""
+
+    client = get_client(context.auth_token)
+    try:
+        client.delete_port(port_id)
+    except neutron_exceptions.NeutronClientException as e:
+        msg = (_('Could not remove VIF %(vif)s of instance %(instance)s, '
+                 'possibly a network issue: %(exc)s') %
+               {'vif': port_id, 'instance': instance_uuid, 'exc': e})
+        LOG.exception(msg)
+        raise exception.NetworkError(msg)
