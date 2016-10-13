@@ -20,7 +20,7 @@ from oslo_config import cfg
 
 from nimble.api import hooks
 from nimble.common import context
-from nimble.tests.unit.api import base
+from nimble.tests import base
 
 
 class FakeRequest(object):
@@ -91,7 +91,7 @@ def fake_headers(admin=False):
     return headers
 
 
-class TestContextHook(base.BaseApiTest):
+class TestContextHook(base.BaseTestCase):
     @mock.patch.object(context, 'RequestContext')
     def test_context_hook(self, mock_ctx):
         headers = fake_headers(admin=True)
@@ -142,13 +142,16 @@ class TestContextHook(base.BaseApiTest):
             reqstate.response.headers['Openstack-Request-Id'])
 
     def test_context_hook_after_miss_context(self):
-        response = self.get_json('/bad/path',
-                                 expect_errors=True)
+        headers = fake_headers(admin=True)
+        reqstate = FakeRequestState(headers=headers)
+        reqstate.request.context = {}
+        context_hook = hooks.ContextHook(None)
+        context_hook.after(reqstate)
         self.assertNotIn('Openstack-Request-Id',
-                         response.headers)
+                         reqstate.response.headers)
 
 
-class TestPublicUrlHook(base.BaseApiTest):
+class TestPublicUrlHook(base.BaseTestCase):
 
     def test_before_host_url(self):
         headers = fake_headers()
