@@ -242,6 +242,9 @@ Switch to the stack user and clone DevStack::
 Create devstack/local.conf with minimal settings required to enable Nimble
 
 .. note::
+    As Ironic tempest configuration depends on baremetal flavor, we have to
+    temporarily disable tempest in the devstack config file to make it work
+    with Ironic.
     It's ok to enable Horizon, Nova and Cinder services, they don't impact
     Nimble at all, disable them in the demo configuration to only deploy the
     dependent services
@@ -287,6 +290,8 @@ Create devstack/local.conf with minimal settings required to enable Nimble
     disable_service nova n-api n-cpu n-cond n-sch n-novnc n-cauth
     # Disable Cinder
     disable_service cinder c-sch c-api c-vol
+    # Disable Tempest
+    disable_service tempest
 
     # Swift temp URL's are required for agent_* drivers.
     SWIFT_ENABLE_TEMPURLS=True
