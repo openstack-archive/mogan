@@ -123,7 +123,7 @@ def get_node_list(**kwargs):
 
 def get_node_states(node_uuid):
     ironicclient = ironic.IronicClientWrapper()
-    ironicclient.call("node.states", node_uuid)
+    return ironicclient.call("node.states", node_uuid)
     # Do we need to catch NotFound exception.
 
 
