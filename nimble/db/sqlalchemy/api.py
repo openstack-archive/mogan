@@ -107,6 +107,18 @@ class Connection(api.Connection):
                 raise exception.InstanceTypeAlreadyExists(name=values['name'])
             return _dict_with_extra_specs(instance_type)
 
+    def instance_type_update(self, instance_type_id, values):
+        with _session_for_write():
+            query = model_query(models.InstanceTypes)
+            query = add_identity_filter(query, instance_type_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.InstanceTypeNotFound(instance=instance_type_id)
+
+            ref.update(values)
+            return ref
+
     def instance_type_get(self, instance_type_uuid):
         query = model_query(models.InstanceTypes).filter_by(
             uuid=instance_type_uuid).options(joinedload('extra_specs'))
