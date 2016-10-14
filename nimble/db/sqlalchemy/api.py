@@ -132,6 +132,19 @@ class Connection(api.Connection):
             raise exception.InstanceTypeNotFound(
                 instance_type=instance_type_uuid)
 
+    def instance_type_update(self, context, instance_type_id, values):
+        with _session_for_write():
+            query = model_query(context, models.InstanceTypes)
+            query = add_identity_filter(query, instance_type_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.InstanceTypeNotFound(
+                    instance_type=instance_type_id)
+
+            ref.update(values)
+            return ref
+
     def instance_type_get_all(self, context):
         results = model_query(context, models.InstanceTypes)
         return [_dict_with_extra_specs(i) for i in results]
