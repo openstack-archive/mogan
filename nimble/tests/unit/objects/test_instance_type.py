@@ -72,8 +72,15 @@ class TestInstanceTypeObject(base.DbTestCase):
             mock_type_destroy.assert_called_once_with(self.context, uuid)
 
     def test_save(self):
-        instance_type = objects.InstanceType(self.context,
-                                             **self.fake_type)
-        self.assertRaises(exception.ObjectActionError,
-                          instance_type.save,
-                          self.context)
+        uuid = self.fake_type['uuid']
+        with mock.patch.object(self.dbapi, 'instance_type_update',
+                               autospec=True) as mock_inst_type_update:
+            instance_type = objects.InstanceType(self.context,
+                                                 **self.fake_type)
+            instance_type.name = 'changed_name'
+            updates = instance_type.obj_get_changes()
+            instance_type.save(self.context)
+            updates.pop('extra_specs', None)
+            mock_inst_type_update.return_value = self.fake_type
+            mock_inst_type_update.assert_called_once_with(
+                self.context, uuid, updates)
