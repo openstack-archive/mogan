@@ -92,10 +92,6 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
     def save(self):
         updates = self.obj_get_changes()
         extra_specs = updates.pop('extra_specs', None)
-        if updates:
-            raise exception.ObjectActionError(
-                action='save', reason='read-only fields were changed')
-
         if extra_specs is not None:
             deleted_keys = (set(self._orig_extra_specs.keys()) -
                             set(extra_specs.keys()))
@@ -105,6 +101,7 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
 
         if added_keys or deleted_keys:
             self.save_extra_specs(self.extra_specs, deleted_keys)
+        self.dbapi.instance_type_update(self.uuid, updates)
 
     def save_extra_specs(self, to_add=None, to_delete=None):
         """Add or delete extra_specs.
