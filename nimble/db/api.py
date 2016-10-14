@@ -50,6 +50,9 @@ class Connection(object):
     def instance_type_get(self, context, instance_type_uuid):
         """Get instance type by uuid."""
 
+    def instance_type_update(self, context, instance_type_id, values):
+        """Update an instance type."""
+
     @abc.abstractmethod
     def instance_type_get_all(self, context):
         """Get all instance types."""
