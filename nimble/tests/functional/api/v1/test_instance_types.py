@@ -69,6 +69,19 @@ class TestInstanceType(v1_test.APITestV1):
         resp = self.get_json('/types')
         self.assertEqual(3, len(resp['types']))
 
+    def test_instance_type_update(self):
+        self._prepare_instance_types()
+        resp = self.get_json('/types/' + self.TYPE_UUIDS[0])
+        self.assertEqual('test0', resp['name'])
+        self.assertEqual('just test0', resp['description'])
+        values = {"name": "update_name", "description": "updated_description",
+                  "is_public": False}
+        self.put_json('/types/' + self.TYPE_UUIDS[0], values, status=200)
+        resp = self.get_json('/types/' + self.TYPE_UUIDS[0])
+        self.assertEqual('update_name', resp['name'])
+        self.assertEqual('updated_description', resp['description'])
+        self.assertEqual(False, resp['is_public'])
+
 
 class TestInstanceTypeExtra(v1_test.APITestV1):
     TYPE_UUID = 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b'
