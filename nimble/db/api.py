@@ -47,6 +47,10 @@ class Connection(object):
         """Create a new instance type."""
 
     @abc.abstractmethod
+    def instance_type_update(self, context, instance_type_id, values):
+        """Update an instance type."""
+
+    @abc.abstractmethod
     def instance_type_get(uuid):
         """Get instance type by uuid."""
 

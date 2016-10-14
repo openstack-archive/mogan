@@ -16,7 +16,6 @@
 
 from oslo_versionedobjects import base as object_base
 
-from nimble.common import exception
 from nimble.db import api as dbapi
 from nimble.objects import base
 from nimble.objects import fields as object_fields
@@ -93,10 +92,6 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
     def save(self, context=None):
         updates = self.obj_get_changes()
         extra_specs = updates.pop('extra_specs', None)
-        if updates:
-            raise exception.ObjectActionError(
-                action='save', reason='read-only fields were changed')
-
         if extra_specs is not None:
             deleted_keys = (set(self._orig_extra_specs.keys()) -
                             set(extra_specs.keys()))
@@ -106,6 +101,7 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
 
         if added_keys or deleted_keys:
             self.save_extra_specs(context, self.extra_specs, deleted_keys)
+        self.dbapi.instance_type_update(context, self.uuid, updates)
 
     def save_extra_specs(self, context, to_add=None, to_delete=None):
         """Add or delete extra_specs.

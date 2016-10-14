@@ -23,6 +23,8 @@ from nimble.api.controllers import base
 from nimble.api.controllers import link
 from nimble.api.controllers.v1 import types
 from nimble.api import expose
+from nimble.common import exception
+from nimble.common.i18n import _
 from nimble import objects
 
 
@@ -160,6 +162,34 @@ class InstanceTypeController(rest.RestController):
         pecan.response.location = link.build_url('instance_type',
                                                  new_instance_type.uuid)
         return InstanceType.convert_with_links(new_instance_type)
+
+    @expose.expose(InstanceType, types.uuid, body=InstanceType)
+    def put(self, instance_type_uuid, instance_type):
+        """Update an instance type.
+
+        :param instance_type_uuid: the uuid of instance_type to be updated.
+        :param instance_type: a instance type within the request body.
+        """
+        try:
+            inst_type_in_db = objects.InstanceType.get(
+                pecan.request.context, instance_type_uuid)
+        except exception.InstanceTypeNotFound:
+            msg = (_("InstanceType %s could not be found") %
+                   instance_type_uuid)
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.BAD_REQUEST)
+        need_to_update = False
+        for attr in ('name', 'description', 'is_public'):
+            if getattr(instance_type, attr) != wtypes.Unset:
+                need_to_update = True
+                setattr(inst_type_in_db, attr, getattr(instance_type, attr))
+        # don't need to call db_api if no update
+        if need_to_update:
+            inst_type_in_db.save()
+        # Set the HTTP Location Header
+        pecan.response.location = link.build_url('instance_type',
+                                                 inst_type_in_db.uuid)
+        return InstanceType.convert_with_links(inst_type_in_db)
 
     @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)
     def delete(self, instance_type_uuid):
