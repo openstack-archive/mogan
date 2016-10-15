@@ -70,14 +70,6 @@ class InstanceStates(base.APIBase):
     target_power_state = wtypes.text
     """The user modified desired power state of the instance."""
 
-    @staticmethod
-    def convert(instance_states):
-        attr_list = ['power_state', 'target_power_state']
-        states = InstanceStates()
-        for attr in attr_list:
-            setattr(states, attr, getattr(instance_states, attr))
-        return states
-
     @classmethod
     def sample(cls):
         sample = cls(target_power_state=ir_states.POWER_ON,
@@ -104,7 +96,7 @@ class InstanceStatesController(rest.RestController):
 
         rpc_states = pecan.request.rpcapi.instance_states(
             pecan.request.context, rpc_instance)
-        return InstanceStates.convert(rpc_states.to_dict())
+        return InstanceStates(**rpc_states)
 
     @expose.expose(None, types.uuid, wtypes.text,
                    status_code=http_client.ACCEPTED)

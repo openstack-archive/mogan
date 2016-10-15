@@ -212,7 +212,7 @@ class EngineManager(base_manager.BaseEngineManager):
         states = ironic.get_node_states(instance.node_uuid)
         LOG.info(_LI('Successfully get ironic node states: %s'),
                  states)
-        return states
+        return states.to_dict()
 
     def instance_states(self, context, instance):
         """Signal to engine service to get an instance states."""
