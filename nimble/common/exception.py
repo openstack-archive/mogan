@@ -155,7 +155,7 @@ class InstanceNotFound(NotFound):
     msg_fmt = _("Instance %(instance)s could not be found.")
 
 
-class InvalidActionParameterValue(InvalidParameterValue):
+class InvalidActionParameterValue(Invalid):
     msg_fmt = _("The Parameter value: %(value)s for %(action) action of "
                 "instance %(instance)s is invalid.")
 
