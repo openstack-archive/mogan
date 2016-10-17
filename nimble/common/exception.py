@@ -215,3 +215,7 @@ class InterfacePlugException(NimbleException):
 
 class NetworkError(NimbleException):
     _msg_fmt = _("Network operation failure.")
+
+
+class ValidationError(Invalid):
+    msg_fmt = "%(detail)s"
