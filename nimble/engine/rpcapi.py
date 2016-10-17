@@ -67,8 +67,9 @@ class EngineAPI(object):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'instance_states', instance=instance)
 
-    def set_power_state(self, context, instance):
+    def set_power_state(self, context, instance, state):
         """Signal to engine service to perform power action on instance."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         # need return?
-        return cctxt.call(context, 'set_power_state', instance=instance)
+        return cctxt.call(context, 'set_power_state',
+                          instance=instance, state=state)
