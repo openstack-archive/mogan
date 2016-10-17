@@ -107,7 +107,7 @@ Response
 
 **Example instance state:**
 
-.. literalinclude:: samples/instance-get-state-response.json
+.. literalinclude:: ../../doc/api_samples/instances/instance-get-state-response.json
 
 
 Change Instance Power State
@@ -134,4 +134,4 @@ Request
 
 **Example request to power off a Instance:**
 
-.. literalinclude:: samples/instance-set-power-off.json
+.. literalinclude:: ../../doc/api_samples/instances/instance-set-power-off.json
