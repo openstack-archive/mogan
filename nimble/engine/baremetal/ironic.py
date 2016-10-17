@@ -100,7 +100,7 @@ def destroy_node(node_uuid):
 
 def validate_node(node_uuid):
     ironicclient = ironic.IronicClientWrapper()
-    ironicclient.call("node.validate", node_uuid)
+    return ironicclient.call("node.validate", node_uuid)
 
 
 def get_node_list(**kwargs):

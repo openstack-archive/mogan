@@ -132,7 +132,6 @@ class EngineManager(base_manager.BaseEngineManager):
             raise exception.InstanceDeployFailure(msg)
 
     def _build_instance(self, context, instance):
-        ironic.set_instance_info(instance)
         ironic.do_node_deploy(instance.node_uuid)
 
         timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
@@ -175,6 +174,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 request_spec)
         instance.node_uuid = top_node.to_dict()['node']
 
+        ironic.set_instance_info(instance)
         # validate we are ready to do the deploy
         validate_chk = ironic.validate_node(instance.node_uuid)
         if (not validate_chk.deploy.get('result')
