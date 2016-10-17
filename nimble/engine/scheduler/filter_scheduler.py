@@ -129,6 +129,10 @@ class FilterScheduler(driver.Scheduler):
         # 'instance_type' to 'resource_type' will make both filters happy.
         instance_type = resource_type = request_spec.get("instance_type")
 
+        if instance_type is None:
+            raise exception.NoValidNode(
+                reason=_("request_spec is missing 'instance_type'"))
+
         config_options = self._get_configuration_options()
 
         if filter_properties is None:
@@ -170,9 +174,14 @@ class FilterScheduler(driver.Scheduler):
 
     def schedule(self, context, request_spec, node_cache,
                  filter_properties=None):
-        weighed_nodes = self._get_weighted_candidates(context, request_spec,
-                                                      node_cache,
-                                                      filter_properties)
+        try:
+            weighed_nodes = self._get_weighted_candidates(context,
+                                                          request_spec,
+                                                          node_cache,
+                                                          filter_properties)
+        except Exception as e:
+            raise exception.NoValidNode(reason=e)
+
         if not weighed_nodes:
             LOG.warning(_LW('No weighed nodes found for instance '
                             'with properties: %s'),
