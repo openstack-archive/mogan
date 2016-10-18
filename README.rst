@@ -2,7 +2,7 @@
 Nimble
 ======
 
-Nimble aims to separate bare metal computing management from Nova, which
+Nimble is a project dedicated for bare metal computing management, which
 is designed specifically for BMs, so we can provide a more lightweight and
 convenient platform with more advanced features by leveraging Ironic. Besides
 this, we also plan to support RSD(Rack Scale Design), so we can not only
