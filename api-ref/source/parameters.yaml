@@ -35,6 +35,19 @@ type_uuid_path:
   type: string
 
 # variables in query
+fields:
+  description: |
+    One or more fields to be returned in the response.
+
+    For example, the following request returns only the ``uuid``
+    and ``name`` fields for each node:
+
+    ::
+
+       GET /v1/instances?fields=uuid,name
+  in: query
+  required: false
+  type: array
 user_id:
   description: |
     Filters the response by a user, by ID.
