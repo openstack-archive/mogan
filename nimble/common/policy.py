@@ -20,6 +20,8 @@ from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log
 from oslo_policy import policy
+from oslo_utils import uuidutils
+from oslo_versionedobjects import base as object_base
 import pecan
 
 from nimble.common import exception
@@ -164,12 +166,13 @@ def authorize(rule, target, creds, *args, **kwargs):
 
 # NOTE(Shaohe Feng): This decorator MUST appear first (the outermost
 # decorator) on an API method for it to work correctly
-def authorize_wsgi(api_name, act=None):
+def authorize_wsgi(api_name, act=None, need_target=True):
     """This is a decorator to simplify wsgi action policy rule check.
 
         :param api_name: The collection name to be evaluate.
         :param act: The function name of wsgi action.
-
+        :param need_target: Whether need target for authorization. Such as,
+               when create some resource , maybe target is not needed.
        example:
            from magnum.common import policy
            class InstancesController(rest.RestController):
@@ -184,10 +187,20 @@ def authorize_wsgi(api_name, act=None):
 
         @functools.wraps(fn)
         def handle(self, *args, **kwargs):
+            target = {}
+            if (args and uuidutils.is_uuid_like(args[0]) and
+                    hasattr(self, "_get_resource")):
+                resource = getattr(self, "_get_resource")(*args, **kwargs)
+                if isinstance(resource, object_base.VersionedObjectDictCompat):
+                    target = {'project_id': resource.project_id,
+                              'user_id': resource.user_id}
             context = pecan.request.context
             credentials = context.to_dict()
-            target = {'project_id': context.project_id,
-                      'user_id': context.user_id}
+            if need_target and not target:
+                raise exception.ResourceTargetNotFound()
+            if not need_target:
+                target = {'project_id': context.project_id,
+                          'user_id': context.user_id}
 
             authorize(action, target, credentials)
             return fn(self, *args, **kwargs)

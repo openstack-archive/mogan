@@ -158,6 +158,8 @@ class InstanceAlreadyExists(NimbleException):
 class InstanceNotFound(NotFound):
     msg_fmt = _("Instance %(instance)s could not be found.")
 
+class ResourceTargetNotFound(NotFound):
+    msg_fmt = _("The authorization target of the resource could not be found.")
 
 class InvalidActionParameterValue(Invalid):
     msg_fmt = _("The Parameter value: %(value)s for %(action) action of "

@@ -237,6 +237,13 @@ class InstanceController(rest.RestController):
         'detail': ['GET']
     }
 
+    _resource = None
+
+    # This _resource is used for authorization.
+    def _get_resource(self, uuid, *args, **kwargs):
+        self._resource = objects.Instance.get(pecan.request.context, uuid)
+        return self._resource
+
     def _get_instance_collection(self, fields=None):
         instances = objects.Instance.list(pecan.request.context)
         instances_data = [instance.as_dict() for instance in instances]
@@ -277,6 +284,7 @@ class InstanceController(rest.RestController):
             fields = _DEFAULT_INSTANCE_RETURN_FIELDS
         return self._get_instance_collection(fields=fields)
 
+    @policy.authorize_wsgi("nimble:instance", "get")
     @expose.expose(Instance, types.uuid, types.listtype)
     def get_one(self, instance_uuid, fields=None):
         """Retrieve information about the given instance.
@@ -285,8 +293,7 @@ class InstanceController(rest.RestController):
         :param fields: Optional, a list with a specified set of fields
                        of the resource to be returned.
         """
-        rpc_instance = objects.Instance.get(pecan.request.context,
-                                            instance_uuid)
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
         instance_data = rpc_instance.as_dict()
         if fields is None or 'power_state' in fields:
             # Only fetch node info if fields parameter is not specified
@@ -312,6 +319,7 @@ class InstanceController(rest.RestController):
             raise exception.NotFound()
         return self._get_instance_collection()
 
+    @policy.authorize_wsgi("nimble:instance", "create", False)
     @expose.expose(Instance, body=types.jsontype,
                    status_code=http_client.CREATED)
     def post(self, instance):
