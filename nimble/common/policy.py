@@ -20,7 +20,10 @@ from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log
 from oslo_policy import policy
+from oslo_versionedobjects import base as object_base
 import pecan
+import sys
+import wsme
 
 from nimble.common import exception
 from nimble.common.i18n import _LW
@@ -164,12 +167,13 @@ def authorize(rule, target, creds, *args, **kwargs):
 
 # NOTE(Shaohe Feng): This decorator MUST appear first (the outermost
 # decorator) on an API method for it to work correctly
-def authorize_wsgi(api_name, act=None):
+def authorize_wsgi(api_name, act=None, need_target=True):
     """This is a decorator to simplify wsgi action policy rule check.
 
         :param api_name: The collection name to be evaluate.
         :param act: The function name of wsgi action.
-
+        :param need_target: Whether need target for authorization. Such as,
+               when create some resource , maybe target is not needed.
        example:
            from magnum.common import policy
            class InstancesController(rest.RestController):
@@ -182,16 +186,43 @@ def authorize_wsgi(api_name, act=None):
     def wraper(fn):
         action = "%s:%s" % (api_name, (act or fn.func_name))
 
+        def return_error(resp_status):
+            exception_info = sys.exc_info()
+            orig_exception = exception_info[1]
+            orig_code = getattr(orig_exception, 'code', None)
+            pecan.response.status = orig_code or resp_status
+            data = wsme.api.format_exception(
+                exception_info,
+                pecan.conf.get('wsme', {}).get('debug', False)
+            )
+            del exception_info
+            return data
+
         @functools.wraps(fn)
         def handle(self, *args, **kwargs):
             context = pecan.request.context
             credentials = context.to_dict()
-            target = {'project_id': context.project_id,
-                      'user_id': context.user_id}
+            target = {}
+            if hasattr(self, "_get_resource"):
+                try:
+                    resource = getattr(self, "_get_resource")(*args, **kwargs)
+                    if isinstance(resource,
+                                  object_base.VersionedObjectDictCompat):
+                        target = {'project_id': resource.project_id,
+                                  'user_id': resource.user_id}
+                except Exception:
+                    return return_error(500)
+            else:
+                target = {'project_id': context.project_id,
+                          'user_id': context.user_id}
+            try:
+                authorize(action, target, credentials)
+            except Exception:
+                return return_error(403)
 
-            authorize(action, target, credentials)
             return fn(self, *args, **kwargs)
         return handle
+
     return wraper
 
 
