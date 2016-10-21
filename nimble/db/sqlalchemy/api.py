@@ -163,21 +163,23 @@ class Connection(api.Connection):
                 raise exception.InstanceAlreadyExists(name=values['name'])
             return instance
 
-    def instance_get(self, context, instance_id):
+    def instance_get(self, context, instance_id, project_only):
         query = model_query(
             context,
-            models.Instance).filter_by(uuid=instance_id)
+            models.Instance,
+            project_only=project_only).filter_by(uuid=instance_id)
         try:
             return query.one()
         except NoResultFound:
             raise exception.InstanceNotFound(instance=instance_id)
 
-    def instance_get_all(self, context):
-        return model_query(context, models.Instance)
+    def instance_get_all(self, context, project_only):
+        return model_query(context, models.Instance, project_only=project_only)
 
-    def instance_destroy(self, context, instance_id):
+    def instance_destroy(self, context, instance_id, project_only):
         with _session_for_write():
-            query = model_query(context, models.Instance)
+            query = model_query(
+                context, models.Instance, project_only=project_only)
             query = add_identity_filter(query, instance_id)
 
             count = query.delete()
