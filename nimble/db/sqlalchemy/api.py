@@ -178,12 +178,13 @@ class Connection(api.Connection):
         except NoResultFound:
             raise exception.InstanceNotFound(instance=instance_id)
 
-    def instance_get_all(self, context):
-        return model_query(context, models.Instance)
+    def instance_get_all(self, context, project_only):
+        return model_query(context, models.Instance, project_only=project_only)
 
     def instance_destroy(self, context, instance_id):
         with _session_for_write():
-            query = model_query(context, models.Instance)
+            query = model_query(
+                context, models.Instance)
             query = add_identity_filter(query, instance_id)
 
             count = query.delete()
