@@ -51,15 +51,17 @@ class Instance(base.NimbleObject, object_base.VersionedObjectDictCompat):
                 for obj in db_objects]
 
     @classmethod
-    def list(cls, context):
+    def list(cls, context, project_only=False):
         """Return a list of Instance objects."""
-        db_instances = cls.dbapi.instance_get_all(context)
+        db_instances = cls.dbapi.instance_get_all(context,
+                                                  project_only=project_only)
         return Instance._from_db_object_list(db_instances, cls, context)
 
     @classmethod
-    def get(cls, context, uuid):
+    def get(cls, context, uuid, project_only=False):
         """Find a instance and return a Instance object."""
-        db_instance = cls.dbapi.instance_get(context, uuid)
+        db_instance = cls.dbapi.instance_get(context, uuid,
+                                             project_only=project_only)
         instance = Instance._from_db_object(cls(context), db_instance)
         return instance
 
