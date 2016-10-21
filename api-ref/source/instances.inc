@@ -70,6 +70,135 @@ Response
    :language: javascript
 
 
+List Instances
+===============
+
+.. rest_method:: GET /instances
+
+Return a list of bare metal Instances, with some useful information about each
+Instance.
+
+By default, this query will return the name, instance uuid, instance status
+and description for each Instance.
+
+Normal response codes: 200
+
+Error response codes: badRequest(400), unauthorized(401),
+forbidden(403), conflict(409)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - fields: fields
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: instance_name
+  - description: instance_description
+  - uuid: instance_uuid
+  - status: instance_status
+  - links: links
+
+**Example List of Instances: JSON response**
+
+.. literalinclude:: ../../doc/api_samples/instances/instance-list-resp.json
+   :language: javascript
+
+
+List Instances Detailed
+=======================
+
+.. rest_method:: GET /instances/detail
+
+Return a list of bare metal Instances with complete details.
+
+Normal response codes: 200
+
+Error response codes: badRequest(400), unauthorized(401),
+forbidden(403), conflict(409)
+
+Request
+-------
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: instance_name
+  - description: instance_description
+  - instance_type_uuid: typeRef
+  - image_uuid: imageRef
+  - availability_zone: availability_zone
+  - network_info: network_info
+  - links: links
+  - uuid: instance_uuid
+  - status: instance_status
+  - power_state: instance_power_state
+  - project_id: project_id_body
+  - user_id: user_id_body
+  - updated_at: updated_at
+  - created_at: created_at
+
+**Example Detailed list of Instances: JSON response**
+
+.. literalinclude:: ../../doc/api_samples/instances/instance-list-detail-resp.json
+   :language: javascript
+
+
+Show Instance Details
+=====================
+
+.. rest_method:: GET /instances/{instance_ident}
+
+Shows details for a instance. By default, this will return the full
+representation of the resource; an optional fields parameter can be supplied to
+return only the specified set.
+
+Normal response codes: 200
+
+Error response codes: badRequest(400), unauthorized(401),
+forbidden(403), conflict(409)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - instance_ident: instance_ident
+  - fields: fields
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: instance_name
+  - description: instance_description
+  - instance_type_uuid: typeRef
+  - image_uuid: imageRef
+  - availability_zone: availability_zone
+  - network_info: network_info
+  - links: links
+  - uuid: instance_uuid
+  - status: instance_status
+  - power_state: instance_power_state
+  - project_id: project_id_body
+  - user_id: user_id_body
+  - updated_at: updated_at
+  - created_at: created_at
+
+**Example Instance Details: JSON response**
+
+.. literalinclude:: ../../doc/api_samples/instances/instance-detail-resp.json
+   :language: javascript
+
+
 ===============================
 Instance Management (instances)
 ===============================
