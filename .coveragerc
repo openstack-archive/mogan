@@ -1,7 +1,7 @@
 [run]
 branch = True
 source = nimble
-omit = nimble/openstack/*
+omit = nimble/tests/*
 
 [report]
 ignore_errors = True
