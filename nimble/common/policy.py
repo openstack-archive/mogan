@@ -57,7 +57,7 @@ default_policies = [
                        '!',
                        description='all access will be forbidden'),
     policy.RuleDefault('is_admin',
-                       'rule:admin_api or (rule:is_member and role:nimble_admin)',  # noqa
+                       'rule:admin_api',  # noqa
                        description='Full read/write API access'),
     policy.RuleDefault('admin_or_owner',
                        'is_admin:True or project_id:%(project_id)s',
