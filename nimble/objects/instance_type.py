@@ -66,14 +66,14 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def list(cls, context):
         """Return a list of Instance Type objects."""
-        db_instance_types = cls.dbapi.instance_type_get_all()
+        db_instance_types = cls.dbapi.instance_type_get_all(context)
         return InstanceType._from_db_object_list(db_instance_types, cls,
                                                  context)
 
     @classmethod
     def get(cls, context, instance_type_id):
         """Find a Instance Type and return a Instance Type object."""
-        db_instance_type = cls.dbapi.instance_type_get(instance_type_id)
+        db_instance_type = cls.dbapi.instance_type_get(context, instance_type_id)
         instance_type = InstanceType._from_db_object(cls(context),
                                                      db_instance_type)
         return instance_type
