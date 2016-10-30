@@ -19,6 +19,7 @@ import threading
 
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
+from oslo_db.sqlalchemy import utils as sqlalchemyutils
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 from sqlalchemy.orm.exc import NoResultFound
@@ -45,15 +46,21 @@ def _session_for_write():
     return enginefacade.writer.using(_CONTEXT)
 
 
-def model_query(context, model, *args, **kwargs):
+def model_query(context, model, args=None, project_only=False, **kwargs):
     """Query helper for simpler session usage.
 
     :param context: Context of the query
     :param model: Model to query. Must be a subclass of ModelBase.
+    :param args: Arguments to query. If None - model is used.
+    :param project_only: If set, then restrict
+                        query to match the context's project_id.
     """
 
     with _session_for_read() as session:
-        query = session.query(model, *args)
+        if project_only:
+            kwargs['project_id'] = context.project_id
+        query = sqlalchemyutils.model_query(
+            model, session, args, **kwargs)
         return query
 
 
