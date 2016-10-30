@@ -19,6 +19,7 @@ import threading
 
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
+from oslo_db.sqlalchemy import utils as sqlalchemyutils
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 from sqlalchemy.orm.exc import NoResultFound
@@ -50,10 +51,23 @@ def model_query(context, model, *args, **kwargs):
 
     :param context: Context of the query
     :param model: Model to query. Must be a subclass of ModelBase.
+    :param args: Arguments to query. If None - model is used.
+
+    Keyword arguments:
+
+    :keyword project_only:
+      If present and True, then restrict query to match the context's project_id.
+      if present and False or absence, then the admin user
+                         will get related info from all projects.
+    :type project_only: bool
     """
 
+    if kwargs.pop("project_only", False):
+        kwargs["project_id"] = context.project_id
+
     with _session_for_read() as session:
-        query = session.query(model, *args)
+        query = sqlalchemyutils.model_query(
+            model, session, args, **kwargs)
         return query
 
 
