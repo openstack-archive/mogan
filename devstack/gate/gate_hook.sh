@@ -14,8 +14,7 @@
 
 # This script is executed inside gate_hook function in devstack gate.
 
-# TODO(liusheng): will enable ironic services if add more functional tests
-ENABLED_SERVICES="key"
+export OVERRIDE_ENABLED_SERVICES="key,mysql,rabbit,g-api,g-reg,q-svc,q-dhcp,q-meta,q-agt,q-l3,ir-api,ir-cond"
 
 # The backend is passed in by the job as the first and only argument
 export DEVSTACK_GATE_INSTALL_TESTONLY=1
