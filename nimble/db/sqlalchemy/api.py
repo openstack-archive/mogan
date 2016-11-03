@@ -45,10 +45,11 @@ def _session_for_write():
     return enginefacade.writer.using(_CONTEXT)
 
 
-def model_query(model, *args, **kwargs):
+def model_query(context, model, *args, **kwargs):
     """Query helper for simpler session usage.
 
-    :param session: if present, the session to use
+    :param context: Context of the query
+    :param model: Model to query. Must be a subclass of ModelBase.
     """
 
     with _session_for_read() as session:
@@ -107,8 +108,8 @@ class Connection(api.Connection):
                 raise exception.InstanceTypeAlreadyExists(name=values['name'])
             return _dict_with_extra_specs(instance_type)
 
-    def instance_type_get(self, instance_type_uuid):
-        query = model_query(models.InstanceTypes).filter_by(
+    def instance_type_get(self, context, instance_type_uuid):
+        query = model_query(context, models.InstanceTypes).filter_by(
             uuid=instance_type_uuid).options(joinedload('extra_specs'))
         try:
             return _dict_with_extra_specs(query.one())
@@ -116,20 +117,22 @@ class Connection(api.Connection):
             raise exception.InstanceTypeNotFound(
                 instance_type=instance_type_uuid)
 
-    def instance_type_get_all(self):
-        results = model_query(models.InstanceTypes)
+    def instance_type_get_all(self, context):
+        results = model_query(context, models.InstanceTypes)
         return [_dict_with_extra_specs(i) for i in results]
 
-    def instance_type_destroy(self, instance_type_uuid):
+    def instance_type_destroy(self, context, instance_type_uuid):
         with _session_for_write():
             # First clean up all extra specs related to this type
-            type_id = _type_get_id_from_type(instance_type_uuid)
-            extra_query = model_query(models.InstanceTypeExtraSpecs).filter_by(
+            type_id = _type_get_id_from_type(context, instance_type_uuid)
+            extra_query = model_query(
+                context,
+                models.InstanceTypeExtraSpecs).filter_by(
                 instance_type_id=type_id)
             extra_query.delete()
 
             # Then delete the type record
-            query = model_query(models.InstanceTypes)
+            query = model_query(context, models.InstanceTypes)
             query = add_identity_filter(query, instance_type_uuid)
 
             count = query.delete()
@@ -137,7 +140,7 @@ class Connection(api.Connection):
                 raise exception.InstanceTypeNotFound(
                     instance_type=instance_type_uuid)
 
-    def instance_create(self, values):
+    def instance_create(self, context, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
@@ -152,39 +155,41 @@ class Connection(api.Connection):
                 raise exception.InstanceAlreadyExists(name=values['name'])
             return instance
 
-    def instance_get(self, instance_id):
-        query = model_query(models.Instance).filter_by(uuid=instance_id)
+    def instance_get(self, context, instance_id):
+        query = model_query(
+            context,
+            models.Instance).filter_by(uuid=instance_id)
         try:
             return query.one()
         except NoResultFound:
             raise exception.InstanceNotFound(instance=instance_id)
 
-    def instance_get_all(self):
-        return model_query(models.Instance)
+    def instance_get_all(self, context):
+        return model_query(context, models.Instance)
 
-    def instance_destroy(self, instance_id):
+    def instance_destroy(self, context, instance_id):
         with _session_for_write():
-            query = model_query(models.Instance)
+            query = model_query(context, models.Instance)
             query = add_identity_filter(query, instance_id)
 
             count = query.delete()
             if count != 1:
                 raise exception.InstanceNotFound(instance=instance_id)
 
-    def update_instance(self, instance_id, values):
+    def update_instance(self, context, instance_id, values):
         if 'uuid' in values:
             msg = _("Cannot overwrite UUID for an existing Instance.")
             raise exception.InvalidParameterValue(err=msg)
 
         try:
-            return self._do_update_instance(instance_id, values)
+            return self._do_update_instance(context, instance_id, values)
         except db_exc.DBDuplicateEntry as e:
             if 'name' in e.columns:
                 raise exception.DuplicateName(name=values['name'])
 
-    def _do_update_instance(self, instance_id, values):
+    def _do_update_instance(self, context, instance_id, values):
         with _session_for_write():
-            query = model_query(models.Instance)
+            query = model_query(context, models.Instance)
             query = add_identity_filter(query, instance_id)
             try:
                 ref = query.with_lockmode('update').one()
@@ -194,7 +199,7 @@ class Connection(api.Connection):
             ref.update(values)
         return ref
 
-    def extra_specs_update_or_create(self, instance_type_id, specs,
+    def extra_specs_update_or_create(self, context, instance_type_id, specs,
                                      max_retries=10):
         """Create or update instance type extra specs.
 
@@ -204,7 +209,8 @@ class Connection(api.Connection):
         for attempt in range(max_retries):
             with _session_for_write() as session:
                 try:
-                    spec_refs = model_query(models.InstanceTypeExtraSpecs). \
+                    spec_refs = model_query(
+                        context, models.InstanceTypeExtraSpecs). \
                         filter_by(instance_type_id=instance_type_id). \
                         filter(models.InstanceTypeExtraSpecs.key.in_(
                             specs.keys())).with_lockmode('update').all()
@@ -234,12 +240,12 @@ class Connection(api.Connection):
                         raise exception.TypeExtraSpecUpdateCreateFailed(
                             id=instance_type_id, retries=max_retries)
 
-    def instance_type_extra_specs_get(self, type_id):
-        rows = _type_extra_specs_get_query(type_id).all()
+    def instance_type_extra_specs_get(self, context, type_id):
+        rows = _type_extra_specs_get_query(context, type_id).all()
         return {row['key']: row['value'] for row in rows}
 
-    def type_extra_specs_delete(self, type_id, key):
-        result = _type_extra_specs_get_query(type_id). \
+    def type_extra_specs_delete(self, context, type_id, key):
+        result = _type_extra_specs_get_query(context, type_id). \
             filter(models.InstanceTypeExtraSpecs.key == key). \
             delete(synchronize_session=False)
         # did not find the extra spec
@@ -248,20 +254,20 @@ class Connection(api.Connection):
                 extra_specs_key=key, type_id=type_id)
 
 
-def _type_get_id_from_type_query(type_id):
-    return model_query(models.InstanceTypes,
+def _type_get_id_from_type_query(context, type_id):
+    return model_query(context, models.InstanceTypes,
                        read_deleted="no"). \
         filter_by(uuid=type_id)
 
 
-def _type_get_id_from_type(type_id):
-    result = _type_get_id_from_type_query(type_id).first().id
+def _type_get_id_from_type(context, type_id):
+    result = _type_get_id_from_type_query(context, type_id).first().id
     if not result:
         raise exception.InstanceTypeNotFound(type_id=type_id)
     return result
 
 
-def _type_extra_specs_get_query(type_id):
-    return model_query(models.InstanceTypeExtraSpecs,
+def _type_extra_specs_get_query(context, type_id):
+    return model_query(context, models.InstanceTypeExtraSpecs,
                        read_deleted="no"). \
         filter_by(instance_type_id=type_id)

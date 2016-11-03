@@ -53,29 +53,29 @@ class Instance(base.NimbleObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def list(cls, context):
         """Return a list of Instance objects."""
-        db_instances = cls.dbapi.instance_get_all()
+        db_instances = cls.dbapi.instance_get_all(context)
         return Instance._from_db_object_list(db_instances, cls, context)
 
     @classmethod
     def get(cls, context, uuid):
         """Find a instance and return a Instance object."""
-        db_instance = cls.dbapi.instance_get(uuid)
+        db_instance = cls.dbapi.instance_get(context, uuid)
         instance = Instance._from_db_object(cls(context), db_instance)
         return instance
 
     def create(self, context=None):
         """Create a Instance record in the DB."""
         values = self.obj_get_changes()
-        db_instance = self.dbapi.instance_create(values)
+        db_instance = self.dbapi.instance_create(context, values)
         self._from_db_object(self, db_instance)
 
     def destroy(self, context=None):
         """Delete the Instance from the DB."""
-        self.dbapi.instance_destroy(self.uuid)
+        self.dbapi.instance_destroy(context, self.uuid)
         self.obj_reset_changes()
 
     def save(self, context=None):
         """Save updates to this Instance."""
         updates = self.obj_get_changes()
-        self.dbapi.update_instance(self.uuid, updates)
+        self.dbapi.update_instance(context, self.uuid, updates)
         self.obj_reset_changes()

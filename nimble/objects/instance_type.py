@@ -66,14 +66,15 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def list(cls, context):
         """Return a list of Instance Type objects."""
-        db_instance_types = cls.dbapi.instance_type_get_all()
+        db_instance_types = cls.dbapi.instance_type_get_all(context)
         return InstanceType._from_db_object_list(db_instance_types, cls,
                                                  context)
 
     @classmethod
     def get(cls, context, instance_type_id):
         """Find a Instance Type and return a Instance Type object."""
-        db_instance_type = cls.dbapi.instance_type_get(instance_type_id)
+        db_instance_type = cls.dbapi.instance_type_get(context,
+                                                       instance_type_id)
         instance_type = InstanceType._from_db_object(cls(context),
                                                      db_instance_type)
         return instance_type
@@ -86,10 +87,10 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
 
     def destroy(self, context=None):
         """Delete the Instance Type from the DB."""
-        self.dbapi.instance_type_destroy(self.uuid)
+        self.dbapi.instance_type_destroy(context, self.uuid)
         self.obj_reset_changes()
 
-    def save(self):
+    def save(self, context=None):
         updates = self.obj_get_changes()
         extra_specs = updates.pop('extra_specs', None)
         if updates:
@@ -104,9 +105,9 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
             added_keys = deleted_keys = None
 
         if added_keys or deleted_keys:
-            self.save_extra_specs(self.extra_specs, deleted_keys)
+            self.save_extra_specs(context, self.extra_specs, deleted_keys)
 
-    def save_extra_specs(self, to_add=None, to_delete=None):
+    def save_extra_specs(self, context, to_add=None, to_delete=None):
         """Add or delete extra_specs.
 
         :param:to_add: A dict of new keys to add/update
@@ -118,7 +119,7 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
         to_delete = to_delete if to_delete is not None else []
 
         if to_add:
-            self.dbapi.extra_specs_update_or_create(ident, to_add)
+            self.dbapi.extra_specs_update_or_create(context, ident, to_add)
 
         for key in to_delete:
             self.dbapi.type_extra_specs_delete(ident, key)
