@@ -59,7 +59,6 @@ function configure_nimble {
     iniset ${NIMBLE_CONF_FILE} DEFAULT debug ${NIMBLE_DEBUG}
 
     NIMBLE_POLICY_FILE=${NIMBLE_CONF_DIR}/policy.json
-    cp ${NIMBLE_DIR}/etc/policy.json ${NIMBLE_POLICY_FILE}
 
     # Nimble Configuration
     #-------------------------
