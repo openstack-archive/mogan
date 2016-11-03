@@ -95,19 +95,27 @@ class InstanceStatesController(rest.RestController):
         'power': ['PUT'],
     }
 
+    _resource = None
+
+    # This _resource is used for authorization.
+    def _get_resource(self, uuid, *args, **kwargs):
+        self._resource = objects.Instance.get(pecan.request.context, uuid)
+        return self._resource
+
+    @policy.authorize_wsgi("nimble:instance", "get_states")
     @expose.expose(InstanceStates, types.uuid)
     def get(self, instance_uuid):
         """List the states of the instance, just support power state at present.
 
         :param instance_uuid: the UUID of a instance.
         """
-        rpc_instance = objects.Instance.get(pecan.request.context,
-                                            instance_uuid)
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
 
         rpc_states = pecan.request.rpcapi.instance_states(
             pecan.request.context, rpc_instance)
         return InstanceStates(**rpc_states)
 
+    @policy.authorize_wsgi("nimble:instance", "set_power_state")
     @expose.expose(None, types.uuid, wtypes.text,
                    status_code=http_client.ACCEPTED)
     def power(self, instance_uuid, target):
@@ -122,9 +130,7 @@ class InstanceStatesController(rest.RestController):
                  state is not valid or if the instance is in CLEANING state.
 
         """
-        # No policy check at present.
-        rpc_instance = objects.Instance.get(pecan.request.context,
-                                            instance_uuid)
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
 
         if target not in ["on", "off", "reboot"]:
             # ironic will throw InvalidStateRequested
