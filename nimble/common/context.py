@@ -21,8 +21,8 @@ class RequestContext(context.RequestContext):
     def __init__(self, auth_token=None, domain_id=None, domain_name=None,
                  user_name=None, user_id=None, project_name=None,
                  project_id=None, is_admin=False, is_public_api=False,
-                 read_only=False, show_deleted=False, request_id=None,
-                 roles=None, show_password=True, overwrite=True, **kwargs):
+                 read_only=False, request_id=None, roles=None,
+                 show_password=True, overwrite=True, **kwargs):
         """Initialize the RequestContext
 
         :param auth_token: The authentication token of the current request.
@@ -46,7 +46,6 @@ class RequestContext(context.RequestContext):
                                              tenant=project_name,
                                              is_admin=is_admin,
                                              read_only=read_only,
-                                             show_deleted=show_deleted,
                                              request_id=request_id,
                                              overwrite=overwrite)
 
@@ -72,7 +71,6 @@ class RequestContext(context.RequestContext):
                       'project_id': self.project_id,
                       'is_admin': self.is_admin,
                       'read_only': self.read_only,
-                      'show_deleted': self.show_deleted,
                       'request_id': self.request_id,
                       'domain_id': self.domain_id,
                       'roles': self.roles,
