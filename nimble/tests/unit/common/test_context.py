@@ -26,8 +26,7 @@ class RequestContextTestCase(tests_base.TestCase):
         test_context = context.RequestContext()
         context_mock.assert_called_once_with(
             auth_token=None, user=None, tenant=None, is_admin=False,
-            read_only=False, show_deleted=False, request_id=None,
-            overwrite=True)
+            read_only=False, request_id=None, overwrite=True)
         self.assertFalse(test_context.is_public_api)
         self.assertIsNone(test_context.domain_id)
         self.assertIsNone(test_context.domain_name)
@@ -57,7 +56,6 @@ class RequestContextTestCase(tests_base.TestCase):
             "project_name": "tenant1",
             'is_admin': True,
             'read_only': True,
-            'show_deleted': True,
             'request_id': 'id1',
             "is_public_api": True,
             "domain_id": "domain_id1",
@@ -72,7 +70,6 @@ class RequestContextTestCase(tests_base.TestCase):
         self.assertIn('tenant', ctx_dict)
         self.assertIn('is_admin', ctx_dict)
         self.assertIn('read_only', ctx_dict)
-        self.assertIn('show_deleted', ctx_dict)
         self.assertIn('request_id', ctx_dict)
         self.assertIn('domain_id', ctx_dict)
         self.assertIn('roles', ctx_dict)
@@ -85,7 +82,6 @@ class RequestContextTestCase(tests_base.TestCase):
         self.assertEqual('tenant1', ctx_dict['project_name'])
         self.assertTrue(ctx_dict['is_admin'])
         self.assertTrue(ctx_dict['read_only'])
-        self.assertTrue(ctx_dict['show_deleted'])
         self.assertEqual('id1', ctx_dict['request_id'])
         self.assertTrue(ctx_dict['is_public_api'])
         self.assertEqual('domain_id1', ctx_dict['domain_id'])
