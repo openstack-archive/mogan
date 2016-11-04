@@ -207,8 +207,8 @@ if is_service_enabled nimble; then
         start_nimble
         echo_summary "Creating instance type"
         create_instance_type
-        #echo_summary "Updating ironic node properties"
-        #update_ironic_node_type
+        echo_summary "Updating ironic node properties"
+        update_ironic_node_type
     fi
 
     if [[ "$1" == "unstack" ]]; then
