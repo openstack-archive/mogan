@@ -91,7 +91,7 @@ def fake_headers(admin=False):
     return headers
 
 
-class TestContextHook(base.BaseTestCase):
+class TestContextHook(base.TestCase):
     @mock.patch.object(context, 'RequestContext')
     def test_context_hook(self, mock_ctx):
         headers = fake_headers(admin=True)
@@ -106,6 +106,7 @@ class TestContextHook(base.BaseTestCase):
             project_name=headers['X-Project-Name'],
             domain_id=headers['X-User-Domain-Id'],
             domain_name=headers['X-User-Domain-Name'],
+            is_admin=True,
             is_public_api=False,
             roles=headers['X-Roles'].split(','))
 
@@ -124,6 +125,7 @@ class TestContextHook(base.BaseTestCase):
             project_name=headers['X-Project-Name'],
             domain_id=headers['X-User-Domain-Id'],
             domain_name=headers['X-User-Domain-Name'],
+            is_admin=True,
             is_public_api=True,
             roles=headers['X-Roles'].split(','))
 
@@ -151,7 +153,7 @@ class TestContextHook(base.BaseTestCase):
                          reqstate.response.headers)
 
 
-class TestPublicUrlHook(base.BaseTestCase):
+class TestPublicUrlHook(base.TestCase):
 
     def test_before_host_url(self):
         headers = fake_headers()

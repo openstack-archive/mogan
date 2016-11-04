@@ -19,6 +19,7 @@ from pecan import hooks
 from six.moves import http_client
 
 from nimble.common import context
+from nimble.common import policy
 from nimble.db import api as dbapi
 from nimble.engine import rpcapi
 
@@ -78,7 +79,8 @@ class ContextHook(hooks.PecanHook):
             'is_public_api': is_public_api,
         }
 
-        state.request.context = context.get_context(**creds)
+        is_admin = policy.check('is_admin', creds, creds)
+        state.request.context = context.get_context(is_admin=is_admin, **creds)
 
     def after(self, state):
         if state.request.context == {}:
