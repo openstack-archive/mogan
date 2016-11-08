@@ -178,7 +178,10 @@ class FilterScheduler(driver.Scheduler):
                             'with properties: %s'),
                         request_spec.get('instance_type'))
             raise exception.NoValidNode(reason=_("No weighed nodes available"))
-        return self._choose_top_node(weighed_nodes, request_spec)
+
+        top_node = self._choose_top_node(weighed_nodes, request_spec)
+        self._add_retry_node(filter_properties, top_node)
+        return top_node
 
     def _choose_top_node(self, weighed_nodes, request_spec):
         top_node = weighed_nodes[0]

@@ -163,10 +163,12 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.debug("Scheduling with request_spec: %s", request_spec)
 
         # TODO(zhenguo): Add retry
+        filter_properties = {}
         try:
             top_node = self.scheduler.schedule(context,
                                                request_spec,
-                                               self.node_cache)
+                                               self.node_cache,
+                                               filter_properties)
         except exception.NoValidNode:
             instance.status = status.ERROR
             instance.save()
