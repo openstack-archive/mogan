@@ -55,17 +55,18 @@ def get_test_instance(**kw):
         'node_uuid': kw.get('node_uuid',
                             'f978ef48-d4af-4dad-beec-e6174309bc71'),
         'launched_at': kw.get('launched_at'),
-        'extra': kw.get('extra', {}),
+        'extra': kw.get('extra', '{}'),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),
     }
 
 
-def create_test_instance(**kw):
+def create_test_instance(context={}, **kw):
     """Create test instance entry in DB and return Instance DB object.
 
     Function to be used to create test Instance objects in the database.
 
+    :param context: The request context, for access checks.
     :param kw: kwargs with overriding values for instance's attributes.
     :returns: Test Instance DB object.
 
@@ -75,4 +76,5 @@ def create_test_instance(**kw):
     if 'id' not in kw:
         del instance['id']
     dbapi = db_api.get_instance()
-    return dbapi.create_instance(instance)
+
+    return dbapi.instance_create(context, instance)
