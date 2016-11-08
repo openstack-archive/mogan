@@ -19,6 +19,7 @@ from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import loopingcall
 from oslo_service import periodic_task
+from oslo_utils import timeutils
 
 from nimble.common import exception
 from nimble.common.i18n import _LI
@@ -112,6 +113,7 @@ class EngineManager(base_manager.BaseEngineManager):
             LOG.debug("Ironic node %(node)s is now ACTIVE",
                       dict(node=node.uuid))
             instance.status = status.ACTIVE
+            instance.launched_at = timeutils.utcnow()
             instance.save()
             raise loopingcall.LoopingCallDone()
 

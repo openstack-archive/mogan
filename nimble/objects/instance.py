@@ -41,6 +41,7 @@ class Instance(base.NimbleObject, object_base.VersionedObjectDictCompat):
         'image_uuid': object_fields.UUIDField(nullable=True),
         'network_info': object_fields.FlexibleDictField(nullable=True),
         'node_uuid': object_fields.UUIDField(nullable=True),
+        'launched_at': object_fields.DateTimeField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),
     }
 

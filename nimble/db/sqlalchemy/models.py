@@ -21,7 +21,7 @@ from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
 from oslo_db.sqlalchemy import types as db_types
 import six.moves.urllib.parse as urlparse
-from sqlalchemy import Boolean, Column, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey
 from sqlalchemy import orm
 from sqlalchemy import schema, String, Integer, Text
 from sqlalchemy.ext.declarative import declarative_base
@@ -132,4 +132,5 @@ class Instance(Base):
     image_uuid = Column(String(36), nullable=True)
     network_info = Column(db_types.JsonEncodedDict)
     node_uuid = Column(String(36), nullable=True)
+    launched_at = Column(DateTime, nullable=True)
     extra = Column(Text, nullable=True)
