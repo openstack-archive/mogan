@@ -133,4 +133,4 @@ class Instance(Base):
     network_info = Column(db_types.JsonEncodedDict)
     node_uuid = Column(String(36), nullable=True)
     launched_at = Column(DateTime, nullable=True)
-    extra = Column(Text, nullable=True)
+    extra = Column(db_types.JsonEncodedDict)
