@@ -55,7 +55,7 @@ def get_test_instance(**kw):
         'node_uuid': kw.get('node_uuid',
                             'f978ef48-d4af-4dad-beec-e6174309bc71'),
         'launched_at': kw.get('launched_at'),
-        'extra': kw.get('extra', '{}'),
+        'extra': kw.get('extra', {}),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),
     }
