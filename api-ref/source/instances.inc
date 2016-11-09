@@ -144,6 +144,7 @@ Response
   - user_id: user_id_body
   - updated_at: updated_at
   - created_at: created_at
+  - launched_at: launched_at
 
 **Example Detailed list of Instances: JSON response**
 
@@ -192,6 +193,7 @@ Response
   - user_id: user_id_body
   - updated_at: updated_at
   - created_at: created_at
+  - launched_at: launched_at
 
 **Example Instance Details: JSON response**
 
