@@ -157,7 +157,7 @@ class InstanceTypeController(rest.RestController):
                                                  **instance_type.as_dict())
         new_instance_type.create()
         # Set the HTTP Location Header
-        pecan.response.location = link.build_url('instance_type',
+        pecan.response.location = link.build_url('types',
                                                  new_instance_type.uuid)
         return InstanceType.convert_with_links(new_instance_type)
 
