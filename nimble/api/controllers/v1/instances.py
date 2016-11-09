@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
+
 import jsonschema
 from oslo_log import log
 import pecan
@@ -192,6 +194,9 @@ class Instance(base.APIBase):
 
     links = wsme.wsattr([link.Link], readonly=True)
     """A list containing a self link"""
+
+    launched_at = datetime.datetime
+    """The UTC date and time of the instance launched"""
 
     def __init__(self, **kwargs):
         super(Instance, self).__init__(**kwargs)
