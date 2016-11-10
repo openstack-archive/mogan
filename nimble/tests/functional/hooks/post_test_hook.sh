@@ -37,6 +37,22 @@ fi
 
 sudo chown -R $STACK_USER:stack $NIMBLE_DIR
 
+# If we're running in the gate find our keystone endpoint to give to
+# gabbi tests and do a chown. Otherwise the existing environment
+# should provide URL and TOKEN.
+if [ -d $BASE/new/devstack ]; then
+    source $BASE/new/devstack/openrc admin admin
+    if [ $OS_IDENTITY_API_VERSION == '2.0' ]; then
+        urltag='publicURL'
+    else
+        urltag='public'
+    fi
+    openstack catalog list
+    export NIMBLE_SERVICE_URL=$(openstack catalog show baremetal_compute -c endpoints -f value | awk "/$urltag"'/{print $2}')
+    export NIMBLE_SERVICE_TOKEN=$(openstack token issue -c id -f value)
+    export NIMBLE_IMAGE_REF=$(openstack image list --limit 1 -c ID -f value)
+fi
+
 # Run tests
 echo "Running nimble functional test suite"
 set +e

@@ -1,0 +1,44 @@
+defaults:
+    request_headers:
+        x-auth-token: $ENVIRON['NIMBLE_SERVICE_TOKEN']
+
+tests:
+    - name: list instances none
+      desc: Lists instances, none yet exist
+      url: /v1/instances
+      method: GET
+      response_strings:
+          - "[]"
+
+    - name: list instances detail
+      desc: Lists instances detail, none yet exist
+      url: /v1/instances/detail
+      method: GET
+      response_strings:
+          - "[]"
+
+    - name: list instances types
+      desc: Lists instances detail, none yet exist
+      url: /v1/types
+      method: GET
+      response_strings:
+          - "[]"
+
+    - name: create instance type
+      desc: Creates an alarm.
+      url: /v1/types
+      method: POST
+      request_headers:
+          content-type: application/json
+      data:
+          name: added_instance_type
+          description: test_instance_type
+          is_public: true
+      status: 201
+      response_headers:
+          location: /$SCHEME://$NETLOC/v1/types/
+          content-type: application/json; charset=UTF-8
+      response_json_paths:
+          $.name: added_instance_type
+          $.description: test_instance_type
+          $.is_public: true
