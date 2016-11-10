@@ -1,4 +1,4 @@
-# Copyright 2016 Intel
+# Copyright 2016 Huawei Technologies Co.,LTD.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Tests for manipulating Instances via the DB API"""
+"""Tests for manipulating Nodes via the DB API"""
 
 from nimble.tests.unit.db import base
 from nimble.tests.unit.db import utils
 
 
-class DbInstanceTestCase(base.DbTestCase):
+class DbInstanceTypeTestCase(base.DbTestCase):
 
-    def test_instance_create(self):
-        utils.create_test_instance()
+    def test_instance_type_create(self):
+        utils.create_test_instance_type()
