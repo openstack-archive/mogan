@@ -40,6 +40,9 @@
             "launched_at": null,
             "user_id": "cdbf77d47f1d4d04ad9b7ff62b672467",
             "uuid": "f978ef48-d4af-4dad-beec-e6174309bc71"
+            "extra": {
+                "My Server Name" : "Apache1"
+            }
         }
     ]
 }

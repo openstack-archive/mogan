@@ -63,6 +63,7 @@ Response
   - user_id: user_id_body
   - updated_at: updated_at
   - created_at: created_at
+  - extra: extra
 
 **Example Create Instance: JSON response**
 
@@ -145,6 +146,7 @@ Response
   - updated_at: updated_at
   - created_at: created_at
   - launched_at: launched_at
+  - extra: extra
 
 **Example Detailed list of Instances: JSON response**
 
@@ -194,6 +196,7 @@ Response
   - updated_at: updated_at
   - created_at: created_at
   - launched_at: launched_at
+  - extra: extra
 
 **Example Instance Details: JSON response**
 
