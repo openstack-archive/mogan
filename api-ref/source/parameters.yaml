@@ -87,6 +87,13 @@ created_at:
   in: body
   required: true
   type: string
+extra:
+  description: |
+    Metadata key and value pairs. The maximum size of the metadata key and value is
+    255 bytes each.
+  in: body
+  required: false
+  type: object
 imageRef:
   description: |
     The UUID of the image to use for your instance.
@@ -122,6 +129,21 @@ instance_status:
 instance_uuid:
   description: |
     The UUID of the server instance
+  in: body
+  required: true
+  type: string
+launched_at:
+  description: |
+    The date and time when the instance was launched. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+    ::
+
+      CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``. The ``±hh:mm``
+    value, if included, is the time zone as an offset from UTC.  In
+    the previous example, the offset value is ``-05:00``.
   in: body
   required: true
   type: string

@@ -66,6 +66,15 @@ _CREATE_INSTANCE_SCHEMA = {
                 'additionalProperties': False,
             },
         },
+        'extra': {
+            'type': 'object',
+            'patternProperties': {
+                '^[a-zA-Z0-9-_:. ]{1,255}$': {
+                    'type': 'string', 'maxLength': 255
+                }
+            },
+            'additionalProperties': False
+        }
     },
     'required': ['name', 'image_uuid', 'instance_type_uuid', 'networks'],
     'additionalProperties': False,
@@ -197,6 +206,9 @@ class Instance(base.APIBase):
 
     launched_at = datetime.datetime
     """The UTC date and time of the instance launched"""
+
+    extra = {wtypes.text: types.jsontype}
+    """The meta data of the instance"""
 
     def __init__(self, **kwargs):
         super(Instance, self).__init__(**kwargs)
