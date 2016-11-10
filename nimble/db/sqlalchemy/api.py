@@ -90,7 +90,7 @@ class Connection(api.Connection):
     def __init__(self):
         pass
 
-    def instance_type_create(self, values):
+    def instance_type_create(self, context, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
@@ -176,7 +176,7 @@ class Connection(api.Connection):
             if count != 1:
                 raise exception.InstanceNotFound(instance=instance_id)
 
-    def update_instance(self, context, instance_id, values):
+    def instance_update(self, context, instance_id, values):
         if 'uuid' in values:
             msg = _("Cannot overwrite UUID for an existing Instance.")
             raise exception.InvalidParameterValue(err=msg)
@@ -261,10 +261,10 @@ def _type_get_id_from_type_query(context, type_id):
 
 
 def _type_get_id_from_type(context, type_id):
-    result = _type_get_id_from_type_query(context, type_id).first().id
+    result = _type_get_id_from_type_query(context, type_id).first()
     if not result:
         raise exception.InstanceTypeNotFound(type_id=type_id)
-    return result
+    return result.id
 
 
 def _type_extra_specs_get_query(context, type_id):

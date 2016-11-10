@@ -82,7 +82,7 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
     def create(self, context=None):
         """Create a Instance Type record in the DB."""
         values = self.obj_get_changes()
-        db_instance_type = self.dbapi.instance_type_create(values)
+        db_instance_type = self.dbapi.instance_type_create(context, values)
         self._from_db_object(self, db_instance_type)
 
     def destroy(self, context=None):

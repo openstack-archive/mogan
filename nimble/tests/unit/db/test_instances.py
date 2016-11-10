@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Tests for manipulating Nodes via the DB API"""
+"""Tests for manipulating Instances via the DB API"""
 
 from nimble.tests.unit.db import base
 from nimble.tests.unit.db import utils
 
 
-class DbNodeTestCase(base.DbTestCase):
+class DbInstanceTestCase(base.DbTestCase):
 
     def test_instance_create(self):
         utils.create_test_instance()

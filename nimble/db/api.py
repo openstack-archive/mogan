@@ -43,38 +43,45 @@ class Connection(object):
 
     # Instance Types
     @abc.abstractmethod
-    def instance_type_create(self, values):
+    def instance_type_create(self, context, values):
         """Create a new instance type."""
 
     @abc.abstractmethod
-    def instance_type_get(uuid):
+    def instance_type_get(self, context, instance_type_uuid):
         """Get instance type by uuid."""
 
-    def instance_type_get_all():
+    @abc.abstractmethod
+    def instance_type_get_all(self, context):
         """Get all instance types."""
 
     @abc.abstractmethod
-    def instance_type_destroy(uuid):
+    def instance_type_destroy(self, context, instance_type_uuid):
         """Delete an instance type."""
 
     # Instances
     @abc.abstractmethod
-    def instance_create(self, values):
+    def instance_create(self, context, values):
         """Create a new instance."""
 
     @abc.abstractmethod
-    def instance_get(uuid):
+    def instance_get(self, context, instance_id):
         """Get instance by name."""
 
-    def instance_get_all():
+    @abc.abstractmethod
+    def instance_get_all(self, context):
         """Get all instances."""
 
     @abc.abstractmethod
-    def instance_destroy(name):
+    def instance_destroy(self, context, instance_id):
         """Delete an instance."""
 
     @abc.abstractmethod
-    def extra_specs_update_or_create(instance_type_id, extra_specs):
+    def instance_update(self, context, instance_id, values):
+        """Update an instance."""
+
+    @abc.abstractmethod
+    def extra_specs_update_or_create(self, context,
+                                     instance_type_id, extra_specs):
         """Create or update instance type extra specs.
 
         This adds or modifies the key/value pairs specified in the
@@ -82,7 +89,11 @@ class Connection(object):
         """
 
     @abc.abstractmethod
-    def type_extra_specs_delete(instance_type_id, key):
+    def instance_type_extra_specs_get(self, context, type_id):
+        """Get instance type extra specs"""
+
+    @abc.abstractmethod
+    def type_extra_specs_delete(self, context, instance_type_id, key):
         """Delete instance type extra specs.
 
         This deletes the key/value pairs specified in the
