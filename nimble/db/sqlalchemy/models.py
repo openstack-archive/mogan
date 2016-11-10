@@ -23,7 +23,7 @@ from oslo_db.sqlalchemy import types as db_types
 import six.moves.urllib.parse as urlparse
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey
 from sqlalchemy import orm
-from sqlalchemy import schema, String, Integer, Text
+from sqlalchemy import schema, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
 
 from nimble.common import paths
@@ -133,4 +133,4 @@ class Instance(Base):
     network_info = Column(db_types.JsonEncodedDict)
     node_uuid = Column(String(36), nullable=True)
     launched_at = Column(DateTime, nullable=True)
-    extra = Column(Text, nullable=True)
+    extra = Column(db_types.JsonEncodedDict)
