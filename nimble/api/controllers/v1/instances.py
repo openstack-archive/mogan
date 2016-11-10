@@ -268,8 +268,14 @@ class InstanceController(rest.RestController):
         self._resource = objects.Instance.get(pecan.request.context, uuid)
         return self._resource
 
-    def _get_instance_collection(self, fields=None):
-        instances = objects.Instance.list(pecan.request.context)
+    def _get_instance_collection(self, fields=None, all_tenants=False):
+        context = pecan.request.context
+        project_only = True
+        if context.is_admin and all_tenants:
+            project_only = False
+
+        instances = objects.Instance.list(pecan.request.context,
+                                          project_only=project_only)
         instances_data = [instance.as_dict() for instance in instances]
 
         if fields is None or 'power_state' in fields:
@@ -297,16 +303,21 @@ class InstanceController(rest.RestController):
         return InstanceCollection.convert_with_links(instances_data,
                                                      fields=fields)
 
-    @expose.expose(InstanceCollection, types.listtype)
-    def get_all(self, fields=None):
+    @expose.expose(InstanceCollection, types.listtype, types.boolean)
+    def get_all(self, fields=None, all_tenants=None):
         """Retrieve a list of instance.
 
         :param fields: Optional, a list with a specified set of fields
                        of the resource to be returned.
+        :param all_tenants: Optional, allows administrators to see the
+                            servers owned by all tenants, otherwise only the
+                            servers associated with the calling tenant are
+                            included in the response.
         """
         if fields is None:
             fields = _DEFAULT_INSTANCE_RETURN_FIELDS
-        return self._get_instance_collection(fields=fields)
+        return self._get_instance_collection(fields=fields,
+                                             all_tenants=all_tenants)
 
     @policy.authorize_wsgi("nimble:instance", "get")
     @expose.expose(Instance, types.uuid, types.listtype)
@@ -334,14 +345,14 @@ class InstanceController(rest.RestController):
             instance_data['power_state'] = node.power_state
         return Instance.convert_with_links(instance_data, fields=fields)
 
-    @expose.expose(InstanceCollection)
-    def detail(self):
+    @expose.expose(InstanceCollection, types.boolean)
+    def detail(self, all_tenants=None):
         """Retrieve detail of a list of instances."""
         # /detail should only work against collections
         parent = pecan.request.path.split('/')[:-1][-1]
         if parent != "instances":
             raise exception.NotFound()
-        return self._get_instance_collection()
+        return self._get_instance_collection(all_tenants=all_tenants)
 
     @policy.authorize_wsgi("nimble:instance", "create", False)
     @expose.expose(Instance, body=types.jsontype,
@@ -382,14 +393,14 @@ class InstanceController(rest.RestController):
         pecan.response.location = link.build_url('instance', instance_obj.uuid)
         return Instance.convert_with_links(instance_obj)
 
+    @policy.authorize_wsgi("nimble:instance", "delete")
     @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)
     def delete(self, instance_uuid):
         """Delete a instance.
 
         :param instance_uuid: UUID of a instance.
         """
-        rpc_instance = objects.Instance.get(pecan.request.context,
-                                            instance_uuid)
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
         pecan.request.rpcapi.delete_instance(pecan.request.context,
                                              rpc_instance)
 
