@@ -41,3 +41,46 @@ class TestInstanceObject(base.DbTestCase):
 
             mock_instance_get.assert_called_once_with(self.context, uuid)
             self.assertEqual(self.context, instance._context)
+
+    def test_list(self):
+        with mock.patch.object(self.dbapi, 'instance_get_all',
+                               autospec=True) as mock_instance_get_all:
+            mock_instance_get_all.return_value = [self.fake_instance]
+
+            project_only = False
+            instances = objects.Instance.list(self.context, project_only)
+
+            mock_instance_get_all.assert_called_once_with(
+                self.context, project_only)
+            self.assertIsInstance(instances[0], objects.Instance)
+            self.assertEqual(self.context, instances[0]._context)
+
+    def test_create(self):
+        with mock.patch.object(self.dbapi, 'instance_create',
+                               autospec=True) as mock_instance_create:
+            mock_instance_create.return_value = self.fake_instance
+            instance = objects.Instance(self.context, **self.fake_instance)
+            values = instance.obj_get_changes()
+            instance.create(self.context)
+            mock_instance_create.assert_called_once_with(self.context, values)
+            self.assertEqual(self.fake_instance['id'], instance['id'])
+
+    def test_destroy(self):
+        uuid = self.fake_instance['uuid']
+        with mock.patch.object(self.dbapi, 'instance_destroy',
+                               autospec=True) as mock_instance_destroy:
+            mock_instance_destroy.return_value = self.fake_instance
+            instance = objects.Instance(self.context, **self.fake_instance)
+            instance.destroy(self.context)
+            mock_instance_destroy.assert_called_once_with(self.context, uuid)
+
+    def test_save(self):
+        uuid = self.fake_instance['uuid']
+        with mock.patch.object(self.dbapi, 'instance_update',
+                               autospec=True) as mock_instance_update:
+            mock_instance_update.return_value = self.fake_instance
+            instance = objects.Instance(self.context, **self.fake_instance)
+            updates = instance.obj_get_changes()
+            instance.save(self.context)
+            mock_instance_update.assert_called_once_with(
+                self.context, uuid, updates)
