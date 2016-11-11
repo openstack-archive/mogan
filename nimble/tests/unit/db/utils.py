@@ -78,3 +78,34 @@ def create_test_instance(context={}, **kw):
     dbapi = db_api.get_instance()
 
     return dbapi.instance_create(context, instance)
+
+
+def get_test_instance_type(**kw):
+    return {
+        'id': kw.get('id', 123),
+        'uuid': kw.get('uuid', 'e5ddde02-f84d-4da7-ade3-957c55072986'),
+        'name': kw.get('name', 'test'),
+        'description': kw.get('description', 'test'),
+        'is_public': kw.get('is_public', 1),
+        'updated_at': kw.get('updated_at'),
+        'created_at': kw.get('created_at'),
+    }
+
+
+def create_test_instance_type(context={}, **kw):
+    """Create test instance type entry in DB and return the DB object.
+
+    Function to be used to create test Instance Type objects in the database.
+
+    :param context: The request context, for access checks.
+    :param kw: kwargs with overriding values for instance type's attributes.
+    :returns: Test Instance Type DB object.
+
+    """
+    instance_type = get_test_instance_type(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del instance_type['id']
+    dbapi = db_api.get_instance()
+
+    return dbapi.instance_type_create(context, instance_type)

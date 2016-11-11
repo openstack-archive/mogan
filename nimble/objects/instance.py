@@ -79,5 +79,5 @@ class Instance(base.NimbleObject, object_base.VersionedObjectDictCompat):
     def save(self, context=None):
         """Save updates to this Instance."""
         updates = self.obj_get_changes()
-        self.dbapi.update_instance(context, self.uuid, updates)
+        self.dbapi.instance_update(context, self.uuid, updates)
         self.obj_reset_changes()
