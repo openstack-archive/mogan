@@ -26,6 +26,7 @@ import testscenarios
 
 from nimble.common import config as nimble_config
 from nimble.common import context as nimble_context
+from nimble.tests  import policy_fixture
 
 
 CONF = cfg.CONF
@@ -57,6 +58,7 @@ class TestCase(base.BaseTestCase):
             pecan.set_config({}, overwrite=True)
 
         self.addCleanup(reset_pecan)
+        self.policy = self.useFixture(policy_fixture.PolicyFixture())
 
     def _set_config(self):
         self.cfg_fixture = self.useFixture(config_fixture.Config(cfg.CONF))
