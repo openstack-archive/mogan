@@ -20,6 +20,7 @@ SHOULD include dedicated exception logging.
 """
 
 from oslo_log import log as logging
+from oslo_versionedobjects import exception as obj_exc
 import six
 from six.moves import http_client
 
@@ -223,3 +224,6 @@ class NetworkError(NimbleException):
 
 class ValidationError(Invalid):
     msg_fmt = "%(detail)s"
+
+
+ObjectActionError = obj_exc.ObjectActionError
