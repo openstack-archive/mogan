@@ -429,51 +429,6 @@ class TestObjectSerializer(test_base.TestCase):
             for item in thing2:
                 self.assertIsInstance(item, MyObj)
 
-    @mock.patch('nimble.objects.base.NimbleObject.indirection_api')
-    def _test_deserialize_entity_newer(self, obj_version, backported_to,
-                                       mock_indirection_api,
-                                       my_version='1.6'):
-        ser = base.NimbleObjectSerializer()
-        mock_indirection_api.object_backport_versions.return_value \
-            = 'backported'
-
-        @base.NimbleObjectRegistry.register
-        class MyTestObj(MyObj):
-            VERSION = my_version
-
-        obj = MyTestObj(self.context)
-        obj.VERSION = obj_version
-        primitive = obj.obj_to_primitive()
-        result = ser.deserialize_entity(self.context, primitive)
-        if backported_to is None:
-            self.assertFalse(
-                mock_indirection_api.object_backport_versions.called)
-        else:
-            self.assertEqual('backported', result)
-            versions = object_base.obj_tree_get_versions('MyTestObj')
-            mock_indirection_api.object_backport_versions.assert_called_with(
-                self.context, primitive, versions)
-
-    def test_deserialize_entity_newer_version_backports(self):
-        "Test object with unsupported (newer) version"
-        self._test_deserialize_entity_newer('1.25', '1.6')
-
-    def test_deserialize_entity_same_revision_does_not_backport(self):
-        "Test object with supported revision"
-        self._test_deserialize_entity_newer('1.6', None)
-
-    def test_deserialize_entity_newer_revision_does_not_backport_zero(self):
-        "Test object with supported revision"
-        self._test_deserialize_entity_newer('1.6.0', None)
-
-    def test_deserialize_entity_newer_revision_does_not_backport(self):
-        "Test object with supported (newer) revision"
-        self._test_deserialize_entity_newer('1.6.1', None)
-
-    def test_deserialize_entity_newer_version_passes_revision(self):
-        "Test object with unsupported (newer) version and revision"
-        self._test_deserialize_entity_newer('1.7', '1.6.1', my_version='1.6.1')
-
 
 class TestRegistry(test_base.TestCase):
     @mock.patch('nimble.objects.base.objects')
