@@ -69,7 +69,6 @@ class TestInstanceObject(base.DbTestCase):
         uuid = self.fake_instance['uuid']
         with mock.patch.object(self.dbapi, 'instance_destroy',
                                autospec=True) as mock_instance_destroy:
-            mock_instance_destroy.return_value = self.fake_instance
             instance = objects.Instance(self.context, **self.fake_instance)
             instance.destroy(self.context)
             mock_instance_destroy.assert_called_once_with(self.context, uuid)
