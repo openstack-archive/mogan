@@ -269,8 +269,7 @@ class Connection(api.Connection):
 
 
 def _type_get_id_from_type_query(context, type_id):
-    return model_query(context, models.InstanceTypes,
-                       read_deleted="no"). \
+    return model_query(context, models.InstanceTypes). \
         filter_by(uuid=type_id)
 
 
@@ -282,6 +281,5 @@ def _type_get_id_from_type(context, type_id):
 
 
 def _type_extra_specs_get_query(context, type_id):
-    return model_query(context, models.InstanceTypeExtraSpecs,
-                       read_deleted="no"). \
+    return model_query(context, models.InstanceTypeExtraSpecs). \
         filter_by(instance_type_id=type_id)
