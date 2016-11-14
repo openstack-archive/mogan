@@ -26,6 +26,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload
 
 from nimble.common import exception
+from nimble.common.i18n import _
 from nimble.db import api
 from nimble.db.sqlalchemy import models
 
