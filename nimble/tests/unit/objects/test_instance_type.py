@@ -14,6 +14,7 @@
 import mock
 
 from nimble.common import context
+from nimble.common import exception
 from nimble import objects
 from nimble.tests.unit.db import base
 from nimble.tests.unit.db import utils
@@ -37,3 +38,42 @@ class TestInstanceTypeObject(base.DbTestCase):
 
             mock_type_get.assert_called_once_with(self.context, uuid)
             self.assertEqual(self.context, instance_type._context)
+
+    def test_list(self):
+        with mock.patch.object(self.dbapi, 'instance_type_get_all',
+                               autospec=True) as mock_type_get_all:
+            mock_type_get_all.return_value = [self.fake_type]
+
+            types = objects.InstanceType.list(self.context)
+
+            mock_type_get_all.assert_called_once_with(self.context)
+            self.assertIsInstance(types[0], objects.InstanceType)
+            self.assertEqual(self.context, types[0]._context)
+
+    def test_create(self):
+        with mock.patch.object(self.dbapi, 'instance_type_create',
+                               autospec=True) as mock_type_create:
+            mock_type_create.return_value = self.fake_type
+            instance_type = objects.InstanceType(self.context,
+                                                 **self.fake_type)
+            values = instance_type.obj_get_changes()
+            instance_type.create(self.context)
+            mock_type_create.assert_called_once_with(self.context, values)
+            self.assertEqual(self.fake_type['id'], instance_type['id'])
+
+    def test_destroy(self):
+        uuid = self.fake_type['uuid']
+        with mock.patch.object(self.dbapi, 'instance_type_destroy',
+                               autospec=True) as mock_type_destroy:
+            mock_type_destroy.return_value = self.fake_type
+            instance_type = objects.InstanceType(self.context,
+                                                 **self.fake_type)
+            instance_type.destroy(self.context)
+            mock_type_destroy.assert_called_once_with(self.context, uuid)
+
+    def test_save(self):
+        instance_type = objects.InstanceType(self.context,
+                                             **self.fake_type)
+        self.assertRaises(exception.ObjectActionError,
+                          instance_type.save,
+                          self.context)
