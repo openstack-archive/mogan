@@ -31,7 +31,7 @@ class TestInstanceType(v1_test.APITestV1):
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
     def _prepare_instance_types(self, mocked):
         mocked.side_effect = self.TYPE_UUIDS
-        for i in xrange(4):
+        for i in range(4):
             body = {"name": "test" + str(i),
                     "description": "just test" + str(i)}
             self.post_json('/types', body, status=201)
