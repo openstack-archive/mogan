@@ -118,6 +118,7 @@ class Instance(Base):
     __tablename__ = 'instances'
     __table_args__ = (
         schema.UniqueConstraint('uuid', name='uniq_instances0uuid'),
+        schema.UniqueConstraint('name', name='uniq_instances0name'),
         table_args()
     )
     id = Column(Integer, primary_key=True)
