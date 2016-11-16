@@ -15,6 +15,7 @@
 
 import time
 
+from ironicclient import exceptions as client_e
 from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import loopingcall
@@ -179,7 +180,20 @@ class EngineManager(base_manager.BaseEngineManager):
                 request_spec)
         instance.node_uuid = top_node.to_dict()['node']
 
-        ironic.set_instance_info(instance)
+        try:
+            ironic.set_instance_info(instance)
+        # Note(Lu yao) we will refactor the instance create code. This is a temporary solution
+        except client_e.BadRequest:
+            instance.status = status.UNASSOCIATE
+            instance.save()
+            raise exception.InstanceDeployFailure(_(
+                'can not associate instance to node %(node_uuid)s '
+                'with request spec %(spec)s."" details: %(details)s')
+                % {'node_uuid': instance.node_uuid,
+                   'spec': request_spec,
+                   'details': client_e.BadRequest})
+        # maybe we need to check other Exception here.
+
         # validate we are ready to do the deploy
         validate_chk = ironic.validate_node(instance.node_uuid)
         if (not validate_chk.deploy.get('result')
@@ -207,6 +221,10 @@ class EngineManager(base_manager.BaseEngineManager):
     def delete_instance(self, context, instance):
         """Signal to engine service to delete an instance."""
         LOG.debug("Deleting instance...")
+
+        if instance.status == status.UNASSOCIATE:
+            instance.destroy()
+            return
 
         self._destroy_networks(context, instance)
         self._destroy_instance(context, instance)
