@@ -26,3 +26,5 @@ ACTIVE = 'active'
 BUILDING = 'building'
 
 ERROR = 'error'
+
+UNASSOCIATE = 'un_associate'
