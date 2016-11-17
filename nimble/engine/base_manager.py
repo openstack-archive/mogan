@@ -20,6 +20,7 @@ from oslo_service import periodic_task
 from oslo_utils import importutils
 
 from nimble.common.i18n import _
+from nimble.common import ironic
 from nimble.common import rpc
 from nimble.conf import CONF
 from nimble.db import api as dbapi
@@ -38,6 +39,7 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         scheduler_driver = CONF.scheduler.scheduler_driver
         self.scheduler = importutils.import_object(scheduler_driver)
         self.notifier = rpc.get_notifier()
+        self.ironicclient = ironic.IronicClientWrapper()
         self._started = False
 
     def init_host(self):

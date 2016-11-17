@@ -44,7 +44,8 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def _refresh_cache(self):
         node_cache = []
-        nodes = ironic.get_node_list(detail=True, maintenance=False,
+        nodes = ironic.get_node_list(self.ironicclient, detail=True,
+                                     maintenance=False,
                                      provision_state=ironic_states.AVAILABLE,
                                      associated=False, limit=0)
         for node in nodes:
@@ -60,7 +61,9 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def _build_networks(self, context, instance, requested_networks):
         node_uuid = instance.node_uuid
-        ironic_ports = ironic.get_ports_from_node(node_uuid, detail=True)
+        ironic_ports = ironic.get_ports_from_node(self.ironicclient,
+                                                  node_uuid,
+                                                  detail=True)
         LOG.debug(_('Find ports %(ports)s for node %(node)s') %
                   {'ports': ironic_ports, 'node': node_uuid})
         if len(requested_networks) > len(ironic_ports):
@@ -84,7 +87,8 @@ class EngineManager(base_manager.BaseEngineManager):
                         'network': port_dict['network_id'],
                         'mac_address': port_dict['mac_address'],
                         'fixed_ips': port_dict['fixed_ips']}
-                    ironic.plug_vif(pif.uuid, port_dict['id'])
+                    ironic.plug_vif(self.ironicclient, pif.uuid,
+                                    port_dict['id'])
 
         return network_info
 
@@ -97,16 +101,18 @@ class EngineManager(base_manager.BaseEngineManager):
         for port in ports:
             neutron.delete_port(context, port, instance.uuid)
 
-        ironic_ports = ironic.get_ports_from_node(instance.node_uuid,
+        ironic_ports = ironic.get_ports_from_node(self.ironicclient,
+                                                  instance.node_uuid,
                                                   detail=True)
         for pif in ironic_ports:
             if 'vif_port_id' in pif.extra:
-                ironic.unplug_vif(pif.uuid)
+                ironic.unplug_vif(self.ironicclient, pif.uuid)
 
     def _wait_for_active(self, instance):
         """Wait for the node to be marked as ACTIVE in Ironic."""
 
-        node = ironic.get_node_by_instance(instance.uuid)
+        node = ironic.get_node_by_instance(self.ironicclient,
+                                           instance.uuid)
         LOG.debug('Current ironic node state is %s', node.provision_state)
         if node.provision_state == ironic_states.ACTIVE:
             # job is done
@@ -134,7 +140,7 @@ class EngineManager(base_manager.BaseEngineManager):
             raise exception.InstanceDeployFailure(msg)
 
     def _build_instance(self, context, instance):
-        ironic.do_node_deploy(instance.node_uuid)
+        ironic.do_node_deploy(self.ironicclient, instance.node_uuid)
 
         timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
                                                      instance)
@@ -143,7 +149,7 @@ class EngineManager(base_manager.BaseEngineManager):
                  instance.node_uuid)
 
     def _destroy_instance(self, context, instance):
-        ironic.destroy_node(instance.node_uuid)
+        ironic.destroy_node(self.ironicclient, instance.node_uuid)
         LOG.info(_LI('Successfully destroyed Ironic node %s'),
                  instance.node_uuid)
 
@@ -179,9 +185,10 @@ class EngineManager(base_manager.BaseEngineManager):
                 request_spec)
         instance.node_uuid = top_node.to_dict()['node']
 
-        ironic.set_instance_info(instance)
+        ironic.set_instance_info(self.ironicclient, instance)
         # validate we are ready to do the deploy
-        validate_chk = ironic.validate_node(instance.node_uuid)
+        validate_chk = ironic.validate_node(self.ironicclient,
+                                            instance.node_uuid)
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
             instance.status = status.ERROR
@@ -214,7 +221,8 @@ class EngineManager(base_manager.BaseEngineManager):
         instance.destroy()
 
     def _instance_states(self, context, instance):
-        states = ironic.get_node_states(instance.node_uuid)
+        states = ironic.get_node_states(self.ironicclient,
+                                        instance.node_uuid)
         LOG.info(_LI('Successfully get ironic node states: %s'),
                  states)
         return states.to_dict()
@@ -226,7 +234,7 @@ class EngineManager(base_manager.BaseEngineManager):
         return self._instance_states(context, instance)
 
     def _set_power_state(self, context, instance, state):
-        ironic.set_power_state(instance.node_uuid, state)
+        ironic.set_power_state(self.ironicclient, instance.node_uuid, state)
         LOG.info(_LI('Successfully set ironic node power state: %s'),
                  state)
 
