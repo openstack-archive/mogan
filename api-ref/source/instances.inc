@@ -85,7 +85,7 @@ and description for each Instance.
 Normal response codes: 200
 
 Error response codes: badRequest(400), unauthorized(401),
-forbidden(403), conflict(409)
+forbidden(403)
 
 Request
 -------
@@ -121,7 +121,7 @@ Return a list of bare metal Instances with complete details.
 Normal response codes: 200
 
 Error response codes: badRequest(400), unauthorized(401),
-forbidden(403), conflict(409)
+forbidden(403)
 
 Request
 -------
@@ -166,7 +166,7 @@ return only the specified set.
 Normal response codes: 200
 
 Error response codes: badRequest(400), unauthorized(401),
-forbidden(403), conflict(409)
+forbidden(403), itemNotFound(404)
 
 Request
 -------
