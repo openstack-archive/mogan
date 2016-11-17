@@ -204,6 +204,34 @@ Response
    :language: javascript
 
 
+Delete Instance
+=============
+
+.. rest_method:: DELETE /instances/{instances_uuid}
+
+Deletes an instance.
+
+Preconditions
+
+- The instance must exist.
+
+Normal response codes: 204
+
+Error response codes: unauthorized(401), forbidden(403), itemNotFound(404)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - instances_uuid: instances_uuid_path
+
+Response
+--------
+
+No body content is returned on a successful DELETE.
+
+
 ===============================
 Instance Management (instances)
 ===============================
