@@ -87,7 +87,7 @@ def add_identity_filter(query, value):
     elif uuidutils.is_uuid_like(value):
         return query.filter_by(uuid=value)
     else:
-        raise exception.InvalidIdentity(identity=value)
+        raise exception.InvalidParameterValue(identity=value)
 
 
 def _dict_with_extra_specs(inst_type_query):

@@ -68,7 +68,7 @@ class Connection(object):
         """Get instance by name."""
 
     @abc.abstractmethod
-    def instance_get_all(self, context):
+    def instance_get_all(self, context, project_only):
         """Get all instances."""
 
     @abc.abstractmethod
