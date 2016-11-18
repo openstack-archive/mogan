@@ -18,6 +18,7 @@
 
 
 from oslo_config import cfg
+from oslo_serialization import jsonutils
 import pecan
 import pecan.testing
 
@@ -208,3 +209,48 @@ class BaseApiTest(base.DbTestCase):
         if not expect_errors:
             response = response.json
         return response
+
+    def gen_headers(self, context, **kw):
+        """Generate a header for a simulated HTTP request to Pecan test app.
+
+        :param context: context that store the client user information.
+        :param kw: key word aguments, used to overwrite the context attribute.
+
+        note: "is_public_api" is not in headers, it should be in environ
+        variables to send along with the requeste. We can pass it by
+        extra_environ when we call delete, get_json or other method request.
+        """
+        ct = context.to_dict()
+        ct.update(kw)
+        headers = {
+            'X-User-Name': ct.get("user_name") or "user",
+            'X-User-Id':
+                ct.get("user_id") or "8abcdef1-2345-6789-abcd-ef123456abc0",
+            'X-Project-Name': ct.get("project_name") or "project",
+            'X-Project-Id':
+                ct.get("project_id") or "1abcdef1-2345-6789-abcd-ef123456abe0",
+            'X-User-Domain-Id':
+                ct.get("domain_id") or "9abcdef1-2345-6789-abcd-ef123456abc0",
+            'X-User-Domain-Name': ct.get("domain_name") or "no_domain",
+            'X-Auth-Token':
+                ct.get("auth_token") or "6aff71c33a274bc3ab7f0b29ca1be162",
+            'X-Roles': ct.get("roles") or "nimble"
+        }
+
+        return headers
+
+    def parser_error_body(self, resp):
+        """paser a string response error body to json for a bad HTTP request.
+
+        :param body: and response body need to be parsered.
+
+        :return: an python dict will be return. such as:
+                {u'debuginfo': None,
+                 u'faultcode': u'Client',
+                 u'faultstring': u': error reason'}
+
+        Note: the error body just one nested json string, so we do not need
+        a recursive function.
+        """
+        body = jsonutils.loads(resp.body)
+        return jsonutils.loads(body["error_message"])
