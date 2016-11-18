@@ -31,6 +31,7 @@ from nimble.common import exception
 from nimble.common.i18n import _
 from nimble.common.i18n import _LW
 from nimble.common import policy
+from nimble.engine import api as engineapi
 from nimble.engine.baremetal.ironic import get_node_by_instance
 from nimble.engine.baremetal.ironic import get_node_list
 from nimble.engine.baremetal import ironic_states as ir_states
@@ -255,6 +256,10 @@ class InstanceCollection(base.APIBase):
 class InstanceController(rest.RestController):
     """REST controller for Instance."""
 
+    def __init__(self, **kwargs):
+        super(InstanceController, self).__init__(**kwargs)
+        self.engine_api = engineapi.API()
+
     states = InstanceStatesController()
 
     _custom_actions = {
@@ -371,27 +376,25 @@ class InstanceController(rest.RestController):
         try:
             instance_type = objects.InstanceType.get(pecan.request.context,
                                                      instance_type_uuid)
+
+            instance = self.engine_api.create(
+                pecan.request.context,
+                instance_type,
+                image_uuid=instance.get('image_uuid'),
+                name=instance.get('name'),
+                description=instance.get('description'),
+                availability_zone=instance.get('availability_zone'),
+                extra=instance.get('extra'),
+                requested_networks=requested_networks)
         except exception.InstanceTypeNotFound:
             msg = (_("InstanceType %s could not be found") %
                    instance_type_uuid)
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
 
-        instance_obj = objects.Instance(pecan.request.context, **instance)
-        instance_obj.create()
-
-        instance_obj.user_id = pecan.request.context.user_id
-        instance_obj.project_id = pecan.request.context.project_id
-        instance_obj.save()
-
-        # TODO(zhenguo): Catch exceptions
-        pecan.request.rpcapi.create_instance(pecan.request.context,
-                                             instance_obj,
-                                             requested_networks,
-                                             instance_type)
         # Set the HTTP Location Header
-        pecan.response.location = link.build_url('instance', instance_obj.uuid)
-        return Instance.convert_with_links(instance_obj)
+        pecan.response.location = link.build_url('instance', instance.uuid)
+        return Instance.convert_with_links(instance)
 
     @policy.authorize_wsgi("nimble:instance", "delete")
     @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)
