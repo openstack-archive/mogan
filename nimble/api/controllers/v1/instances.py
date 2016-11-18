@@ -335,6 +335,7 @@ class InstanceController(rest.RestController):
             # or node fields is not requested.
             try:
                 node = get_node_by_instance(instance_uuid, _NODE_FIELDS)
+                instance_data['power_state'] = node.power_state
             except Exception as e:
                 LOG.warning(
                     _LW("Failed to retrieve node by instance_uuid"
@@ -342,7 +343,6 @@ class InstanceController(rest.RestController):
                         "instance_uuid": instance_uuid,
                         "msg": e})
 
-            instance_data['power_state'] = node.power_state
         return Instance.convert_with_links(instance_data, fields=fields)
 
     @expose.expose(InstanceCollection, types.boolean)
