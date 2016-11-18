@@ -17,7 +17,6 @@ from ironicclient import exceptions as client_e
 from oslo_log import log as logging
 
 from nimble.common.i18n import _LE
-from nimble.common import ironic
 from nimble.engine.baremetal import ironic_states
 
 LOG = logging.getLogger(__name__)
@@ -27,23 +26,20 @@ _NODE_FIELDS = ('uuid', 'power_state', 'target_power_state', 'provision_state',
                 'properties', 'instance_uuid')
 
 
-def get_ports_from_node(node_uuid, detail=False):
+def get_ports_from_node(ironicclient, node_uuid, detail=False):
     """List the MAC addresses and the port types from a node."""
-    ironicclient = ironic.IronicClientWrapper()
     ports = ironicclient.call("node.list_ports", node_uuid, detail=detail)
     return ports
 
 
-def plug_vif(ironic_port_id, port_id):
-    ironicclient = ironic.IronicClientWrapper()
+def plug_vif(ironicclient, ironic_port_id, port_id):
     patch = [{'op': 'add',
               'path': '/extra/vif_port_id',
               'value': port_id}]
     ironicclient.call("port.update", ironic_port_id, patch)
 
 
-def unplug_vif(ironic_port_id):
-    ironicclient = ironic.IronicClientWrapper()
+def unplug_vif(ironicclient, ironic_port_id):
     patch = [{'op': 'remove',
               'path': '/extra/vif_port_id'}]
     try:
@@ -52,8 +48,7 @@ def unplug_vif(ironic_port_id):
         pass
 
 
-def set_instance_info(instance):
-    ironicclient = ironic.IronicClientWrapper()
+def set_instance_info(ironicclient, instance):
 
     patch = []
     # Associate the node with an instance
@@ -78,34 +73,30 @@ def set_instance_info(instance):
     ironicclient.call("node.update", instance.node_uuid, patch)
 
 
-def do_node_deploy(node_uuid):
+def do_node_deploy(ironicclient, node_uuid):
     # trigger the node deploy
-    ironicclient = ironic.IronicClientWrapper()
     ironicclient.call("node.set_provision_state", node_uuid,
                       ironic_states.ACTIVE)
 
 
-def get_node_by_instance(instance_uuid, fields=None):
+def get_node_by_instance(ironicclient, instance_uuid, fields=None):
     if fields is None:
         fields = _NODE_FIELDS
-    ironicclient = ironic.IronicClientWrapper()
     return ironicclient.call('node.get_by_instance_uuid',
                              instance_uuid, fields=fields)
 
 
-def destroy_node(node_uuid):
+def destroy_node(ironicclient, node_uuid):
     # trigger the node destroy
-    ironicclient = ironic.IronicClientWrapper()
     ironicclient.call("node.set_provision_state", node_uuid,
                       ironic_states.DELETED)
 
 
-def validate_node(node_uuid):
-    ironicclient = ironic.IronicClientWrapper()
+def validate_node(ironicclient, node_uuid):
     return ironicclient.call("node.validate", node_uuid)
 
 
-def get_node_list(**kwargs):
+def get_node_list(ironicclient, **kwargs):
     """Helper function to return the list of nodes.
 
     If unable to connect ironic server, an empty list is returned.
@@ -113,7 +104,6 @@ def get_node_list(**kwargs):
     :returns: a list of raw node from ironic
 
     """
-    ironicclient = ironic.IronicClientWrapper()
     try:
         node_list = ironicclient.call("node.list", **kwargs)
     except client_e.ClientException as e:
@@ -123,13 +113,11 @@ def get_node_list(**kwargs):
     return node_list
 
 
-def get_node_states(node_uuid):
-    ironicclient = ironic.IronicClientWrapper()
+def get_node_states(ironicclient, node_uuid):
     return ironicclient.call("node.states", node_uuid)
     # Do we need to catch NotFound exception.
 
 
-def set_power_state(node_uuid, state):
-    ironicclient = ironic.IronicClientWrapper()
+def set_power_state(ironicclient, node_uuid, state):
     ironicclient.call("node.set_power_state", node_uuid, state)
     # Do we need to catch NotFound exception.
