@@ -18,3 +18,4 @@ sphinxcontrib-pecanwsme>=0.8 # Apache-2.0
 sphinxcontrib-seqdiag # BSD
 reno>=1.8.0 # Apache-2.0
 os-api-ref>=1.0.0 # Apache-2.0
+tempest>=12.1.0  # Apache-2.0
