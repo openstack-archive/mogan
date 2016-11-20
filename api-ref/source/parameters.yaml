@@ -128,7 +128,7 @@ instance_status:
   type: string
 instance_uuid:
   description: |
-    The UUID of the server instance
+    The UUID of the instance
   in: body
   required: true
   type: string

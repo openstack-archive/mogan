@@ -205,7 +205,7 @@ Response
 
 
 Delete Instance
-=============
+===============
 
 .. rest_method:: DELETE /instances/{instances_uuid}
 
@@ -224,7 +224,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - instances_uuid: instances_uuid_path
+  - instance_ident: instance_ident
 
 Response
 --------
