@@ -92,6 +92,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
+  - all_tenants: all_tenants
   - fields: fields
 
 Response
@@ -125,6 +126,8 @@ forbidden(403)
 
 Request
 -------
+
+  - all_tenants: all_tenants
 
 Response
 --------
