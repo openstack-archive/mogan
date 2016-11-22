@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ironicclient as ironic
+from ironicclient import exc as ironic_exc
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_utils import importutils
 
 from nimble.common import exception
 from nimble.common.i18n import _
@@ -23,8 +24,6 @@ from nimble.common.i18n import _
 
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
-
-ironic = None
 
 # The API version required by the Ironic driver
 IRONIC_API_VERSION = (1, 21)
@@ -34,21 +33,7 @@ class IronicClientWrapper(object):
     """Ironic client wrapper class that encapsulates authentication logic."""
 
     def __init__(self):
-        """Initialise the IronicClientWrapper for use.
-
-        Initialise IronicClientWrapper by loading ironicclient
-        dynamically so that ironicclient is not a dependency for
-        Nimble.
-        """
-        global ironic
-        if ironic is None:
-            ironic = importutils.import_module('ironicclient')
-            # NOTE(deva): work around a lack of symbols in the current version.
-            if not hasattr(ironic, 'exc'):
-                ironic.exc = importutils.import_module('ironicclient.exc')
-            if not hasattr(ironic, 'client'):
-                ironic.client = importutils.import_module(
-                    'ironicclient.client')
+        """Initialise the IronicClientWrapper for use."""
         self._cached_client = None
 
     def _invalidate_cached_client(self):
@@ -94,7 +79,7 @@ class IronicClientWrapper(object):
             if retry_on_conflict:
                 self._cached_client = cli
 
-        except ironic.exc.Unauthorized:
+        except ironic_exc.Unauthorized:
             msg = _("Unable to authenticate Ironic client.")
             LOG.error(msg)
             raise exception.NimbleException(msg)
@@ -135,7 +120,7 @@ class IronicClientWrapper(object):
 
             try:
                 return self._multi_getattr(client, method)(*args, **kwargs)
-            except ironic.exc.Unauthorized:
+            except ironic_exc.Unauthorized:
                 # In this case, the authorization token of the cached
                 # ironic-client probably expired. So invalidate the cached
                 # client and the next try will start with a fresh one.
