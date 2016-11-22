@@ -243,3 +243,13 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.debug("set power state...")
 
         return self._set_power_state(context, instance, state)
+
+    def get_ironic_node(self, context, instance_uuid, fields):
+        node = ironic.get_node_by_instance(self.ironicclient,
+                                           instance_uuid, fields)
+        return node.to_dict()
+
+    def get_ironic_node_list(self, context, fields):
+        nodes = ironic.get_node_list(self.ironicclient, associated=True,
+                                     limit=0, fields=fields)
+        return {'nodes': [node.to_dict() for node in nodes]}

@@ -21,7 +21,6 @@ from six.moves import http_client
 from nimble.common import context
 from nimble.common import policy
 from nimble.db import api as dbapi
-from nimble.engine import rpcapi
 
 
 class ConfigHook(hooks.PecanHook):
@@ -90,13 +89,6 @@ class ContextHook(hooks.PecanHook):
         # passing outside, so it always contain a request_id.
         request_id = state.request.context.request_id
         state.response.headers['Openstack-Request-Id'] = request_id
-
-
-class RPCHook(hooks.PecanHook):
-    """Attach the rpcapi object to the request so controllers can get to it."""
-
-    def before(self, state):
-        state.request.rpcapi = rpcapi.EngineAPI()
 
 
 class NoExceptionTracebackHook(hooks.PecanHook):
