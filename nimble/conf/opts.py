@@ -16,6 +16,7 @@ import nimble.conf.api
 import nimble.conf.database
 import nimble.conf.default
 import nimble.conf.engine
+import nimble.conf.glance
 import nimble.conf.ironic
 import nimble.conf.keystone
 import nimble.conf.neutron
@@ -33,6 +34,7 @@ _opts = [
     ('api', nimble.conf.api.opts),
     ('database', nimble.conf.database.opts),
     ('engine', nimble.conf.engine.opts),
+    ('glance', nimble.conf.glance.opts),
     ('ironic', nimble.conf.ironic.opts),
     ('keystone', nimble.conf.keystone.opts),
     ('neutron', nimble.conf.neutron.opts),

@@ -226,4 +226,22 @@ class ValidationError(Invalid):
     msg_fmt = "%(detail)s"
 
 
+class ImageNotAuthorized(NimbleException):
+    msg_fmt = _("Not authorized for image %(image_id)s.")
+
+
+class ImageBadRequest(Invalid):
+    msg_fmt = _("Request of image %(image_id)s got BadRequest response: "
+                "%(response)s")
+
+
+class ImageNotFound(NotFound):
+    msg_fmt = _("Image %(image_id)s could not be found.")
+
+
+class GlanceConnectionFailed(NimbleException):
+    msg_fmt = _("Connection to glance host %(server)s failed: "
+                "%(reason)s")
+
+
 ObjectActionError = obj_exc.ObjectActionError
