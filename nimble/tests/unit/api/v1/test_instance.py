@@ -52,11 +52,12 @@ class TestInstanceAuthorization(v1_test.APITestV1):
         self.instance1 = utils.create_test_instance(
             name="T1", project_id=project_id)
 
-    @mock.patch('nimble.engine.rpcapi.EngineAPI.create_instance')
+    @mock.patch('nimble.engine.api.API.create')
     @mock.patch('nimble.objects.InstanceType.get')
-    def test_instance_post(self, mock_get, mock_rpi_create):
+    def test_instance_post(self, mock_get, mock_engine_create):
         mock_get.side_effect = None
-        mock_rpi_create.side_effect = None
+        mock_engine_create.side_effect = None
+        mock_engine_create.return_value = self.instance1
         body = gen_post_body()
         self.context.roles = "no-admin"
         # we can not prevent the evil tenant, quota will limite him.
