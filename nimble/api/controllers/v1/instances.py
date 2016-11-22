@@ -32,8 +32,6 @@ from nimble.common.i18n import _
 from nimble.common.i18n import _LW
 from nimble.common import policy
 from nimble.engine import api as engineapi
-from nimble.engine.baremetal.ironic import get_node_by_instance
-from nimble.engine.baremetal.ironic import get_node_list
 from nimble.engine.baremetal import ironic_states as ir_states
 from nimble import objects
 
@@ -123,8 +121,8 @@ class InstanceStatesController(rest.RestController):
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
 
-        rpc_states = pecan.request.rpcapi.instance_states(
-            pecan.request.context, rpc_instance)
+        rpc_states = self.engine_api.states(pecan.request.context,
+                                            rpc_instance)
         return InstanceStates(**rpc_states)
 
     @policy.authorize_wsgi("nimble:instance", "set_power_state")
@@ -149,8 +147,7 @@ class InstanceStatesController(rest.RestController):
             raise exception.InvalidActionParameterValue(
                 value=target, action="power",
                 instance=instance_uuid)
-        pecan.request.rpcapi.set_power_state(pecan.request.context,
-                                             rpc_instance, target)
+        self.engine_api.power(pecan.request.context, rpc_instance, target)
         # At present we do not catch the Exception from ironicclient.
         # Such as Conflict and BadRequest.
         # varify provision_state, if instance is being cleaned,
@@ -285,9 +282,8 @@ class InstanceController(rest.RestController):
 
         if fields is None or 'power_state' in fields:
             try:
-                node_list = get_node_list(
-                    associated=True, limit=0,
-                    fields=_NODE_FIELDS)
+                node_list = self.engine_api.get_ironic_node_list(
+                    pecan.request.context, fields=_NODE_FIELDS)
 
             except Exception as e:
                 LOG.warning(
@@ -339,7 +335,9 @@ class InstanceController(rest.RestController):
             # Only fetch node info if fields parameter is not specified
             # or node fields is not requested.
             try:
-                node = get_node_by_instance(instance_uuid, _NODE_FIELDS)
+                node = self.engine_api.get_ironic_node(pecan.request.context,
+                                                       instance_uuid,
+                                                       _NODE_FIELDS)
                 instance_data['power_state'] = node.power_state
             except Exception as e:
                 LOG.warning(
@@ -404,8 +402,7 @@ class InstanceController(rest.RestController):
         :param instance_uuid: UUID of a instance.
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
-        pecan.request.rpcapi.delete_instance(pecan.request.context,
-                                             rpc_instance)
+        self.engine_api.delete(pecan.request.context, rpc_instance)
 
 
 def _check_create_body(body):

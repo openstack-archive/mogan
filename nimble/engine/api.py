@@ -15,9 +15,13 @@
 
 """Handles all requests relating to compute resources"""
 
+from oslo_log import log
+
 from nimble.engine import rpcapi
 from nimble.engine import status
 from nimble import objects
+
+LOG = log.getLogger(__name__)
 
 
 class API(object):
@@ -96,3 +100,23 @@ class API(object):
                                      image_uuid, name, description,
                                      availability_zone, extra,
                                      requested_networks)
+
+    def _delete_instance(self, context, instance):
+        self.engine_rpcapi.delete_instance(context, instance)
+
+    def delete(self, context, instance):
+        """Delete an instance."""
+        LOG.debug("Going to try to delete instance %s", instance.uuid)
+        self._delete_instance(context, instance)
+
+    def states(self, context, instance):
+        self.engine_rpcapi.instance_states(context, instance)
+
+    def power(self, context, instance, target):
+        self.engine_rpcapi.set_power_state(context, instance, target)
+
+    def get_ironic_node(self, context, instance_uuid, fields):
+        self.engine_rpcapi.get_ironic_node(context, instance_uuid, fields)
+
+    def get_ironic_node_list(self, context, fields):
+        self.engine_rpcapi.get_ironic_node_list(context, fields)
