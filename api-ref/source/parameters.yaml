@@ -35,6 +35,13 @@ type_uuid_path:
   type: string
 
 # variables in query
+all_tenants:
+  description: |
+    Specify the ``all_tenants=1`` query parameter to list all instances
+    for all projects. By default this is only allowed by admin users.
+  in: query
+  required: false
+  type: integer
 fields:
   description: |
     One or more fields to be returned in the response.
