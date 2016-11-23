@@ -21,6 +21,7 @@ from nimble.common.i18n import _
 
 opts = [
     cfg.ListOpt('glance_api_servers',
+                required=True,
                 help=_('A list of the glance api servers available to nimble. '
                        'Prefix with https:// for SSL-based glance API '
                        'servers. Format is [hostname|IP]:port.')),

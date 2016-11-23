@@ -168,7 +168,7 @@
 #rpc_zmq_bind_address = *
 
 # MatchMaker driver. (string value)
-# Allowed values: redis, dummy
+# Allowed values: redis, sentinel, dummy
 # Deprecated group/name - [DEFAULT]/rpc_zmq_matchmaker
 #rpc_zmq_matchmaker = redis
 
@@ -191,13 +191,15 @@
 # Deprecated group/name - [DEFAULT]/rpc_zmq_host
 #rpc_zmq_host = localhost
 
-# Seconds to wait before a cast expires (TTL). The default
-# value of -1 specifies an infinite linger period. The value
-# of 0 specifies no linger period. Pending messages shall be
-# discarded immediately when the socket is closed. Only
-# supported by impl_zmq. (integer value)
+# Number of seconds to wait before all pending messages will
+# be sent after closing a socket. The default value of -1
+# specifies an infinite linger period. The value of 0
+# specifies no linger period. Pending messages shall be
+# discarded immediately when the socket is closed. Positive
+# values specify an upper bound for the linger period.
+# (integer value)
 # Deprecated group/name - [DEFAULT]/rpc_cast_timeout
-#rpc_cast_timeout = -1
+#zmq_linger = -1
 
 # The default number of seconds that poll should wait. Poll
 # raises timeout exception when timeout expired. (integer
@@ -253,7 +255,73 @@
 # False means to keep queue and messages even if server is
 # disconnected, when the server appears we send all
 # accumulated messages to it. (boolean value)
-#zmq_immediate = false
+#zmq_immediate = true
+
+# Enable/disable TCP keepalive (KA) mechanism. The default
+# value of -1 (or any other negative value) means to skip any
+# overrides and leave it to OS default; 0 and 1 (or any other
+# positive value) mean to disable and enable the option
+# respectively. (integer value)
+#zmq_tcp_keepalive = -1
+
+# The duration between two keepalive transmissions in idle
+# condition. The unit is platform dependent, for example,
+# seconds in Linux, milliseconds in Windows etc. The default
+# value of -1 (or any other negative value and 0) means to
+# skip any overrides and leave it to OS default. (integer
+# value)
+#zmq_tcp_keepalive_idle = -1
+
+# The number of retransmissions to be carried out before
+# declaring that remote end is not available. The default
+# value of -1 (or any other negative value and 0) means to
+# skip any overrides and leave it to OS default. (integer
+# value)
+#zmq_tcp_keepalive_cnt = -1
+
+# The duration between two successive keepalive
+# retransmissions, if acknowledgement to the previous
+# keepalive transmission is not received. The unit is platform
+# dependent, for example, seconds in Linux, milliseconds in
+# Windows etc. The default value of -1 (or any other negative
+# value and 0) means to skip any overrides and leave it to OS
+# default. (integer value)
+#zmq_tcp_keepalive_intvl = -1
+
+# Maximum number of (green) threads to work concurrently.
+# (integer value)
+#rpc_thread_pool_size = 100
+
+# Expiration timeout in seconds of a sent/received message
+# after which it is not tracked anymore by a client/server.
+# (integer value)
+#rpc_message_ttl = 300
+
+# Wait for message acknowledgements from receivers. This
+# mechanism works only via proxy without PUB/SUB. (boolean
+# value)
+#rpc_use_acks = false
+
+# Number of seconds to wait for an ack from a cast/call. After
+# each retry attempt this timeout is multiplied by some
+# specified multiplier. (integer value)
+#rpc_ack_timeout_base = 15
+
+# Number to multiply base ack timeout by after each retry
+# attempt. (integer value)
+#rpc_ack_timeout_multiplier = 2
+
+# Default number of message sending attempts in case of any
+# problems occurred: positive value N means at most N retries,
+# 0 means no retries, None or -1 (or any other negative
+# values) mean to retry forever. This option is used only if
+# acknowledgments are enabled. (integer value)
+#rpc_retry_attempts = 3
+
+# List of publisher hosts SubConsumer can subscribe on. This
+# option has higher priority then the default publishers list
+# taken from the matchmaker. (list value)
+#subscribe_on =
 
 # Size of executor thread pool. (integer value)
 # Deprecated group/name - [DEFAULT]/rpc_thread_pool_size
@@ -570,6 +638,34 @@
 # Interval between syncing the node resources from ironic, in
 # seconds. (integer value)
 #sync_node_resource_interval = 60
+
+# Default scheduler driver to use (string value)
+#scheduler_driver = nimble.engine.scheduler.filter_scheduler.FilterScheduler
+
+
+[glance]
+
+#
+# From nimble
+#
+
+# A list of the glance api servers available to nimble. Prefix
+# with https:// for SSL-based glance API servers. Format is
+# [hostname|IP]:port. (list value)
+#glance_api_servers = <None>
+
+# Allow to perform insecure SSL (https) requests to glance.
+# (boolean value)
+#glance_api_insecure = false
+
+# Number of retries when downloading an image from glance.
+# (integer value)
+#glance_num_retries = 0
+
+# Optional path to a CA certificate bundle to be used to
+# validate the SSL certificate served by glance. It is used
+# when glance_api_insecure is set to False. (string value)
+#glance_cafile = <None>
 
 
 [ironic]
@@ -919,6 +1015,19 @@
 # Minimum value: 1
 #notify_server_credit = 100
 
+# Send messages of this type pre-settled.
+# Pre-settled messages will not receive acknowledgement
+# from the peer. Note well: pre-settled messages may be
+# silently discarded if the delivery fails.
+# Permitted values:
+# 'rpc-call' - send RPC Calls pre-settled
+# 'rpc-reply'- send RPC Replies pre-settled
+# 'rpc-cast' - Send RPC Casts pre-settled
+# 'notify'   - Send Notifications pre-settled
+#  (multi valued)
+#pre_settled = rpc-cast
+#pre_settled = rpc-reply
+
 
 [oslo_messaging_notifications]
 
@@ -1046,6 +1155,7 @@
 #rabbit_password = guest
 
 # The RabbitMQ login method. (string value)
+# Allowed values: PLAIN, AMQPLAIN, RABBIT-CR-DEMO
 # Deprecated group/name - [DEFAULT]/rabbit_login_method
 #rabbit_login_method = AMQPLAIN
 
@@ -1080,7 +1190,7 @@
 # change this option, you must wipe the RabbitMQ database. In
 # RabbitMQ 3.0, queue mirroring is no longer controlled by the
 # x-ha-policy argument when declaring a queue. If you just
-# want to make sure that all queues (except  those with auto-
+# want to make sure that all queues (except those with auto-
 # generated names) are mirrored across all nodes, run:
 # "rabbitmqctl set_policy HA '^(?!amq\.).*' '{"ha-mode":
 # "all"}' " (boolean value)
@@ -1166,6 +1276,12 @@
 # connections are closed on acquire. (integer value)
 #pool_stale = 60
 
+# Default serialization mechanism for
+# serializing/deserializing outgoing/incoming messages (string
+# value)
+# Allowed values: json, msgpack
+#default_serializer_type = json
+
 # Persist notification messages. (boolean value)
 #notification_persistence = false
 
@@ -1236,7 +1352,7 @@
 #rpc_zmq_bind_address = *
 
 # MatchMaker driver. (string value)
-# Allowed values: redis, dummy
+# Allowed values: redis, sentinel, dummy
 # Deprecated group/name - [DEFAULT]/rpc_zmq_matchmaker
 #rpc_zmq_matchmaker = redis
 
@@ -1259,13 +1375,15 @@
 # Deprecated group/name - [DEFAULT]/rpc_zmq_host
 #rpc_zmq_host = localhost
 
-# Seconds to wait before a cast expires (TTL). The default
-# value of -1 specifies an infinite linger period. The value
-# of 0 specifies no linger period. Pending messages shall be
-# discarded immediately when the socket is closed. Only
-# supported by impl_zmq. (integer value)
+# Number of seconds to wait before all pending messages will
+# be sent after closing a socket. The default value of -1
+# specifies an infinite linger period. The value of 0
+# specifies no linger period. Pending messages shall be
+# discarded immediately when the socket is closed. Positive
+# values specify an upper bound for the linger period.
+# (integer value)
 # Deprecated group/name - [DEFAULT]/rpc_cast_timeout
-#rpc_cast_timeout = -1
+#zmq_linger = -1
 
 # The default number of seconds that poll should wait. Poll
 # raises timeout exception when timeout expired. (integer
@@ -1321,7 +1439,73 @@
 # False means to keep queue and messages even if server is
 # disconnected, when the server appears we send all
 # accumulated messages to it. (boolean value)
-#zmq_immediate = false
+#zmq_immediate = true
+
+# Enable/disable TCP keepalive (KA) mechanism. The default
+# value of -1 (or any other negative value) means to skip any
+# overrides and leave it to OS default; 0 and 1 (or any other
+# positive value) mean to disable and enable the option
+# respectively. (integer value)
+#zmq_tcp_keepalive = -1
+
+# The duration between two keepalive transmissions in idle
+# condition. The unit is platform dependent, for example,
+# seconds in Linux, milliseconds in Windows etc. The default
+# value of -1 (or any other negative value and 0) means to
+# skip any overrides and leave it to OS default. (integer
+# value)
+#zmq_tcp_keepalive_idle = -1
+
+# The number of retransmissions to be carried out before
+# declaring that remote end is not available. The default
+# value of -1 (or any other negative value and 0) means to
+# skip any overrides and leave it to OS default. (integer
+# value)
+#zmq_tcp_keepalive_cnt = -1
+
+# The duration between two successive keepalive
+# retransmissions, if acknowledgement to the previous
+# keepalive transmission is not received. The unit is platform
+# dependent, for example, seconds in Linux, milliseconds in
+# Windows etc. The default value of -1 (or any other negative
+# value and 0) means to skip any overrides and leave it to OS
+# default. (integer value)
+#zmq_tcp_keepalive_intvl = -1
+
+# Maximum number of (green) threads to work concurrently.
+# (integer value)
+#rpc_thread_pool_size = 100
+
+# Expiration timeout in seconds of a sent/received message
+# after which it is not tracked anymore by a client/server.
+# (integer value)
+#rpc_message_ttl = 300
+
+# Wait for message acknowledgements from receivers. This
+# mechanism works only via proxy without PUB/SUB. (boolean
+# value)
+#rpc_use_acks = false
+
+# Number of seconds to wait for an ack from a cast/call. After
+# each retry attempt this timeout is multiplied by some
+# specified multiplier. (integer value)
+#rpc_ack_timeout_base = 15
+
+# Number to multiply base ack timeout by after each retry
+# attempt. (integer value)
+#rpc_ack_timeout_multiplier = 2
+
+# Default number of message sending attempts in case of any
+# problems occurred: positive value N means at most N retries,
+# 0 means no retries, None or -1 (or any other negative
+# values) mean to retry forever. This option is used only if
+# acknowledgments are enabled. (integer value)
+#rpc_retry_attempts = 3
+
+# List of publisher hosts SubConsumer can subscribe on. This
+# option has higher priority then the default publishers list
+# taken from the matchmaker. (list value)
+#subscribe_on =
 
 
 [oslo_policy]
@@ -1330,7 +1514,7 @@
 # From oslo.policy
 #
 
-# The JSON file that defines policies. (string value)
+# The file that defines policies. (string value)
 # Deprecated group/name - [DEFAULT]/policy_file
 #policy_file = policy.json
 
@@ -1347,6 +1531,39 @@
 # (multi valued)
 # Deprecated group/name - [DEFAULT]/policy_dirs
 #policy_dirs = policy.d
+
+
+[scheduler]
+
+#
+# From nimble
+#
+
+# Default scheduler driver to use (string value)
+#scheduler_driver = nimble.engine.scheduler.filter_scheduler.FilterScheduler
+
+# The scheduler node manager class to use (string value)
+#scheduler_node_manager = nimble.engine.scheduler.node_manager.NodeManager
+
+# Maximum number of attempts to schedule a node (integer
+# value)
+#scheduler_max_attempts = 3
+
+# Absolute path to scheduler configuration JSON file. (string
+# value)
+#scheduler_json_config_location =
+
+# Which filter class names to use for filtering nodes when not
+# specified in the request. (list value)
+#scheduler_default_filters = AvailabilityZoneFilter,InstanceTypeFilter,CapabilitiesFilter
+
+# Which weigher class names to use for weighing nodes. (list
+# value)
+#scheduler_default_weighers =
+
+# Which handler to use for selecting the node after weighing
+# (string value)
+#scheduler_weight_handler = nimble.engine.scheduler.weights.OrderedNodeWeightHandler
 
 
 [ssl]

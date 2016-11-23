@@ -69,6 +69,7 @@ class TestCase(base.BaseTestCase):
         self.set_defaults(connection="sqlite://",
                           sqlite_synchronous=False,
                           group='database')
+        CONF.set_override('glance_api_servers', 'fake-glance', 'glance')
         nimble_config.parse_args([], default_config_files=[])
 
     def config(self, **kw):

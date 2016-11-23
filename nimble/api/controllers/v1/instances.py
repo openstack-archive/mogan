@@ -369,6 +369,7 @@ class InstanceController(rest.RestController):
 
         requested_networks = instance.pop('networks', None)
         instance_type_uuid = instance.get('instance_type_uuid')
+        image_uuid = instance.get('image_uuid')
 
         try:
             instance_type = objects.InstanceType.get(pecan.request.context,
@@ -377,7 +378,7 @@ class InstanceController(rest.RestController):
             instance = self.engine_api.create(
                 pecan.request.context,
                 instance_type,
-                image_uuid=instance.get('image_uuid'),
+                image_uuid=image_uuid,
                 name=instance.get('name'),
                 description=instance.get('description'),
                 availability_zone=instance.get('availability_zone'),
@@ -386,6 +387,14 @@ class InstanceController(rest.RestController):
         except exception.InstanceTypeNotFound:
             msg = (_("InstanceType %s could not be found") %
                    instance_type_uuid)
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.BAD_REQUEST)
+        except exception.ImageNotFound:
+            msg = (_("Requested image %s could not be found") % image_uuid)
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.BAD_REQUEST)
+        except exception.GlanceConnectionFailed:
+            msg = _("Error contacting with glance server")
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
 

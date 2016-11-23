@@ -88,7 +88,10 @@ function configure_nimble {
     iniset ${NIMBLE_CONF_FILE} ironic api_endpoint "${KEYSTONE_AUTH_PROTOCOL}://${SERVICE_HOST}:${IRONIC_SERVICE_PORT}"
 
     # Setup neutron section
-    iniset ${NIMBLE_CONF_FILE} neutron url "${NIMBLE_SERVICE_PROTOCOL}://${SERVICE_HOST}:${NEUTRON_SERVICE_PORT}"
+    iniset ${NIMBLE_CONF_FILE} neutron url "${NEUTRON_SERVICE_PROTOCOL}://${SERVICE_HOST}:${NEUTRON_SERVICE_PORT}"
+
+    # Setup glance section
+    iniset ${NIMBLE_CONF_FILE} glance glance_api_servers "${GLANCE_SERVICE_PROTOCOL}://${SERVICE_HOST}:${GLANCE_SERVICE_PORT}"
 
     # Setup keystone section
     iniset ${NIMBLE_CONF_FILE} keystone region_name ${REGION_NAME}

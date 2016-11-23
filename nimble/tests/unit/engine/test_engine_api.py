@@ -80,8 +80,10 @@ class ComputeAPIUnitTest(base.DbTestCase):
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'create_instance')
     @mock.patch('nimble.engine.api.API._provision_instances')
+    @mock.patch('nimble.engine.api.API._get_image')
     @mock.patch('nimble.engine.api.API._validate_and_build_base_options')
-    def test_create(self, mock_validate, mock_provision, mock_create):
+    def test_create(self, mock_validate, mock_get_image,
+                    mock_provision, mock_create):
         instance_type = self._create_instance_type()
 
         base_options = {'image_uuid': 'fake-uuid',
@@ -94,6 +96,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
                         'extra': {'k1', 'v1'},
                         'availability_zone': None}
         mock_validate.return_value = base_options
+        mock_get_image.side_effect = None
         mock_create.return_value = mock.MagicMock()
 
         self.engine_api.create(
@@ -111,3 +114,4 @@ class ComputeAPIUnitTest(base.DbTestCase):
             'fake-descritpion', 'test_az', {'k1', 'v1'})
         mock_provision.assert_called_once_with(self.context, base_options)
         self.assertTrue(mock_create.called)
+        self.assertTrue(mock_get_image.called)
