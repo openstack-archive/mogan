@@ -66,13 +66,17 @@ class TestInstanceAuthorization(v1_test.APITestV1):
         headers = self.gen_headers(self.context)
         self.post_json('/instances', body, headers=headers, status=201)
 
-    def test_instance_get_one_by_owner(self):
+    @mock.patch('nimble.engine.api.API.get_ironic_node')
+    def test_instance_get_one_by_owner(self, mock_get_node):
+        mock_get_node.return_value = {'power_state': 'power on'}
         # not admin but the owner
         self.context.project_id = self.instance1.project_id
         headers = self.gen_headers(self.context, roles="no-admin")
         self.get_json('/instances/%s' % self.instance1.uuid, headers=headers)
 
-    def test_instance_get_one_by_admin(self):
+    @mock.patch('nimble.engine.api.API.get_ironic_node')
+    def test_instance_get_one_by_admin(self, mock_get_node):
+        mock_get_node.return_value = {'power_state': 'power on'}
         # admin but the owner
         self.context.project_id = self.instance1.project_id
         # when the evil tenant is admin, he can do everything.
