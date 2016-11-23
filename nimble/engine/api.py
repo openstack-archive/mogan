@@ -19,6 +19,7 @@ from oslo_log import log
 
 from nimble.engine import rpcapi
 from nimble.engine import status
+from nimble import image
 from nimble import objects
 
 LOG = log.getLogger(__name__)
@@ -27,9 +28,13 @@ LOG = log.getLogger(__name__)
 class API(object):
     """API for interacting with the engine manager."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, image_api=None, **kwargs):
         super(API, self).__init__(**kwargs)
+        self.image_api = image_api or image.API()
         self.engine_rpcapi = rpcapi.EngineAPI()
+
+    def _get_image(self, context, image_uuid):
+        return self.image_api.get(context, image_uuid)
 
     def _validate_and_build_base_options(self, context, instance_type,
                                          image_uuid, name, description,
@@ -64,6 +69,10 @@ class API(object):
                          name, description, availability_zone, extra,
                          requested_networks):
         """Verify all the input parameters"""
+
+        # Verify the specified image exists
+        if image_uuid:
+            self._get_image(context, image_uuid)
 
         base_options = self._validate_and_build_base_options(
             context, instance_type, image_uuid, name, description,
