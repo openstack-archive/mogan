@@ -28,15 +28,12 @@ fi
 # service     nimble     admin
 function create_nimble_accounts {
     create_service_user "nimble" "admin"
-
-    if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
-        get_or_create_service "nimble" "baremetal_compute" "Baremetal Compute"
-        get_or_create_endpoint "baremetal_compute" \
-            "$REGION_NAME" \
-            "${NIMBLE_SERVICE_PROTOCOL}://${NIMBLE_SERVICE_HOST}:${NIMBLE_SERVICE_PORT}/v1" \
-            "${NIMBLE_SERVICE_PROTOCOL}://${NIMBLE_SERVICE_HOST}:${NIMBLE_SERVICE_PORT}/v1" \
-            "${NIMBLE_SERVICE_PROTOCOL}://${NIMBLE_SERVICE_HOST}:${NIMBLE_SERVICE_PORT}/v1"
-    fi
+    get_or_create_service "nimble" "baremetal_compute" "Baremetal Compute"
+    get_or_create_endpoint "baremetal_compute" \
+        "$REGION_NAME" \
+        "${NIMBLE_SERVICE_PROTOCOL}://${NIMBLE_SERVICE_HOST}:${NIMBLE_SERVICE_PORT}/v1" \
+        "${NIMBLE_SERVICE_PROTOCOL}://${NIMBLE_SERVICE_HOST}:${NIMBLE_SERVICE_PORT}/v1" \
+        "${NIMBLE_SERVICE_PROTOCOL}://${NIMBLE_SERVICE_HOST}:${NIMBLE_SERVICE_PORT}/v1"
 }
 
 
@@ -196,6 +193,10 @@ function update_ironic_node_type {
 
 
 if is_service_enabled nimble; then
+    if is_service_enabled tempest; then
+        export DEVSTACK_GATE_NEUTRON=1
+        export DEVSTACK_GATE_VIRT_DRIVER=ironic
+    fi
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing nimble"
         install_nimble
