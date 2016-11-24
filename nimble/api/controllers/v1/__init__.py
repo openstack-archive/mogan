@@ -19,8 +19,10 @@ Version 1 of the Nimble API
 Specification can be found at doc/source/webapi/v1.rst
 """
 
+import pecan
 from pecan import rest
 
+from nimble.api.controllers.v1 import availability_zone
 from nimble.api.controllers.v1 import instance_types
 from nimble.api.controllers.v1 import instances
 
@@ -30,6 +32,11 @@ class Controller(rest.RestController):
 
     types = instance_types.InstanceTypeController()
     instances = instances.InstanceController()
+
+    @pecan.expose()
+    def _lookup(self, kind, *remainder):
+        if kind == 'availability-zone':
+            return availability_zone.AvailabilityZoneController(), remainder
 
 
 __all__ = ('Controller',)
