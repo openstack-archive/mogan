@@ -1,0 +1,7 @@
+{
+  "availability_zones": [
+    "az1",
+    "az2",
+    "az3"
+  ]
+}
