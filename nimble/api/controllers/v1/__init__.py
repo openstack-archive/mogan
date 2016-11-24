@@ -21,6 +21,7 @@ Specification can be found at doc/source/webapi/v1.rst
 
 from pecan import rest
 
+from nimble.api.controllers.v1 import availability_zone
 from nimble.api.controllers.v1 import instance_types
 from nimble.api.controllers.v1 import instances
 
@@ -30,6 +31,7 @@ class Controller(rest.RestController):
 
     types = instance_types.InstanceTypeController()
     instances = instances.InstanceController()
+    availability_zones = availability_zone.AvailabilityZoneController()
 
 
 __all__ = ('Controller',)

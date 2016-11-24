@@ -9,3 +9,4 @@
 .. include:: urls.inc
 .. include:: instances.inc
 .. include:: types.inc
+.. include:: availability_zones.inc
