@@ -73,22 +73,6 @@ class InstanceTypes(Base):
     is_public = Column(Boolean, default=True)
 
 
-class InstanceTypeProjects(Base):
-    """Represents projects associated instance_types."""
-
-    __tablename__ = 'instance_type_projects'
-    __table_args__ = (
-        schema.UniqueConstraint(
-            'instance_type_id', 'project_id',
-            name='uniq_instance_type_projects0instance_type_id0project_id'
-        ),
-        table_args()
-    )
-    id = Column(Integer, primary_key=True)
-    instance_type_id = Column(Integer, nullable=True)
-    project_id = Column(String(36), nullable=True)
-
-
 class InstanceTypeExtraSpecs(Base):
     """Represents additional specs as key/value pairs for an instance_type."""
     __tablename__ = 'instance_type_extra_specs'
