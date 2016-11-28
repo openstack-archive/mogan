@@ -30,7 +30,6 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
     dbapi = dbapi.get_instance()
 
     fields = {
-        'id': object_fields.IntegerField(),
         'uuid': object_fields.UUIDField(nullable=True),
         'name': object_fields.StringField(nullable=True),
         'description': object_fields.StringField(nullable=True),

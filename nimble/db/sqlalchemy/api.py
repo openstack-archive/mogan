@@ -278,7 +278,7 @@ def _type_get_id_from_type(context, type_id):
     result = _type_get_id_from_type_query(context, type_id).first()
     if not result:
         raise exception.InstanceTypeNotFound(type_id=type_id)
-    return result.id
+    return result.uuid
 
 
 def _type_extra_specs_get_query(context, type_id):
