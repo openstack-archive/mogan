@@ -32,13 +32,11 @@ def upgrade():
         'instance_types',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('uuid', sa.String(length=36), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('description', sa.String(length=255), nullable=True),
         sa.Column('is_public', sa.Boolean(), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('name', name='uniq_instance_types0name'),
+        sa.PrimaryKeyConstraint('uuid'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
@@ -47,10 +45,10 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('instance_type_id', sa.Integer(), nullable=False),
+        sa.Column('instance_type_id', sa.String(length=36), nullable=False),
         sa.Column('key', sa.String(length=255), nullable=False),
         sa.Column('value', sa.String(length=255), nullable=False),
-        sa.ForeignKeyConstraint(['instance_type_id'], ['instance_types.id'], ),
+        sa.ForeignKeyConstraint(['instance_type_id'], ['instance_types.uuid']),
         sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
@@ -60,9 +58,9 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('instance_type_id', sa.Integer(), nullable=True),
+        sa.Column('instance_type_id', sa.String(length=36), nullable=True),
         sa.Column('project_id', sa.String(length=36), nullable=True),
-        sa.ForeignKeyConstraint(['instance_type_id'], ['instance_types.id'], ),
+        sa.ForeignKeyConstraint(['instance_type_id'], ['instance_types.uuid']),
         sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
@@ -71,7 +69,6 @@ def upgrade():
         'instances',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('uuid', sa.String(length=36), nullable=True),
         sa.Column('user_id', sa.String(length=36), nullable=True),
         sa.Column('project_id', sa.String(length=36), nullable=True),
@@ -85,9 +82,8 @@ def upgrade():
         sa.Column('availability_zone', sa.String(length=255), nullable=True),
         sa.Column('node_uuid', sa.String(length=36), nullable=True),
         sa.Column('extra', sa.Text(), nullable=True),
-        sa.PrimaryKeyConstraint('id'),
+        sa.PrimaryKeyConstraint('uuid'),
         sa.UniqueConstraint('uuid', name='uniq_instances0uuid'),
-        sa.UniqueConstraint('name', name='uniq_instances0name'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )

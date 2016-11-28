@@ -62,15 +62,15 @@ class InstanceTypes(Base):
     """Represents possible types for instances."""
 
     __tablename__ = 'instance_types'
-    __table_args__ = (
-        schema.UniqueConstraint('name', name='uniq_instance_types0name'),
-        table_args()
-    )
-    id = Column(Integer, primary_key=True)
-    uuid = Column(String(36), nullable=False)
+    uuid = Column(String(36), primary_key=True)
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=True)
     is_public = Column(Boolean, default=True)
+    instances = orm.relationship(
+        Instance,
+        backref=orm.backref('instance_type', uselist=False),
+        foreign_keys=uuid,
+        primaryjoin='Instance.instance_type_id == InstanceTypes.uuid')
 
 
 class InstanceTypeProjects(Base):
@@ -87,6 +87,12 @@ class InstanceTypeProjects(Base):
     id = Column(Integer, primary_key=True)
     instance_type_id = Column(Integer, nullable=True)
     project_id = Column(String(36), nullable=True)
+    instances = orm.relationship(
+        InstanceTypes,
+        backref=orm.backref('projects', uselist=False),
+        foreign_keys=instance_type_id,
+        primaryjoin='InstanceTypeProjects.instance_type_id'
+                    ' == InstanceTypes.uuid')
 
 
 class InstanceTypeExtraSpecs(Base):
@@ -103,13 +109,13 @@ class InstanceTypeExtraSpecs(Base):
     id = Column(Integer, primary_key=True)
     key = Column(String(255))
     value = Column(String(255))
-    instance_type_id = Column(Integer, ForeignKey('instance_types.id'),
+    instance_type_id = Column(String(36), ForeignKey('instance_types.uuid'),
                               nullable=False)
     instance_type = orm.relationship(
         InstanceTypes, backref="extra_specs",
         foreign_keys=instance_type_id,
-        primaryjoin='and_(InstanceTypeExtraSpecs.instance_type_id '
-                    '== InstanceTypes.id)')
+        primaryjoin='InstanceTypeExtraSpecs.instance_type_id '
+                    '== InstanceTypes.uuid)')
 
 
 class Instance(Base):
@@ -118,11 +124,9 @@ class Instance(Base):
     __tablename__ = 'instances'
     __table_args__ = (
         schema.UniqueConstraint('uuid', name='uniq_instances0uuid'),
-        schema.UniqueConstraint('name', name='uniq_instances0name'),
         table_args()
     )
-    id = Column(Integer, primary_key=True)
-    uuid = Column(String(36), nullable=True)
+    uuid = Column(String(36), primary_key=True)
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=True)
     project_id = Column(String(36), nullable=True)
