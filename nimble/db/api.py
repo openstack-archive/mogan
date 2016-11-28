@@ -81,7 +81,7 @@ class Connection(object):
 
     @abc.abstractmethod
     def extra_specs_update_or_create(self, context,
-                                     instance_type_id, extra_specs):
+                                     instance_type_uuid, extra_specs):
         """Create or update instance type extra specs.
 
         This adds or modifies the key/value pairs specified in the
@@ -93,7 +93,7 @@ class Connection(object):
         """Get instance type extra specs"""
 
     @abc.abstractmethod
-    def type_extra_specs_delete(self, context, instance_type_id, key):
+    def type_extra_specs_delete(self, context, instance_type_uuid, key):
         """Delete instance type extra specs.
 
         This deletes the key/value pairs specified in the

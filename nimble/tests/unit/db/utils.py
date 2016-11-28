@@ -14,6 +14,7 @@
 #    under the License.
 """Nimble test utilities."""
 
+from oslo_utils import uuidutils
 
 from nimble.db import api as db_api
 from nimble.engine import status
@@ -38,8 +39,7 @@ def get_test_instance(**kw):
     }
 
     return {
-        'id': kw.get('id', 123),
-        'uuid': kw.get('uuid', '1be26c0b-03f2-4d2e-ae87-c02d7f33c123'),
+        'uuid': kw.get('uuid', uuidutils.generate_uuid()),
         'name': kw.get('name', 'test'),
         'description': kw.get('description', 'test'),
         'project_id': kw.get('project_id',
@@ -72,9 +72,6 @@ def create_test_instance(context={}, **kw):
 
     """
     instance = get_test_instance(**kw)
-    # Let DB generate ID if it isn't specified explicitly
-    if 'id' not in kw:
-        del instance['id']
     dbapi = db_api.get_instance()
 
     return dbapi.instance_create(context, instance)
@@ -82,8 +79,7 @@ def create_test_instance(context={}, **kw):
 
 def get_test_instance_type(**kw):
     return {
-        'id': kw.get('id', 123),
-        'uuid': kw.get('uuid', 'e5ddde02-f84d-4da7-ade3-957c55072986'),
+        'uuid': kw.get('uuid', uuidutils.generate_uuid()),
         'name': kw.get('name', 'test'),
         'description': kw.get('description', 'test'),
         'is_public': kw.get('is_public', 1),
@@ -103,9 +99,6 @@ def create_test_instance_type(context={}, **kw):
 
     """
     instance_type = get_test_instance_type(**kw)
-    # Let DB generate ID if it isn't specified explicitly
-    if 'id' not in kw:
-        del instance_type['id']
     dbapi = db_api.get_instance()
 
     return dbapi.instance_type_create(context, instance_type)
