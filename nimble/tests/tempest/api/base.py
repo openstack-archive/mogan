@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
+from tempest.common.utils import data_utils
 from tempest import config
 from tempest.lib import exceptions as lib_exc
 import tempest.test
@@ -46,6 +46,35 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         cls.type_ids = []
         cls.instance_ids = []
 
+    @classmethod
+    def setup_credentials(cls):
+        cls.set_network_resources()
+        super(BaseBaremetalComputeTest, cls).setup_credentials()
+
+    @classmethod
+    def create_instance(cls):
+        types = cls.baremetal_compute_client.list_instance_types()
+        if types:
+            type_id = types[0]['uuid']
+        else:
+            type_req = {"name": data_utils.rand_name('nimble_instance_type'),
+                        "description": "nimble instance type description",
+                        'is_public': bool(data_utils.rand_int_id(0, 1))}
+            resp = cls.baremetal_compute_client.create_instance_type(
+                **type_req)
+            type_id = resp['uuid']
+        tenant_network_id = cls.get_tenant_network()['id']
+        image_id = CONF.compute.image_ref
+        body = {'name': data_utils.rand_name('nimble_instance'),
+                'description': "nimble tempest instance",
+                'instance_type_uuid': type_id,
+                'image_uuid': image_id,
+                "networks": [{"uuid": tenant_network_id}]
+                }
+        resp = cls.baremetal_compute_client.create_instance(**body)
+        cls.instance_ids.append(resp['uuid'])
+        return resp
+
     @staticmethod
     def cleanup_resources(method, list_of_ids):
         for resource_id in list_of_ids:
@@ -58,7 +87,6 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
     def resource_cleanup(cls):
         cls.cleanup_resources(
             cls.baremetal_compute_client.delete_instance_type, cls.type_ids)
-        # TODO(liusheng)
-        # cls.cleanup_resources(cls.baremetal_compute_client.delete_instance,
-        #  cls.instance_ids)
+        cls.cleanup_resources(cls.baremetal_compute_client.delete_instance,
+                              cls.instance_ids)
         super(BaseBaremetalComputeTest, cls).resource_cleanup()
