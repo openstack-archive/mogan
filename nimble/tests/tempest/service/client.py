@@ -16,6 +16,8 @@
 from oslo_serialization import jsonutils as json
 from tempest import config
 from tempest.lib.common import rest_client
+from tempest.lib.services.compute import networks_client as network_cli
+from tempest.lib.services.image.v2 import images_client as image_cli
 from tempest import manager
 
 CONF = config.CONF
@@ -64,8 +66,45 @@ class BaremetalComputeClient(rest_client.RestClient):
         body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
+    def create_instance(self, **kwargs):
+        uri = "%s/instances" % self.uri_prefix
+        body = self.serialize(kwargs)
+        resp, body = self.post(uri, body)
+        self.expected_success(201, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def list_instances(self):
+        uri = '%s/instances' % self.uri_prefix
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['instances']
+        return rest_client.ResponseBodyList(resp, body)
+
+    def show_instance(self, instance_id):
+        uri = '%s/instances/%s' % (self.uri_prefix, instance_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def delete_instance(self, instance_id):
+        uri = "%s/instances/%s" % (self.uri_prefix, instance_id)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
 
 class Manager(manager.Manager):
+
+    load_clients = [
+        'baremetal_compute_client',
+        'compute_networks_client',
+        'image_client_v2',
+    ]
+
     default_params = {
         'disable_ssl_certificate_validation':
             CONF.identity.disable_ssl_certificate_validation,
@@ -73,17 +112,46 @@ class Manager(manager.Manager):
         'trace_requests': CONF.debug.trace_requests
     }
 
-    alarming_params = {
+    baremetal_compute_params = {
         'service': CONF.baremetal_compute_plugin.catalog_type,
         'region': CONF.identity.region,
         'endpoint_type': CONF.baremetal_compute_plugin.endpoint_type,
     }
-    alarming_params.update(default_params)
+    baremetal_compute_params.update(default_params)
+
+    compute_params = {
+        'service': CONF.compute.catalog_type,
+        'region': CONF.compute.region or CONF.identity.region,
+        'endpoint_type': CONF.compute.endpoint_type,
+        'build_interval': CONF.compute.build_interval,
+        'build_timeout': CONF.compute.build_timeout,
+    }
+    compute_params.update(default_params)
+
+    image_params = {
+        'service': CONF.image.catalog_type,
+        'region': CONF.image.region or CONF.identity.region,
+        'endpoint_type': CONF.image.endpoint_type,
+        'build_interval': CONF.image.build_interval,
+        'build_timeout': CONF.image.build_timeout,
+    }
+    image_params.update(default_params)
 
     def __init__(self, credentials=None, service=None):
         super(Manager, self).__init__(credentials)
-        self.set_baremetal_compute_client()
+        for client in self.load_clients:
+            getattr(self, 'set_%s' % client)()
 
     def set_baremetal_compute_client(self):
         self.baremetal_compute_client = BaremetalComputeClient(
-            self.auth_provider, **self.alarming_params)
+            self.auth_provider, **self.baremetal_compute_params)
+
+    def set_compute_networks_client(self):
+        self.compute_networks_client = network_cli.NetworksClient(
+            self.auth_provider,
+            **self.compute_params)
+
+    def set_image_client_v2(self):
+        self.image_client_v2 = image_cli.ImagesClient(
+            self.auth_provider,
+            **self.image_params)
