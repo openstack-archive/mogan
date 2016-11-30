@@ -22,6 +22,7 @@ from oslo_service import periodic_task
 from oslo_utils import timeutils
 
 from nimble.common import exception
+from nimble.common.i18n import _LE
 from nimble.common.i18n import _LI
 from nimble.common import neutron
 from nimble.conf import CONF
@@ -58,6 +59,14 @@ class EngineManager(base_manager.BaseEngineManager):
         spacing=CONF.engine.sync_node_resource_interval)
     def _sync_node_resources(self, context):
         self._refresh_cache()
+
+    def _set_instance_obj_error_state(self, context, instance):
+        try:
+            instance.status = status.ERROR
+            instance.save()
+        except exception.InstanceNotFound:
+            LOG.debug('Instance has been destroyed from under us while '
+                      'trying to set it to ERROR', instance=instance)
 
     def _build_networks(self, context, instance, requested_networks):
         node_uuid = instance.node_uuid
@@ -178,8 +187,7 @@ class EngineManager(base_manager.BaseEngineManager):
                                                self.node_cache,
                                                filter_properties)
         except exception.NoValidNode:
-            instance.status = status.ERROR
-            instance.save()
+            self._set_instance_obj_error_state(context, instance)
             raise exception.NoValidNode(
                 _('No valid node is found with request spec %s') %
                 request_spec)
@@ -191,8 +199,7 @@ class EngineManager(base_manager.BaseEngineManager):
                                             instance.node_uuid)
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
-            instance.status = status.ERROR
-            instance.save()
+            self._set_instance_obj_error_state(context, instance)
             raise exception.ValidationError(_(
                 "Ironic node: %(id)s failed to validate."
                 " (deploy: %(deploy)s, power: %(power)s)")
@@ -200,21 +207,31 @@ class EngineManager(base_manager.BaseEngineManager):
                    'deploy': validate_chk.deploy,
                    'power': validate_chk.power})
 
-        network_info = self._build_networks(context, instance,
-                                            requested_networks)
+        try:
+            network_info = self._build_networks(context, instance,
+                                                requested_networks)
+        except Exception:
+            self._set_instance_obj_error_state(context, instance)
+            return
 
         instance.network_info = network_info
 
-        self._build_instance(context, instance)
-
-        return instance
+        try:
+            self._build_instance(context, instance)
+        except Exception:
+            self._set_instance_obj_error_state(context, instance)
 
     def delete_instance(self, context, instance):
         """Delete an instance."""
         LOG.debug("Deleting instance...")
 
-        self._destroy_networks(context, instance)
-        self._destroy_instance(context, instance)
+        try:
+            self._destroy_networks(context, instance)
+            self._destroy_instance(context, instance)
+        except Exception:
+            LOG.exception(_LE("Error while trying to clean up "
+                              "instance resources."),
+                          instance=instance)
 
         instance.destroy()
 
