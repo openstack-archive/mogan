@@ -91,7 +91,7 @@ class EngineManager(base_manager.BaseEngineManager):
     def create_instance(self, context, instance, requested_networks,
                         request_spec=None, filter_properties=None):
         """Perform a deployment."""
-        LOG.debug("Starting instance...")
+        LOG.debug("Starting instance...", instance=instance)
 
         if filter_properties is None:
             filter_properties = {}
