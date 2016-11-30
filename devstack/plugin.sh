@@ -51,8 +51,6 @@ function mkdir_chown_stack {
 function configure_nimble {
     mkdir_chown_stack "${NIMBLE_CONF_DIR}"
 
-    # Generate Nimble configuration file and configure common parameters.
-    oslo-config-generator --config-file ${NIMBLE_DIR}/tools/config/nimble-config-generator.conf --output-file ${NIMBLE_CONF_FILE}
     iniset ${NIMBLE_CONF_FILE} DEFAULT debug ${NIMBLE_DEBUG}
 
     NIMBLE_POLICY_FILE=${NIMBLE_CONF_DIR}/policy.json
