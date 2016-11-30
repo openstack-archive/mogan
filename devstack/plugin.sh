@@ -190,6 +190,11 @@ function update_ironic_node_type {
 
 
 if is_service_enabled mogan; then
+    if is_service_enabled tempest; then
+        iniset $TEMPEST_CONFIG auth create_isolated_networks True
+        iniset $TEMPEST_CONFIG baremetal driver_enabled False
+    fi
+
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing mogan"
         install_mogan
