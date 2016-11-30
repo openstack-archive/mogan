@@ -200,16 +200,23 @@ class EngineManager(base_manager.BaseEngineManager):
                    'deploy': validate_chk.deploy,
                    'power': validate_chk.power})
 
-        network_info = self._build_networks(context, instance,
-                                            requested_networks)
+        try:
+            network_info = self._build_networks(context, instance,
+                                                requested_networks)
+        except Exception:
+            instance.status = status.ERROR
+            instance.save()
+            return
 
         instance.network_info = network_info
 
         instance.status = status.BUILDING
         instance.save()
-        self._build_instance(context, instance)
-
-        return instance
+        try:
+            self._build_instance(context, instance)
+        except Exception:
+            instance.status = status.ERROR
+            instance.save()
 
     def delete_instance(self, context, instance):
         """Delete an instance."""
