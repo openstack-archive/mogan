@@ -25,9 +25,9 @@
     "network_info": {
         "3c5b24d1-21b7-4036-8bd1-b0aefe65533d": {
             "network": "42a01505-855d-4f3b-9b8b-0abd413b3036",
-            "mac_address": "aa:bb:cc:dd:ee:ff"
+            "mac_address": "aa:bb:cc:dd:ee:ff",
             "fixed_ip": "10.1.0.100"
-        },
+        }
     },
     "extra": {
         "My Server Name" : "Apache1"
