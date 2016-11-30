@@ -119,15 +119,23 @@ class API(object):
         self._delete_instance(context, instance)
 
     def states(self, context, instance):
+        """Get instance states."""
         return self.engine_rpcapi.instance_states(context, instance)
 
     def power(self, context, instance, target):
+        """Set power state of an instance."""
         self.engine_rpcapi.set_power_state(context, instance, target)
 
     def get_ironic_node(self, context, instance_uuid, fields):
+        """Get a ironic node by instance UUID."""
         return self.engine_rpcapi.get_ironic_node(context,
                                                   instance_uuid,
                                                   fields)
 
     def get_ironic_node_list(self, context, fields):
+        """Get a list of ironic node."""
         return self.engine_rpcapi.get_ironic_node_list(context, fields)
+
+    def list_availability_zones(self, context):
+        """Get a list of availability zones."""
+        return self.engine_rpcapi.list_availability_zones(context)

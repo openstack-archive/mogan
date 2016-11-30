@@ -155,7 +155,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def create_instance(self, context, instance,
                         requested_networks, instance_type):
-        """Signal to engine service to perform a deployment."""
+        """Perform a deployment."""
         LOG.debug("Starting instance...")
 
         # Populate request spec
@@ -212,7 +212,7 @@ class EngineManager(base_manager.BaseEngineManager):
         return instance
 
     def delete_instance(self, context, instance):
-        """Signal to engine service to delete an instance."""
+        """Delete an instance."""
         LOG.debug("Deleting instance...")
 
         self._destroy_networks(context, instance)
@@ -228,7 +228,7 @@ class EngineManager(base_manager.BaseEngineManager):
         return states.to_dict()
 
     def instance_states(self, context, instance):
-        """Signal to engine service to get an instance states."""
+        """Get an instance states."""
         LOG.debug("get instance states")
 
         return self._instance_states(context, instance)
@@ -239,17 +239,29 @@ class EngineManager(base_manager.BaseEngineManager):
                  state)
 
     def set_power_state(self, context, instance, state):
-        """Signal to engine service to get an instance states."""
+        """Get an instance states."""
         LOG.debug("set power state...")
 
         return self._set_power_state(context, instance, state)
 
     def get_ironic_node(self, context, instance_uuid, fields):
+        """Get a ironic node."""
         node = ironic.get_node_by_instance(self.ironicclient,
                                            instance_uuid, fields)
         return node.to_dict()
 
     def get_ironic_node_list(self, context, fields):
+        """Get a ironic node list."""
         nodes = ironic.get_node_list(self.ironicclient, associated=True,
                                      limit=0, fields=fields)
         return {'nodes': [node.to_dict() for node in nodes]}
+
+    def list_availability_zones(self, context):
+        """Get availability zone list."""
+        azs = set()
+        for node in self.node_cache:
+            az = node.properties.get('availability_zone')
+            if az is not None:
+                azs.add(az)
+
+        return {'availability_zones': list(azs)}

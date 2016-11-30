@@ -79,6 +79,12 @@ availability_zone:
   in: body
   required: false
   type: string
+availability_zones:
+  description: |
+    An array of availability zone name.
+  in: body
+  required: true
+  type: array
 created_at:
   description: |
     The date and time when the resource was created. The date and time
