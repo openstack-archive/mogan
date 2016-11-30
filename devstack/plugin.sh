@@ -70,9 +70,8 @@ function configure_nimble {
     iniset ${NIMBLE_CONF_FILE} keystone_authtoken auth_url ${KEYSTONE_AUTH_URI}
     iniset ${NIMBLE_CONF_FILE} keystone_authtoken auth_type "password"
 
-    # Setup RabbitMQ credentials
-    iniset ${NIMBLE_CONF_FILE} oslo_messaging_rabbit rabbit_userid ${RABBIT_USERID}
-    iniset ${NIMBLE_CONF_FILE} oslo_messaging_rabbit rabbit_password ${RABBIT_PASSWORD}
+    # Config the transport url
+    iniset_rpc_backend nimble $NIMBLE_CONF_FILE
 
     # Configure the database.
     iniset ${NIMBLE_CONF_FILE} database connection `database_connection_url nimble`
