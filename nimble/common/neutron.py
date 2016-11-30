@@ -61,7 +61,7 @@ def get_client(token=None):
 def create_port(context, network_uuid, mac, instance_uuid):
     """Create neutron port."""
 
-    client = get_client(context.auth_token)
+    client = get_client()
     body = {
         'port': {
             'network_id': network_uuid,
