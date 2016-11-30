@@ -190,6 +190,10 @@ function update_ironic_node_type {
 
 
 if is_service_enabled nimble; then
+    if is_service_enabled tempest; then
+        iniset $TEMPEST_CONFIG compute fixed_network_name $PRIVATE_NETWORK_NAME
+    fi
+
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing nimble"
         install_nimble

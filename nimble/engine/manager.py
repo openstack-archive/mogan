@@ -184,6 +184,8 @@ class EngineManager(base_manager.BaseEngineManager):
                                                self.node_cache,
                                                filter_properties)
         except exception.NoValidNode:
+            LOG.error("[Test for tempest 1] the Instance'status will be in"
+                      " error")
             self._set_instance_obj_error_state(context, instance)
             raise exception.NoValidNode(
                 _('No valid node is found with request spec %s') %
@@ -196,6 +198,8 @@ class EngineManager(base_manager.BaseEngineManager):
                                             instance.node_uuid)
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
+            LOG.error("[Test for tempest 2] the Instance'status will be in "
+                      "error: %s-%s" % (validate_chk.deploy, validate_chk.power))
             self._set_instance_obj_error_state(context, instance)
             raise exception.ValidationError(_(
                 "Ironic node: %(id)s failed to validate."
@@ -207,7 +211,9 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             network_info = self._build_networks(context, instance,
                                                 requested_networks)
-        except Exception:
+        except Exception as e:
+            LOG.error("[Test for tempest 3] the Instance'status will be in"
+                      " error %s" % e.message)
             self._set_instance_obj_error_state(context, instance)
             return
 
@@ -215,7 +221,9 @@ class EngineManager(base_manager.BaseEngineManager):
 
         try:
             self._build_instance(context, instance)
-        except Exception:
+        except Exception as e:
+            LOG.error("[Test for tempest 4] the Instance'status will be in"
+                      " error %s" % e.message)
             self._set_instance_obj_error_state(context, instance)
 
     def delete_instance(self, context, instance):
