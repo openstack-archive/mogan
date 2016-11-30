@@ -162,7 +162,7 @@ class EngineManager(base_manager.BaseEngineManager):
     def create_instance(self, context, instance,
                         requested_networks, instance_type):
         """Perform a deployment."""
-        LOG.debug("Starting instance...")
+        LOG.debug("Starting instance...", instance=instance)
 
         # Populate request spec
         instance_type_uuid = instance.instance_type_uuid
@@ -209,7 +209,7 @@ class EngineManager(base_manager.BaseEngineManager):
                                                 requested_networks)
         except Exception:
             self._set_instance_obj_error_state(context, instance)
-            return
+            raise
 
         instance.network_info = network_info
 
