@@ -13,7 +13,7 @@ Project Resources
 -----------------
 
 * Free software: Apache license
-* Documentation: http://docs.openstack.org/developer/nimble
+* Documentation: http://docs.openstack.org
 * Source: http://git.openstack.org/cgit/openstack/nimble
 * Bugs: http://bugs.launchpad.net/nimble
 * Wiki: https://wiki.openstack.org/wiki/Nimble
