@@ -205,8 +205,6 @@ class EngineManager(base_manager.BaseEngineManager):
 
         instance.network_info = network_info
 
-        instance.status = status.BUILDING
-        instance.save()
         self._build_instance(context, instance)
 
         return instance
