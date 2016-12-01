@@ -101,6 +101,10 @@ class InstanceStatesController(rest.RestController):
     # Note(Shaohe Feng) we follow ironic restful api define.
     # We can refactor this API, if we do not like ironic pattern.
 
+    def __init__(self, **kwargs):
+        super(InstanceStatesController, self).__init__(**kwargs)
+        self.engine_api = engineapi.API()
+
     _custom_actions = {
         'power': ['PUT'],
     }
