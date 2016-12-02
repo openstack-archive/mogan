@@ -12,6 +12,7 @@
 
 """Test utils for Nimble Managers."""
 
+import mock
 from nimble.engine import manager
 
 
@@ -27,3 +28,10 @@ class ServiceSetUpMixin(object):
     def _start_service(self):
         self.service.init_host()
         self.addCleanup(self._stop_service)
+
+
+def mock_sync_nodes(func_or_class):
+    return mock.patch.object(
+        manager.EngineManager,
+        '_sync_node_resources',
+        lambda _: None)(func_or_class)
