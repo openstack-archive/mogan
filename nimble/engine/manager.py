@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import time
-
 from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import loopingcall
@@ -53,7 +51,6 @@ class EngineManager(base_manager.BaseEngineManager):
             node_cache.append(node)
 
         self.node_cache = node_cache
-        self.node_cache_time = time.time()
 
     @periodic_task.periodic_task(
         spacing=CONF.engine.sync_node_resource_interval)
