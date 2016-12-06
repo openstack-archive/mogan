@@ -16,8 +16,8 @@
 """Unit tests for engine API."""
 
 import mock
+from oslo_context import context
 
-from nimble.common import context
 from nimble.engine import api as engine_api
 from nimble.engine import rpcapi as engine_rpcapi
 from nimble.engine import status

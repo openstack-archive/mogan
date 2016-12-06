@@ -15,10 +15,10 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_context import context
 from pecan import hooks
 from six.moves import http_client
 
-from nimble.common import context
 from nimble.common import policy
 from nimble.db import api as dbapi
 
@@ -79,7 +79,7 @@ class ContextHook(hooks.PecanHook):
         }
 
         is_admin = policy.check('is_admin', creds, creds)
-        state.request.context = context.get_context(is_admin=is_admin, **creds)
+        state.request.context = context.RequestContext(is_admin=is_admin, **creds)
 
     def after(self, state):
         if state.request.context == {}:
