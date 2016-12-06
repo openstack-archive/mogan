@@ -15,10 +15,10 @@
 # under the License.
 
 from oslo_config import cfg
+from oslo_context import context
 from pecan import hooks
 from six.moves import http_client
 
-from nimble.common import context
 from nimble.common import policy
 from nimble.db import api as dbapi
 
@@ -43,7 +43,7 @@ class ContextHook(hooks.PecanHook):
     The following HTTP request headers are used:
 
     X-User-Id or X-User:
-        Used for context.user_id.
+        Used for context.user.
 
     X-Tenant-Id or X-Tenant:
         Used for context.tenant.
@@ -64,22 +64,20 @@ class ContextHook(hooks.PecanHook):
     def before(self, state):
         headers = state.request.headers
 
-        is_public_api = state.request.environ.get('is_public_api', False)
-
         creds = {
             'user_name': headers.get('X-User-Name'),
-            'user_id': headers.get('X-User-Id'),
+            'user': headers.get('X-User-Id'),
             'project_name': headers.get('X-Project-Name'),
-            'project_id': headers.get('X-Project-Id'),
-            'domain_id': headers.get('X-User-Domain-Id'),
+            'tenant': headers.get('X-Project-Id'),
+            'domain': headers.get('X-User-Domain-Id'),
             'domain_name': headers.get('X-User-Domain-Name'),
             'auth_token': headers.get('X-Auth-Token'),
             'roles': headers.get('X-Roles', '').split(','),
-            'is_public_api': is_public_api,
         }
 
         is_admin = policy.check('is_admin', creds, creds)
-        state.request.context = context.get_context(is_admin=is_admin, **creds)
+        state.request.context = context.RequestContext(
+            is_admin=is_admin, **creds)
 
     def after(self, state):
         if state.request.context == {}:
