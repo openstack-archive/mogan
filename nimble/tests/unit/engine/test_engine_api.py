@@ -16,8 +16,8 @@
 """Unit tests for engine API."""
 
 import mock
+from oslo_context import context
 
-from nimble.common import context
 from nimble.engine import api as engine_api
 from nimble.engine import rpcapi as engine_rpcapi
 from nimble.engine import status
@@ -32,8 +32,8 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.user_id = 'fake-user'
         self.project_id = 'fake-project'
         self.engine_api = engine_api.API()
-        self.context = context.RequestContext(user_id=self.user_id,
-                                              project_id=self.project_id)
+        self.context = context.RequestContext(user=self.user_id,
+                                              tenant=self.project_id)
 
     def _create_instance_type(self):
         inst_type = db_utils.get_test_instance_type()

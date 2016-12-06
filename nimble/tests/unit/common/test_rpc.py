@@ -11,10 +11,11 @@
 # under the License.
 
 import mock
+
 from oslo_config import cfg
+from oslo_context import context as nimble_context
 import oslo_messaging as messaging
 
-from nimble.common import context as nimble_context
 from nimble.common import rpc
 from nimble.tests import base
 
@@ -116,5 +117,5 @@ class TestRequestContextSerializer(base.TestCase):
         new_context = self.serializer.deserialize_context(serialize_values)
         # Nimble RequestContext from_dict will pop 'user' and 'tenant' and
         # initialize to None.
-        self.assertIsNone(new_context.user)
-        self.assertIsNone(new_context.tenant)
+        self.assertEqual('fake-user', new_context.user)
+        self.assertEqual('fake-tenant', new_context.tenant)
