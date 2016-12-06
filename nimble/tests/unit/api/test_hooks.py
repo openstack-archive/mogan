@@ -17,9 +17,9 @@
 
 import mock
 from oslo_config import cfg
+from oslo_context import context
 
 from nimble.api import hooks
-from nimble.common import context
 from nimble.tests import base
 
 
