@@ -14,9 +14,9 @@
 #    under the License.
 
 from oslo_config import cfg
+from oslo_context import context as nimble_context
 import oslo_messaging as messaging
 
-from nimble.common import context as nimble_context
 from nimble.common import exception
 
 

@@ -227,8 +227,8 @@ def authorize_wsgi(api_name, act=None, need_target=True):
             else:
                 # for create method, before resource exsites, we can check the
                 # the credentials with itself.
-                target = {'project_id': context.project_id,
-                          'user_id': context.user_id}
+                target = {'project_id': context.tenant,
+                          'user_id': context.user}
             try:
                 authorize(action, target, credentials)
             except Exception:

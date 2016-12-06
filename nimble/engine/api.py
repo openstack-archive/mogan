@@ -44,8 +44,8 @@ class API(object):
         base_options = {
             'image_uuid': image_uuid,
             'status': status.BUILDING,
-            'user_id': context.user_id,
-            'project_id': context.project_id,
+            'user_id': context.user,
+            'project_id': context.tenant,
             'instance_type_uuid': instance_type['uuid'],
             'name': name,
             'description': description,

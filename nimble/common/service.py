@@ -13,6 +13,7 @@
 # under the License.
 
 from oslo_concurrency import processutils
+from oslo_context import context
 from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import service
@@ -21,7 +22,6 @@ from oslo_utils import importutils
 
 from nimble.api import app
 from nimble.common import config
-from nimble.common import context
 from nimble.common import exception
 from nimble.common.i18n import _
 from nimble.common.i18n import _LE

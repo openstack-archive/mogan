@@ -17,12 +17,12 @@ import gettext
 import iso8601
 
 import mock
+from oslo_context import context
 from oslo_versionedobjects import base as object_base
 from oslo_versionedobjects import exception as object_exception
 from oslo_versionedobjects import fixture as object_fixture
 import six
 
-from nimble.common import context
 from nimble.objects import base
 from nimble.objects import fields
 from nimble.tests import base as test_base
@@ -55,8 +55,8 @@ class MyObj(base.NimbleObject, object_base.VersionedObjectDictCompat):
         return 'polo'
 
     @object_base.remotable
-    def update_test(self, context=None):
-        if context and context.tenant == 'alternate':
+    def update_test(self, ctxt=None):
+        if ctxt and ctxt.tenant == 'alternate':
             self.bar = 'alternate-context'
         else:
             self.bar = 'updated'

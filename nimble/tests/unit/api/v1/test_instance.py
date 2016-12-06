@@ -66,7 +66,7 @@ class TestInstanceAuthorization(v1_test.APITestV1):
         self.context.roles = "no-admin"
         # we can not prevent the evil tenant, quota will limite him.
         # Note(Shaohe): quota is in plan
-        self.context.project_id = self.evil_project
+        self.context.tenant = self.evil_project
         headers = self.gen_headers(self.context)
         self.post_json('/instances', body, headers=headers, status=201)
 
@@ -74,7 +74,7 @@ class TestInstanceAuthorization(v1_test.APITestV1):
     def test_instance_get_one_by_owner(self, mock_get_node):
         mock_get_node.return_value = {'power_state': 'power on'}
         # not admin but the owner
-        self.context.project_id = self.instance1.project_id
+        self.context.tenant = self.instance1.project_id
         headers = self.gen_headers(self.context, roles="no-admin")
         self.get_json('/instances/%s' % self.instance1.uuid, headers=headers)
 
@@ -82,15 +82,15 @@ class TestInstanceAuthorization(v1_test.APITestV1):
     def test_instance_get_one_by_admin(self, mock_get_node):
         mock_get_node.return_value = {'power_state': 'power on'}
         # admin but the owner
-        self.context.project_id = self.instance1.project_id
+        self.context.tenant = self.instance1.project_id
         # when the evil tenant is admin, he can do everything.
-        self.context.project_id = self.evil_project
+        self.context.tenant = self.evil_project
         headers = self.gen_headers(self.context, roles="admin")
         self.get_json('/instances/%s' % self.instance1.uuid, headers=headers)
 
     def test_instance_get_one_unauthorized(self):
         # not admin and not the owner
-        self.context.project_id = self.evil_project
+        self.context.tenant = self.evil_project
         headers = self.gen_headers(self.context, roles="no-admin")
         resp = self.get_json('/instances/%s' % self.instance1.uuid,
                              True, headers=headers)
@@ -104,7 +104,7 @@ class TestPatch(v1_test.APITestV1):
     def setUp(self):
         super(TestPatch, self).setUp()
         self.instance = utils.create_test_instance(name="patch_instance")
-        self.context.project_id = self.instance.project_id
+        self.context.tenant = self.instance.project_id
         self.headers = self.gen_headers(self.context, roles="no-admin")
 
     def test_update_not_found(self):
