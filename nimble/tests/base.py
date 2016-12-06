@@ -18,6 +18,7 @@ import os
 
 from oslo_config import cfg
 from oslo_config import fixture as config_fixture
+from oslo_context import context
 from oslo_db import options
 from oslo_log import log
 from oslotest import base
@@ -25,7 +26,6 @@ import pecan
 import testscenarios
 
 from nimble.common import config as nimble_config
-from nimble.common import context as nimble_context
 from nimble.tests import policy_fixture
 
 
@@ -50,7 +50,7 @@ class TestCase(base.BaseTestCase):
 
     def setUp(self):
         super(TestCase, self).setUp()
-        self.context = nimble_context.get_admin_context()
+        self.context = context.get_admin_context()
 
         self._set_config()
 

@@ -15,9 +15,9 @@
 """ Tests for create_instance TaskFlow """
 
 import mock
+from oslo_context import context
 from oslo_utils import uuidutils
 
-from nimble.common import context
 from nimble.engine.baremetal import ironic
 from nimble.engine.flows import create_instance
 from nimble.engine.scheduler import filter_scheduler as scheduler

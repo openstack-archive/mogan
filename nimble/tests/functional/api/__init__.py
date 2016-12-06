@@ -223,10 +223,10 @@ class BaseApiTest(base.DbTestCase):
         headers = {
             'X-User-Name': ct.get("user_name") or "user",
             'X-User-Id':
-                ct.get("user_id") or "8abcdef1-2345-6789-abcd-ef123456abc0",
+                ct.get("user") or "8abcdef1-2345-6789-abcd-ef123456abc0",
             'X-Project-Name': ct.get("project_name") or "project",
             'X-Project-Id':
-                ct.get("project_id") or "1abcdef1-2345-6789-abcd-ef123456abe0",
+                ct.get("tenant") or "1abcdef1-2345-6789-abcd-ef123456abe0",
             'X-User-Domain-Id':
                 ct.get("domain_id") or "9abcdef1-2345-6789-abcd-ef123456abc0",
             'X-User-Domain-Name': ct.get("domain_name") or "no_domain",
