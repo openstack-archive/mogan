@@ -220,7 +220,7 @@ def _extract_attributes(image, include_locations=False):
     output = {'properties': {}, 'deleted': False, 'deleted_at': None,
               'disk_format': None, 'container_format': None, 'name': None,
               'checksum': None}
-    for name, value in six.iteritems(image):
+    for name, value in image.items():
         if (name in omit_attrs
                 or name in include_locations_attrs and not include_locations):
             continue
