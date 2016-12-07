@@ -1,0 +1,12 @@
+[
+   {
+      "op": "replace",
+      "path": "/extra/k1",
+      "value": "v1"
+   },
+   {
+       "op": "add",
+       "path": "/extra/k2",
+       "value": "v2"
+   }
+]
