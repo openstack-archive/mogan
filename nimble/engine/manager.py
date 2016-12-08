@@ -15,11 +15,10 @@
 
 from oslo_log import log
 import oslo_messaging as messaging
-from oslo_service import loopingcall
 from oslo_service import periodic_task
-from oslo_utils import timeutils
 
 from nimble.common import exception
+from nimble.common import flow_utils
 from nimble.common.i18n import _LE
 from nimble.common.i18n import _LI
 from nimble.common import neutron
@@ -27,6 +26,7 @@ from nimble.conf import CONF
 from nimble.engine.baremetal import ironic
 from nimble.engine.baremetal import ironic_states
 from nimble.engine import base_manager
+from nimble.engine.flows import create_instance
 from nimble.engine import status
 
 MANAGER_TOPIC = 'nimble.engine_manager'
@@ -65,39 +65,6 @@ class EngineManager(base_manager.BaseEngineManager):
             LOG.debug('Instance has been destroyed from under us while '
                       'trying to set it to ERROR', instance=instance)
 
-    def _build_networks(self, context, instance, requested_networks):
-        node_uuid = instance.node_uuid
-        ironic_ports = ironic.get_ports_from_node(self.ironicclient,
-                                                  node_uuid,
-                                                  detail=True)
-        LOG.debug(_('Find ports %(ports)s for node %(node)s') %
-                  {'ports': ironic_ports, 'node': node_uuid})
-        if len(requested_networks) > len(ironic_ports):
-            raise exception.InterfacePlugException(_(
-                "Ironic node: %(id)s virtual to physical interface count"
-                "  mismatch"
-                " (Vif count: %(vif_count)d, Pif count: %(pif_count)d)")
-                % {'id': instance.node_uuid,
-                   'vif_count': len(requested_networks),
-                   'pif_count': len(ironic_ports)})
-
-        network_info = {}
-        for vif in requested_networks:
-            for pif in ironic_ports:
-                # Match the specified port type with physical interface type
-                if vif.get('port_type') == pif.extra.get('port_type'):
-                    port = neutron.create_port(context, vif['uuid'],
-                                               pif.address, instance.uuid)
-                    port_dict = port['port']
-                    network_info[port_dict['id']] = {
-                        'network': port_dict['network_id'],
-                        'mac_address': port_dict['mac_address'],
-                        'fixed_ips': port_dict['fixed_ips']}
-                    ironic.plug_vif(self.ironicclient, pif.uuid,
-                                    port_dict['id'])
-
-        return network_info
-
     def _destroy_networks(self, context, instance):
         LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(network_info)s",
                   {'uuid': instance.uuid,
@@ -114,58 +81,22 @@ class EngineManager(base_manager.BaseEngineManager):
             if 'vif_port_id' in pif.extra:
                 ironic.unplug_vif(self.ironicclient, pif.uuid)
 
-    def _wait_for_active(self, instance):
-        """Wait for the node to be marked as ACTIVE in Ironic."""
-
-        node = ironic.get_node_by_instance(self.ironicclient,
-                                           instance.uuid)
-        LOG.debug('Current ironic node state is %s', node.provision_state)
-        if node.provision_state == ironic_states.ACTIVE:
-            # job is done
-            LOG.debug("Ironic node %(node)s is now ACTIVE",
-                      dict(node=node.uuid))
-            instance.status = status.ACTIVE
-            instance.launched_at = timeutils.utcnow()
-            instance.save()
-            raise loopingcall.LoopingCallDone()
-
-        if node.target_provision_state in (ironic_states.DELETED,
-                                           ironic_states.AVAILABLE):
-            # ironic is trying to delete it now
-            raise exception.InstanceNotFound(instance_id=instance.uuid)
-
-        if node.provision_state in (ironic_states.NOSTATE,
-                                    ironic_states.AVAILABLE):
-            # ironic already deleted it
-            raise exception.InstanceNotFound(instance_id=instance.uuid)
-
-        if node.provision_state == ironic_states.DEPLOYFAIL:
-            # ironic failed to deploy
-            msg = (_("Failed to provision instance %(inst)s: %(reason)s")
-                   % {'inst': instance.uuid, 'reason': node.last_error})
-            raise exception.InstanceDeployFailure(msg)
-
-    def _build_instance(self, context, instance):
-        ironic.do_node_deploy(self.ironicclient, instance.node_uuid)
-
-        timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
-                                                     instance)
-        timer.start(interval=CONF.ironic.api_retry_interval).wait()
-        LOG.info(_LI('Successfully provisioned Ironic node %s'),
-                 instance.node_uuid)
-
     def _destroy_instance(self, context, instance):
         ironic.destroy_node(self.ironicclient, instance.node_uuid)
         LOG.info(_LI('Successfully destroyed Ironic node %s'),
                  instance.node_uuid)
 
-    def create_instance(self, context, instance,
-                        requested_networks, instance_type):
+    def create_instance(self, context, instance, requested_networks,
+                        instance_type, filter_properties=None):
         """Perform a deployment."""
         LOG.debug("Starting instance...")
 
         # Populate request spec
         instance_type_uuid = instance.instance_type_uuid
+
+        if filter_properties is None:
+            filter_properties = {}
+
         request_spec = {
             'instance_id': instance.uuid,
             'instance_properties': {
@@ -174,49 +105,33 @@ class EngineManager(base_manager.BaseEngineManager):
             },
             'instance_type': dict(instance_type),
         }
-        LOG.debug("Scheduling with request_spec: %s", request_spec)
-
-        # TODO(zhenguo): Add retry
-        filter_properties = {}
-        try:
-            top_node = self.scheduler.schedule(context,
-                                               request_spec,
-                                               self.node_cache,
-                                               filter_properties)
-        except exception.NoValidNode:
-            self._set_instance_obj_error_state(context, instance)
-            raise exception.NoValidNode(
-                _('No valid node is found with request spec %s') %
-                request_spec)
-        instance.node_uuid = top_node.to_dict()['node']
-
-        ironic.set_instance_info(self.ironicclient, instance)
-        # validate we are ready to do the deploy
-        validate_chk = ironic.validate_node(self.ironicclient,
-                                            instance.node_uuid)
-        if (not validate_chk.deploy.get('result')
-                or not validate_chk.power.get('result')):
-            self._set_instance_obj_error_state(context, instance)
-            raise exception.ValidationError(_(
-                "Ironic node: %(id)s failed to validate."
-                " (deploy: %(deploy)s, power: %(power)s)")
-                % {'id': instance.node_uuid,
-                   'deploy': validate_chk.deploy,
-                   'power': validate_chk.power})
 
         try:
-            network_info = self._build_networks(context, instance,
-                                                requested_networks)
+            flow_engine = create_instance.get_flow(
+                context,
+                self,
+                instance,
+                requested_networks,
+                request_spec,
+                filter_properties,
+            )
         except Exception:
-            self._set_instance_obj_error_state(context, instance)
-            return
+            msg = _("Create manager instance flow failed.")
+            LOG.exception(msg)
+            raise exception.NimbleException(msg)
 
-        instance.network_info = network_info
+        def _run_flow():
+            # This code executes create instance flow. If something goes wrong,
+            # flow reverts all job that was done and reraises an exception.
+            # Otherwise, all data that was generated by flow becomes available
+            # in flow engine's storage.
+            with flow_utils.DynamicLogListener(flow_engine, logger=LOG):
+                flow_engine.run()
 
-        try:
-            self._build_instance(context, instance)
-        except Exception:
-            self._set_instance_obj_error_state(context, instance)
+        _run_flow()
+
+        LOG.info(_LI("Created instance %s successfully."), instance.uuid)
+        return instance
 
     def delete_instance(self, context, instance):
         """Delete an instance."""
