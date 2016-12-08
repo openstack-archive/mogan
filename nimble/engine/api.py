@@ -80,9 +80,19 @@ class API(object):
 
         instance = self._provision_instances(context, base_options)
 
+        request_spec = {
+            'instance_id': instance.uuid,
+            'instance_properties': {
+                'availability_zone': instance.availability_zone,
+                'instance_type_uuid': instance.instance_type_uuid,
+            },
+            'instance_type': dict(instance_type),
+        }
+
         self.engine_rpcapi.create_instance(context, instance,
                                            requested_networks,
-                                           instance_type)
+                                           request_spec,
+                                           filter_properties=None)
 
         return instance
 
