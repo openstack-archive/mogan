@@ -24,6 +24,7 @@ from nimble.common import ironic
 from nimble.common import rpc
 from nimble.conf import CONF
 from nimble.db import api as dbapi
+from nimble.engine import rpcapi
 
 
 class BaseEngineManager(periodic_task.PeriodicTasks):
@@ -39,6 +40,7 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self.scheduler = importutils.import_object(scheduler_driver)
         self.notifier = rpc.get_notifier()
         self.ironicclient = ironic.IronicClientWrapper()
+        self.engine_rpcapi = rpcapi.EngineAPI()
         self._started = False
 
     def init_host(self):

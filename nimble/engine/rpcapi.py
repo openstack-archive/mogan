@@ -18,8 +18,8 @@ Client side of the engine RPC API.
 from oslo_config import cfg
 import oslo_messaging as messaging
 
+from nimble.common import constants
 from nimble.common import rpc
-from nimble.engine import manager
 from nimble.objects import base as objects_base
 
 CONF = cfg.CONF
@@ -40,7 +40,7 @@ class EngineAPI(object):
         super(EngineAPI, self).__init__()
         self.topic = topic
         if self.topic is None:
-            self.topic = manager.MANAGER_TOPIC
+            self.topic = constants.MANAGER_TOPIC
 
         target = messaging.Target(topic=self.topic,
                                   version='1.0')
@@ -49,13 +49,14 @@ class EngineAPI(object):
                                      version_cap=self.RPC_API_VERSION,
                                      serializer=serializer)
 
-    def create_instance(self, context, instance,
-                        requested_networks, instance_type):
+    def create_instance(self, context, instance, requested_networks,
+                        request_spec, filter_properties):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.cast(context, 'create_instance', instance=instance,
                           requested_networks=requested_networks,
-                          instance_type=instance_type)
+                          request_spec=request_spec,
+                          filter_properties=filter_properties)
 
     def delete_instance(self, context, instance):
         """Signal to engine service to delete an instance."""
