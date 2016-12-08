@@ -22,6 +22,7 @@ import sys
 from oslo_config import cfg
 from oslo_service import service
 
+from nimble.common import constants
 from nimble.common import service as nimble_service
 
 CONF = cfg.CONF
@@ -33,7 +34,8 @@ def main():
 
     mgr = nimble_service.RPCService(CONF.host,
                                     'nimble.engine.manager',
-                                    'EngineManager')
+                                    'EngineManager',
+                                    constants.MANAGER_TOPIC)
 
     launcher = service.launch(CONF, mgr)
     launcher.wait()

@@ -86,7 +86,7 @@ class FilterScheduler(driver.Scheduler):
                    'last_node': last_node,
                    'exc': exc})
 
-    def _populate_retry(self, filter_properties, properties):
+    def _populate_retry(self, filter_properties, request_spec):
         """Populate filter properties with history of retries for request.
 
         If maximum retries is exceeded, raise NoValidNode.
@@ -108,13 +108,13 @@ class FilterScheduler(driver.Scheduler):
             }
         filter_properties['retry'] = retry
 
-        instance_id = properties.get('instance_id')
+        instance_id = request_spec.get('instance_id')
         self._log_instance_error(instance_id, retry)
 
         if retry['num_attempts'] > max_attempts:
             raise exception.NoValidNode(
-                reason=_("Exceeded max scheduling attempts %(max_attempts)d "
-                         "for instance %(instance_id)s") %
+                _("Exceeded max scheduling attempts %(max_attempts)d "
+                  "for instance %(instance_id)s") %
                 {'max_attempts': max_attempts,
                  'instance_id': instance_id})
 
@@ -133,13 +133,11 @@ class FilterScheduler(driver.Scheduler):
 
         if filter_properties is None:
             filter_properties = {}
-        self._populate_retry(filter_properties,
-                             request_spec['instance_properties'])
+        self._populate_retry(filter_properties, request_spec)
 
         request_spec_dict = jsonutils.to_primitive(request_spec)
 
-        filter_properties.update({'context': context,
-                                  'request_spec': request_spec_dict,
+        filter_properties.update({'request_spec': request_spec_dict,
                                   'config_options': config_options,
                                   'instance_type': instance_type,
                                   'resource_type': resource_type})
@@ -177,7 +175,7 @@ class FilterScheduler(driver.Scheduler):
             LOG.warning(_LW('No weighed nodes found for instance '
                             'with properties: %s'),
                         request_spec.get('instance_type'))
-            raise exception.NoValidNode(reason=_("No weighed nodes available"))
+            raise exception.NoValidNode(_("No weighed nodes available"))
 
         top_node = self._choose_top_node(weighed_nodes, request_spec)
         self._add_retry_node(filter_properties, top_node)
