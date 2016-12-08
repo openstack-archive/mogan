@@ -16,6 +16,7 @@ from oslo_config import cfg
 import oslo_messaging
 from oslo_service import service as base_service
 
+from nimble.common import constants
 from nimble.common import exception
 from nimble.common import rpc
 from nimble.common import service
@@ -34,7 +35,8 @@ class TestRPCService(base.TestCase):
         host = "fake_host"
         mgr_module = "nimble.engine.manager"
         mgr_class = "EngineManager"
-        self.rpc_svc = service.RPCService(host, mgr_module, mgr_class)
+        self.rpc_svc = service.RPCService(host, mgr_module, mgr_class,
+                                          constants.MANAGER_TOPIC)
 
     @mock.patch.object(oslo_messaging, 'Target', autospec=True)
     @mock.patch.object(objects_base, 'NimbleObjectSerializer', autospec=True)

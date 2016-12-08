@@ -72,3 +72,15 @@ def validate_and_normalize_mac(address):
     if not is_valid_mac(address):
         raise exception.InvalidMAC(mac=address)
     return address.lower()
+
+
+def make_pretty_name(method):
+    """Makes a pretty name for a function/method."""
+    meth_pieces = [method.__name__]
+    # If its an instance method attempt to tack on the class name
+    if hasattr(method, '__self__') and method.__self__ is not None:
+        try:
+            meth_pieces.insert(0, method.__self__.__class__.__name__)
+        except AttributeError:
+            pass
+    return ".".join(meth_pieces)

@@ -73,6 +73,15 @@ def set_instance_info(ironicclient, instance):
     ironicclient.call("node.update", instance.node_uuid, patch)
 
 
+def unset_instance_info(ironicclient, instance):
+
+    patch = []
+    patch.append({'path': '/instance_uuid', 'op': 'remove'})
+    patch.append({'path': '/instance_info', 'op': 'remove'})
+
+    ironicclient.call("node.update", instance.node_uuid, patch)
+
+
 def do_node_deploy(ironicclient, node_uuid):
     # trigger the node deploy
     ironicclient.call("node.set_provision_state", node_uuid,
