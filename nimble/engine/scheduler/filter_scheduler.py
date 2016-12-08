@@ -86,7 +86,7 @@ class FilterScheduler(driver.Scheduler):
                    'last_node': last_node,
                    'exc': exc})
 
-    def _populate_retry(self, filter_properties, properties):
+    def _populate_retry(self, filter_properties, request_spec):
         """Populate filter properties with history of retries for request.
 
         If maximum retries is exceeded, raise NoValidNode.
@@ -108,7 +108,7 @@ class FilterScheduler(driver.Scheduler):
             }
         filter_properties['retry'] = retry
 
-        instance_id = properties.get('instance_id')
+        instance_id = request_spec.get('instance_id')
         self._log_instance_error(instance_id, retry)
 
         if retry['num_attempts'] > max_attempts:
@@ -133,13 +133,11 @@ class FilterScheduler(driver.Scheduler):
 
         if filter_properties is None:
             filter_properties = {}
-        self._populate_retry(filter_properties,
-                             request_spec['instance_properties'])
+        self._populate_retry(filter_properties, request_spec)
 
         request_spec_dict = jsonutils.to_primitive(request_spec)
 
-        filter_properties.update({'context': context,
-                                  'request_spec': request_spec_dict,
+        filter_properties.update({'request_spec': request_spec_dict,
                                   'config_options': config_options,
                                   'instance_type': instance_type,
                                   'resource_type': resource_type})
@@ -187,4 +185,4 @@ class FilterScheduler(driver.Scheduler):
         top_node = weighed_nodes[0]
         node_state = top_node.obj
         LOG.debug("Choosing %s", node_state.node)
-        return top_node
+        return node_state.node

@@ -16,16 +16,12 @@
 """Test class for Nimble ManagerService."""
 
 import mock
-from oslo_service import loopingcall
 
 from nimble.common import neutron
 from nimble.engine.baremetal import ironic
 from nimble.engine.baremetal import ironic_states
 from nimble.engine import manager
-from nimble.engine.scheduler import filter_scheduler as scheduler
-from nimble import objects
 from nimble.tests.unit.db import base as tests_db_base
-from nimble.tests.unit.db import utils as db_utils
 from nimble.tests.unit.engine import mgr_utils
 from nimble.tests.unit.objects import utils as obj_utils
 
@@ -33,52 +29,6 @@ from nimble.tests.unit.objects import utils as obj_utils
 @mock.patch.object(manager.EngineManager, '_refresh_cache')
 class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
                              tests_db_base.DbTestCase):
-
-    @mock.patch.object(manager.EngineManager, '_wait_for_active')
-    @mock.patch.object(ironic, 'do_node_deploy')
-    def test__build_instance(self, deploy_node_mock, wait_mock,
-                             refresh_cache_mock):
-        instance = obj_utils.create_test_instance(self.context)
-        deploy_node_mock.side_effect = None
-        wait_mock.side_effect = loopingcall.LoopingCallDone()
-        refresh_cache_mock.side_effect = None
-        self._start_service()
-
-        self.service._build_instance(self.context, instance)
-        self._stop_service()
-
-        deploy_node_mock.assert_called_once_with(mock.ANY, instance.node_uuid)
-
-    @mock.patch.object(manager.EngineManager, '_build_instance')
-    @mock.patch.object(manager.EngineManager, '_build_networks')
-    @mock.patch.object(ironic, 'validate_node')
-    @mock.patch.object(ironic, 'set_instance_info')
-    @mock.patch.object(scheduler.FilterScheduler, 'schedule')
-    def test_create_instance(self, schedule_mock, set_inst_mock,
-                             validate_mock, build_net_mock,
-                             build_inst_mock, refresh_cache_mock):
-        instance = obj_utils.create_test_instance(self.context)
-        fake_type = db_utils.get_test_instance_type(context=self.context)
-        fake_type['extra_specs'] = {}
-        inst_type = objects.InstanceType(self.context, **fake_type)
-        schedule_mock.side_effect = None
-        set_inst_mock.side_effect = None
-        validate_mock.side_effect = None
-        build_net_mock.side_effect = None
-        build_inst_mock.side_effect = None
-        refresh_cache_mock.side_effect = None
-        requested_net = [{'uuid': 'fake-net-uuid'}]
-
-        self._start_service()
-        self.service.create_instance(self.context, instance,
-                                     requested_net, inst_type)
-        self._stop_service()
-
-        set_inst_mock.assert_called_once_with(mock.ANY, instance)
-        validate_mock.assert_called_once_with(mock.ANY, instance.node_uuid)
-        build_net_mock.assert_called_once_with(self.context, instance,
-                                               requested_net)
-        build_inst_mock.assert_called_once_with(self.context, instance)
 
     @mock.patch.object(ironic, 'unplug_vif')
     @mock.patch.object(ironic, 'get_ports_from_node')
