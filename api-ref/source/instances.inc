@@ -207,6 +207,60 @@ Response
    :language: javascript
 
 
+Update Instance
+===============
+
+.. rest_method:: PATCH /instances/{instances_uuid}
+
+Updates the infromation stored about an instance.
+
+Normal response codes: 200
+
+Error response codes: badRequest(400), unauthorized(401),
+forbidden(403), conflict(409)
+
+Request
+-------
+
+The BODY of the PATCH request must be a JSON PATCH document, adhering to
+`RFC 6902 <https://tools.ietf.org/html/rfc6902>`_.
+
+.. rest_parameters:: parameters.yaml
+
+  - instance_ident: instance_ident
+
+**Example Update Instance: JSON request**
+
+.. literalinclude:: ../../doc/api_samples/instances/instance-update-req.json
+   :language: javascript
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: instance_name
+  - description: instance_description
+  - instance_type_uuid: typeRef
+  - image_uuid: imageRef
+  - availability_zone: availability_zone
+  - network_info: network_info
+  - links: links
+  - uuid: instance_uuid
+  - status: instance_status
+  - power_state: instance_power_state
+  - project_id: project_id_body
+  - user_id: user_id_body
+  - updated_at: updated_at
+  - created_at: created_at
+  - extra: extra
+
+**Example Update Instance: JSON response**
+
+.. literalinclude:: ../../doc/api_samples/instances/instance-update-resp.json
+   :language: javascript
+
+
 Delete Instance
 ===============
 

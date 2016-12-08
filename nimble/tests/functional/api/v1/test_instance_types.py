@@ -40,6 +40,7 @@ class TestInstanceType(v1_test.APITestV1):
     def test_instance_type_post(self):
         body = {"name": "test", "description": "just test"}
         resp = self.post_json('/types', body, status=201)
+        resp = resp.json
         self.assertEqual('test', resp['name'])
         self.assertEqual('just test', resp['description'])
         self.assertEqual(True, resp['is_public'])

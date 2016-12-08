@@ -26,6 +26,7 @@ from wsme import types as wtypes
 from nimble.api.controllers import base
 from nimble.api.controllers import link
 from nimble.api.controllers.v1 import types
+from nimble.api.controllers.v1 import utils as api_utils
 from nimble.api import expose
 from nimble.common import exception
 from nimble.common.i18n import _
@@ -173,7 +174,7 @@ class Instance(base.APIBase):
     uuid = types.uuid
     """The UUID of the instance"""
 
-    name = wtypes.text
+    name = wsme.wsattr(wtypes.text, mandatory=True)
     """The name of the instance"""
 
     description = wtypes.text
@@ -238,6 +239,19 @@ class Instance(base.APIBase):
                                               bookmark=True)
                           ]
         return instance
+
+
+class InstancePatchType(types.JsonPatchType):
+
+    _api_base = Instance
+
+    @staticmethod
+    def internal_attrs():
+        defaults = types.JsonPatchType.internal_attrs()
+        return defaults + ['/project_id', '/user_id', '/status',
+                           '/power_state', '/availability_zone',
+                           '/instance_type_uuid', 'image_uuid',
+                           '/network_info', '/launched_at']
 
 
 class InstanceCollection(base.APIBase):
@@ -405,6 +419,39 @@ class InstanceController(rest.RestController):
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('instance', instance.uuid)
         return Instance.convert_with_links(instance)
+
+    @policy.authorize_wsgi("nimble:instance", "update")
+    @wsme.validate(types.uuid, [InstancePatchType])
+    @expose.expose(Instance, types.uuid, body=[InstancePatchType])
+    def patch(self, instance_uuid, patch):
+        """Update an instance.
+
+        :param instance_uuid: UUID of an instance.
+        :param patch: a json PATCH document to apply to this instance.
+        """
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
+        try:
+            instance = Instance(
+                **api_utils.apply_jsonpatch(rpc_instance.as_dict(), patch))
+
+        except api_utils.JSONPATCH_EXCEPTIONS as e:
+            raise exception.PatchError(patch=patch, reason=e)
+
+        # Update only the fields that have changed
+        for field in objects.Instance.fields:
+            try:
+                patch_val = getattr(instance, field)
+            except AttributeError:
+                # Ignore fields that aren't exposed in the API
+                continue
+            if patch_val == wtypes.Unset:
+                patch_val = None
+            if rpc_instance[field] != patch_val:
+                rpc_instance[field] = patch_val
+
+        rpc_instance.save()
+
+        return Instance.convert_with_links(rpc_instance)
 
     @policy.authorize_wsgi("nimble:instance", "delete")
     @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)

@@ -13,7 +13,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import mock
+from oslo_utils import timeutils
+from oslo_utils import uuidutils
+from six.moves import http_client
 
 from nimble.tests.functional.api import v1 as v1_test
 from nimble.tests.unit.db import utils
@@ -93,3 +97,167 @@ class TestInstanceAuthorization(v1_test.APITestV1):
         error = self.parser_error_body(resp)
         self.assertEqual(error['faultstring'],
                          self.DENY_MESSAGE % 'instance:get')
+
+
+class TestPatch(v1_test.APITestV1):
+
+    def setUp(self):
+        super(TestPatch, self).setUp()
+        self.instance = utils.create_test_instance(name="patch_instance")
+        self.context.project_id = self.instance.project_id
+        self.headers = self.gen_headers(self.context, roles="no-admin")
+
+    def test_update_not_found(self):
+        uuid = uuidutils.generate_uuid()
+        response = self.patch_json('/instances/%s' % uuid,
+                                   [{'path': '/extra/a', 'value': 'b',
+                                     'op': 'add'}],
+                                   headers=self.headers,
+                                   expect_errors=True)
+        self.assertEqual(http_client.NOT_FOUND, response.status_int)
+        self.assertEqual('application/json', response.content_type)
+        self.assertTrue(response.json['error_message'])
+
+    @mock.patch('nimble.engine.api.API.get_ironic_node')
+    @mock.patch.object(timeutils, 'utcnow')
+    def test_replace_singular(self, mock_utcnow, mock_get_node):
+        mock_get_node.return_value = {'power_state': 'power on'}
+        description = 'instance-new-description'
+        test_time = datetime.datetime(2000, 1, 1, 0, 0)
+
+        mock_utcnow.return_value = test_time
+        response = self.patch_json('/instances/%s' % self.instance.uuid,
+                                   [{'path': '/description',
+                                     'value': description, 'op': 'replace'}],
+                                   headers=self.headers)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(http_client.OK, response.status_code)
+        result = self.get_json('/instances/%s' % self.instance.uuid,
+                               headers=self.headers)
+        self.assertEqual(description, result['description'])
+        return_updated_at = timeutils.parse_isotime(
+            result['updated_at']).replace(tzinfo=None)
+        self.assertEqual(test_time, return_updated_at)
+
+    @mock.patch('nimble.engine.api.API.get_ironic_node')
+    def test_replace_multi(self, mock_get_node):
+        mock_get_node.return_value = {'power_state': 'power on'}
+        extra = {"foo1": "bar1", "foo2": "bar2", "foo3": "bar3"}
+        uuid = uuidutils.generate_uuid()
+        instance = utils.create_test_instance(name='test1', uuid=uuid,
+                                              extra=extra)
+        new_value = 'new value'
+        response = self.patch_json('/instances/%s' % instance.uuid,
+                                   [{'path': '/extra/foo2',
+                                     'value': new_value, 'op': 'replace'}],
+                                   headers=self.headers)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(http_client.OK, response.status_code)
+        result = self.get_json('/instances/%s' % instance.uuid,
+                               headers=self.headers)
+
+        extra["foo2"] = new_value
+        self.assertEqual(extra, result['extra'])
+
+    @mock.patch('nimble.engine.api.API.get_ironic_node')
+    def test_remove_singular(self, mock_get_node):
+        mock_get_node.return_value = {'power_state': 'power on'}
+        uuid = uuidutils.generate_uuid()
+        instance = utils.create_test_instance(name='test2', uuid=uuid,
+                                              extra={'a': 'b'})
+        response = self.patch_json('/instances/%s' % instance.uuid,
+                                   [{'path': '/description', 'op': 'remove'}],
+                                   headers=self.headers)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(http_client.OK, response.status_code)
+        result = self.get_json('/instances/%s' % instance.uuid,
+                               headers=self.headers)
+        self.assertIsNone(result['description'])
+
+        # Assert nothing else was changed
+        self.assertEqual(instance.uuid, result['uuid'])
+        self.assertEqual(instance.extra, result['extra'])
+
+    @mock.patch('nimble.engine.api.API.get_ironic_node')
+    def test_remove_multi(self, mock_get_node):
+        mock_get_node.return_value = {'power_state': 'power on'}
+        extra = {"foo1": "bar1", "foo2": "bar2", "foo3": "bar3"}
+        uuid = uuidutils.generate_uuid()
+        instance = utils.create_test_instance(name='test3', extra=extra,
+                                              uuid=uuid, description="foobar")
+
+        # Removing one item from the collection
+        response = self.patch_json('/instances/%s' % instance.uuid,
+                                   [{'path': '/extra/foo2', 'op': 'remove'}],
+                                   headers=self.headers)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(http_client.OK, response.status_code)
+        result = self.get_json('/instances/%s' % instance.uuid,
+                               headers=self.headers)
+        extra.pop("foo2")
+        self.assertEqual(extra, result['extra'])
+
+        # Removing the collection
+        response = self.patch_json('/instances/%s' % instance.uuid,
+                                   [{'path': '/extra', 'op': 'remove'}],
+                                   headers=self.headers)
+        self.assertEqual(http_client.OK, response.status_code)
+        result = self.get_json('/instances/%s' % instance.uuid,
+                               headers=self.headers)
+        self.assertEqual({}, result['extra'])
+
+        # Assert nothing else was changed
+        self.assertEqual(instance.uuid, result['uuid'])
+        self.assertEqual(instance.description, result['description'])
+
+    def test_remove_non_existent_property_fail(self):
+        response = self.patch_json(
+            '/instances/%s' % self.instance.uuid,
+            [{'path': '/extra/non-existent', 'op': 'remove'}],
+            headers=self.headers,
+            expect_errors=True)
+        self.assertEqual(http_client.BAD_REQUEST, response.status_code)
+        self.assertEqual('application/json', response.content_type)
+        self.assertTrue(response.json['error_message'])
+
+    def test_add_root(self):
+        response = self.patch_json('/instances/%s' % self.instance.uuid,
+                                   [{'path': '/description', 'value': 'test',
+                                     'op': 'add'}],
+                                   headers=self.headers)
+        self.assertEqual(http_client.OK, response.status_int)
+        self.assertEqual('application/json', response.content_type)
+
+    def test_add_root_non_existent(self):
+        response = self.patch_json('/instances/%s' % self.instance.uuid,
+                                   [{'path': '/foo', 'value': 'bar',
+                                     'op': 'add'}],
+                                   expect_errors=True,
+                                   headers=self.headers)
+        self.assertEqual(http_client.BAD_REQUEST, response.status_int)
+        self.assertTrue(response.json['error_message'])
+
+    @mock.patch('nimble.engine.api.API.get_ironic_node')
+    def test_add_multi(self, mock_get_node):
+        mock_get_node.return_value = {'power_state': 'power on'}
+        response = self.patch_json('/instances/%s' % self.instance.uuid,
+                                   [{'path': '/extra/foo1', 'value': 'bar1',
+                                     'op': 'add'},
+                                    {'path': '/extra/foo2', 'value': 'bar2',
+                                     'op': 'add'}],
+                                   headers=self.headers)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(http_client.OK, response.status_code)
+        result = self.get_json('/instances/%s' % self.instance.uuid,
+                               headers=self.headers)
+        expected = {"foo1": "bar1", "foo2": "bar2"}
+        self.assertEqual(expected, result['extra'])
+
+    def test_remove_uuid(self):
+        response = self.patch_json('/instances/%s' % self.instance.uuid,
+                                   [{'path': '/uuid', 'op': 'remove'}],
+                                   expect_errors=True,
+                                   headers=self.headers)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(http_client.BAD_REQUEST, response.status_int)
+        self.assertTrue(response.json['error_message'])
