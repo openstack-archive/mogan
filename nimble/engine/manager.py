@@ -189,6 +189,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 _('No valid node is found with request spec %s') %
                 request_spec)
         instance.node_uuid = top_node.to_dict()['node']
+        del self.node_cache[top_node.to_dict()['node']]
 
         ironic.set_instance_info(self.ironicclient, instance)
         # validate we are ready to do the deploy
