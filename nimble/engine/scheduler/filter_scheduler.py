@@ -187,4 +187,4 @@ class FilterScheduler(driver.Scheduler):
         top_node = weighed_nodes[0]
         node_state = top_node.obj
         LOG.debug("Choosing %s", node_state.node)
-        return top_node
+        return node_state.node

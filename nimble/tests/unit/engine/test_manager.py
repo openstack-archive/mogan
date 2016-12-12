@@ -61,7 +61,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         fake_type = db_utils.get_test_instance_type(context=self.context)
         fake_type['extra_specs'] = {}
         inst_type = objects.InstanceType(self.context, **fake_type)
-        schedule_mock.side_effect = None
+        schedule_mock.return_value = 'fake-node'
         set_inst_mock.side_effect = None
         validate_mock.side_effect = None
         build_net_mock.side_effect = None
@@ -70,6 +70,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         requested_net = [{'uuid': 'fake-net-uuid'}]
 
         self._start_service()
+        self.service.node_cache = {'fake-node': 'node'}
         self.service.create_instance(self.context, instance,
                                      requested_net, inst_type)
         self._stop_service()
