@@ -33,6 +33,3 @@ def main():
     server = nimble_service.WSGIService('nimble_api', CONF.api.enable_ssl_api)
     launcher.launch_service(server, workers=server.workers)
     launcher.wait()
-
-if __name__ == '__main__':
-    sys.exit(main())
