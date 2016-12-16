@@ -63,7 +63,7 @@ class TestInstanceObject(base.DbTestCase):
             values = instance.obj_get_changes()
             instance.create(self.context)
             mock_instance_create.assert_called_once_with(self.context, values)
-            self.assertEqual(self.fake_instance['id'], instance['id'])
+            self.assertEqual(self.fake_instance['uuid'], instance['uuid'])
 
     def test_destroy(self):
         uuid = self.fake_instance['uuid']

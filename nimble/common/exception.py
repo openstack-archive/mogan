@@ -145,7 +145,7 @@ class InvalidUUID(Invalid):
 
 
 class InstanceTypeAlreadyExists(NimbleException):
-    _msg_fmt = _("InstanceType with name %(name)s already exists.")
+    _msg_fmt = _("InstanceType with uuid %(uuid)s already exists.")
 
 
 class InstanceTypeNotFound(NotFound):

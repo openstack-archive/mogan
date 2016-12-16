@@ -50,10 +50,6 @@ def get_test_instance(ctxt, **kw):
     get_db_instance_checked = check_keyword_arguments(
         db_utils.get_test_instance)
     db_instance = get_db_instance_checked(**kw)
-
-    # Let DB generate ID if it isn't specified explicitly
-    if 'id' not in kw:
-        del db_instance['id']
     instance = objects.Instance(ctxt)
     for key in db_instance:
         setattr(instance, key, db_instance[key])

@@ -30,7 +30,6 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
     dbapi = dbapi.get_instance()
 
     fields = {
-        'id': object_fields.IntegerField(),
         'uuid': object_fields.UUIDField(nullable=True),
         'name': object_fields.StringField(nullable=True),
         'description': object_fields.StringField(nullable=True),
@@ -71,10 +70,10 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
                                                  context)
 
     @classmethod
-    def get(cls, context, instance_type_id):
+    def get(cls, context, instance_type_uuid):
         """Find a Instance Type and return a Instance Type object."""
         db_instance_type = cls.dbapi.instance_type_get(context,
-                                                       instance_type_id)
+                                                       instance_type_uuid)
         instance_type = InstanceType._from_db_object(cls(context),
                                                      db_instance_type)
         return instance_type
