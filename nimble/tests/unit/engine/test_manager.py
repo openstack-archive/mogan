@@ -197,7 +197,9 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         node3.properties = {'availability_zone': 'az1'}
 
         self._start_service()
-        self.service.node_cache = [node1, node2, node3]
+        self.service.node_cache = {'node1_id': node1,
+                                   'node2_id': node2,
+                                   'node3_id': node3}
         azs = self.service.list_availability_zones(self.context)
         self._stop_service()
 

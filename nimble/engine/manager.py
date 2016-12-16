@@ -272,7 +272,7 @@ class EngineManager(base_manager.BaseEngineManager):
     def list_availability_zones(self, context):
         """Get availability zone list."""
         azs = set()
-        for node in self.node_cache:
+        for node in self.node_cache.values():
             az = node.properties.get('availability_zone')
             if az is not None:
                 azs.add(az)
