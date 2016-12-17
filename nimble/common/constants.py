@@ -13,29 +13,5 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-The Nimble Management Service
-"""
 
-import sys
-
-from oslo_config import cfg
-from oslo_service import service
-
-from nimble.common import constants
-from nimble.common import service as nimble_service
-
-CONF = cfg.CONF
-
-
-def main():
-    # Parse config file and command line options, then start logging
-    nimble_service.prepare_service(sys.argv)
-
-    mgr = nimble_service.RPCService(CONF.host,
-                                    'nimble.engine.manager',
-                                    'EngineManager',
-                                    constants.MANAGER_TOPIC)
-
-    launcher = service.launch(CONF, mgr)
-    launcher.wait()
+MANAGER_TOPIC = 'nimble.engine_manager'
