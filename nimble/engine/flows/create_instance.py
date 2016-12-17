@@ -49,10 +49,13 @@ class ScheduleCreateInstanceTask(flow_utils.NimbleTask):
         self.manager = manager
 
     def execute(self, context, instance, request_spec, filter_properties):
-        top_node = self.manager.scheduler.schedule(context,
-                                                   request_spec,
-                                                   self.manager.node_cache,
-                                                   filter_properties)
+        with self.manager._lock:
+            top_node = self.manager.scheduler.schedule(
+                context,
+                request_spec,
+                self.manager.node_cache,
+                filter_properties)
+            self.manager.node_cache.pop(top_node, None)
         instance.node_uuid = top_node
 
 
