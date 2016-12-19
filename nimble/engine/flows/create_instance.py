@@ -54,6 +54,7 @@ class ScheduleCreateInstanceTask(flow_utils.NimbleTask):
                                                    self.manager.node_cache,
                                                    filter_properties)
         instance.node_uuid = top_node
+        instance.save()
 
 
 class OnFailureRescheduleTask(flow_utils.NimbleTask):
@@ -74,6 +75,7 @@ class OnFailureRescheduleTask(flow_utils.NimbleTask):
             # The instance has been removed from the database, that can not
             # be fixed by rescheduling.
             exception.InstanceNotFound,
+            exception.NetworkError,
         ]
 
     def execute(self, **kwargs):
@@ -251,6 +253,7 @@ class BuildNetworkTask(flow_utils.NimbleTask):
             requested_networks)
 
         instance.network_info = network_info
+        instance.save()
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Check if we have a cause which need to clean up networks.

@@ -21,6 +21,7 @@ from nimble.common import context
 from nimble.engine.baremetal import ironic
 from nimble.engine.flows import create_instance
 from nimble.engine.scheduler import filter_scheduler as scheduler
+from nimble import objects
 from nimble.tests import base
 from nimble.tests.unit.objects import utils as obj_utils
 
@@ -31,8 +32,9 @@ class CreateInstanceFlowTestCase(base.TestCase):
         super(CreateInstanceFlowTestCase, self).setUp()
         self.ctxt = context.get_admin_context()
 
+    @mock.patch.object(objects.instance.Instance, 'save')
     @mock.patch.object(scheduler.FilterScheduler, 'schedule')
-    def test_schedule_task_execute(self, mock_schedule):
+    def test_schedule_task_execute(self, mock_schedule, mock_save):
         fake_uuid = uuidutils.generate_uuid()
         fake_engine_manager = mock.MagicMock()
         fake_request_spec = mock.MagicMock()
@@ -42,6 +44,7 @@ class CreateInstanceFlowTestCase(base.TestCase):
             fake_engine_manager)
         instance_obj = obj_utils.get_test_instance(self.ctxt)
         mock_schedule.return_value = fake_uuid
+        mock_save.side_effect = None
 
         task.execute(self.ctxt,
                      instance_obj,
@@ -70,14 +73,16 @@ class CreateInstanceFlowTestCase(base.TestCase):
         mock_validate.assert_called_once_with(fake_ironicclient,
                                               instance_obj.node_uuid)
 
+    @mock.patch.object(objects.instance.Instance, 'save')
     @mock.patch.object(create_instance.BuildNetworkTask, '_build_networks')
-    def test_create_network_task_execute(self, mock_build_networks):
+    def test_create_network_task_execute(self, mock_build_networks, mock_save):
         fake_ironicclient = mock.MagicMock()
         fake_requested_networks = mock.MagicMock()
         task = create_instance.BuildNetworkTask(
             fake_ironicclient)
         instance_obj = obj_utils.get_test_instance(self.ctxt)
         mock_build_networks.side_effect = None
+        mock_save.side_effect = None
 
         task.execute(self.ctxt, instance_obj, fake_requested_networks)
         mock_build_networks.assert_called_once_with(self.ctxt,
