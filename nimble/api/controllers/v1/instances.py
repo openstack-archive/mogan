@@ -310,7 +310,8 @@ class InstanceController(rest.RestController):
                 node_list = []
 
             if node_list:
-                node_dict = {node['instance_uuid']: node for node in node_list}
+                node_dict = {node['instance_uuid']: node for node in node_list
+                             if node['instance_uuid']}
                 # Merge nimble instance info with ironic node power state
                 for instance_data in instances_data:
                     uuid = instance_data['uuid']
@@ -348,9 +349,11 @@ class InstanceController(rest.RestController):
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
         instance_data = rpc_instance.as_dict()
-        if fields is None or 'power_state' in fields:
+        if (fields is None or 'power_state' in fields and
+                instance_data['node_uuid']):
             # Only fetch node info if fields parameter is not specified
-            # or node fields is not requested.
+            # or node fields is not requested and when instance is really
+            # associated with a ironic node.
             try:
                 node = self.engine_api.get_ironic_node(pecan.request.context,
                                                        instance_uuid,
