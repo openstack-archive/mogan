@@ -1,0 +1,9 @@
+Code-Review+2: ShaoHe Feng <shaohe.feng@intel.com>
+Code-Review+2: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Workflow+1: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 20 Dec 2016 11:24:08 +0000
+Reviewed-on: https://review.openstack.org/412852
+Project: openstack/nimble
+Branch: refs/heads/master
