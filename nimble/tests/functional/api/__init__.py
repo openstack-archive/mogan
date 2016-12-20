@@ -92,7 +92,6 @@ class BaseApiTest(base.DbTestCase):
             extra_environ=extra_environ,
             expect_errors=expect_errors
         )
-        print('GOT:%s' % response)
         return response
 
     def put_json(self, path, params, expect_errors=False, headers=None,
