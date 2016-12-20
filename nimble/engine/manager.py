@@ -21,7 +21,6 @@ from nimble.common import exception
 from nimble.common import flow_utils
 from nimble.common.i18n import _LE
 from nimble.common.i18n import _LI
-from nimble.common import neutron
 from nimble.conf import CONF
 from nimble.engine.baremetal import ironic
 from nimble.engine.baremetal import ironic_states
@@ -70,7 +69,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
         ports = instance.network_info.keys()
         for port in ports:
-            neutron.delete_port(context, port, instance.uuid)
+            self.network_api.delete_port(context, port, instance.uuid)
 
         ironic_ports = ironic.get_ports_from_node(self.ironicclient,
                                                   instance.node_uuid,

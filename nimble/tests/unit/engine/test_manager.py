@@ -17,10 +17,10 @@
 
 import mock
 
-from nimble.common import neutron
 from nimble.engine.baremetal import ironic
 from nimble.engine.baremetal import ironic_states
 from nimble.engine import manager
+from nimble.network import api as network_api
 from nimble.tests.unit.db import base as tests_db_base
 from nimble.tests.unit.engine import mgr_utils
 from nimble.tests.unit.objects import utils as obj_utils
@@ -32,7 +32,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
 
     @mock.patch.object(ironic, 'unplug_vif')
     @mock.patch.object(ironic, 'get_ports_from_node')
-    @mock.patch.object(neutron, 'delete_port')
+    @mock.patch.object(network_api.API, 'delete_port')
     def test__destroy_networks(self, delete_port_mock,
                                get_ports_mock, unplug_vif_mock,
                                refresh_cache_mock):

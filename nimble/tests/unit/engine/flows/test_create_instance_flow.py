@@ -77,9 +77,10 @@ class CreateInstanceFlowTestCase(base.TestCase):
     @mock.patch.object(create_instance.BuildNetworkTask, '_build_networks')
     def test_create_network_task_execute(self, mock_build_networks, mock_save):
         fake_ironicclient = mock.MagicMock()
+        fake_network_api = mock.MagicMock()
         fake_requested_networks = mock.MagicMock()
         task = create_instance.BuildNetworkTask(
-            fake_ironicclient)
+            fake_network_api, fake_ironicclient)
         instance_obj = obj_utils.get_test_instance(self.ctxt)
         mock_build_networks.side_effect = None
         mock_save.side_effect = None

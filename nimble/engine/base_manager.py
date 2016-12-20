@@ -25,6 +25,7 @@ from nimble.common import rpc
 from nimble.conf import CONF
 from nimble.db import api as dbapi
 from nimble.engine import rpcapi
+from nimble import network
 
 
 class BaseEngineManager(periodic_task.PeriodicTasks):
@@ -36,6 +37,7 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self.host = host
         self.topic = topic
         self.node_cache = {}
+        self.network_api = network.API()
         scheduler_driver = CONF.scheduler.scheduler_driver
         self.scheduler = importutils.import_object(scheduler_driver)
         self.notifier = rpc.get_notifier()
