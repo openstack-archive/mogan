@@ -192,12 +192,12 @@ Response
    :language: javascript
 
 
-Create Extra Spec
-=================
+Create/update Extra Spec
+========================
 
-.. rest_method:: POST /types/{type_uuid}/extraspecs
+.. rest_method:: PATCH /types/{type_uuid}/extraspecs
 
-Create extra specs to the given type.
+Create/update extra specs to the given type.
 
 Normal response codes: 201
 
@@ -213,7 +213,7 @@ Request
 
 **Example Create Extra Specs**
 
-.. literalinclude:: ../../doc/api_samples/types/type-extra-specs-post-req.json
+.. literalinclude:: ../../doc/api_samples/types/type-extra-specs-patch-req.json
    :language: javascript
 
 Response
@@ -225,44 +225,7 @@ Response
 
 **Example Create Extra Specs**
 
-.. literalinclude:: ../../doc/api_samples/types/type-extra-specs-list-resp.json
-   :language: javascript
-
-
-Update Extra Spec
-=================
-
-.. rest_method:: PUT /types/{type_uuid}/extraspecs
-
-Updates extra specs to the given type.
-
-Normal response codes: 202
-
-Error response codes: unauthorized(401), forbidden(403)
-
-Request
--------
-
-.. rest_parameters:: parameters.yaml
-
-    - type_uuid: type_uuid_path
-    - extra_specs: type_extra_specs
-
-**Example Update Extra Specs**
-
-.. literalinclude:: ../../doc/api_samples/types/type-extra-specs-post-req.json
-   :language: javascript
-
-Response
---------
-
-.. rest_parameters:: parameters.yaml
-
-    - extra_specs: type_extra_specs
-
-**Example Update Extra Specs**
-
-.. literalinclude:: ../../doc/api_samples/types/type-extra-specs-list-resp.json
+.. literalinclude:: ../../doc/api_samples/types/type-extra-specs-patch-resp.json
    :language: javascript
 
 
