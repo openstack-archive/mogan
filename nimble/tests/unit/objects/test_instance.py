@@ -14,8 +14,8 @@
 #    under the License.
 
 import mock
+from oslo_context import context
 
-from nimble.common import context
 from nimble import objects
 from nimble.tests.unit.db import base
 from nimble.tests.unit.db import utils

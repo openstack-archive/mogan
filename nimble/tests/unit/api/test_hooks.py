@@ -17,9 +17,9 @@
 
 import mock
 from oslo_config import cfg
+from oslo_context import context
 
 from nimble.api import hooks
-from nimble.common import context
 from nimble.tests import base
 
 
@@ -100,14 +100,13 @@ class TestContextHook(base.TestCase):
         context_hook.before(reqstate)
         mock_ctx.assert_called_with(
             auth_token=headers['X-Auth-Token'],
-            user_id=headers['X-User-Id'],
+            user=headers['X-User-Id'],
             user_name=headers['X-User-Name'],
-            project_id=headers['X-Project-Id'],
+            tenant=headers['X-Project-Id'],
             project_name=headers['X-Project-Name'],
-            domain_id=headers['X-User-Domain-Id'],
+            domain=headers['X-User-Domain-Id'],
             domain_name=headers['X-User-Domain-Name'],
             is_admin=True,
-            is_public_api=False,
             roles=headers['X-Roles'].split(','))
 
     @mock.patch.object(context, 'RequestContext')
@@ -119,14 +118,13 @@ class TestContextHook(base.TestCase):
         context_hook.before(reqstate)
         mock_ctx.assert_called_with(
             auth_token=headers['X-Auth-Token'],
-            user_id=headers['X-User-Id'],
+            user=headers['X-User-Id'],
             user_name=headers['X-User-Name'],
-            project_id=headers['X-Project-Id'],
+            tenant=headers['X-Project-Id'],
             project_name=headers['X-Project-Name'],
-            domain_id=headers['X-User-Domain-Id'],
+            domain=headers['X-User-Domain-Id'],
             domain_name=headers['X-User-Domain-Name'],
             is_admin=True,
-            is_public_api=True,
             roles=headers['X-Roles'].split(','))
 
     @mock.patch.object(context, 'RequestContext')

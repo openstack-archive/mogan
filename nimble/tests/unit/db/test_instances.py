@@ -73,14 +73,14 @@ class DbInstanceTestCase(base.DbTestCase):
 
         # Set project_only to True
         # get instances from current project (project_1)
-        self.context.project_id = 'project_1'
+        self.context.tenant = 'project_1'
         res = self.dbapi.instance_get_all(self.context, project_only=True)
         res_uuids = [r.uuid for r in res]
         six.assertCountEqual(self, uuids_project_1, res_uuids)
 
         # Set project_only to True
         # get instances from current project (project_2)
-        self.context.project_id = 'project_2'
+        self.context.tenant = 'project_2'
         res = self.dbapi.instance_get_all(self.context, project_only=True)
         res_uuids = [r.uuid for r in res]
         six.assertCountEqual(self, uuids_project_2, res_uuids)
