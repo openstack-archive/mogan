@@ -16,7 +16,9 @@
 """Test class for Nimble ManagerService."""
 
 import mock
+from oslo_config import cfg
 
+from nimble.common import exception
 from nimble.engine.baremetal import ironic
 from nimble.engine.baremetal import ironic_states
 from nimble.engine import manager
@@ -24,6 +26,8 @@ from nimble.network import api as network_api
 from nimble.tests.unit.db import base as tests_db_base
 from nimble.tests.unit.engine import mgr_utils
 from nimble.tests.unit.objects import utils as obj_utils
+
+CONF = cfg.CONF
 
 
 @mock.patch.object(manager.EngineManager, '_refresh_cache')
@@ -56,9 +60,14 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
             mock.ANY, instance.node_uuid, detail=True)
         unplug_vif_mock.assert_called_once_with(mock.ANY, 'fake-uuid')
 
+    @mock.patch.object(ironic, 'get_node_by_instance')
     @mock.patch.object(ironic, 'destroy_node')
-    def test__destroy_instance(self, destroy_node_mock,
-                               refresh_cache_mock):
+    def _test__destroy_instance(self, destroy_node_mock,
+                                get_node_mock, refresh_cache_mock,
+                                state=None):
+        fake_node = mock.MagicMock()
+        fake_node.provision_state = state
+        get_node_mock.return_value = fake_node
         instance = obj_utils.create_test_instance(self.context)
         destroy_node_mock.side_effect = None
         refresh_cache_mock.side_effect = None
@@ -67,16 +76,52 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         self.service._destroy_instance(self.context, instance)
         self._stop_service()
 
+        get_node_mock.assert_called_once_with(mock.ANY, instance.uuid)
         destroy_node_mock.assert_called_once_with(mock.ANY, instance.node_uuid)
 
+    def test__destroy_instance_cleaning(self, refresh_cache_mock):
+        self._test__destroy_instance(state=ironic_states.CLEANING,
+                                     refresh_cache_mock=refresh_cache_mock)
+
+    def test__destroy_instance_cleanwait(self, refresh_cache_mock):
+        self._test__destroy_instance(state=ironic_states.CLEANWAIT,
+                                     refresh_cache_mock=refresh_cache_mock)
+
+    @mock.patch.object(ironic, 'get_node_by_instance')
+    @mock.patch.object(ironic, 'destroy_node')
+    def test__destroy_instance_fail_max_retries(self, destroy_node_mock,
+                                                get_node_mock,
+                                                refresh_cache_mock):
+        CONF.set_default('api_max_retries', default=2, group='ironic')
+        fake_node = mock.MagicMock()
+        fake_node.provision_state = ironic_states.ACTIVE
+        get_node_mock.return_value = fake_node
+        instance = obj_utils.create_test_instance(self.context)
+        destroy_node_mock.side_effect = None
+        refresh_cache_mock.side_effect = None
+        self._start_service()
+
+        self.assertRaises(exception.NimbleException,
+                          self.service._destroy_instance,
+                          self.context, instance)
+        self._stop_service()
+
+        self.assertTrue(get_node_mock.called)
+        destroy_node_mock.assert_called_once_with(mock.ANY, instance.node_uuid)
+
+    @mock.patch.object(ironic, 'get_node_by_instance')
     @mock.patch.object(manager.EngineManager, '_destroy_instance')
     @mock.patch.object(manager.EngineManager, '_destroy_networks')
     def test_delete_instance(self, destroy_net_mock,
-                             destroy_inst_mock, refresh_cache_mock):
+                             destroy_inst_mock, get_node_mock,
+                             refresh_cache_mock):
+        fake_node = mock.MagicMock()
+        fake_node.provision_state = ironic_states.ACTIVE
         instance = obj_utils.create_test_instance(self.context)
         destroy_net_mock.side_effect = None
         destroy_inst_mock.side_effect = None
         refresh_cache_mock.side_effect = None
+        get_node_mock.return_value = fake_node
         self._start_service()
 
         self.service.delete_instance(self.context, instance)
@@ -84,6 +129,28 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
 
         destroy_net_mock.assert_called_once_with(mock.ANY, instance)
         destroy_inst_mock.assert_called_once_with(mock.ANY, instance)
+        get_node_mock.assert_called_once_with(mock.ANY, instance.uuid)
+
+    @mock.patch.object(ironic, 'get_node_by_instance')
+    @mock.patch.object(manager.EngineManager, '_destroy_instance')
+    @mock.patch.object(manager.EngineManager, '_destroy_networks')
+    def test_delete_instance_without_node_destroy(
+            self, destroy_net_mock, destroy_inst_mock, get_node_mock,
+            refresh_cache_mock):
+        fake_node = mock.MagicMock()
+        fake_node.provision_state = 'foo'
+        instance = obj_utils.create_test_instance(self.context)
+        destroy_net_mock.side_effect = None
+        destroy_inst_mock.side_effect = None
+        refresh_cache_mock.side_effect = None
+        get_node_mock.return_value = fake_node
+        self._start_service()
+
+        self.service.delete_instance(self.context, instance)
+        self._stop_service()
+
+        destroy_net_mock.assert_called_once_with(mock.ANY, instance)
+        self.assertFalse(destroy_inst_mock.called)
 
     @mock.patch.object(ironic, 'set_power_state')
     def test_change_instance_power_state(self, set_power_mock,
