@@ -112,7 +112,7 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
         :param:to_add: A dict of new keys to add/update
         :param:to_delete: A list of keys to remove
         """
-        ident = self.id
+        ident = self.uuid
 
         to_add = to_add if to_add is not None else {}
         to_delete = to_delete if to_delete is not None else []
@@ -121,5 +121,5 @@ class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
             self.dbapi.extra_specs_update_or_create(context, ident, to_add)
 
         for key in to_delete:
-            self.dbapi.type_extra_specs_delete(ident, key)
+            self.dbapi.type_extra_specs_delete(context, ident, key)
         self.obj_reset_changes(['extra_specs'])

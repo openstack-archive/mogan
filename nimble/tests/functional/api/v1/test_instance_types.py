@@ -16,6 +16,8 @@
 import mock
 import six
 
+from oslo_serialization import jsonutils
+
 from nimble.tests.functional.api import v1 as v1_test
 
 
@@ -66,3 +68,69 @@ class TestInstanceType(v1_test.APITestV1):
         self.delete('/types/' + self.TYPE_UUIDS[0], status=204)
         resp = self.get_json('/types')
         self.assertEqual(3, len(resp['types']))
+
+
+class TestInstanceTypeExtra(v1_test.APITestV1):
+    TYPE_UUID = 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b'
+
+    def setUp(self):
+        super(TestInstanceTypeExtra, self).setUp()
+        self._prepare_instance_type()
+
+    @mock.patch('oslo_utils.uuidutils.generate_uuid')
+    def _prepare_instance_type(self, mocked):
+        mocked.return_value = self.TYPE_UUID
+        body = {"name": "test_type_extra",
+                "description": "just test type extra"}
+        self.post_json('/types', body, status=201)
+
+    def test_list_extra_empty(self):
+        resp = self.get_json('/types/%s/extraspecs' % self.TYPE_UUID)
+        self.assertEqual({}, resp['extra_specs'])
+
+    def test_add_extra(self):
+        resp = self.patch_json('/types/%s/extraspecs' % self.TYPE_UUID,
+                               {'test_key': 'test_value'})
+        resp = resp.json
+        self.assertEqual({'extra_specs': {'test_key': 'test_value'}}, resp)
+
+    def test_update_extra(self):
+        resp = self.patch_json('/types/%s/extraspecs' % self.TYPE_UUID,
+                               {'test_key': 'test_value1'})
+        resp = resp.json
+        self.assertEqual({'extra_specs': {'test_key': 'test_value1'}}, resp)
+
+        resp = self.patch_json('/types/%s/extraspecs' % self.TYPE_UUID,
+                               {'test_key': 'test_value2'})
+        resp = resp.json
+        self.assertEqual({'extra_specs': {'test_key': 'test_value2'}}, resp)
+
+    def test_list_extra(self):
+        resp = self.patch_json('/types/%s/extraspecs' % self.TYPE_UUID,
+                               {'test_key1': 'test_value1',
+                                'test_key2': 'test_value2'})
+        resp = resp.json
+        self.assertEqual(
+            '{"test_key1": "test_value1", "test_key2": "test_value2"}',
+            jsonutils.dumps(resp['extra_specs'], sort_keys=True))
+
+        self.patch_json('/types/%s/extraspecs' % self.TYPE_UUID,
+                        {'test_key3': 'test_value3'})
+        resp = self.get_json('/types/%s/extraspecs' % self.TYPE_UUID)
+        self.assertEqual(
+            '{"test_key1": "test_value1", "test_key2": "test_value2", '
+            '"test_key3": "test_value3"}',
+            jsonutils.dumps(resp['extra_specs'], sort_keys=True))
+
+    def test_delete_extra(self):
+        resp = self.patch_json('/types/%s/extraspecs' % self.TYPE_UUID,
+                               {'test_key1': 'test_value1',
+                                'test_key2': 'test_value2'})
+        resp = resp.json
+        self.assertEqual(
+            '{"test_key1": "test_value1", "test_key2": "test_value2"}',
+            jsonutils.dumps(resp['extra_specs'], sort_keys=True))
+
+        self.delete('/types/%s/extraspecs/test_key1' % self.TYPE_UUID)
+        resp = self.get_json('/types/%s/extraspecs' % self.TYPE_UUID)
+        self.assertEqual({'test_key2': 'test_value2'}, resp['extra_specs'])
