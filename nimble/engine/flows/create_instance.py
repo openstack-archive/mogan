@@ -26,7 +26,6 @@ from nimble.common import exception
 from nimble.common import flow_utils
 from nimble.common.i18n import _LE
 from nimble.common.i18n import _LI
-from nimble.common import neutron
 from nimble.common import utils
 from nimble.engine.baremetal import ironic
 from nimble.engine.baremetal import ironic_states
@@ -178,10 +177,11 @@ class SetInstanceInfoTask(flow_utils.NimbleTask):
 class BuildNetworkTask(flow_utils.NimbleTask):
     """Build network for the instance."""
 
-    def __init__(self, ironicclient):
+    def __init__(self, network_api, ironicclient):
         requires = ['instance', 'requested_networks', 'context']
         super(BuildNetworkTask, self).__init__(addons=[ACTION],
                                                requires=requires)
+        self.network_api = network_api
         self.ironicclient = ironicclient
         # These exception types will trigger the network to be cleaned.
         self.network_cleaned_exc_types = [
@@ -213,8 +213,8 @@ class BuildNetworkTask(flow_utils.NimbleTask):
                 # Match the specified port type with physical interface type
                 if vif.get('port_type') == pif.extra.get('port_type'):
                     try:
-                        port = neutron.create_port(context, vif['uuid'],
-                                                   pif.address, instance.uuid)
+                        port = self.network_api.create_port(
+                            context, vif['uuid'], pif.address, instance.uuid)
                         port_dict = port['port']
                         network_info[port_dict['id']] = {
                             'network': port_dict['network_id'],
@@ -240,7 +240,7 @@ class BuildNetworkTask(flow_utils.NimbleTask):
 
         ports = instance.network_info.keys()
         for port in ports:
-            neutron.delete_port(context, port, instance.uuid)
+            self.network_api.delete_port(context, port, instance.uuid)
 
         ironic_ports = ironic.get_ports_from_node(self.ironicclient,
                                                   instance.node_uuid,
@@ -371,7 +371,8 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
     instance_flow.add(ScheduleCreateInstanceTask(manager),
                       OnFailureRescheduleTask(manager.engine_rpcapi),
                       SetInstanceInfoTask(manager.ironicclient),
-                      BuildNetworkTask(manager.ironicclient),
+                      BuildNetworkTask(manager.network_api,
+                                       manager.ironicclient),
                       CreateInstanceTask(manager.ironicclient))
 
     # Now load (but do not run) the flow using the provided initial data.
