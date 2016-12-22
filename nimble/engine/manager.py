@@ -15,6 +15,7 @@
 
 import threading
 
+from ironicclient import exc as ironic_exc
 from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import periodic_task
@@ -166,10 +167,18 @@ class EngineManager(base_manager.BaseEngineManager):
 
         return self._set_power_state(context, instance, state)
 
+    @messaging.expected_exceptions(exception.NodeNotFound)
     def get_ironic_node(self, context, instance_uuid, fields):
         """Get a ironic node."""
-        node = ironic.get_node_by_instance(self.ironicclient,
-                                           instance_uuid, fields)
+        try:
+            node = ironic.get_node_by_instance(self.ironicclient,
+                                               instance_uuid, fields)
+        except ironic_exc.NotFound:
+            msg = (_("Error retrieving the node by instance %(instance)s.")
+                   % {'instance': instance_uuid})
+            LOG.debug(msg)
+            raise exception.NodeNotFound(msg)
+
         return node.to_dict()
 
     def get_ironic_node_list(self, context, fields):
