@@ -28,6 +28,11 @@ class DbInstanceTestCase(base.DbTestCase):
     def test_instance_create(self):
         utils.create_test_instance()
 
+    def test_instance_create_already_exist(self):
+        utils.create_test_instance()
+        self.assertRaises(exception.InstanceAlreadyExists,
+                          utils.create_test_instance)
+
     def test_instance_create_with_same_uuid(self):
         utils.create_test_instance(uuid='uuid', name='instance1')
         self.assertRaises(exception.InstanceAlreadyExists,
@@ -35,9 +40,17 @@ class DbInstanceTestCase(base.DbTestCase):
                           uuid='uuid',
                           name='instance2')
 
+    def test_instance_create_with_duplicate_name(self):
+        utils.create_test_instance(uuid='uuid-1', name='instance')
+        self.assertRaises(exception.InstanceAlreadyExists,
+                          utils.create_test_instance,
+                          uuid='uuid-2',
+                          name='instance')
+
     def test_instance_get_by_uuid(self):
         instance = utils.create_test_instance()
         res = self.dbapi.instance_get(self.context, instance.uuid)
+        self.assertEqual(instance.id, res.id)
         self.assertEqual(instance.uuid, res.uuid)
 
     def test_instance_get_not_exist(self):
@@ -106,7 +119,7 @@ class DbInstanceTestCase(base.DbTestCase):
         self.assertNotEqual(old_extra, new_extra)
 
         res = self.dbapi.instance_update(self.context,
-                                         instance.uuid,
+                                         instance.id,
                                          {'extra': new_extra})
         self.assertEqual(new_extra, res.extra)
 
@@ -115,5 +128,15 @@ class DbInstanceTestCase(base.DbTestCase):
         self.assertRaises(exception.InvalidParameterValue,
                           self.dbapi.instance_update,
                           self.context,
-                          instance.uuid,
+                          instance.id,
                           {'uuid': '12345678-9999-0000-aaaa-123456789012'})
+
+    def test_instance_update_with_duplicate_name(self):
+        instance1 = utils.create_test_instance(uuid=uuidutils.generate_uuid(),
+                                               name='spam')
+        instance2 = utils.create_test_instance(uuid=uuidutils.generate_uuid())
+        self.assertRaises(exception.DuplicateName,
+                          self.dbapi.instance_update,
+                          self.context,
+                          instance2.id,
+                          {'name': instance1.name})

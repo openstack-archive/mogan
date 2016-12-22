@@ -120,7 +120,7 @@ class Connection(api.Connection):
                 session.add(instance_type)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise exception.InstanceTypeAlreadyExists(uuid=values['uuid'])
+                raise exception.InstanceTypeAlreadyExists(name=values['name'])
             return _dict_with_extra_specs(instance_type)
 
     def instance_type_get(self, context, instance_type_uuid):
@@ -143,7 +143,7 @@ class Connection(api.Connection):
             extra_query = model_query(
                 context,
                 models.InstanceTypeExtraSpecs).filter_by(
-                instance_type_uuid=type_id)
+                instance_type_id=type_id)
             extra_query.delete()
 
             # Then delete the type record
@@ -214,8 +214,7 @@ class Connection(api.Connection):
             ref.update(values)
         return ref
 
-    def extra_specs_update_or_create(self, context,
-                                     instance_type_uuid, specs,
+    def extra_specs_update_or_create(self, context, instance_type_id, specs,
                                      max_retries=10):
         """Create or update instance type extra specs.
 
@@ -227,7 +226,7 @@ class Connection(api.Connection):
                 try:
                     spec_refs = model_query(
                         context, models.InstanceTypeExtraSpecs). \
-                        filter_by(instance_type_uuid=instance_type_uuid). \
+                        filter_by(instance_type_id=instance_type_id). \
                         filter(models.InstanceTypeExtraSpecs.key.in_(
                             specs.keys())).with_lockmode('update').all()
 
@@ -243,7 +242,7 @@ class Connection(api.Connection):
                         spec_ref = models.InstanceTypeExtraSpecs()
                         spec_ref.update(
                             {"key": key, "value": value,
-                             "instance_type_uuid": instance_type_uuid})
+                             "instance_type_id": instance_type_id})
 
                         session.add(spec_ref)
                         session.flush()
@@ -254,7 +253,7 @@ class Connection(api.Connection):
                     # try again unless this was the last attempt
                     if attempt == max_retries - 1:
                         raise exception.TypeExtraSpecUpdateCreateFailed(
-                            id=instance_type_uuid, retries=max_retries)
+                            id=instance_type_id, retries=max_retries)
 
     def instance_type_extra_specs_get(self, context, type_id):
         rows = _type_extra_specs_get_query(context, type_id).all()
@@ -279,9 +278,9 @@ def _type_get_id_from_type(context, type_id):
     result = _type_get_id_from_type_query(context, type_id).first()
     if not result:
         raise exception.InstanceTypeNotFound(type_id=type_id)
-    return result.uuid
+    return result.id
 
 
 def _type_extra_specs_get_query(context, type_id):
     return model_query(context, models.InstanceTypeExtraSpecs). \
-        filter_by(instance_type_uuid=type_id)
+        filter_by(instance_type_id=type_id)

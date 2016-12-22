@@ -58,15 +58,71 @@ class NimbleBase(models.TimestampMixin,
 Base = declarative_base(cls=NimbleBase)
 
 
+class InstanceTypes(Base):
+    """Represents possible types for instances."""
+
+    __tablename__ = 'instance_types'
+    __table_args__ = (
+        schema.UniqueConstraint('name', name='uniq_instance_types0name'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=True)
+    is_public = Column(Boolean, default=True)
+
+
+class InstanceTypeProjects(Base):
+    """Represents projects associated instance_types."""
+
+    __tablename__ = 'instance_type_projects'
+    __table_args__ = (
+        schema.UniqueConstraint(
+            'instance_type_id', 'project_id',
+            name='uniq_instance_type_projects0instance_type_id0project_id'
+        ),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    instance_type_id = Column(Integer, nullable=True)
+    project_id = Column(String(36), nullable=True)
+
+
+class InstanceTypeExtraSpecs(Base):
+    """Represents additional specs as key/value pairs for an instance_type."""
+    __tablename__ = 'instance_type_extra_specs'
+    __table_args__ = (
+        schema.UniqueConstraint(
+            "instance_type_id", "key",
+            name=("uniq_instance_type_extra_specs0"
+                  "instance_type_id")
+        ),
+        {'mysql_collate': 'utf8_bin'},
+    )
+    id = Column(Integer, primary_key=True)
+    key = Column(String(255))
+    value = Column(String(255))
+    instance_type_id = Column(Integer, ForeignKey('instance_types.id'),
+                              nullable=False)
+    instance_type = orm.relationship(
+        InstanceTypes, backref="extra_specs",
+        foreign_keys=instance_type_id,
+        primaryjoin='and_(InstanceTypeExtraSpecs.instance_type_id '
+                    '== InstanceTypes.id)')
+
+
 class Instance(Base):
     """Represents possible types for instances."""
 
     __tablename__ = 'instances'
     __table_args__ = (
         schema.UniqueConstraint('uuid', name='uniq_instances0uuid'),
+        schema.UniqueConstraint('name', name='uniq_instances0name'),
         table_args()
     )
-    uuid = Column(String(36), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=True)
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=True)
     project_id = Column(String(36), nullable=True)
@@ -79,63 +135,3 @@ class Instance(Base):
     node_uuid = Column(String(36), nullable=True)
     launched_at = Column(DateTime, nullable=True)
     extra = Column(db_types.JsonEncodedDict)
-
-
-class InstanceTypes(Base):
-    """Represents possible types for instances."""
-
-    __tablename__ = 'instance_types'
-    uuid = Column(String(36), primary_key=True)
-    name = Column(String(255), nullable=False)
-    description = Column(String(255), nullable=True)
-    is_public = Column(Boolean, default=True)
-    instances = orm.relationship(
-        Instance,
-        backref=orm.backref('instance_type', uselist=False),
-        foreign_keys=uuid,
-        primaryjoin='Instance.instance_type_uuid == InstanceTypes.uuid')
-
-
-class InstanceTypeProjects(Base):
-    """Represents projects associated instance_types."""
-
-    __tablename__ = 'instance_type_projects'
-    __table_args__ = (
-        schema.UniqueConstraint(
-            'instance_type_uuid', 'project_id',
-            name='uniq_instance_type_projects0instance_type_uuid0project_id'
-        ),
-        table_args()
-    )
-    id = Column(Integer, primary_key=True)
-    instance_type_uuid = Column(Integer, nullable=True)
-    project_id = Column(String(36), nullable=True)
-    instances = orm.relationship(
-        InstanceTypes,
-        backref=orm.backref('projects', uselist=False),
-        foreign_keys=instance_type_uuid,
-        primaryjoin='InstanceTypeProjects.instance_type_uuid'
-                    ' == InstanceTypes.uuid')
-
-
-class InstanceTypeExtraSpecs(Base):
-    """Represents additional specs as key/value pairs for an instance_type."""
-    __tablename__ = 'instance_type_extra_specs'
-    __table_args__ = (
-        schema.UniqueConstraint(
-            "instance_type_uuid", "key",
-            name=("uniq_instance_type_extra_specs0"
-                  "instance_type_uuid")
-        ),
-        {'mysql_collate': 'utf8_bin'},
-    )
-    id = Column(Integer, primary_key=True)
-    key = Column(String(255))
-    value = Column(String(255))
-    instance_type_uuid = Column(String(36), ForeignKey('instance_types.uuid'),
-                                nullable=False)
-    instance_type = orm.relationship(
-        InstanceTypes, backref="extra_specs",
-        foreign_keys=instance_type_uuid,
-        primaryjoin='InstanceTypeExtraSpecs.instance_type_uuid '
-                    '== InstanceTypes.uuid')
