@@ -16,7 +16,9 @@
 """Handles all requests relating to compute resources"""
 
 from oslo_log import log
+from oslo_utils import timeutils
 
+from nimble.common import exception
 from nimble.engine import rpcapi
 from nimble.engine import status
 from nimble import image
@@ -121,6 +123,12 @@ class API(object):
                                      requested_networks)
 
     def _delete_instance(self, context, instance):
+        try:
+            instance.status = status.DELETING
+            instance.deleted_at = timeutils.utcnow()
+            instance.save()
+        except exception.InstanceNotFound:
+            pass
         self.engine_rpcapi.delete_instance(context, instance)
 
     def delete(self, context, instance):

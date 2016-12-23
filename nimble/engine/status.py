@@ -25,4 +25,8 @@ ACTIVE = 'active'
 # Instance only exists in DB
 BUILDING = 'building'
 
+DELETING = 'deleting'
+
+DELETED = 'deleted'
+
 ERROR = 'error'

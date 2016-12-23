@@ -66,7 +66,8 @@ class Instance(Base):
         schema.UniqueConstraint('uuid', name='uniq_instances0uuid'),
         table_args()
     )
-    uuid = Column(String(36), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=True)
     project_id = Column(String(36), nullable=True)
@@ -78,7 +79,9 @@ class Instance(Base):
     network_info = Column(db_types.JsonEncodedDict)
     node_uuid = Column(String(36), nullable=True)
     launched_at = Column(DateTime, nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
     extra = Column(db_types.JsonEncodedDict)
+    deleted = Column(Boolean, default=False)
 
 
 class InstanceTypes(Base):
