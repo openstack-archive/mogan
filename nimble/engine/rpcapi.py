@@ -61,7 +61,7 @@ class EngineAPI(object):
     def delete_instance(self, context, instance):
         """Signal to engine service to delete an instance."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.call(context, 'delete_instance', instance=instance)
+        return cctxt.cast(context, 'delete_instance', instance=instance)
 
     def instance_states(self, context, instance):
         """Signal to engine service to get an instance states."""

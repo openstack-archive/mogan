@@ -39,6 +39,7 @@ def get_test_instance(**kw):
     }
 
     return {
+        'id': kw.get('id', 123),
         'uuid': kw.get('uuid', uuidutils.generate_uuid()),
         'name': kw.get('name', 'test'),
         'description': kw.get('description', 'test'),
@@ -55,7 +56,9 @@ def get_test_instance(**kw):
         'node_uuid': kw.get('node_uuid',
                             'f978ef48-d4af-4dad-beec-e6174309bc71'),
         'launched_at': kw.get('launched_at'),
+        'deleted_at': kw.get('deleted_at'),
         'extra': kw.get('extra', {}),
+        'deleted': kw.get('deleted', False),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),
     }
@@ -72,6 +75,9 @@ def create_test_instance(context={}, **kw):
 
     """
     instance = get_test_instance(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del instance['id']
     dbapi = db_api.get_instance()
 
     return dbapi.instance_create(context, instance)

@@ -140,6 +140,8 @@ class EngineManager(base_manager.BaseEngineManager):
                               "instance resources."),
                           instance=instance)
 
+        instance.status = status.DELETED
+        instance.save()
         instance.destroy()
 
     def _instance_states(self, context, instance):

@@ -112,7 +112,7 @@ class RPCAPITestCase(base.DbTestCase):
 
     def test_delete_instance(self):
         self._test_rpcapi('delete_instance',
-                          'call',
+                          'cast',
                           version='1.0',
                           instance=self.fake_instance_obj)
 
