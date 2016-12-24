@@ -214,7 +214,7 @@ class BuildNetworkTask(flow_utils.NimbleTask):
                 if vif.get('port_type') == pif.extra.get('port_type'):
                     try:
                         port = self.network_api.create_port(
-                            context, vif['uuid'], pif.address, instance.uuid)
+                            context, vif['net_id'], pif.address, instance.uuid)
                         port_dict = port['port']
                         network_info[port_dict['id']] = {
                             'network': port_dict['network_id'],

@@ -26,10 +26,10 @@ from nimble.tests.unit.db import utils
 def gen_post_body(**kw):
     fake_networks = [
         {
-            "uuid": "c1940655-8b8e-4370-b8f9-03ba1daeca31"
+            "net_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31"
         },
         {
-            "uuid": "8e8ceb07-4641-4188-9b22-840755e92ee2",
+            "net_id": "8e8ceb07-4641-4188-9b22-840755e92ee2",
             "port_type": "10GE"
         }
     ]
