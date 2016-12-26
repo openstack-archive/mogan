@@ -74,6 +74,12 @@ mac_address = {
     'pattern': '^([0-9a-fA-F]{2})(:[0-9a-fA-F]{2}){5}$'
 }
 
+# FIXME(Shaohe): we should use underline style instead of camel casing style.
+adminPass = {
+    'type': 'string', 'minLength': 1, 'maxLength': 255,
+    'additionalProperties': False
+}
+
 
 ip_address = {
     'type': 'string',
