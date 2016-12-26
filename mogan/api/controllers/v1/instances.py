@@ -471,6 +471,12 @@ class InstanceController(InstanceControllerBase):
         instance_type_uuid = instance.get('instance_type_uuid')
         image_uuid = instance.get('image_uuid')
 
+        # The injected_files is formatted as a list of
+        # (file_path, file_content) pairs in the underlying engine service.
+        personality = instance.get('personality', [])
+        injected_files = [
+            (item['path'], item['contents']) for item in personality]
+
         try:
             instance_type = objects.InstanceType.get(pecan.request.context,
                                                      instance_type_uuid)
@@ -485,7 +491,9 @@ class InstanceController(InstanceControllerBase):
                 extra=instance.get('extra'),
                 requested_networks=requested_networks,
                 min_count=instance.get('min_count'),
-                max_count=instance.get('max_count'))
+                max_count=instance.get('max_count'),
+                admin_password=instance.get("adminPass", None),
+                injected_files=injected_files)
         except exception.InstanceTypeNotFound:
             msg = (_("InstanceType %s could not be found") %
                    instance_type_uuid)

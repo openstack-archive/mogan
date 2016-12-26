@@ -108,7 +108,9 @@ class RPCAPITestCase(base.DbTestCase):
                           instance=self.fake_instance_obj,
                           requested_networks=[],
                           request_spec=None,
-                          filter_properties=None)
+                          filter_properties=None,
+                          admin_password=None,
+                          injected_files=[])
 
     def test_delete_instance(self):
         self._test_rpcapi('delete_instance',

@@ -162,7 +162,8 @@ class API(object):
 
     def _create_instance(self, context, instance_type, image_uuid,
                          name, description, availability_zone, extra,
-                         requested_networks, min_count, max_count):
+                         requested_networks, min_count, max_count,
+                         admin_password, injected_files):
         """Verify all the input parameters"""
         min_count = min_count or 1
         max_count = max_count or min_count
@@ -199,14 +200,16 @@ class API(object):
             self.engine_rpcapi.create_instance(context, instance,
                                                requested_networks,
                                                request_spec,
-                                               filter_properties=None)
+                                               filter_properties=None,
+                                               admin_password=admin_password,
+                                               injected_files=injected_files)
 
         return instances
 
     def create(self, context, instance_type, image_uuid,
                name=None, description=None, availability_zone=None,
                extra=None, requested_networks=None, min_count=None,
-               max_count=None):
+               max_count=None, admin_password=None, injected_files=[]):
         """Provision instances
 
         Sending instance information to the engine and will handle
@@ -225,7 +228,8 @@ class API(object):
                                      image_uuid, name, description,
                                      availability_zone, extra,
                                      requested_networks, min_count,
-                                     max_count)
+                                     max_count, admin_password,
+                                     injected_files)
 
     def _delete_instance(self, context, instance):
         # Initialize state machine
