@@ -177,7 +177,7 @@ function _nimble_cleanup_nimble_dashboard {
 
 
 function create_instance_type {
-    openstack baremetal compute type create ${NIMBLE_DEFAULT_INSTANCE_TYPE} --description 'Nimble default instance type'
+    openstack baremetal flavor create ${NIMBLE_DEFAULT_INSTANCE_TYPE} --description 'Nimble default instance type'
 }
 
 
