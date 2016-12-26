@@ -62,6 +62,32 @@ def get_client(token=None):
 class API(object):
     """API for interacting with the neutron 2.x API."""
 
+    def show_subnet(self, context, subnet_uuid, instance_uuid):
+        """Get the subnet info """
+        client = get_client(context.auth_token)
+        try:
+            subnet = client.show_subnet(subnet_uuid)
+        except neutron_exceptions.NeutronClientException as e:
+            msg = (_("Could not get neutron subnet %(net)s for "
+                     "instance %(instance)s. %(exc)s"),
+                   {'net': subnet_uuid, 'instance': instance_uuid, 'exc': e})
+            LOG.exception(msg)
+            raise exception.NetworkError(msg)
+        return subnet
+
+    def show_network(self, context, network_uuid, instance_uuid):
+        """Get the network info """
+        client = get_client(context.auth_token)
+        try:
+            network = client.show_network(network_uuid)
+        except neutron_exceptions.NeutronClientException as e:
+            msg = (_("Could not get neutron network %(net)s for "
+                     "instance %(instance)s. %(exc)s"),
+                   {'net': network_uuid, 'instance': instance_uuid, 'exc': e})
+            LOG.exception(msg)
+            raise exception.NetworkError(msg)
+        return network
+
     def create_port(self, context, network_uuid, mac, instance_uuid):
         """Create neutron port."""
 
