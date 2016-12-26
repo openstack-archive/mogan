@@ -110,12 +110,10 @@ class API(object):
         """
 
         # check availability zone
-        # if availability_zone:
-        #     available_zones = availability_zones.\
-        #         get_availability_zones(context.elevated(), True)
-        #     if availability_zone not in available_zones:
-        #         msg = _('The requested availability zone is not available')
-        #         raise exception.InvalidRequest(msg)
+        if availability_zone:
+            azs = self.engine_rpcapi.list_availability_zones(context)
+            if availability_zone not in azs:
+                raise exception.AZNotFound
 
         return self._create_instance(context, instance_type,
                                      image_uuid, name, description,

@@ -418,6 +418,10 @@ class InstanceController(rest.RestController):
             msg = _("Error contacting with glance server")
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
+        except exception.AZNotFound:
+            msg = _('The requested availability zone is not available')
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.BAD_REQUEST)
 
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('instance', instance.uuid)
