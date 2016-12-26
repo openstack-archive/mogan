@@ -253,4 +253,8 @@ class PatchError(Invalid):
     _msg_fmt = _("Couldn't apply patch '%(patch)s'. Reason: %(reason)s")
 
 
+class AZNotFound(NotFound):
+    msg_fmt = _("The availability zone could not be found.")
+
+
 ObjectActionError = obj_exc.ObjectActionError

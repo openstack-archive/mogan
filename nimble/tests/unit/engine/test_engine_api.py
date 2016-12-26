@@ -18,6 +18,7 @@
 import mock
 from oslo_context import context
 
+from nimble.common import exception
 from nimble.engine import api as engine_api
 from nimble.engine import rpcapi as engine_rpcapi
 from nimble.engine import status
@@ -82,7 +83,8 @@ class ComputeAPIUnitTest(base.DbTestCase):
     @mock.patch('nimble.engine.api.API._provision_instances')
     @mock.patch('nimble.engine.api.API._get_image')
     @mock.patch('nimble.engine.api.API._validate_and_build_base_options')
-    def test_create(self, mock_validate, mock_get_image,
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
+    def test_create(self, mock_list_az, mock_validate, mock_get_image,
                     mock_provision, mock_create):
         instance_type = self._create_instance_type()
 
@@ -94,10 +96,11 @@ class ComputeAPIUnitTest(base.DbTestCase):
                         'name': 'fake-name',
                         'description': 'fake-description',
                         'extra': {'k1', 'v1'},
-                        'availability_zone': None}
+                        'availability_zone': 'test_az'}
         mock_validate.return_value = base_options
         mock_get_image.side_effect = None
         mock_create.return_value = mock.MagicMock()
+        mock_list_az.return_value = {'availability_zones': ['test_az']}
 
         self.engine_api.create(
             self.context,
@@ -109,9 +112,29 @@ class ComputeAPIUnitTest(base.DbTestCase):
             extra={'k1', 'v1'},
             requested_networks=[{'uuid': 'fake'}])
 
+        mock_list_az.assert_called_once_with(self.context)
         mock_validate.assert_called_once_with(
             self.context, instance_type, 'fake-uuid', 'fake-name',
             'fake-descritpion', 'test_az', {'k1', 'v1'})
         mock_provision.assert_called_once_with(self.context, base_options)
         self.assertTrue(mock_create.called)
         self.assertTrue(mock_get_image.called)
+
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
+    def test_create_with_invalid_az(self, mock_list_az):
+        instance_type = mock.MagicMock()
+        mock_list_az.return_value = {'availability_zones': ['invalid_az']}
+
+        self.assertRaises(
+            exception.AZNotFound,
+            self.engine_api.create,
+            self.context,
+            instance_type,
+            'fake-uuid',
+            'fake-name',
+            'fake-descritpion',
+            'test_az',
+            {'k1', 'v1'},
+            [{'uuid': 'fake'}])
+
+        mock_list_az.assert_called_once_with(self.context)
