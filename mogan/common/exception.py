@@ -228,6 +228,11 @@ class InterfacePlugException(MoganException):
     msg_fmt = _("Interface plugin failed")
 
 
+class GenerateConfigDriveFailed(MoganException):
+    msg_fmt = _("Failed to generate configdrive value for instance "
+                "%(instance)s. Reason: %(reason)s")
+
+
 class NetworkError(MoganException):
     _msg_fmt = _("Network operation failure.")
 

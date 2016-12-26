@@ -15,18 +15,41 @@
 
 """Utilities and helper functions."""
 
+import contextlib
 import re
+import shutil
+import tempfile
 
 from oslo_concurrency import lockutils
+from oslo_concurrency import processutils
 from oslo_log import log as logging
 import six
 
 from mogan.common import exception
+from mogan.common.i18n import _LE
 from mogan.common.i18n import _LW
+import mogan.conf
 
+
+CONF = mogan.conf.CONF
 LOG = logging.getLogger(__name__)
 
 synchronized = lockutils.synchronized_with_prefix('mogan-')
+
+
+@contextlib.contextmanager
+def tempdir(**kwargs):
+    argdict = kwargs.copy()
+    if 'dir' not in argdict:
+        argdict['dir'] = CONF.tempdir
+    tmpdir = tempfile.mkdtemp(**argdict)
+    try:
+        yield tmpdir
+    finally:
+        try:
+            shutil.rmtree(tmpdir)
+        except OSError as e:
+            LOG.error(_LE('Could not remove tmpdir: %s'), e)
 
 
 def safe_rstrip(value, chars=None):
@@ -87,3 +110,61 @@ def make_pretty_name(method):
         except AttributeError:
             pass
     return ".".join(meth_pieces)
+
+
+def get_root_helper():
+    # FIXME(Shaohe) need to support rootwrap
+    return 'sudo'
+
+
+def execute(*cmd, **kwargs):
+    """Convenience wrapper around oslo's execute() method."""
+
+    if 'run_as_root' in kwargs and kwargs.get('run_as_root'):
+        # FIXME (Shaohe) need to support rootwrap daemon
+        return RootwrapProcessHelper().execute(*cmd, **kwargs)
+    return processutils.execute(*cmd, **kwargs)
+
+
+class RootwrapProcessHelper(object):
+    def trycmd(self, *cmd, **kwargs):
+        kwargs['root_helper'] = get_root_helper()
+        return processutils.trycmd(*cmd, **kwargs)
+
+    def execute(self, *cmd, **kwargs):
+        kwargs['root_helper'] = get_root_helper()
+        return processutils.execute(*cmd, **kwargs)
+
+
+def sanitize_hostname(hostname):
+    """Return a hostname which conforms to RFC-952 and RFC-1123 specs except
+    the length of hostname.
+
+    Window, Linux, and Dnsmasq has different limitation:
+
+    Windows: 255 (net_bios limits to 15, but window will truncate it)
+    Linux: 64
+    Dnsmasq: 63
+
+    chose 63.
+
+    """
+
+    def truncate_hostname(name):
+        if len(name) > 63:
+            LOG.warning(_LW("Hostname %(hostname)s is longer than 63, "
+                            "truncate it to %(truncated_name)s"),
+                        {'hostname': name, 'truncated_name': name[:63]})
+        return name[:63]
+
+    if isinstance(hostname, six.text_type):
+        # Remove characters outside the Unicode range U+0000-U+00FF
+        hostname = hostname.encode('latin-1', 'ignore')
+        if six.PY3:
+            hostname = hostname.decode('latin-1')
+
+    hostname = truncate_hostname(hostname)
+    hostname = re.sub('[ _]', '-', hostname)
+    hostname = re.sub('[^\w.-]+', '', hostname)
+    hostname = hostname.lower()
+    hostname = hostname.strip('.-')

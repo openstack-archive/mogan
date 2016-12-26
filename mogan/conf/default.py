@@ -50,6 +50,10 @@ path_opts = [
     cfg.StrOpt('state_path',
                default='$pybasedir',
                help=_("Top-level directory for maintaining mogan's state.")),
+    # FIXME(Shaohe): find a good place for this option.
+    cfg.StrOpt(
+        'tempdir',
+        help='Explicitly specify the temporary working directory.'),
 ]
 
 service_opts = [

@@ -19,9 +19,9 @@ from mogan.image import glance
 
 
 class API(object):
-
     """Responsible for exposing a relatively stable internal API for other
     modules in Mogan to retrieve information about disk images.
+
     """
 
     def get(self, context, image_id):

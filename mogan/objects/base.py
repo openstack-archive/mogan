@@ -26,7 +26,7 @@ class MoganObjectRegistry(object_base.VersionedObjectRegistry):
     notification_classes = []
 
     def registration_hook(self, cls, index):
-        # NOTE(jroll): blatantly stolen from nova
+        # NOTE(jroll): blatantly stolen from mogan
         # NOTE(danms): This is called when an object is registered,
         # and is responsible for maintaining mogan.objects.$OBJECT
         # as the highest-versioned implementation of a given object.
@@ -73,7 +73,7 @@ class MoganObject(object_base.VersionedObject):
     OBJ_PROJECT_NAMESPACE = 'mogan'
 
     # TODO(lintan) Refactor these fields and create PersistentObject and
-    # TimeStampObject like Nova when it is necessary.
+    # TimeStampObject like Mogan when it is necessary.
     fields = {
         'created_at': object_fields.DateTimeField(nullable=True),
         'updated_at': object_fields.DateTimeField(nullable=True),

@@ -38,6 +38,7 @@ create_instance = {
             },
         },
         'extra': parameter_types.extra,
+        'adminPass': parameter_types.adminPass,
     },
     'required': ['name', 'image_uuid', 'instance_type_uuid', 'networks'],
     'additionalProperties': False,
