@@ -69,7 +69,7 @@ class API(object):
 
     def _create_instance(self, context, instance_type, image_uuid,
                          name, description, availability_zone, extra,
-                         requested_networks):
+                         requested_networks, admin_password, injected_files):
         """Verify all the input parameters"""
 
         # Verify the specified image exists
@@ -95,13 +95,16 @@ class API(object):
         self.engine_rpcapi.create_instance(context, instance,
                                            requested_networks,
                                            request_spec,
-                                           filter_properties=None)
+                                           filter_properties=None,
+                                           admin_password=admin_password,
+                                           injected_files=injected_files)
 
         return instance
 
     def create(self, context, instance_type, image_uuid,
                name=None, description=None, availability_zone=None,
-               extra=None, requested_networks=None):
+               extra=None, requested_networks=None, admin_password=None,
+               injected_files=[]):
         """Provision instances
 
         Sending instance information to the engine and will handle
@@ -121,7 +124,8 @@ class API(object):
         return self._create_instance(context, instance_type,
                                      image_uuid, name, description,
                                      availability_zone, extra,
-                                     requested_networks)
+                                     requested_networks, admin_password,
+                                     injected_files)
 
     def _delete_instance(self, context, instance):
         # Initialize state machine

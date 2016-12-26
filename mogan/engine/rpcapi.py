@@ -50,13 +50,16 @@ class EngineAPI(object):
                                      serializer=serializer)
 
     def create_instance(self, context, instance, requested_networks,
-                        request_spec, filter_properties):
+                        request_spec, filter_properties,
+                        admin_password, injected_files):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         cctxt.cast(context, 'create_instance', instance=instance,
                    requested_networks=requested_networks,
                    request_spec=request_spec,
-                   filter_properties=filter_properties)
+                   filter_properties=filter_properties,
+                   admin_password=admin_password,
+                   injected_files=injected_files)
 
     def delete_instance(self, context, instance):
         """Signal to engine service to delete an instance."""

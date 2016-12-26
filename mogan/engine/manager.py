@@ -13,6 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import base64
+import gzip
+import shutil
+import six
+import tempfile
 import threading
 
 from ironicclient import exc as ironic_exc
@@ -23,19 +28,23 @@ from oslo_service import periodic_task
 from oslo_utils import timeutils
 import six
 
+from mogan.api.metadata import base as instance_metadata
 from mogan.common import exception
 from mogan.common import flow_utils
 from mogan.common.i18n import _
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LI
 from mogan.common.i18n import _LW
+from mogan.conf import CONF
 from mogan.common import states
 from mogan.common import utils
 from mogan.conf import CONF
 from mogan.engine.baremetal import ironic
 from mogan.engine.baremetal import ironic_states
 from mogan.engine import base_manager
+from mogan.engine import configdrive
 from mogan.engine.flows import create_instance
+from mogan.engine import status
 from mogan.notifications import base as notifications
 from mogan import objects
 from mogan.objects import fields
@@ -288,7 +297,9 @@ class EngineManager(base_manager.BaseEngineManager):
                          'reason': six.text_type(e)})
 
     def create_instance(self, context, instance, requested_networks,
-                        request_spec=None, filter_properties=None):
+                        request_spec=None, filter_properties=None,
+                        admin_password=None, injected_files=[]):
+
         """Perform a deployment."""
         LOG.debug("Starting instance...", instance=instance)
         notifications.notify_about_instance_action(
@@ -311,6 +322,8 @@ class EngineManager(base_manager.BaseEngineManager):
                 requested_networks,
                 request_spec,
                 filter_properties,
+                admin_password,
+                injected_files
             )
         except Exception:
             msg = _("Create manager instance flow failed.")

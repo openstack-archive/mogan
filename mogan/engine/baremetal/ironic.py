@@ -16,10 +16,13 @@
 from ironicclient import exceptions as client_e
 from oslo_log import log as logging
 
+from mogan.api.metadata import base as instance_metadata
+from mogan.common import exception
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LW
 from mogan.common import states
 from mogan.engine.baremetal import ironic_states
+from mogan.engine import configdrive
 
 LOG = logging.getLogger(__name__)
 
@@ -99,10 +102,16 @@ def unset_instance_info(ironicclient, instance):
     ironicclient.call("node.update", instance.node_uuid, patch)
 
 
-def do_node_deploy(ironicclient, node_uuid):
+def do_node_deploy(ironicclient, instance, configdrive_value):
     # trigger the node deploy
-    ironicclient.call("node.set_provision_state", node_uuid,
-                      ironic_states.ACTIVE)
+    ironicclient.call("node.set_provision_state", instance.node_uuid,
+                      ironic_states.ACTIVE, configdrive=configdrive_value)
+
+
+def _get_node_by_uuid(self, node_uuid):
+    """Get a node by its UUID."""
+    return self.ironicclient.call('node.get', node_uuid,
+                                  fields=_NODE_FIELDS)
 
 
 def get_node_by_instance(ironicclient, instance_uuid, fields=None):

@@ -13,6 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import base64
+from copy import deepcopy
+import gzip
+import shutil
+import six
+import tempfile
 import traceback
 
 from oslo_config import cfg
@@ -21,6 +27,7 @@ from oslo_service import loopingcall
 import taskflow.engines
 from taskflow.patterns import linear_flow
 
+from mogan.api.metadata import base as instance_metadata
 from mogan.common import exception
 from mogan.common import flow_utils
 from mogan.common.i18n import _
@@ -30,6 +37,8 @@ from mogan.common import states
 from mogan.common import utils
 from mogan.engine.baremetal import ironic
 from mogan.engine.baremetal import ironic_states
+from mogan.engine import configdrive
+from mogan.engine import status
 
 LOG = logging.getLogger(__name__)
 
@@ -84,7 +93,8 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         pass
 
     def _reschedule(self, context, cause, request_spec, filter_properties,
-                    instance, requested_networks):
+                    instance, requested_networks, admin_password,
+                    injected_files):
         """Actions that happen during the rescheduling attempt occur here."""
 
         create_instance = self.engine_rpcapi.create_instance
@@ -107,11 +117,20 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             # Stringify to avoid circular ref problem in json serialization
             retry_info['exc'] = traceback.format_exception(*cause.exc_info)
 
+        # NOTE (Shaohe): This is a recursion. Not sure we can move it to
+        # uplayer by Taskflow retry contoller.
+        # http://docs.openstack.org/developer/taskflow/examples.html# \
+        # controlling-retries-using-a-retry-controller
+        # NOTE (Shaohe): The configdrive_value has been stored by task engine.
+        # maybe we can pass it here, no need to generate it again.
         return create_instance(context, instance, requested_networks,
                                request_spec=request_spec,
-                               filter_properties=filter_properties)
+                               filter_properties=filter_properties,
+                               admin_password=admin_password,
+                               injected_files=injected_files)
 
-    def revert(self, context, result, flow_failures, instance, **kwargs):
+    def revert(self, context, result, flow_failures, instance,
+               admin_password, injected_files, **kwargs):
         # Check if we have a cause which can tell us not to reschedule and
         # set the instance's status to error.
         for failure in flow_failures.values():
@@ -122,7 +141,9 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
         cause = list(flow_failures.values())[0]
         try:
-            self._reschedule(context, cause, instance=instance, **kwargs)
+            self._reschedule(context, cause, instance=instance,
+                             admin_password=admin_password,
+                             injected_files=injected_files, **kwargs)
             return True
         except exception.MoganException:
             LOG.exception(_LE("Instance %s: rescheduling failed"),
@@ -144,6 +165,7 @@ class SetInstanceInfoTask(flow_utils.MoganTask):
             exception.ValidationError,
             exception.InterfacePlugException,
             exception.NetworkError,
+            exception.GenerateConfigDriveFailed
         ]
 
     def execute(self, context, instance):
@@ -188,6 +210,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
             # include instance create task failure here
             exception.InstanceDeployFailure,
             loopingcall.LoopingCallTimeOut,
+            exception.GenerateConfigDriveFailed
         ]
 
     def _build_networks(self, context, instance, requested_networks):
@@ -256,11 +279,87 @@ class BuildNetworkTask(flow_utils.MoganTask):
         return False
 
 
+# Not sure we should split the task into different files.
+class GenerateConfigDriveTask(flow_utils.MoganTask):
+    """Generate config drive for node"""
+
+    default_provides = 'configdrive_value'
+
+    def __init__(self, network_api, ironicclient):
+        requires = ['instance', 'context', "admin_password", "injected_files"]
+        super(GenerateConfigDriveTask, self).__init__(addons=[ACTION],
+                                                      requires=requires)
+        self.network_api = network_api
+
+    def _generate_configdrive(self, context, instance,
+                              admin_password=None, injected_files=[]):
+
+        def get_configdrive_value(i_meta):
+            with tempfile.NamedTemporaryFile() as uncompressed:
+                with configdrive.ConfigDriveBuilder(instance_md=i_meta) as cdb:
+                    cdb.make_drive(uncompressed.name)
+
+                with tempfile.NamedTemporaryFile() as compressed:
+                    # compress config drive
+                    with gzip.GzipFile(fileobj=compressed,
+                                       mode='wb') as gzipped:
+                        uncompressed.seek(0)
+                        shutil.copyfileobj(uncompressed, gzipped)
+
+                    # base64 encode config drive
+                    compressed.seek(0)
+                    return base64.b64encode(compressed.read())
+
+        # always enable config_drive
+        if not configdrive.required_by(instance):
+            return
+
+        # FIXME(Shaohe): This is a hack, will refactor.
+        network_info = deepcopy(instance.network_info)
+        for uuid, port in network_info.items():
+            # NOTE(Shaohe): API layer will make sure the 'fixed_ips' is not
+            # empty.
+            subnets = [
+                self.network_api.show_subnet(
+                    context, net['subnet_id'], instance.uuid)
+                for net in port.get('fixed_ips', [])]
+            network = self.network_api.show_network(
+                context, port['network'], instance.uuid)
+            network['network']["subnets"] = subnets
+            network_info[uuid].update(network)
+
+        extra_md = {'admin_pass': admin_password} if admin_password else {}
+        i_meta = instance_metadata.InstanceMetadata(
+            instance, content=injected_files, extra_md=extra_md,
+            network_info=network_info, request_context=context)
+
+        configdrive_value = get_configdrive_value(i_meta)
+        LOG.info(_LI("Create config drive for instance %(instance)s."),
+                 instance['uuid'])
+        return configdrive_value
+
+    def execute(self, context, instance, admin_password, injected_files):
+        try:
+            # https://github.com/jriguera/ansible-ironic-standalone/wiki/ \
+            # Cloud-Init-and-Config-Drive
+            return self._generate_configdrive(
+                context,
+                instance,
+                admin_password=None,
+                injected_files=[])
+        except Exception as e:
+            msg = (_LE("Failed to build configdrive for instance"
+                       "%(instance)s. Reason: %(reason)s") %
+                   {"instance": instance.uuid, "reason": six.text_type(e)})
+            LOG.error(msg, instance=instance)
+            raise exception.GenerateConfigDriveFailed(msg)
+
+
 class CreateInstanceTask(flow_utils.MoganTask):
     """Build and deploy the instance."""
 
     def __init__(self, ironicclient):
-        requires = ['instance', 'context']
+        requires = ['instance', 'context', 'configdrive_value']
         super(CreateInstanceTask, self).__init__(addons=[ACTION],
                                                  requires=requires)
         self.ironicclient = ironicclient
@@ -268,6 +367,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
         self.instance_cleaned_exc_types = [
             exception.InstanceDeployFailure,
             loopingcall.LoopingCallTimeOut,
+            exception.GenerateConfigDriveFailed
         ]
 
     def _wait_for_active(self, instance):
@@ -302,8 +402,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
                    % {'inst': instance.uuid, 'reason': node.last_error})
             raise exception.InstanceDeployFailure(msg)
 
-    def _build_instance(self, context, instance):
-        ironic.do_node_deploy(self.ironicclient, instance.node_uuid)
+    def _build_instance(self, context, instance, configdrive_value):
+        ironic.do_node_deploy(self.ironicclient, instance, configdrive_value)
 
         timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
                                                      instance)
@@ -311,8 +411,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
         LOG.info(_LI('Successfully provisioned Ironic node %s'),
                  instance.node_uuid)
 
-    def execute(self, context, instance):
-        self._build_instance(context, instance)
+    def execute(self, context, instance, configdrive_value):
+        self._build_instance(context, instance, configdrive_value)
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Check if we have a cause which need to clean up instance.
@@ -326,8 +426,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, instance, requested_networks, request_spec,
-             filter_properties):
-
+             filter_properties, admin_password, injected_files):
     """Constructs and returns the manager entrypoint flow
 
     This flow will do the following:
@@ -349,13 +448,17 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
         'filter_properties': filter_properties,
         'request_spec': request_spec,
         'instance': instance,
-        'requested_networks': requested_networks
+        'requested_networks': requested_networks,
+        'admin_password': admin_password,
+        'injected_files': injected_files
     }
 
     instance_flow.add(ScheduleCreateInstanceTask(manager),
                       OnFailureRescheduleTask(manager.engine_rpcapi),
                       SetInstanceInfoTask(manager.ironicclient),
                       BuildNetworkTask(manager),
+                      GenerateConfigDriveTask(manager.network_api,
+                                              manager.ironicclient),
                       CreateInstanceTask(manager.ironicclient))
 
     # Now load (but do not run) the flow using the provided initial data.
