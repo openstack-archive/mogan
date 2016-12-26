@@ -85,7 +85,7 @@ class OnFailureRescheduleTask(flow_utils.NimbleTask):
         pass
 
     def _reschedule(self, context, cause, request_spec, filter_properties,
-                    instance, requested_networks):
+                    instance, requested_networks, admin_password):
         """Actions that happen during the rescheduling attempt occur here."""
 
         create_instance = self.engine_rpcapi.create_instance
@@ -110,7 +110,8 @@ class OnFailureRescheduleTask(flow_utils.NimbleTask):
 
         return create_instance(context, instance, requested_networks,
                                request_spec=request_spec,
-                               filter_properties=filter_properties)
+                               filter_properties=filter_properties,
+                               admin_password=admin_password)
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Check if we have a cause which can tell us not to reschedule and
@@ -161,7 +162,8 @@ class SetInstanceInfoTask(flow_utils.NimbleTask):
                    'deploy': validate_chk.deploy,
                    'power': validate_chk.power})
 
-    def revert(self, context, result, flow_failures, instance, **kwargs):
+    def revert(self, context, result, flow_failures, instance,
+               admin_password, **kwargs):
         # Check if we have a cause which need to clean up ironic node
         # instance info.
         for failure in flow_failures.values():
@@ -318,8 +320,9 @@ class CreateInstanceTask(flow_utils.NimbleTask):
                    % {'inst': instance.uuid, 'reason': node.last_error})
             raise exception.InstanceDeployFailure(msg)
 
-    def _build_instance(self, context, instance):
-        ironic.do_node_deploy(self.ironicclient, instance.node_uuid)
+    def _build_instance(self, context, instance, admin_password):
+        ironic.do_node_deploy(self.ironicclient, instance,
+                              admin_password)
 
         timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
                                                      instance)
@@ -327,8 +330,8 @@ class CreateInstanceTask(flow_utils.NimbleTask):
         LOG.info(_LI('Successfully provisioned Ironic node %s'),
                  instance.node_uuid)
 
-    def execute(self, context, instance):
-        self._build_instance(context, instance)
+    def execute(self, context, instance, admin_password):
+        self._build_instance(context, instance, admin_password)
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Check if we have a cause which need to clean up instance.

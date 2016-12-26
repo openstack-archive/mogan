@@ -24,7 +24,7 @@ from nimble.objects import fields as object_fields
 
 class NimbleObjectRegistry(object_base.VersionedObjectRegistry):
     def registration_hook(self, cls, index):
-        # NOTE(jroll): blatantly stolen from nova
+        # NOTE(jroll): blatantly stolen from nimble
         # NOTE(danms): This is called when an object is registered,
         # and is responsible for maintaining nimble.objects.$OBJECT
         # as the highest-versioned implementation of a given object.
@@ -52,7 +52,7 @@ class NimbleObject(object_base.VersionedObject):
     OBJ_PROJECT_NAMESPACE = 'nimble'
 
     # TODO(lintan) Refactor these fields and create PersistentObject and
-    # TimeStampObject like Nova when it is necessary.
+    # TimeStampObject like Nimble when it is necessary.
     fields = {
         'created_at': object_fields.DateTimeField(nullable=True),
         'updated_at': object_fields.DateTimeField(nullable=True),

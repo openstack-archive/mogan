@@ -158,7 +158,8 @@ class EngineManager(base_manager.BaseEngineManager):
                          'reason': six.text_type(e)})
 
     def create_instance(self, context, instance, requested_networks,
-                        request_spec=None, filter_properties=None):
+                        request_spec=None, filter_properties=None,
+                        admin_password=None):
         """Perform a deployment."""
         LOG.debug("Starting instance...")
 
@@ -173,6 +174,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 requested_networks,
                 request_spec,
                 filter_properties,
+                admin_password
             )
         except Exception:
             msg = _("Create manager instance flow failed.")

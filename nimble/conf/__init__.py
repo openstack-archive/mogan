@@ -16,6 +16,7 @@
 from oslo_config import cfg
 
 from nimble.conf import api
+from nimble.conf import configdrive
 from nimble.conf import database
 from nimble.conf import default
 from nimble.conf import engine
@@ -28,6 +29,7 @@ from nimble.conf import scheduler
 CONF = cfg.CONF
 
 api.register_opts(CONF)
+configdrive.register_opts(CONF)
 database.register_opts(CONF)
 default.register_opts(CONF)
 engine.register_opts(CONF)

@@ -395,7 +395,8 @@ class InstanceController(rest.RestController):
                 description=instance.get('description'),
                 availability_zone=instance.get('availability_zone'),
                 extra=instance.get('extra'),
-                requested_networks=requested_networks)
+                requested_networks=requested_networks,
+                admin_password=instance.get("adminPass", None))
         except exception.InstanceTypeNotFound:
             msg = (_("InstanceType %s could not be found") %
                    instance_type_uuid)

@@ -18,12 +18,48 @@ from oslo_log import log as logging
 
 from nimble.common.i18n import _LE
 from nimble.engine.baremetal import ironic_states
+from nimble.engine import configdrive
 
 LOG = logging.getLogger(__name__)
 
 _NODE_FIELDS = ('uuid', 'power_state', 'target_power_state', 'provision_state',
                 'target_provision_state', 'last_error', 'maintenance',
                 'properties', 'instance_uuid')
+
+
+def _generate_configdrive(self, context, instance, node, network_info,
+                          extra_md=None, files=None):
+    """Generate a config drive.
+
+    :param instance: The instance object.
+    :param node: The node object.
+    :param network_info: Instance network information.
+    :param extra_md: Optional, extra metadata to be added to the
+                     configdrive.
+    :param files: Optional, a list of paths to files to be added to
+                  the configdrive.
+
+    """
+    if not extra_md:
+        extra_md = {}
+
+    i_meta = instance_metadata.InstanceMetadata(instance,
+        content=files, extra_md=extra_md, network_info=network_info,
+        request_context=context)
+
+    with tempfile.NamedTemporaryFile() as uncompressed:
+        with configdrive.ConfigDriveBuilder(instance_md=i_meta) as cdb:
+            cdb.make_drive(uncompressed.name)
+
+        with tempfile.NamedTemporaryFile() as compressed:
+            # compress config drive
+            with gzip.GzipFile(fileobj=compressed, mode='wb') as gzipped:
+                uncompressed.seek(0)
+                shutil.copyfileobj(uncompressed, gzipped)
+
+            # base64 encode config drive
+            compressed.seek(0)
+            return base64.b64encode(compressed.read())
 
 
 def get_ports_from_node(ironicclient, node_uuid, detail=False):
@@ -81,11 +117,46 @@ def unset_instance_info(ironicclient, instance):
     ironicclient.call("node.update", instance.node_uuid, patch)
 
 
-def do_node_deploy(ironicclient, node_uuid):
-    # trigger the node deploy
-    ironicclient.call("node.set_provision_state", node_uuid,
-                      ironic_states.ACTIVE)
+def _node_config_drive(context, instance, admin_password=None):
+    node = self._get_node_by_uuid(instance.node_uuid)
+    configdrive_value = None
+    # always enable config_drive
+    if configdrive.required_by(instance):
+        extra_md = {}
+        if admin_password:
+            extra_md['admin_pass'] = admin_password
 
+        try:
+            # https://github.com/jriguera/ansible-ironic-standalone/wiki/ \
+            # Cloud-Init-and-Config-Drive
+            network_info=instance.network_info
+            configdrive_value = self._generate_configdrive(
+                context, instance, node, network_info, extra_md=extra_md,
+                files=injected_files)
+        except Exception as e:
+            with excutils.save_and_reraise_exception():
+                msg = (_LE("Failed to build configdrive: %s") %
+                       six.text_type(e))
+                LOG.error(msg, instance=instance)
+                self._cleanup_deploy(node, instance, network_info)
+
+        LOG.info(_LI("Config drive for instance %(instance)s on "
+                     "baremetal node %(node)s created."),
+                     {'instance': instance['uuid'], 'node': node_uuid})
+
+    return configdrive_value
+
+
+def do_node_deploy(ironicclient, instance, admin_password=None):
+    configdrive = _node_config_drive(None, instance, admin_password)
+    # trigger the node deploy
+    ironicclient.call("node.set_provision_state", instance.node_uuid,
+                      ironic_states.ACTIVE, configdrive=configdrive_value)
+
+def _get_node_by_uuid(self, node_uuid):
+    """Get a node by its UUID."""
+    return self.ironicclient.call('node.get', node_uuid,
+                                  fields=_NODE_FIELDS)
 
 def get_node_by_instance(ironicclient, instance_uuid, fields=None):
     if fields is None:
