@@ -23,6 +23,8 @@ from nimble.objects import fields as object_fields
 
 
 class NimbleObjectRegistry(object_base.VersionedObjectRegistry):
+    notification_classes = []
+
     def registration_hook(self, cls, index):
         # NOTE(jroll): blatantly stolen from nova
         # NOTE(danms): This is called when an object is registered,
@@ -36,6 +38,25 @@ class NimbleObjectRegistry(object_base.VersionedObjectRegistry):
                 getattr(objects, cls.obj_name()).VERSION)
             if version >= cur_version:
                 setattr(objects, cls.obj_name(), cls)
+
+    @classmethod
+    def register_notification(cls, notification_cls):
+        """Register a class as notification.
+        Use only to register concrete notification or payload classes,
+        do not register base classes intended for inheritance only.
+        """
+        cls.register_if(False)(notification_cls)
+        cls.notification_classes.append(notification_cls)
+        return notification_cls
+
+    @classmethod
+    def register_notification_objects(cls):
+        """Register previously decorated notification as normal ovos.
+        This is not intended for production use but only for testing and
+        document generation purposes.
+        """
+        for notification_cls in cls.notification_classes:
+            cls.register(notification_cls)
 
 
 class NimbleObject(object_base.VersionedObject):
