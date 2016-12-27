@@ -22,6 +22,9 @@ from oslo_versionedobjects import fields as object_fields
 
 from nimble.common import utils
 
+Field = object_fields.Field
+ObjectField = object_fields.ObjectField
+
 
 class IntegerField(object_fields.IntegerField):
     pass
@@ -106,3 +109,55 @@ class MACAddress(object_fields.FieldType):
 
 class MACAddressField(object_fields.AutoTypedField):
     AUTO_TYPE = MACAddress()
+
+
+class BaseNimbleEnum(object_fields.Enum):
+    def __init__(self, **kwargs):
+        super(BaseNimbleEnum, self).__init__(valid_values=self.__class__.ALL)
+
+
+class NotificationPriority(BaseNimbleEnum):
+    AUDIT = 'audit'
+    CRITICAL = 'critical'
+    DEBUG = 'debug'
+    INFO = 'info'
+    ERROR = 'error'
+    SAMPLE = 'sample'
+    WARN = 'warn'
+
+    ALL = (AUDIT, CRITICAL, DEBUG, INFO, ERROR, SAMPLE, WARN)
+
+
+class NotificationPhase(BaseNimbleEnum):
+    START = 'start'
+    END = 'end'
+    ERROR = 'error'
+
+    ALL = (START, END, ERROR)
+
+
+class NotificationAction(BaseNimbleEnum):
+    UPDATE = 'update'
+    EXCEPTION = 'exception'
+    DELETE = 'delete'
+    PAUSE = 'pause'
+    POWER_ON = 'power_on'
+    POWER_OFF = 'power_off'
+    REBOOT = 'reboot'
+    SHUTDOWN = 'shutdown'
+    CREATE = 'create'
+    EVACUATE = 'evacuate'
+
+    ALL = (UPDATE, EXCEPTION, DELETE, PAUSE, POWER_OFF)
+
+
+class NotificationPhaseField(object_fields.BaseEnumField):
+    AUTO_TYPE = NotificationPhase()
+
+
+class NotificationActionField(object_fields.BaseEnumField):
+    AUTO_TYPE = NotificationAction()
+
+
+class NotificationPriorityField(object_fields.BaseEnumField):
+    AUTO_TYPE = NotificationPriority()
