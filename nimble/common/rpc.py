@@ -41,7 +41,8 @@ def init(conf):
         allowed_remote_exmods=exmods)
     serializer = RequestContextSerializer(messaging.JsonPayloadSerializer())
     NOTIFIER = messaging.Notifier(NOTIFICATION_TRANSPORT,
-                                  serializer=serializer)
+                                  serializer=serializer,
+                                  topics=['versioned_notifications'])
 
 
 def cleanup():
