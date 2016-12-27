@@ -58,7 +58,8 @@ class TestUtils(base.TestCase):
         notifier_calls = [
             mock.call(
                 rpc.NOTIFICATION_TRANSPORT,
-                serializer=mock_request_serializer.return_value),
+                serializer=mock_request_serializer.return_value,
+                topics=['versioned_notifications']),
         ]
 
         mock_notifier.assert_has_calls(notifier_calls)
