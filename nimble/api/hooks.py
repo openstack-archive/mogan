@@ -21,6 +21,7 @@ from six.moves import http_client
 
 from nimble.common import policy
 from nimble.db import api as dbapi
+from nimble.engine import api as engineapi
 
 
 class ConfigHook(hooks.PecanHook):
@@ -35,6 +36,16 @@ class DBHook(hooks.PecanHook):
 
     def before(self, state):
         state.request.dbapi = dbapi.get_instance()
+
+
+class EngineAPIHook(hooks.PecanHook):
+    """Attach the engine_api object to the request."""
+
+    def __init__(self):
+        self.engine_api = engineapi.API()
+
+    def before(self, state):
+        state.request.engine_api = self.engine_api
 
 
 class ContextHook(hooks.PecanHook):

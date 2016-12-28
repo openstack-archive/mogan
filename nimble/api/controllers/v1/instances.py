@@ -102,10 +102,6 @@ class InstanceStatesController(rest.RestController):
     # Note(Shaohe Feng) we follow ironic restful api define.
     # We can refactor this API, if we do not like ironic pattern.
 
-    def __init__(self, **kwargs):
-        super(InstanceStatesController, self).__init__(**kwargs)
-        self.engine_api = engineapi.API()
-
     _custom_actions = {
         'power': ['PUT'],
     }
@@ -126,8 +122,8 @@ class InstanceStatesController(rest.RestController):
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
 
-        rpc_states = self.engine_api.states(pecan.request.context,
-                                            rpc_instance)
+        rpc_states = pecan.request.engine_api.states(pecan.request.context,
+                                                     rpc_instance)
         return InstanceStates(**rpc_states)
 
     @policy.authorize_wsgi("nimble:instance", "set_power_state")
@@ -152,7 +148,8 @@ class InstanceStatesController(rest.RestController):
             raise exception.InvalidActionParameterValue(
                 value=target, action="power",
                 instance=instance_uuid)
-        self.engine_api.power(pecan.request.context, rpc_instance, target)
+        pecan.request.engine_api.power(
+            pecan.request.context, rpc_instance, target)
         # At present we do not catch the Exception from ironicclient.
         # Such as Conflict and BadRequest.
         # varify provision_state, if instance is being cleaned,
@@ -271,10 +268,6 @@ class InstanceCollection(base.APIBase):
 class InstanceController(rest.RestController):
     """REST controller for Instance."""
 
-    def __init__(self, **kwargs):
-        super(InstanceController, self).__init__(**kwargs)
-        self.engine_api = engineapi.API()
-
     states = InstanceStatesController()
 
     _custom_actions = {
@@ -300,7 +293,7 @@ class InstanceController(rest.RestController):
 
         if fields is None or 'power_state' in fields:
             try:
-                nodes = self.engine_api.get_ironic_node_list(
+                nodes = pecan.request.engine_api.get_ironic_node_list(
                     pecan.request.context, fields=_NODE_FIELDS)
                 node_list = nodes['nodes']
             except Exception as e:
@@ -355,9 +348,8 @@ class InstanceController(rest.RestController):
             # or node fields is not requested and when instance is really
             # associated with a ironic node.
             try:
-                node = self.engine_api.get_ironic_node(pecan.request.context,
-                                                       instance_uuid,
-                                                       _NODE_FIELDS)
+                node = pecan.request.engine_api.get_ironic_node(
+                    pecan.request.context, instance_uuid, _NODE_FIELDS)
                 instance_data['power_state'] = node['power_state']
             except Exception as e:
                 LOG.warning(
@@ -396,7 +388,7 @@ class InstanceController(rest.RestController):
             instance_type = objects.InstanceType.get(pecan.request.context,
                                                      instance_type_uuid)
 
-            instance = self.engine_api.create(
+            instance = pecan.request.engine_api.create(
                 pecan.request.context,
                 instance_type,
                 image_uuid=image_uuid,
@@ -468,7 +460,7 @@ class InstanceController(rest.RestController):
         :param instance_uuid: UUID of a instance.
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
-        self.engine_api.delete(pecan.request.context, rpc_instance)
+        pecan.request.engine_api.delete(pecan.request.context, rpc_instance)
 
 
 def _check_create_body(body):
