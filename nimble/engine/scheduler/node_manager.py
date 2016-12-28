@@ -35,7 +35,8 @@ class NodeState(object):
     def __init__(self, node):
         self.node = node.uuid
         self.capabilities = node.properties.get('capabilities')
-        self.availability_zone = node.properties.get('availability_zone')
+        self.availability_zone = node.properties.get('availability_zone') \
+            or CONF.engine.default_schedule_zone
         self.instance_type = node.properties.get('instance_type')
 
 

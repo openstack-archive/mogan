@@ -38,6 +38,8 @@ opts = [
                default='nimble.engine.scheduler.filter_scheduler.'
                        'FilterScheduler',
                help='Default scheduler driver to use')
+    cfg.StrOpt('default_schedule_zone',
+               help="Availability zone to use when user doesn't specify one.")
 ]
 
 
