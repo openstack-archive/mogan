@@ -33,8 +33,11 @@ class ConfigHook(hooks.PecanHook):
 class DBHook(hooks.PecanHook):
     """Attach the dbapi object to the request so controllers can get to it."""
 
+    def __init__(self):
+        self.db_api = dbapi.get_instance()
+
     def before(self, state):
-        state.request.dbapi = dbapi.get_instance()
+        state.request.dbapi = self.db_api
 
 
 class ContextHook(hooks.PecanHook):
