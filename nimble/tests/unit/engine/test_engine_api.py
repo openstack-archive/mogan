@@ -16,6 +16,7 @@
 """Unit tests for engine API."""
 
 import mock
+from oslo_config import cfg
 from oslo_context import context
 
 from nimble.common import exception
@@ -116,6 +117,47 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_validate.assert_called_once_with(
             self.context, instance_type, 'fake-uuid', 'fake-name',
             'fake-descritpion', 'test_az', {'k1', 'v1'})
+        mock_provision.assert_called_once_with(self.context, base_options)
+        self.assertTrue(mock_create.called)
+        self.assertTrue(mock_get_image.called)
+
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'create_instance')
+    @mock.patch('nimble.engine.api.API._provision_instances')
+    @mock.patch('nimble.engine.api.API._get_image')
+    @mock.patch('nimble.engine.api.API._validate_and_build_base_options')
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
+    def test_create_default_az(self, mock_list_az, mock_validate,
+                               mock_get_image, mock_provision, mock_create):
+        cfg.CONF.set_override('default_schedule_zone', 'default_az', 'engine')
+        instance_type = self._create_instance_type()
+
+        base_options = {'image_uuid': 'fake-uuid',
+                        'status': status.BUILDING,
+                        'user_id': 'fake-user',
+                        'project_id': 'fake-project',
+                        'instance_type_uuid': 'fake-type-uuid',
+                        'name': 'fake-name',
+                        'description': 'fake-description',
+                        'extra': {'k1', 'v1'},
+                        'availability_zone': 'default_az'}
+        mock_validate.return_value = base_options
+        mock_get_image.side_effect = None
+        mock_create.return_value = mock.MagicMock()
+
+        self.engine_api.create(
+            self.context,
+            instance_type=instance_type,
+            image_uuid='fake-uuid',
+            name='fake-name',
+            description='fake-descritpion',
+            availability_zone=None,
+            extra={'k1', 'v1'},
+            requested_networks=[{'uuid': 'fake'}])
+
+        self.assertFalse(mock_list_az.called)
+        mock_validate.assert_called_once_with(
+            self.context, instance_type, 'fake-uuid', 'fake-name',
+            'fake-descritpion', 'default_az', {'k1', 'v1'})
         mock_provision.assert_called_once_with(self.context, base_options)
         self.assertTrue(mock_create.called)
         self.assertTrue(mock_get_image.called)
