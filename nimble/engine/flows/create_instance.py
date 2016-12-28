@@ -48,13 +48,16 @@ class ScheduleCreateInstanceTask(flow_utils.NimbleTask):
         self.manager = manager
 
     def execute(self, context, instance, request_spec, filter_properties):
-        with self.manager._lock:
-            top_node = self.manager.scheduler.schedule(
-                context,
-                request_spec,
-                self.manager.node_cache,
-                filter_properties)
-            self.manager.node_cache.pop(top_node, None)
+        try:
+            with self.manager._lock:
+                top_node = self.manager.scheduler.schedule(
+                    context,
+                    request_spec,
+                    self.manager.node_cache,
+                    filter_properties)
+                self.manager.node_cache.pop(top_node, None)
+        except Exception:
+            raise exception.NoValidNode
         instance.node_uuid = top_node
         instance.save()
 
@@ -164,6 +167,8 @@ class SetInstanceInfoTask(flow_utils.NimbleTask):
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Check if we have a cause which need to clean up ironic node
         # instance info.
+        instance.status = status.ERROR
+        instance.save()
         for failure in flow_failures.values():
             if failure.check(*self.instance_info_cleaned_exc_types):
                 LOG.debug("Instance %s: cleaning up node instance info",
@@ -260,6 +265,8 @@ class BuildNetworkTask(flow_utils.NimbleTask):
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Check if we have a cause which need to clean up networks.
+        instance.status = status.ERROR
+        instance.save()
         for failure in flow_failures.values():
             if failure.check(*self.network_cleaned_exc_types):
                 LOG.debug("Instance %s: cleaning up node networks",
@@ -332,6 +339,8 @@ class CreateInstanceTask(flow_utils.NimbleTask):
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Check if we have a cause which need to clean up instance.
+        instance.status = status.ERROR
+        instance.save()
         for failure in flow_failures.values():
             if failure.check(*self.instance_cleaned_exc_types):
                 LOG.debug("Instance %s: destroy ironic node", instance.uuid)
