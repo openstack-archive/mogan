@@ -36,7 +36,7 @@ Request
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - networks: networks
-  - networks.uuid: network_uuid
+  - networks.net_id: network_uuid
   - networks.port_type: network_port_type
 
 **Example Create Instance: JSON request**

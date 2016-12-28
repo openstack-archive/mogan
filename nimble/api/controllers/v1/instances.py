@@ -58,11 +58,11 @@ _CREATE_INSTANCE_SCHEMA = {
             'items': {
                 'type': 'object',
                 'properties': {
-                    'uuid': {'type': 'string', 'format': 'uuid'},
+                    'net_id': {'type': 'string', 'format': 'uuid'},
                     'port_type': {'type': 'string', 'minLength': 1,
                                   'maxLength': 255},
                 },
-                'required': ['uuid'],
+                'required': ['net_id'],
                 'additionalProperties': False,
             },
         },
