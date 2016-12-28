@@ -75,9 +75,8 @@ def set_instance_info(ironicclient, instance):
 
 def unset_instance_info(ironicclient, instance):
 
-    patch = []
-    patch.append({'path': '/instance_uuid', 'op': 'remove'})
-    patch.append({'path': '/instance_info', 'op': 'remove'})
+    patch = [{'path': '/instance_info', 'op': 'remove'},
+             {'path': '/instance_uuid', 'op': 'remove'}]
 
     ironicclient.call("node.update", instance.node_uuid, patch)
 
