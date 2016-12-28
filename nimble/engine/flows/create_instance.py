@@ -24,6 +24,7 @@ from taskflow.patterns import linear_flow
 
 from nimble.common import exception
 from nimble.common import flow_utils
+from nimble.common.i18n import _
 from nimble.common.i18n import _LE
 from nimble.common.i18n import _LI
 from nimble.common import utils
