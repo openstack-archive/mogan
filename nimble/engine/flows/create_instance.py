@@ -48,13 +48,18 @@ class ScheduleCreateInstanceTask(flow_utils.NimbleTask):
         self.manager = manager
 
     def execute(self, context, instance, request_spec, filter_properties):
-        with self.manager._lock:
-            top_node = self.manager.scheduler.schedule(
-                context,
-                request_spec,
-                self.manager.node_cache,
-                filter_properties)
-            self.manager.node_cache.pop(top_node, None)
+        try:
+            with self.manager._lock:
+                top_node = self.manager.scheduler.schedule(
+                    context,
+                    request_spec,
+                    self.manager.node_cache,
+                    filter_properties)
+                self.manager.node_cache.pop(top_node, None)
+        except Exception:
+            raise exception.NoValidNode(_(
+                "Created instance %s failed, No valid node "
+                "is found with the request spec.") % instance.uuid)
         instance.node_uuid = top_node
         instance.save()
 
@@ -153,7 +158,6 @@ class SetInstanceInfoTask(flow_utils.NimbleTask):
                                             instance.node_uuid)
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
-            self._set_instance_obj_error_state(context, instance)
             raise exception.ValidationError(_(
                 "Ironic node: %(id)s failed to validate."
                 " (deploy: %(deploy)s, power: %(power)s)")

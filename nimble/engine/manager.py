@@ -18,6 +18,7 @@ import threading
 from ironicclient import exc as ironic_exc
 from oslo_log import log
 import oslo_messaging as messaging
+from oslo_service import loopingcall
 from oslo_service import periodic_task
 
 from nimble.common import exception
@@ -96,6 +97,14 @@ class EngineManager(base_manager.BaseEngineManager):
         if filter_properties is None:
             filter_properties = {}
 
+        exceptions_list = (exception.NoValidNode,
+                           exception.ValidationError,
+                           exception.InterfacePlugException,
+                           exception.NetworkError,
+                           loopingcall.LoopingCallDone,
+                           exception.InstanceNotFound,
+                           exception.InstanceDeployFailure)
+
         try:
             flow_engine = create_instance.get_flow(
                 context,
@@ -120,10 +129,8 @@ class EngineManager(base_manager.BaseEngineManager):
 
         try:
             _run_flow()
-        except exception.NoValidNode:
+        except exceptions_list:
             self._set_instance_obj_error_state(context, instance)
-            LOG.error(_LE("Created instance %s failed, No valid node "
-                          "is found with the request spec."), instance.uuid)
         else:
             LOG.info(_LI("Created instance %s successfully."), instance.uuid)
         finally:
