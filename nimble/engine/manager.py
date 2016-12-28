@@ -18,13 +18,16 @@ import threading
 from ironicclient import exc as ironic_exc
 from oslo_log import log
 import oslo_messaging as messaging
+from oslo_service import loopingcall
 from oslo_service import periodic_task
+import six
 
 from nimble.common import exception
 from nimble.common import flow_utils
 from nimble.common.i18n import _
 from nimble.common.i18n import _LE
 from nimble.common.i18n import _LI
+from nimble.common.i18n import _LW
 from nimble.conf import CONF
 from nimble.engine.baremetal import ironic
 from nimble.engine.baremetal import ironic_states
@@ -33,6 +36,10 @@ from nimble.engine.flows import create_instance
 from nimble.engine import status
 
 LOG = log.getLogger(__name__)
+
+_UNPROVISION_STATES = (ironic_states.ACTIVE, ironic_states.DEPLOYFAIL,
+                       ironic_states.ERROR, ironic_states.DEPLOYWAIT,
+                       ironic_states.DEPLOYING)
 
 
 class EngineManager(base_manager.BaseEngineManager):
@@ -85,9 +92,70 @@ class EngineManager(base_manager.BaseEngineManager):
                 ironic.unplug_vif(self.ironicclient, pif.uuid)
 
     def _destroy_instance(self, context, instance):
-        ironic.destroy_node(self.ironicclient, instance.node_uuid)
+        try:
+            ironic.destroy_node(self.ironicclient, instance.node_uuid)
+        except Exception as e:
+            # if the node is already in a deprovisioned state, continue
+            # This should be fixed in Ironic.
+            # TODO(deva): This exception should be added to
+            #             python-ironicclient and matched directly,
+            #             rather than via __name__.
+            if getattr(e, '__name__', None) != 'InstanceDeployFailure':
+                raise
+
+        # using a dict because this is modified in the local method
+        data = {'tries': 0}
+
+        def _wait_for_provision_state():
+
+            try:
+                node = ironic.get_node_by_instance(self.ironicclient,
+                                                   instance.uuid)
+            except ironic_exc.NotFound:
+                LOG.debug("Instance already removed from Ironic",
+                          instance=instance)
+                raise loopingcall.LoopingCallDone()
+            LOG.debug('Current ironic node state is %s', node.provision_state)
+            if node.provision_state in (ironic_states.NOSTATE,
+                                        ironic_states.CLEANING,
+                                        ironic_states.CLEANWAIT,
+                                        ironic_states.CLEANFAIL,
+                                        ironic_states.AVAILABLE):
+                # From a user standpoint, the node is unprovisioned. If a node
+                # gets into CLEANFAIL state, it must be fixed in Ironic, but we
+                # can consider the instance unprovisioned.
+                LOG.debug("Ironic node %(node)s is in state %(state)s, "
+                          "instance is now unprovisioned.",
+                          dict(node=node.uuid, state=node.provision_state),
+                          instance=instance)
+                raise loopingcall.LoopingCallDone()
+
+            if data['tries'] >= CONF.ironic.api_max_retries + 1:
+                msg = (_("Error destroying the instance on node %(node)s. "
+                         "Provision state still '%(state)s'.")
+                       % {'state': node.provision_state,
+                          'node': node.uuid})
+                LOG.error(msg)
+                raise exception.NimbleException(msg)
+            else:
+                data['tries'] += 1
+
+        # wait for the state transition to finish
+        timer = loopingcall.FixedIntervalLoopingCall(_wait_for_provision_state)
+        timer.start(interval=CONF.ironic.api_retry_interval).wait()
+
         LOG.info(_LI('Successfully destroyed Ironic node %s'),
                  instance.node_uuid)
+
+    def _remove_instance_info_from_node(self, instance):
+        try:
+            ironic.unset_instance_info(self.ironicclient, instance)
+        except ironic_exc.BadRequest as e:
+            LOG.warning(_LW("Failed to remove deploy parameters from node "
+                            "%(node)s when unprovisioning the instance "
+                            "%(instance)s: %(reason)s"),
+                        {'node': instance.node_uuid, 'instance': instance.uuid,
+                         'reason': six.text_type(e)})
 
     def create_instance(self, context, instance, requested_networks,
                         request_spec=None, filter_properties=None):
@@ -135,12 +203,22 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.debug("Deleting instance...")
 
         try:
-            self._destroy_networks(context, instance)
-            self._destroy_instance(context, instance)
-        except Exception:
-            LOG.exception(_LE("Error while trying to clean up "
-                              "instance resources."),
-                          instance=instance)
+            node = ironic.get_node_by_instance(self.ironicclient,
+                                               instance.uuid)
+        except ironic_exc.NotFound:
+            node = None
+
+        if node:
+            try:
+                if node.provision_state in _UNPROVISION_STATES:
+                    self._destroy_networks(context, instance)
+                    self._destroy_instance(context, instance)
+                else:
+                    self._remove_instance_info_from_node(instance)
+            except Exception:
+                LOG.exception(_LE("Error while trying to clean up "
+                                  "instance resources."),
+                              instance=instance)
 
         instance.status = status.DELETED
         instance.save()
@@ -185,7 +263,7 @@ class EngineManager(base_manager.BaseEngineManager):
         return node.to_dict()
 
     def get_ironic_node_list(self, context, fields):
-        """Get a ironic node list."""
+        """Get an ironic node list."""
         nodes = ironic.get_node_list(self.ironicclient, associated=True,
                                      limit=0, fields=fields)
         return {'nodes': [node.to_dict() for node in nodes]}
