@@ -9,6 +9,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import os
 
 import mock
 from oslo_concurrency import processutils
@@ -53,6 +54,11 @@ class TestRPCService(base.TestCase):
 
 
 class TestWSGIService(base.TestCase):
+    def setUp(self):
+        super(TestWSGIService, self).setUp()
+        self.config(paste_config=os.path.abspath('etc/nimble/api_paste.ini'),
+                    group='api')
+
     @mock.patch.object(service.wsgi, 'Server')
     def test_workers_set_default(self, wsgi_server):
         service_name = "nimble_api"

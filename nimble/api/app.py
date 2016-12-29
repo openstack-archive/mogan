@@ -13,13 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
+
+from oslo_log import log
+from paste import deploy
 import pecan
 
 from nimble.api import config
 from nimble.api import hooks
 from nimble.api import middleware
-from nimble.api.middleware import auth_token
+from nimble.common.i18n import _LI
+
+LOG = log.getLogger(__name__)
 
 
 def get_pecan_config():
@@ -29,6 +33,8 @@ def get_pecan_config():
 
 
 def setup_app(pecan_config=None, extra_hooks=None):
+    if not pecan_config:
+        pecan_config = get_pecan_config()
     app_hooks = [hooks.ConfigHook(),
                  hooks.DBHook(),
                  hooks.ContextHook(pecan_config.app.acl_public_routes),
@@ -36,9 +42,6 @@ def setup_app(pecan_config=None, extra_hooks=None):
                  hooks.PublicUrlHook()]
     if extra_hooks:
         app_hooks.extend(extra_hooks)
-
-    if not pecan_config:
-        pecan_config = get_pecan_config()
 
     pecan.configuration.set_config(dict(pecan_config), overwrite=True)
 
@@ -50,18 +53,13 @@ def setup_app(pecan_config=None, extra_hooks=None):
         hooks=app_hooks,
         wrap_app=middleware.ParsableErrorMiddleware,
     )
-
-    app = auth_token.AuthTokenMiddleware(
-        app, dict(cfg.CONF),
-        public_api_routes=pecan_config.app.acl_public_routes)
-
     return app
 
 
-class VersionSelectorApplication(object):
-    def __init__(self):
-        pc = get_pecan_config()
-        self.v1 = setup_app(pecan_config=pc)
+def load_app(paste_cfg):
+    LOG.info(_LI("Full WSGI config used: %s"), paste_cfg)
+    return deploy.loadapp("config:" + paste_cfg)
 
-    def __call__(self, environ, start_response):
-        return self.v1(environ, start_response)
+
+def app_factory(global_config, **local_conf):
+    return setup_app()
