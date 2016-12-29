@@ -48,6 +48,9 @@ opts = [
                        "the service, this option should be False; note, you "
                        "will want to change public API endpoint to represent "
                        "SSL termination URL with 'public_endpoint' option.")),
+    cfg.StrOpt('paste_config',
+               default="api_paste.ini",
+               help="Configuration file for WSGI definition of API."),
 ]
 
 opt_group = cfg.OptGroup(name='api',

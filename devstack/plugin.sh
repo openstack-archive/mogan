@@ -51,6 +51,10 @@ function mkdir_chown_stack {
 function configure_nimble {
     mkdir_chown_stack "${NIMBLE_CONF_DIR}"
 
+    # Configure paste config file
+    cp $NIMBLE_DIR/etc/nimble/api_paste.ini $NIMBLE_CONF_DIR
+    iniset ${NIMBLE_CONF_FILE} api paste_config $NIMBLE_DIR/etc/nimble/api_paste.ini
+
     iniset ${NIMBLE_CONF_FILE} DEFAULT debug ${NIMBLE_DEBUG}
 
     NIMBLE_POLICY_FILE=${NIMBLE_CONF_DIR}/policy.json
