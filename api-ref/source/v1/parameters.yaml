@@ -129,7 +129,7 @@ instance_name:
 instance_power_state:
   description: |
     The current power state of this instance. Usually, “power on” or “power off”, but may be “None”
-    if Nimble is unable to determine the power state (eg, due to hardware failure)
+    if Mogan is unable to determine the power state (eg, due to hardware failure)
   in: body
   required: true
   type: string
@@ -199,7 +199,7 @@ networks:
 power_state:
   description: |
     The current power state of this Instance. Usually, "power on" or
-    "power off", but may be "None" if Nimble is unable to determine the power
+    "power off", but may be "None" if Mogan is unable to determine the power
     state (eg, due to hardware failure).
   in: body
   required: true
