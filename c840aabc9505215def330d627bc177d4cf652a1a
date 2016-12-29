@@ -1,0 +1,10 @@
+Code-Review+1: wanghongtaozz <wanghongtaozz@inspur.com>
+Code-Review+1: zhangjl <luoyan_cn@outlook.com>
+Code-Review+2: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Workflow+1: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 29 Dec 2016 12:47:58 +0000
+Reviewed-on: https://review.openstack.org/415426
+Project: openstack/nimble
+Branch: refs/heads/master
