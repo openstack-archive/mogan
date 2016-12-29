@@ -19,7 +19,6 @@ from wsme import types as wtypes
 
 from nimble.api.controllers import base
 from nimble.api import expose
-from nimble.engine import api as engineapi
 
 
 class AvailabilityZones(base.APIBase):
@@ -32,15 +31,12 @@ class AvailabilityZones(base.APIBase):
 class AvailabilityZoneController(rest.RestController):
     """REST controller for Availability Zone."""
 
-    def __init__(self, **kwargs):
-        super(AvailabilityZoneController, self).__init__(**kwargs)
-        self.engine_api = engineapi.API()
-
     @expose.expose(AvailabilityZones)
     def get_all(self):
         """Retrieve a list of availability zone."""
 
-        azs = self.engine_api.list_availability_zones(pecan.request.context)
+        azs = pecan.request.engine_api.list_availability_zones(
+            pecan.request.context)
 
         collection = AvailabilityZones()
         collection.availability_zones = azs['availability_zones']
