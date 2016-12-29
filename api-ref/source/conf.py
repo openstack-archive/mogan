@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-# nimble documentation build configuration file, created by
+# mogan documentation build configuration file, created by
 # sphinx-quickstart on Sat May  1 15:17:47 2010.
 #
 # This file is execfile()d with the current directory set to
@@ -42,7 +42,7 @@ html_theme_path = [openstackdocstheme.get_html_theme_path()]
 html_theme_options = {
     "sidebar_mode": "toc",
 }
-html_context = {'bug_project': 'nimble', 'bug_tag': 'api-ref'}
+html_context = {'bug_project': 'mogan', 'bug_tag': 'api-ref'}
 
 # End temporary block
 
@@ -76,7 +76,7 @@ copyright = u'2010-present, OpenStack Foundation'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-from nimble.version import version_info
+from mogan.version import version_info
 # The full version, including alpha/beta/rc tags.
 release = version_info.release_string()
 # The short X.Y version.
@@ -212,7 +212,7 @@ htmlhelp_basename = 'nimbledoc'
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
-    ('index', 'Nimble.tex', u'OpenStack Baremetal-Compute API Documentation',
+    ('index', 'Mogan.tex', u'OpenStack Baremetal-Compute API Documentation',
      u'OpenStack Foundation', 'manual'),
 ]
 

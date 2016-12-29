@@ -55,7 +55,7 @@ function configure_nimble {
 
     NIMBLE_POLICY_FILE=${NIMBLE_CONF_DIR}/policy.json
 
-    # Nimble Configuration
+    # nimble Configuration
     #-------------------------
 
     # Setup keystone_authtoken section
@@ -101,7 +101,7 @@ function configure_nimble {
 
 # init_nimble - Initialize the database
 function init_nimble {
-    # (re)create Nimble database
+    # (re)create nimble database
     recreate_database nimble utf8
     ${NIMBLE_BIN_DIR}/nimble-dbsync --config-file ${NIMBLE_CONF_FILE}  upgrade
 }
@@ -113,7 +113,7 @@ function install_nimble {
     local req_services="key glance neutron ironic"
     for srv in $req_services; do
         if ! is_service_enabled "$srv"; then
-            die $LINENO "$srv should be enabled for Nimble."
+            die $LINENO "$srv should be enabled for nimble."
         fi
     done
 
@@ -157,7 +157,7 @@ function start_nimble {
 
 # stop_nimble - Stop running processes
 function stop_nimble {
-    # Kill the Nimble screen windows
+    # Kill the nimble screen windows
     for serv in nimble-api nimble-engine; do
         stop_process $serv
     done
@@ -177,7 +177,7 @@ function _nimble_cleanup_nimble_dashboard {
 
 
 function create_instance_type {
-    openstack baremetal flavor create ${NIMBLE_DEFAULT_INSTANCE_TYPE} --description 'Nimble default instance type'
+    openstack baremetal flavor create ${NIMBLE_DEFAULT_INSTANCE_TYPE} --description 'nimble default instance type'
 }
 
 
