@@ -4,9 +4,9 @@ Installation
 
 At the command line::
 
-    $ pip install nimble
+    $ pip install mogan
 
 Or, if you have virtualenvwrapper installed::
 
-    $ mkvirtualenv nimble
-    $ pip install nimble
+    $ mkvirtualenv mogan
+    $ pip install mogan

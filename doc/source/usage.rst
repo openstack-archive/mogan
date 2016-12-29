@@ -2,6 +2,6 @@
 Usage
 ========
 
-To use nimble in a project::
+To use mogan in a project::
 
-    import nimble
+    import mogan
