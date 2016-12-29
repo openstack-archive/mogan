@@ -21,14 +21,14 @@ else
     NIMBLE_BIN_DIR=$(get_python_exec_prefix)
 fi
 
-# create_nimble_accounts - Set up common required nimble accounts
+# create_nimble_accounts - Set up common required mogan accounts
 #
 # Project     User       Roles
 # ------------------------------
-# service     nimble     admin
+# service     mogan     admin
 function create_nimble_accounts {
-    create_service_user "nimble" "admin"
-    get_or_create_service "nimble" "baremetal_compute" "Baremetal Compute"
+    create_service_user "mogan" "admin"
+    get_or_create_service "mogan" "baremetal_compute" "Baremetal Compute"
     get_or_create_endpoint "baremetal_compute" \
         "$REGION_NAME" \
         "${NIMBLE_SERVICE_PROTOCOL}://${NIMBLE_SERVICE_HOST}:${NIMBLE_SERVICE_PORT}/v1" \
@@ -55,7 +55,7 @@ function configure_nimble {
 
     NIMBLE_POLICY_FILE=${NIMBLE_CONF_DIR}/policy.json
 
-    # Nimble Configuration
+    # Mogan Configuration
     #-------------------------
 
     # Setup keystone_authtoken section
@@ -69,10 +69,10 @@ function configure_nimble {
     iniset ${NIMBLE_CONF_FILE} keystone_authtoken auth_type "password"
 
     # Config the transport url
-    iniset_rpc_backend nimble $NIMBLE_CONF_FILE
+    iniset_rpc_backend mogan $NIMBLE_CONF_FILE
 
     # Configure the database.
-    iniset ${NIMBLE_CONF_FILE} database connection `database_connection_url nimble`
+    iniset ${NIMBLE_CONF_FILE} database connection `database_connection_url mogan`
 
     # Setup ironic section
     iniset ${NIMBLE_CONF_FILE} ironic admin_tenant_name ${SERVICE_PROJECT_NAME}
@@ -101,9 +101,9 @@ function configure_nimble {
 
 # init_nimble - Initialize the database
 function init_nimble {
-    # (re)create Nimble database
-    recreate_database nimble utf8
-    ${NIMBLE_BIN_DIR}/nimble-dbsync --config-file ${NIMBLE_CONF_FILE}  upgrade
+    # (re)create Mogan database
+    recreate_database mogan utf8
+    ${NIMBLE_BIN_DIR}/mogan-dbsync --config-file ${NIMBLE_CONF_FILE}  upgrade
 }
 
 
@@ -113,7 +113,7 @@ function install_nimble {
     local req_services="key glance neutron ironic"
     for srv in $req_services; do
         if ! is_service_enabled "$srv"; then
-            die $LINENO "$srv should be enabled for Nimble."
+            die $LINENO "$srv should be enabled for Mogan."
         fi
     done
 
@@ -126,11 +126,11 @@ function install_nimble {
 
 
 function _install_nimble_dashboard {
-    # add it when nimble dashboard is ready
+    # add it when mogan dashboard is ready
     :
     #git_clone ${NIMBLE_DASHBOARD_REPO} ${NIMBLE_DASHBOARD_DIR} ${NIMBLE_DASHBOARD_BRANCH}
     #setup_develop ${NIMBLE_DASHBOARD_DIR}
-    # add it when nimble dashboard is ready
+    # add it when mogan dashboard is ready
     #ln -fs ${NIMBLE_DASHBOARD_DIR}/_xx_nimble.py.example ${HORIZON_DIR}/openstack_dashboard/local/enabled/_xx_nimble.py
 }
 
@@ -144,21 +144,21 @@ function install_nimble_pythonclient {
 
 # start_nimble - Start running processes, including screen
 function start_nimble {
-    if is_service_enabled nimble-api && is_service_enabled nimble-engine ; then
+    if is_service_enabled mogan-api && is_service_enabled mogan-engine ; then
         echo_summary "Installing all nimble services in separate processes"
-        run_process nimble-api "${NIMBLE_BIN_DIR}/nimble-api --config-file ${NIMBLE_CONF_DIR}/nimble.conf"
+        run_process mogan-api "${NIMBLE_BIN_DIR}/mogan-api --config-file ${NIMBLE_CONF_DIR}/mogan.conf"
         if ! wait_for_service ${SERVICE_TIMEOUT} ${NIMBLE_SERVICE_PROTOCOL}://${NIMBLE_SERVICE_HOST}:${NIMBLE_SERVICE_PORT}; then
-            die $LINENO "nimble-api did not start"
+            die $LINENO "mogan-api did not start"
         fi
-        run_process nimble-engine "${NIMBLE_BIN_DIR}/nimble-engine --config-file ${NIMBLE_CONF_DIR}/nimble.conf"
+        run_process mogan-engine "${NIMBLE_BIN_DIR}/mogan-engine --config-file ${NIMBLE_CONF_DIR}/mogan.conf"
     fi
 }
 
 
 # stop_nimble - Stop running processes
 function stop_nimble {
-    # Kill the Nimble screen windows
-    for serv in nimble-api nimble-engine; do
+    # Kill the Mogan screen windows
+    for serv in mogan-api mogan-engine; do
         stop_process $serv
     done
 }
@@ -177,7 +177,7 @@ function _nimble_cleanup_nimble_dashboard {
 
 
 function create_instance_type {
-    openstack baremetal flavor create ${NIMBLE_DEFAULT_INSTANCE_TYPE} --description 'Nimble default instance type'
+    openstack baremetal flavor create ${NIMBLE_DEFAULT_INSTANCE_TYPE} --description 'Mogan default instance type'
 }
 
 
@@ -189,17 +189,17 @@ function update_ironic_node_type {
 }
 
 
-if is_service_enabled nimble; then
+if is_service_enabled mogan; then
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
-        echo_summary "Installing nimble"
+        echo_summary "Installing mogan"
         install_nimble
         install_nimble_pythonclient
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
-        echo_summary "Configuring nimble"
+        echo_summary "Configuring mogan"
         configure_nimble
         create_nimble_accounts
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
-        echo_summary "Initializing nimble"
+        echo_summary "Initializing mogan"
         init_nimble
         start_nimble
         echo_summary "Creating instance type"
@@ -209,13 +209,13 @@ if is_service_enabled nimble; then
     fi
 
     if [[ "$1" == "unstack" ]]; then
-        echo_summary "Shutting down nimble"
+        echo_summary "Shutting down mogan"
         stop_nimble
     fi
 
     if [[ "$1" == "clean" ]]; then
-        echo_summary "Cleaning nimble"
-        #add it when nimble dashboard
+        echo_summary "Cleaning mogan"
+        #add it when mogan dashboard
         #cleanup_nimble
     fi
 fi

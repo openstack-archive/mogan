@@ -11,6 +11,6 @@ Enabling in Devstack
 
      > cat local.conf
      [[local|localrc]]
-     enable_plugin nimble https://git.openstack.org/openstack/nimble
+     enable_plugin mogan https://git.openstack.org/openstack/mogan
 
 3. run ``stack.sh``
