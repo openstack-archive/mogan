@@ -11,8 +11,8 @@ with the OpenStack Identity service. They also required a base
 will be added to build a full path.
 
 For instance, if the ``service url`` is
-``http://mycompute.pvt/nimble/v1`` then the full API call for
-``/instances`` is ``http://mycompute.pvt/nimble/v1/instances``.
+``http://mycompute.pvt/mogan/v1`` then the full API call for
+``/instances`` is ``http://mycompute.pvt/mogan/v1/instances``.
 
 Depending on the deployment the baremetal compute service url might
 be http or https, a custom port, a custom path, and include your
