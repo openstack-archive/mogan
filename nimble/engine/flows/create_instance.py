@@ -154,7 +154,6 @@ class SetInstanceInfoTask(flow_utils.NimbleTask):
                                             instance.node_uuid)
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
-            self._set_instance_obj_error_state(context, instance)
             raise exception.ValidationError(_(
                 "Ironic node: %(id)s failed to validate."
                 " (deploy: %(deploy)s, power: %(power)s)")

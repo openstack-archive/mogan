@@ -189,10 +189,12 @@ class EngineManager(base_manager.BaseEngineManager):
 
         try:
             _run_flow()
-        except exception.NoValidNode:
+        except Exception as e:
             self._set_instance_obj_error_state(context, instance)
-            LOG.error(_LE("Created instance %s failed, No valid node "
-                          "is found with the request spec."), instance.uuid)
+            LOG.error(_LE("Created instance %(uuid)s failed."
+                          "Exception: %(exception)s"),
+                      {"uuid": instance.uuid,
+                       "exception": e})
         else:
             LOG.info(_LI("Created instance %s successfully."), instance.uuid)
         finally:
