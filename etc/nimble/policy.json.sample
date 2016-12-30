@@ -17,14 +17,14 @@
 # Default API access rule
 "default": "rule:admin_or_owner"
 # Retrieve Instance records
-"nimble:instance:get": "rule:default"
+"mogan:instance:get": "rule:default"
 # View Instance power and provision state
-"nimble:instance:get_states": "rule:default"
+"mogan:instance:get_states": "rule:default"
 # Create Instance records
-"nimble:instance:create": "rule:allow"
+"mogan:instance:create": "rule:allow"
 # Delete Instance records
-"nimble:instance:delete": "rule:default"
+"mogan:instance:delete": "rule:default"
 # Update Instance records
-"nimble:instance:update": "rule:default"
+"mogan:instance:update": "rule:default"
 # Change Instance power status
-"nimble:instance:set_power_state": "rule:default"
+"mogan:instance:set_power_state": "rule:default"
