@@ -53,15 +53,15 @@ class EngineAPI(object):
                         request_spec, filter_properties):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.cast(context, 'create_instance', instance=instance,
-                          requested_networks=requested_networks,
-                          request_spec=request_spec,
-                          filter_properties=filter_properties)
+        cctxt.cast(context, 'create_instance', instance=instance,
+                   requested_networks=requested_networks,
+                   request_spec=request_spec,
+                   filter_properties=filter_properties)
 
     def delete_instance(self, context, instance):
         """Signal to engine service to delete an instance."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.cast(context, 'delete_instance', instance=instance)
+        cctxt.cast(context, 'delete_instance', instance=instance)
 
     def instance_states(self, context, instance):
         """Signal to engine service to get an instance states."""
