@@ -129,7 +129,7 @@ class API(object):
             instance.deleted_at = timeutils.utcnow()
             instance.save()
         except exception.InstanceNotFound:
-            pass
+            return
         self.engine_rpcapi.delete_instance(context, instance)
 
     def delete(self, context, instance):
