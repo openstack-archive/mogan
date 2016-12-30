@@ -70,6 +70,8 @@ class TestCase(base.BaseTestCase):
                           sqlite_synchronous=False,
                           group='database')
         CONF.set_override('glance_api_servers', 'fake-glance', 'glance')
+        CONF.set_override('paste_config',
+                          os.path.abspath('etc/nimble/api_paste.ini'), 'api')
         nimble_config.parse_args([], default_config_files=[])
 
     def config(self, **kw):
