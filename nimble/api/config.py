@@ -27,10 +27,6 @@ app = {
     'modules': ['nimble.api'],
     'static_root': '%(confdir)s/public',
     'debug': False,
-    'acl_public_routes': [
-        '/',
-        '/v1',
-    ],
 }
 
 # WSME Configurations
