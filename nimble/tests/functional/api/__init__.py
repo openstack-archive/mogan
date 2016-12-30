@@ -19,8 +19,10 @@
 
 from oslo_config import cfg
 from oslo_serialization import jsonutils
+from oslo_utils import fileutils
 import pecan
 import pecan.testing
+import six
 
 from nimble import objects
 from nimble.tests.unit.db import base
@@ -56,17 +58,26 @@ class BaseApiTest(base.DbTestCase):
     def _make_app(self):
         # Determine where we are so we can set up paths in the config
         root_dir = self.get_path()
-
+        paste_cfg = cfg.CONF.api.paste_config
+        with open(paste_cfg, 'r') as f:
+            paste_cfg_content = f.read()
+        paste_cfg_content = paste_cfg_content.replace(
+            'public_api_routes = /,/v1\n', 'public_api_routes = /,/v1.*\n')
+        if six.PY3:
+            paste_cfg_content = paste_cfg_content.encode('utf-8')
+        self.tmp_paste_cfg = fileutils.write_to_tempfile(
+            content=paste_cfg_content, prefix='nimble_api_paste',
+            suffix='.ini')
         self.app_config = {
             'app': {
                 'root': 'nimble.api.controllers.root.RootController',
                 'modules': ['nimble.api'],
                 'static_root': '%s/public' % root_dir,
                 'template_path': '%s/api/templates' % root_dir,
-                'acl_public_routes': ['/', '/v1/.*'],
             },
         }
-        return pecan.testing.load_test_app(self.app_config)
+        return pecan.testing.load_test_app(self.app_config,
+                                           paste_cfg_file=self.tmp_paste_cfg)
 
     def _request_json(self, path, params, expect_errors=False, headers=None,
                       method="post", extra_environ=None, status=None):

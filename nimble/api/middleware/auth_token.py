@@ -32,7 +32,7 @@ class AuthTokenMiddleware(auth_token.AuthProtocol):
 
     """
     def __init__(self, app, conf, public_api_routes=None):
-        api_routes = [] if public_api_routes is None else public_api_routes
+        api_routes = public_api_routes.split(',') if public_api_routes else []
         self._nimble_app = app
         route_pattern_tpl = '%s(\.json)?$'
 
@@ -60,3 +60,14 @@ class AuthTokenMiddleware(auth_token.AuthProtocol):
             return self._nimble_app(env, start_response)
 
         return super(AuthTokenMiddleware, self).__call__(env, start_response)
+
+
+def filter_factory(global_conf, **local_conf):
+    """Return a WSGI filter app for use with paste.deploy."""
+    public_api_routes = local_conf.pop('public_api_routes', None)
+    conf = global_conf.copy()
+    conf.update(local_conf)
+
+    def auth_filter(app):
+        return AuthTokenMiddleware(app, conf, public_api_routes)
+    return auth_filter

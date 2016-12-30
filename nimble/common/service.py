@@ -11,10 +11,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import os
-
 from oslo_concurrency import processutils
-from oslo_config import cfg
 from oslo_context import context
 from oslo_log import log
 import oslo_messaging as messaging
@@ -111,15 +108,7 @@ class WSGIService(service.ServiceBase):
         :returns: None
         """
         self.name = name
-        paste_cfg = CONF.api.paste_config
-        cfg_file = None
-        if not os.path.isabs(paste_cfg):
-            cfg_file = CONF.find_file(paste_cfg)
-        elif os.path.exists(paste_cfg):
-            cfg_file = paste_cfg
-        if not paste_cfg:
-            raise cfg.ConfigFilesNotFoundError([CONF.api.paste_config])
-        self.app = app.load_app(cfg_file)
+        self.app = app.setup_app()
         self.workers = (CONF.api.api_workers or
                         processutils.get_worker_count())
         if self.workers and self.workers < 1:

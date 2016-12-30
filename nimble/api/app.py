@@ -12,8 +12,9 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import os
 
-
+from oslo_config import cfg
 from oslo_log import log
 from paste import deploy
 import pecan
@@ -22,6 +23,7 @@ from nimble.api import config
 from nimble.api import hooks
 from nimble.api import middleware
 from nimble.common.i18n import _LI
+from nimble.conf import CONF
 
 LOG = log.getLogger(__name__)
 
@@ -32,13 +34,13 @@ def get_pecan_config():
     return pecan.configuration.conf_from_file(filename)
 
 
-def setup_app(pecan_config=None, extra_hooks=None):
+def init_app(pecan_config=None, extra_hooks=None):
     if not pecan_config:
         pecan_config = get_pecan_config()
     app_hooks = [hooks.ConfigHook(),
                  hooks.DBHook(),
                  hooks.EngineAPIHook(),
-                 hooks.ContextHook(pecan_config.app.acl_public_routes),
+                 hooks.ContextHook(),
                  hooks.NoExceptionTracebackHook(),
                  hooks.PublicUrlHook()]
     if extra_hooks:
@@ -57,10 +59,23 @@ def setup_app(pecan_config=None, extra_hooks=None):
     return app
 
 
-def load_app(paste_cfg):
-    LOG.info(_LI("Full WSGI config used: %s"), paste_cfg)
-    return deploy.loadapp("config:" + paste_cfg)
+def setup_app(pecan_cfg=None, paste_cfg_file=None):
+    if not paste_cfg_file:
+        paste_cfg = CONF.api.paste_config
+        paste_cfg_file = None
+        if not os.path.isabs(paste_cfg):
+            paste_cfg_file = CONF.find_file(paste_cfg)
+        elif os.path.exists(paste_cfg):
+            paste_cfg_file = paste_cfg
+        if not paste_cfg:
+            raise cfg.ConfigFilesNotFoundError([CONF.api.paste_config])
+    LOG.info(_LI("Full WSGI config used: %s"), paste_cfg_file)
+    global_conf = {}
+    if pecan_cfg:
+        global_conf.update({'pecan_cfg': pecan_cfg})
+    return deploy.loadapp("config:" + paste_cfg_file, global_conf=global_conf)
 
 
 def app_factory(global_config, **local_conf):
-    return setup_app()
+    pecan_config = global_config.pop('pecan_cfg', None)
+    return init_app(pecan_config=pecan_config)
