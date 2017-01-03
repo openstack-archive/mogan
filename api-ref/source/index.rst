@@ -1,12 +1,17 @@
-:tocdepth: 2
-
 ======================
  Baremetal Compute API
 ======================
 
-.. rest_expand_all::
+Contents:
 
-.. include:: urls.inc
-.. include:: instances.inc
-.. include:: types.inc
-.. include:: availability_zones.inc
+.. toctree::
+    :maxdepth: 1
+
+    v1/index
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`search`
