@@ -1,8 +1,8 @@
-======
-Nimble
-======
+=====
+Mogan
+=====
 
-Nimble is a project dedicated for bare metal computing management, which
+Mogan is a project dedicated for bare metal computing management, which
 is designed specifically for BMs, so we can provide a more lightweight and
 convenient platform with more advanced features by leveraging Ironic. Besides
 this, we also plan to support RSD(Rack Scale Design), so we can not only
@@ -13,14 +13,14 @@ Project Resources
 -----------------
 
 * Free software: Apache license
-* Documentation: http://docs.openstack.org/developer/nimble
+* Documentation: http://docs.openstack.org/developer/mogan
 * Source: http://git.openstack.org/cgit/openstack/nimble
-* Bugs: http://bugs.launchpad.net/nimble
-* Wiki: https://wiki.openstack.org/wiki/Nimble
+* Bugs: http://bugs.launchpad.net/mogan
+* Wiki: https://wiki.openstack.org/wiki/Mogan
 
 Project status, bugs and BPs are tracked on Launchpad:
 
-  http://launchpad.net/nimble
+  http://launchpad.net/mogan
 
 Anyone wishing to contribute to an OpenStack project should
 find a good reference here:
