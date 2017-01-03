@@ -41,7 +41,7 @@ Request
 
 **Example Create Instance: JSON request**
 
-.. literalinclude:: ../../doc/api_samples/instances/instance-create-req.json
+.. literalinclude:: samples/instances/instance-create-req.json
    :language: javascript
 
 Response
@@ -67,7 +67,7 @@ Response
 
 **Example Create Instance: JSON response**
 
-.. literalinclude:: ../../doc/api_samples/instances/instance-create-resp.json
+.. literalinclude:: samples/instances/instance-create-resp.json
    :language: javascript
 
 
@@ -108,7 +108,7 @@ Response
 
 **Example List of Instances: JSON response**
 
-.. literalinclude:: ../../doc/api_samples/instances/instance-list-resp.json
+.. literalinclude:: samples/instances/instance-list-resp.json
    :language: javascript
 
 
@@ -153,7 +153,7 @@ Response
 
 **Example Detailed list of Instances: JSON response**
 
-.. literalinclude:: ../../doc/api_samples/instances/instance-list-detail-resp.json
+.. literalinclude:: samples/instances/instance-list-detail-resp.json
    :language: javascript
 
 
@@ -203,7 +203,7 @@ Response
 
 **Example Instance Details: JSON response**
 
-.. literalinclude:: ../../doc/api_samples/instances/instance-detail-resp.json
+.. literalinclude:: samples/instances/instance-detail-resp.json
    :language: javascript
 
 
@@ -231,7 +231,7 @@ The BODY of the PATCH request must be a JSON PATCH document, adhering to
 
 **Example Update Instance: JSON request**
 
-.. literalinclude:: ../../doc/api_samples/instances/instance-update-req.json
+.. literalinclude:: samples/instances/instance-update-req.json
    :language: javascript
 
 Response
@@ -257,7 +257,7 @@ Response
 
 **Example Update Instance: JSON response**
 
-.. literalinclude:: ../../doc/api_samples/instances/instance-update-resp.json
+.. literalinclude:: samples/instances/instance-update-resp.json
    :language: javascript
 
 
@@ -326,7 +326,7 @@ Response
 
 **Example instance state:**
 
-.. literalinclude:: ../../doc/api_samples/instances/instance-get-state-response.json
+.. literalinclude:: samples/instances/instance-get-state-response.json
 
 
 Change Instance Power State
@@ -353,4 +353,4 @@ Request
 
 **Example request to power off a Instance:**
 
-.. literalinclude:: ../../doc/api_samples/instances/instance-set-power-off.json
+.. literalinclude:: samples/instances/instance-set-power-off.json

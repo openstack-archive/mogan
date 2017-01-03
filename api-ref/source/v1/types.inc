@@ -42,7 +42,7 @@ Response
 
 **Example List types**
 
-.. literalinclude:: ../../doc/api_samples/types/types-list-resp.json
+.. literalinclude:: samples/types/types-list-resp.json
    :language: javascript
 
 Create Type
@@ -72,7 +72,7 @@ Request
 
 **Example Create Type**
 
-.. literalinclude:: ../../doc/api_samples/types/type-create-post-req.json
+.. literalinclude:: samples/types/type-create-post-req.json
    :language: javascript
 
 Response
@@ -91,7 +91,7 @@ Response
 
 **Example Create type**
 
-.. literalinclude:: ../../doc/api_samples/types/type-create-post-resp.json
+.. literalinclude:: samples/types/type-create-post-resp.json
    :language: javascript
 
 Update Type
@@ -120,7 +120,7 @@ Request
 
 **Example Update Type**
 
-.. literalinclude:: ../../doc/api_samples/types/type-update-put-req.json
+.. literalinclude:: samples/types/type-update-put-req.json
    :language: javascript
 
 Response
@@ -139,7 +139,7 @@ Response
 
 **Example Update type**
 
-.. literalinclude:: ../../doc/api_samples/types/type-update-put-resp.json
+.. literalinclude:: samples/types/type-update-put-resp.json
    :language: javascript
 
 Show Type Details
@@ -176,7 +176,7 @@ Response
 
 **Example Show type Details**
 
-.. literalinclude:: ../../doc/api_samples/types/type-get-resp.json
+.. literalinclude:: samples/types/type-get-resp.json
    :language: javascript
 
 
@@ -235,7 +235,7 @@ Response
 
 **Example List Extra Specs**
 
-.. literalinclude:: ../../doc/api_samples/types/type-extra-specs-list-resp.json
+.. literalinclude:: samples/types/type-extra-specs-list-resp.json
    :language: javascript
 
 
@@ -260,7 +260,7 @@ Request
 
 **Example Create Extra Specs**
 
-.. literalinclude:: ../../doc/api_samples/types/type-extra-specs-patch-req.json
+.. literalinclude:: samples/types/type-extra-specs-patch-req.json
    :language: javascript
 
 Response
@@ -272,7 +272,7 @@ Response
 
 **Example Create Extra Specs**
 
-.. literalinclude:: ../../doc/api_samples/types/type-extra-specs-patch-resp.json
+.. literalinclude:: samples/types/type-extra-specs-patch-resp.json
    :language: javascript
 
 

@@ -28,5 +28,5 @@ Response
 
 **Example List availability zone information**
 
-.. literalinclude:: ../../doc/api_samples/availability_zones/availability-zone-list-resp.json
+.. literalinclude:: samples/availability_zones/availability-zone-list-resp.json
    :language: javascript
