@@ -94,6 +94,53 @@ Response
 .. literalinclude:: ../../doc/api_samples/types/type-create-post-resp.json
    :language: javascript
 
+Update Type
+===========
+
+.. rest_method:: PUT /types/{type_uuid}
+
+Updates a type.
+
+Updating a type is typically only available to administrators of a
+cloud because this has implications for scheduling efficiently in the cloud.
+
+Normal response codes: 200
+
+Error response codes: badRequest(400), unauthorized(401), forbidden(403),
+conflict(409)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - name: type_name
+   - description: type_description
+   - is_public: type_is_public_not_required
+
+**Example Update Type**
+
+.. literalinclude:: ../../doc/api_samples/types/type-update-put-req.json
+   :language: javascript
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+   - name: type_name
+   - links: links
+   - description: type_description
+   - uuid: type_uuid
+   - created_at: created_at
+   - updated_at: updated_at
+   - is_public: type_is_public
+   - extra_specs: type_extra_specs
+
+**Example Update type**
+
+.. literalinclude:: ../../doc/api_samples/types/type-update-put-resp.json
+   :language: javascript
 
 Show Type Details
 ===================
