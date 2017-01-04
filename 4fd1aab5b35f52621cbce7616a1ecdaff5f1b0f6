@@ -1,0 +1,8 @@
+Code-Review+2: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Workflow+1: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 04 Jan 2017 16:29:27 +0000
+Reviewed-on: https://review.openstack.org/415786
+Project: openstack/nimble
+Branch: refs/heads/master
