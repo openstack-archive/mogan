@@ -82,7 +82,7 @@ class IronicClientWrapper(object):
         except ironic_exc.Unauthorized:
             msg = _("Unable to authenticate Ironic client.")
             LOG.error(msg)
-            raise exception.NimbleException(msg)
+            raise exception.MoganException(msg)
 
         return cli
 

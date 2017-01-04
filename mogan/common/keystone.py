@@ -23,7 +23,7 @@ from six.moves.urllib import parse  # for legacy options loading only
 from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common.i18n import _LE
-from mogan.conf import auth as nimble_auth
+from mogan.conf import auth as mogan_auth
 from mogan.conf import CONF
 
 
@@ -72,12 +72,12 @@ def ks_exceptions(f):
 
 @ks_exceptions
 def get_session(group):
-    auth = nimble_auth.load_auth(CONF, group) or _get_legacy_auth()
+    auth = mogan_auth.load_auth(CONF, group) or _get_legacy_auth()
     if not auth:
         msg = _("Failed to load auth from either [%(new)s] or [%(old)s] "
                 "config sections.")
         raise exception.ConfigInvalid(message=msg, new=group,
-                                      old=nimble_auth.LEGACY_SECTION)
+                                      old=mogan_auth.LEGACY_SECTION)
     session = kaloading.load_session_from_conf_options(
         CONF, group, auth=auth)
     return session
@@ -89,7 +89,7 @@ def _get_legacy_auth():
 
     Used only to provide backward compatibility with old configs.
     """
-    conf = getattr(CONF, nimble_auth.LEGACY_SECTION)
+    conf = getattr(CONF, mogan_auth.LEGACY_SECTION)
     legacy_loader = kaloading.get_plugin_loader('password')
     auth_params = {
         'auth_url': conf.auth_uri,

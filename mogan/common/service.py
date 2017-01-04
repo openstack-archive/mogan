@@ -51,7 +51,7 @@ class RPCService(service.Service):
 
         target = messaging.Target(topic=self.topic, server=self.host)
         endpoints = [self.manager]
-        serializer = objects_base.NimbleObjectSerializer()
+        serializer = objects_base.MoganObjectSerializer()
         self.rpcserver = rpc.get_server(target, endpoints, serializer)
         self.rpcserver.start()
 

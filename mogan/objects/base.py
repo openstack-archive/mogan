@@ -22,7 +22,7 @@ from mogan import objects
 from mogan.objects import fields as object_fields
 
 
-class NimbleObjectRegistry(object_base.VersionedObjectRegistry):
+class MoganObjectRegistry(object_base.VersionedObjectRegistry):
     notification_classes = []
 
     def registration_hook(self, cls, index):
@@ -59,7 +59,7 @@ class NimbleObjectRegistry(object_base.VersionedObjectRegistry):
             cls.register(notification_cls)
 
 
-class NimbleObject(object_base.VersionedObject):
+class MoganObject(object_base.VersionedObject):
     """Base class and object factory.
 
     This forms the base of all objects that can be remoted or instantiated
@@ -69,7 +69,7 @@ class NimbleObject(object_base.VersionedObject):
     as appropriate.
     """
 
-    OBJ_SERIAL_NAMESPACE = 'nimble_object'
+    OBJ_SERIAL_NAMESPACE = 'mogan_object'
     OBJ_PROJECT_NAMESPACE = 'mogan'
 
     # TODO(lintan) Refactor these fields and create PersistentObject and
@@ -85,7 +85,7 @@ class NimbleObject(object_base.VersionedObject):
                     if hasattr(self, k))
 
     def obj_refresh(self, loaded_object):
-        """Applies updates for objects that inherit from base.NimbleObject.
+        """Applies updates for objects that inherit from base. MoganObject.
 
         Checks for updated attributes in an object. Updates are applied from
         the loaded object column by column in comparison with the current
@@ -112,6 +112,6 @@ class NimbleObject(object_base.VersionedObject):
         return obj
 
 
-class NimbleObjectSerializer(object_base.VersionedObjectSerializer):
+class MoganObjectSerializer(object_base.VersionedObjectSerializer):
     # Base class to use for object hydration
-    OBJ_BASE_CLASS = NimbleObject
+    OBJ_BASE_CLASS = MoganObject

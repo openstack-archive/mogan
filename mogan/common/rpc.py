@@ -14,7 +14,7 @@
 #    under the License.
 
 from oslo_config import cfg
-from oslo_context import context as nimble_context
+from oslo_context import context as mogan_context
 import oslo_messaging as messaging
 
 from mogan.common import exception
@@ -90,7 +90,7 @@ class RequestContextSerializer(messaging.Serializer):
         return context.to_dict()
 
     def deserialize_context(self, context):
-        return nimble_context.RequestContext.from_dict(context)
+        return mogan_context.RequestContext.from_dict(context)
 
 
 def get_transport_url(url_str=None):

@@ -31,7 +31,7 @@ from mogan.conf import CONF
 LOG = logging.getLogger(__name__)
 
 
-class NimbleException(Exception):
+class MoganException(Exception):
     """Base Mogan Exception
 
     To correctly use this class, inherit from it and define
@@ -74,7 +74,7 @@ class NimbleException(Exception):
                     # happened
                     message = self._msg_fmt
 
-        super(NimbleException, self).__init__(message)
+        super(MoganException, self).__init__(message)
 
     def __str__(self):
         """Encode to utf-8 then wsme api can consume it as well."""
@@ -88,7 +88,7 @@ class NimbleException(Exception):
         return unicode(self.args[0])
 
 
-class NotAuthorized(NimbleException):
+class NotAuthorized(MoganException):
     _msg_fmt = _("Not authorized.")
     code = http_client.FORBIDDEN
 
@@ -101,12 +101,12 @@ class HTTPForbidden(NotAuthorized):
     _msg_fmt = _("Access was denied to the following resource: %(resource)s")
 
 
-class NotFound(NimbleException):
+class NotFound(MoganException):
     _msg_fmt = _("Resource could not be found.")
     code = http_client.NOT_FOUND
 
 
-class Invalid(NimbleException):
+class Invalid(MoganException):
     _msg_fmt = _("Unacceptable parameters.")
     code = http_client.BAD_REQUEST
 
@@ -117,22 +117,22 @@ class InvalidParameterValue(Invalid):
     _msg_fmt = _("%(err)s")
 
 
-class Conflict(NimbleException):
+class Conflict(MoganException):
     _msg_fmt = _('Conflict.')
     code = http_client.CONFLICT
 
 
-class TemporaryFailure(NimbleException):
+class TemporaryFailure(MoganException):
     _msg_fmt = _("Resource temporarily unavailable, please retry.")
     code = http_client.SERVICE_UNAVAILABLE
 
 
-class NotAcceptable(NimbleException):
+class NotAcceptable(MoganException):
     _msg_fmt = _("Request not acceptable.")
     code = http_client.NOT_ACCEPTABLE
 
 
-class ConfigInvalid(NimbleException):
+class ConfigInvalid(MoganException):
     _msg_fmt = _("Invalid configuration file. %(error_msg)s")
 
 
@@ -144,7 +144,7 @@ class InvalidUUID(Invalid):
     msg_fmt = _("Expected a uuid but received %(uuid)s.")
 
 
-class InstanceTypeAlreadyExists(NimbleException):
+class InstanceTypeAlreadyExists(MoganException):
     _msg_fmt = _("InstanceType with uuid %(uuid)s already exists.")
 
 
@@ -152,7 +152,7 @@ class InstanceTypeNotFound(NotFound):
     msg_fmt = _("InstanceType %(type_id)s could not be found.")
 
 
-class InstanceAlreadyExists(NimbleException):
+class InstanceAlreadyExists(MoganException):
     _msg_fmt = _("Instance with name %(name)s already exists.")
 
 
@@ -184,15 +184,15 @@ class DuplicateName(Conflict):
     _msg_fmt = _("A instance with name %(name)s already exists.")
 
 
-class KeystoneUnauthorized(NimbleException):
+class KeystoneUnauthorized(MoganException):
     _msg_fmt = _("Not authorized in Keystone.")
 
 
-class KeystoneFailure(NimbleException):
+class KeystoneFailure(MoganException):
     pass
 
 
-class CatalogNotFound(NimbleException):
+class CatalogNotFound(MoganException):
     _msg_fmt = _("Service type %(service_type)s with endpoint type "
                  "%(endpoint_type)s not found in keystone service catalog.")
 
@@ -205,11 +205,11 @@ class SchedulerNodeWeigherNotFound(NotFound):
     message = _("Scheduler Node Weigher %(weigher_name)s could not be found.")
 
 
-class NoValidNode(NimbleException):
+class NoValidNode(MoganException):
     message = _("No valid node was found. %(reason)s")
 
 
-class TypeExtraSpecUpdateCreateFailed(NimbleException):
+class TypeExtraSpecUpdateCreateFailed(MoganException):
     msg_fmt = _("Instance Type %(id)s extra spec cannot be updated or"
                 "created after %(retries)d retries.")
 
@@ -219,11 +219,11 @@ class InstanceTypeExtraSpecsNotFound(NotFound):
                 "key %(extra_specs_key)s.")
 
 
-class InterfacePlugException(NimbleException):
+class InterfacePlugException(MoganException):
     msg_fmt = _("Interface plugin failed")
 
 
-class NetworkError(NimbleException):
+class NetworkError(MoganException):
     _msg_fmt = _("Network operation failure.")
 
 
@@ -231,7 +231,7 @@ class ValidationError(Invalid):
     msg_fmt = "%(detail)s"
 
 
-class ImageNotAuthorized(NimbleException):
+class ImageNotAuthorized(MoganException):
     msg_fmt = _("Not authorized for image %(image_id)s.")
 
 
@@ -244,7 +244,7 @@ class ImageNotFound(NotFound):
     msg_fmt = _("Image %(image_id)s could not be found.")
 
 
-class GlanceConnectionFailed(NimbleException):
+class GlanceConnectionFailed(MoganException):
     msg_fmt = _("Connection to glance host %(server)s failed: "
                 "%(reason)s")
 
