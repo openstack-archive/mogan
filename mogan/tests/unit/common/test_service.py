@@ -39,7 +39,7 @@ class TestRPCService(base.TestCase):
                                           constants.MANAGER_TOPIC)
 
     @mock.patch.object(oslo_messaging, 'Target', autospec=True)
-    @mock.patch.object(objects_base, 'NimbleObjectSerializer', autospec=True)
+    @mock.patch.object(objects_base, 'MoganObjectSerializer', autospec=True)
     @mock.patch.object(rpc, 'get_server', autospec=True)
     @mock.patch.object(manager.EngineManager, 'init_host', autospec=True)
     def test_start(self, mock_init_method, mock_rpc, mock_ios, mock_target):
@@ -55,7 +55,7 @@ class TestRPCService(base.TestCase):
 class TestWSGIService(base.TestCase):
     @mock.patch.object(service.wsgi, 'Server')
     def test_workers_set_default(self, wsgi_server):
-        service_name = "nimble_api"
+        service_name = "mogan_api"
         test_service = service.WSGIService(service_name)
         self.assertEqual(processutils.get_worker_count(),
                          test_service.workers)
@@ -68,13 +68,13 @@ class TestWSGIService(base.TestCase):
     @mock.patch.object(service.wsgi, 'Server')
     def test_workers_set_correct_setting(self, wsgi_server):
         self.config(api_workers=8, group='api')
-        test_service = service.WSGIService("nimble_api")
+        test_service = service.WSGIService("mogan_api")
         self.assertEqual(8, test_service.workers)
 
     @mock.patch.object(service.wsgi, 'Server')
     def test_workers_set_zero_setting(self, wsgi_server):
         self.config(api_workers=0, group='api')
-        test_service = service.WSGIService("nimble_api")
+        test_service = service.WSGIService("mogan_api")
         self.assertEqual(processutils.get_worker_count(), test_service.workers)
 
     @mock.patch.object(service.wsgi, 'Server')
@@ -82,14 +82,14 @@ class TestWSGIService(base.TestCase):
         self.config(api_workers=-2, group='api')
         self.assertRaises(exception.ConfigInvalid,
                           service.WSGIService,
-                          'nimble_api')
+                          'mogan_api')
         self.assertFalse(wsgi_server.called)
 
     @mock.patch.object(service.wsgi, 'Server')
     def test_wsgi_service_with_ssl_enabled(self, wsgi_server):
         self.config(enable_ssl_api=True, group='api')
-        service_name = 'nimble_api'
-        srv = service.WSGIService('nimble_api', CONF.api.enable_ssl_api)
+        service_name = 'mogan_api'
+        srv = service.WSGIService('mogan_api', CONF.api.enable_ssl_api)
         wsgi_server.assert_called_once_with(CONF, service_name,
                                             srv.app,
                                             host='0.0.0.0',

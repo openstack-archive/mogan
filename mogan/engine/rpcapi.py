@@ -44,7 +44,7 @@ class EngineAPI(object):
 
         target = messaging.Target(topic=self.topic,
                                   version='1.0')
-        serializer = objects_base.NimbleObjectSerializer()
+        serializer = objects_base.MoganObjectSerializer()
         self.client = rpc.get_client(target,
                                      version_cap=self.RPC_API_VERSION,
                                      serializer=serializer)

@@ -101,7 +101,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         refresh_cache_mock.side_effect = None
         self._start_service()
 
-        self.assertRaises(exception.NimbleException,
+        self.assertRaises(exception.MoganException,
                           self.service._destroy_instance,
                           self.context, instance)
         self._stop_service()

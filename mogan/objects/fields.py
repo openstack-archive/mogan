@@ -111,12 +111,12 @@ class MACAddressField(object_fields.AutoTypedField):
     AUTO_TYPE = MACAddress()
 
 
-class BaseNimbleEnum(object_fields.Enum):
+class BaseMoganEnum(object_fields.Enum):
     def __init__(self, **kwargs):
-        super(BaseNimbleEnum, self).__init__(valid_values=self.__class__.ALL)
+        super(BaseMoganEnum, self).__init__(valid_values=self.__class__.ALL)
 
 
-class NotificationPriority(BaseNimbleEnum):
+class NotificationPriority(BaseMoganEnum):
     AUDIT = 'audit'
     CRITICAL = 'critical'
     DEBUG = 'debug'
@@ -128,7 +128,7 @@ class NotificationPriority(BaseNimbleEnum):
     ALL = (AUDIT, CRITICAL, DEBUG, INFO, ERROR, SAMPLE, WARN)
 
 
-class NotificationPhase(BaseNimbleEnum):
+class NotificationPhase(BaseMoganEnum):
     START = 'start'
     END = 'end'
     ERROR = 'error'
@@ -136,7 +136,7 @@ class NotificationPhase(BaseNimbleEnum):
     ALL = (START, END, ERROR)
 
 
-class NotificationAction(BaseNimbleEnum):
+class NotificationAction(BaseMoganEnum):
     UPDATE = 'update'
     EXCEPTION = 'exception'
     DELETE = 'delete'

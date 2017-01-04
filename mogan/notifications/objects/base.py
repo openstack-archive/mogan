@@ -17,8 +17,8 @@ from mogan.objects import base
 from mogan.objects import fields
 
 
-@base.NimbleObjectRegistry.register_if(False)
-class NotificationObject(base.NimbleObject):
+@base.MoganObjectRegistry.register_if(False)
+class NotificationObject(base.MoganObject):
     """Base class for every notification related versioned object."""
     # Version 1.0: Initial version
     VERSION = '1.0'
@@ -32,7 +32,7 @@ class NotificationObject(base.NimbleObject):
         self.obj_reset_changes(recursive=False)
 
 
-@base.NimbleObjectRegistry.register_notification
+@base.MoganObjectRegistry.register_notification
 class EventType(NotificationObject):
     # Version 1.0: Initial version
     VERSION = '1.0'
@@ -51,7 +51,7 @@ class EventType(NotificationObject):
         return s
 
 
-@base.NimbleObjectRegistry.register_if(False)
+@base.MoganObjectRegistry.register_if(False)
 class NotificationPayloadBase(NotificationObject):
     """Base class for the payload of versioned notifications."""
     # SCHEMA defines how to populate the payload fields. It is a dictionary
@@ -97,7 +97,7 @@ class NotificationPayloadBase(NotificationObject):
         self.obj_reset_changes(recursive=False)
 
 
-@base.NimbleObjectRegistry.register_notification
+@base.MoganObjectRegistry.register_notification
 class NotificationPublisher(NotificationObject):
     # Version 1.0: Initial version
     VERSION = '1.0'
@@ -112,7 +112,7 @@ class NotificationPublisher(NotificationObject):
         return cls(host=service.host, binary=service.binary)
 
 
-@base.NimbleObjectRegistry.register_if(False)
+@base.MoganObjectRegistry.register_if(False)
 class NotificationBase(NotificationObject):
     """Base class for versioned notifications.
 
@@ -155,7 +155,7 @@ def notification_sample(sample):
     to the notification object for documentation generation purposes.
 
     :param sample: the path of the sample json file relative to the
-                   doc/notification_samples/ directory in the nimble repository
+                   doc/notification_samples/ directory in the mogan repository
                    root.
     """
 

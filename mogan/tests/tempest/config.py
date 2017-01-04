@@ -19,7 +19,7 @@ service_available_group = cfg.OptGroup(name="service_available",
                                        title="Available OpenStack Services")
 
 ServiceAvailableGroup = [
-    cfg.BoolOpt("nimble_plugin",
+    cfg.BoolOpt("mogan_plugin",
                 default=True,
                 help="Whether or not Mogan is expected to be available"),
 ]

@@ -14,7 +14,7 @@
 #    under the License.
 
 """
-Version 1 of the Nimble API
+Version 1 of the Mogan API
 
 Specification can be found at doc/source/webapi/v1.rst
 """

@@ -32,7 +32,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
     @classmethod
     def skip_checks(cls):
         super(BaseBaremetalComputeTest, cls).skip_checks()
-        if not CONF.service_available.nimble_plugin:
+        if not CONF.service_available.mogan_plugin:
             raise cls.skipException("Mogan support is required")
 
     @classmethod

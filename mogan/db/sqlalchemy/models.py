@@ -43,8 +43,8 @@ def table_args():
     return None
 
 
-class NimbleBase(models.TimestampMixin,
-                 models.ModelBase):
+class MoganBase(models.TimestampMixin,
+                models.ModelBase):
 
     metadata = None
 
@@ -55,7 +55,7 @@ class NimbleBase(models.TimestampMixin,
         return d
 
 
-Base = declarative_base(cls=NimbleBase)
+Base = declarative_base(cls=MoganBase)
 
 
 class Instance(Base):

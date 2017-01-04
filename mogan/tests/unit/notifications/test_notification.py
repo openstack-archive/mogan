@@ -21,8 +21,8 @@ from mogan.tests import base as test_base
 
 
 class TestNotificationBase(test_base.TestCase):
-    @base.NimbleObjectRegistry.register_if(False)
-    class TestObject(base.NimbleObject):
+    @base.MoganObjectRegistry.register_if(False)
+    class TestObject(base.MoganObject):
         VERSION = '1.0'
         fields = {
             'field_1': fields.StringField(),
@@ -30,7 +30,7 @@ class TestNotificationBase(test_base.TestCase):
             'not_important_field': fields.IntegerField(),
         }
 
-    @base.NimbleObjectRegistry.register_if(False)
+    @base.MoganObjectRegistry.register_if(False)
     class TestNotificationPayload(notification.NotificationPayloadBase):
         VERSION = '1.0'
 
@@ -49,7 +49,7 @@ class TestNotificationBase(test_base.TestCase):
             super(TestNotificationBase.TestNotificationPayload,
                   self).populate_schema(source_field=source_field)
 
-    @base.NimbleObjectRegistry.register_if(False)
+    @base.MoganObjectRegistry.register_if(False)
     class TestNotificationPayloadEmptySchema(
             notification.NotificationPayloadBase):
         VERSION = '1.0'
@@ -60,14 +60,14 @@ class TestNotificationBase(test_base.TestCase):
 
     @notification.notification_sample('test-update-1.json')
     @notification.notification_sample('test-update-2.json')
-    @base.NimbleObjectRegistry.register_if(False)
+    @base.MoganObjectRegistry.register_if(False)
     class TestNotification(notification.NotificationBase):
         VERSION = '1.0'
         fields = {
             'payload': fields.ObjectField('TestNotificationPayload')
         }
 
-    @base.NimbleObjectRegistry.register_if(False)
+    @base.MoganObjectRegistry.register_if(False)
     class TestNotificationEmptySchema(notification.NotificationBase):
         VERSION = '1.0'
         fields = {
@@ -75,13 +75,13 @@ class TestNotificationBase(test_base.TestCase):
         }
 
     expected_payload = {
-        'nimble_object.name': 'TestNotificationPayload',
-        'nimble_object.data': {
+        'mogan_object.name': 'TestNotificationPayload',
+        'mogan_object.data': {
             'extra_field': 'test string',
             'field_1': 'test1',
             'field_2': 42},
-        'nimble_object.version': '1.0',
-        'nimble_object.namespace': 'mogan'}
+        'mogan_object.version': '1.0',
+        'mogan_object.namespace': 'mogan'}
 
     def setUp(self):
         super(TestNotificationBase, self).setUp()
@@ -99,7 +99,7 @@ class TestNotificationBase(test_base.TestCase):
                 action=fields.NotificationAction.UPDATE,
                 phase=fields.NotificationPhase.START),
             publisher=notification.NotificationPublisher(
-                host='fake-host', binary='nimble-fake'),
+                host='fake-host', binary='mogan-fake'),
             priority=fields.NotificationPriority.INFO,
             payload=self.payload)
 
@@ -107,7 +107,7 @@ class TestNotificationBase(test_base.TestCase):
                              expected_event_type,
                              expected_payload):
         mock_notifier.prepare.assert_called_once_with(
-            publisher_id='nimble-fake:fake-host')
+            publisher_id='mogan-fake:fake-host')
         mock_notify = mock_notifier.prepare.return_value.info
         self.assertTrue(mock_notify.called)
         self.assertEqual(mock_notify.call_args[0][0], mock_context)
@@ -135,7 +135,7 @@ class TestNotificationBase(test_base.TestCase):
                 object='test_object',
                 action=fields.NotificationAction.UPDATE),
             publisher=notification.NotificationPublisher(
-                host='fake-host', binary='nimble-fake'),
+                host='fake-host', binary='mogan-fake'),
             priority=fields.NotificationPriority.INFO,
             payload=self.payload)
 
@@ -156,7 +156,7 @@ class TestNotificationBase(test_base.TestCase):
                 object='test_object',
                 action=fields.NotificationAction.UPDATE),
             publisher=notification.NotificationPublisher(
-                host='fake-host', binary='nimble-fake'),
+                host='fake-host', binary='mogan-fake'),
             priority=fields.NotificationPriority.INFO,
             payload=self.payload)
 
@@ -179,7 +179,7 @@ class TestNotificationBase(test_base.TestCase):
                 object='test_object',
                 action=fields.NotificationAction.UPDATE),
             publisher=notification.NotificationPublisher(
-                host='fake-host', binary='nimble-fake'),
+                host='fake-host', binary='mogan-fake'),
             priority=fields.NotificationPriority.INFO,
             payload=non_populated_payload)
 
@@ -196,7 +196,7 @@ class TestNotificationBase(test_base.TestCase):
                 object='test_object',
                 action=fields.NotificationAction.UPDATE),
             publisher=notification.NotificationPublisher(
-                host='fake-host', binary='nimble-fake'),
+                host='fake-host', binary='mogan-fake'),
             priority=fields.NotificationPriority.INFO,
             payload=non_populated_payload)
 
@@ -209,10 +209,10 @@ class TestNotificationBase(test_base.TestCase):
             mock_context,
             expected_event_type='test_object.update',
             expected_payload={
-                'nimble_object.name': 'TestNotificationPayloadEmptySchema',
-                'nimble_object.data': {'extra_field': u'test string'},
-                'nimble_object.version': '1.0',
-                'nimble_object.namespace': 'mogan'})
+                'mogan_object.name': 'TestNotificationPayloadEmptySchema',
+                'mogan_object.data': {'extra_field': u'test string'},
+                'mogan_object.version': '1.0',
+                'mogan_object.namespace': 'mogan'})
 
     def test_sample_decorator(self):
         self.assertEqual(2, len(self.TestNotification.samples))

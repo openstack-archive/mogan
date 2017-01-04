@@ -32,8 +32,8 @@ class FakeFilterScheduler(filter_scheduler.FilterScheduler):
         self.node_manager = node_manager.NodeManager()
 
 
-@base.NimbleObjectRegistry.register
-class FakeNode(base.NimbleObject, object_base.VersionedObjectDictCompat):
+@base.MoganObjectRegistry.register
+class FakeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
     fields = {
         'id': object_fields.IntegerField(),
         'uuid': object_fields.UUIDField(nullable=True),

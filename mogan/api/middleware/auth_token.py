@@ -33,7 +33,7 @@ class AuthTokenMiddleware(auth_token.AuthProtocol):
     """
     def __init__(self, app, conf, public_api_routes=None):
         api_routes = [] if public_api_routes is None else public_api_routes
-        self._nimble_app = app
+        self._mogan_app = app
         route_pattern_tpl = '%s(\.json)?$'
 
         try:
@@ -57,6 +57,6 @@ class AuthTokenMiddleware(auth_token.AuthProtocol):
                                        self.public_api_routes))
 
         if env['is_public_api']:
-            return self._nimble_app(env, start_response)
+            return self._mogan_app(env, start_response)
 
         return super(AuthTokenMiddleware, self).__call__(env, start_response)

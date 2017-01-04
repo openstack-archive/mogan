@@ -30,8 +30,8 @@ from mogan.tests import base as test_base
 gettext.install('mogan')
 
 
-@base.NimbleObjectRegistry.register
-class MyObj(base.NimbleObject, object_base.VersionedObjectDictCompat):
+@base.MoganObjectRegistry.register
+class MyObj(base.MoganObject, object_base.VersionedObjectDictCompat):
     VERSION = '1.1'
 
     fields = {'foo': fields.IntegerField(),
@@ -88,40 +88,40 @@ class MyObj2(object):
         pass
 
 
-@base.NimbleObjectRegistry.register_if(False)
+@base.MoganObjectRegistry.register_if(False)
 class TestSubclassedObject(MyObj):
     fields = {'new_field': fields.StringField()}
 
 
 class _TestObject(object):
     def test_hydration_type_error(self):
-        primitive = {'nimble_object.name': 'MyObj',
-                     'nimble_object.namespace': 'mogan',
-                     'nimble_object.version': '1.5',
-                     'nimble_object.data': {'foo': 'a'}}
+        primitive = {'mogan_object.name': 'MyObj',
+                     'mogan_object.namespace': 'mogan',
+                     'mogan_object.version': '1.5',
+                     'mogan_object.data': {'foo': 'a'}}
         self.assertRaises(ValueError, MyObj.obj_from_primitive, primitive)
 
     def test_hydration(self):
-        primitive = {'nimble_object.name': 'MyObj',
-                     'nimble_object.namespace': 'mogan',
-                     'nimble_object.version': '1.5',
-                     'nimble_object.data': {'foo': 1}}
+        primitive = {'mogan_object.name': 'MyObj',
+                     'mogan_object.namespace': 'mogan',
+                     'mogan_object.version': '1.5',
+                     'mogan_object.data': {'foo': 1}}
         obj = MyObj.obj_from_primitive(primitive)
         self.assertEqual(1, obj.foo)
 
     def test_hydration_bad_ns(self):
-        primitive = {'nimble_object.name': 'MyObj',
-                     'nimble_object.namespace': 'foo',
-                     'nimble_object.version': '1.5',
-                     'nimble_object.data': {'foo': 1}}
+        primitive = {'mogan_object.name': 'MyObj',
+                     'mogan_object.namespace': 'foo',
+                     'mogan_object.version': '1.5',
+                     'mogan_object.data': {'foo': 1}}
         self.assertRaises(object_exception.UnsupportedObjectError,
                           MyObj.obj_from_primitive, primitive)
 
     def test_dehydration(self):
-        expected = {'nimble_object.name': 'MyObj',
-                    'nimble_object.namespace': 'mogan',
-                    'nimble_object.version': '1.5',
-                    'nimble_object.data': {'foo': 1}}
+        expected = {'mogan_object.name': 'MyObj',
+                    'mogan_object.namespace': 'mogan',
+                    'mogan_object.version': '1.5',
+                    'mogan_object.data': {'foo': 1}}
         obj = MyObj(self.context)
         obj.foo = 1
         obj.obj_reset_changes()
@@ -153,8 +153,8 @@ class _TestObject(object):
         self.assertEqual('loaded!', obj.bar)
 
     def test_load_in_base(self):
-        @base.NimbleObjectRegistry.register_if(False)
-        class Foo(base.NimbleObject, object_base.VersionedObjectDictCompat):
+        @base.MoganObjectRegistry.register_if(False)
+        class Foo(base.MoganObject, object_base.VersionedObjectDictCompat):
             fields = {'foobar': fields.IntegerField()}
         obj = Foo(self.context)
 
@@ -167,12 +167,12 @@ class _TestObject(object):
         obj.foo = 1
         obj.obj_reset_changes()
         self.assertEqual('loaded!', obj.bar)
-        expected = {'nimble_object.name': 'MyObj',
-                    'nimble_object.namespace': 'mogan',
-                    'nimble_object.version': '1.5',
-                    'nimble_object.changes': ['bar'],
-                    'nimble_object.data': {'foo': 1,
-                                           'bar': 'loaded!'}}
+        expected = {'mogan_object.name': 'MyObj',
+                    'mogan_object.namespace': 'mogan',
+                    'mogan_object.version': '1.5',
+                    'mogan_object.changes': ['bar'],
+                    'mogan_object.data': {'foo': 1,
+                                          'bar': 'loaded!'}}
         self.assertEqual(expected, obj.obj_to_primitive())
 
     def test_changes_in_primitive(self):
@@ -180,7 +180,7 @@ class _TestObject(object):
         obj.foo = 123
         self.assertEqual(set(['foo']), obj.obj_what_changed())
         primitive = obj.obj_to_primitive()
-        self.assertIn('nimble_object.changes', primitive)
+        self.assertIn('mogan_object.changes', primitive)
         obj2 = MyObj.obj_from_primitive(primitive)
         self.assertEqual(set(['foo']), obj2.obj_what_changed())
         obj2.obj_reset_changes()
@@ -188,7 +188,7 @@ class _TestObject(object):
 
     def test_unknown_objtype(self):
         self.assertRaises(object_exception.UnsupportedObjectError,
-                          base.NimbleObject.obj_class_from_name, 'foo', '1.0')
+                          base.MoganObject.obj_class_from_name, 'foo', '1.0')
 
     def test_with_alternate_context(self):
         ctxt1 = context.RequestContext('foo', 'foo')
@@ -255,21 +255,21 @@ class _TestObject(object):
         obj = MyObj(self.context)
         obj.created_at = dt
         obj.updated_at = dt
-        expected = {'nimble_object.name': 'MyObj',
-                    'nimble_object.namespace': 'mogan',
-                    'nimble_object.version': '1.5',
-                    'nimble_object.changes':
+        expected = {'mogan_object.name': 'MyObj',
+                    'mogan_object.namespace': 'mogan',
+                    'mogan_object.version': '1.5',
+                    'mogan_object.changes':
                         ['created_at', 'updated_at'],
-                    'nimble_object.data':
+                    'mogan_object.data':
                         {'created_at': datatime.stringify(dt),
                          'updated_at': datatime.stringify(dt),
                          }
                     }
         actual = obj.obj_to_primitive()
-        # nimble_object.changes is built from a set and order is undefined
-        self.assertEqual(sorted(expected['nimble_object.changes']),
-                         sorted(actual['nimble_object.changes']))
-        del expected['nimble_object.changes'], actual['nimble_object.changes']
+        # mogan_object.changes is built from a set and order is undefined
+        self.assertEqual(sorted(expected['mogan_object.changes']),
+                         sorted(actual['mogan_object.changes']))
+        del expected['mogan_object.changes'], actual['mogan_object.changes']
         self.assertEqual(expected, actual)
 
     def test_contains(self):
@@ -303,7 +303,7 @@ class _TestObject(object):
         self.assertRaises(AttributeError, obj.get, 'nothing', 3)
 
     def test_object_inheritance(self):
-        base_fields = list(base.NimbleObject.fields)
+        base_fields = list(base.MoganObject.fields)
         myobj_fields = ['foo', 'bar', 'missing'] + base_fields
         myobj3_fields = ['new_field']
         self.assertTrue(issubclass(TestSubclassedObject, MyObj))
@@ -325,8 +325,8 @@ class _TestObject(object):
         self.assertEqual({}, obj.obj_get_changes())
 
     def test_obj_fields(self):
-        @base.NimbleObjectRegistry.register_if(False)
-        class TestObj(base.NimbleObject,
+        @base.MoganObjectRegistry.register_if(False)
+        class TestObj(base.MoganObject,
                       object_base.VersionedObjectDictCompat):
             fields = {'foo': fields.IntegerField()}
             obj_extra_fields = ['bar']
@@ -340,8 +340,8 @@ class _TestObject(object):
                          set(obj.obj_fields))
 
     def test_refresh_object(self):
-        @base.NimbleObjectRegistry.register_if(False)
-        class TestObj(base.NimbleObject,
+        @base.MoganObjectRegistry.register_if(False)
+        class TestObj(base.MoganObject,
                       object_base.VersionedObjectDictCompat):
             fields = {'foo': fields.IntegerField(),
                       'bar': fields.StringField()}
@@ -363,7 +363,7 @@ class _TestObject(object):
         self.assertEqual(set(['foo', 'bar']), obj.obj_what_changed())
 
     def test_assign_value_without_DictCompat(self):
-        class TestObj(base.NimbleObject):
+        class TestObj(base.MoganObject):
             fields = {'foo': fields.IntegerField(),
                       'bar': fields.StringField()}
         obj = TestObj(self.context)
@@ -392,7 +392,7 @@ expected_object_fingerprints = {
 class TestObjectVersions(test_base.TestCase):
 
     def test_object_version_check(self):
-        classes = base.NimbleObjectRegistry.obj_classes()
+        classes = base.MoganObjectRegistry.obj_classes()
         checker = object_fixture.ObjectVersionChecker(obj_classes=classes)
         # Compute the difference between actual fingerprints and
         # expect fingerprints. expect = actual = {} if there is no change.
@@ -407,23 +407,23 @@ class TestObjectVersions(test_base.TestCase):
 class TestObjectSerializer(test_base.TestCase):
 
     def test_object_serialization(self):
-        ser = base.NimbleObjectSerializer()
+        ser = base.MoganObjectSerializer()
         obj = MyObj(self.context)
         primitive = ser.serialize_entity(self.context, obj)
-        self.assertIn('nimble_object.name', primitive)
+        self.assertIn('mogan_object.name', primitive)
         obj2 = ser.deserialize_entity(self.context, primitive)
         self.assertIsInstance(obj2, MyObj)
         self.assertEqual(self.context, obj2._context)
 
     def test_object_serialization_iterables(self):
-        ser = base.NimbleObjectSerializer()
+        ser = base.MoganObjectSerializer()
         obj = MyObj(self.context)
         for iterable in (list, tuple, set):
             thing = iterable([obj])
             primitive = ser.serialize_entity(self.context, thing)
             self.assertEqual(1, len(primitive))
             for item in primitive:
-                self.assertNotIsInstance(item, base.NimbleObject)
+                self.assertNotIsInstance(item, base.MoganObject)
             thing2 = ser.deserialize_entity(self.context, primitive)
             self.assertEqual(1, len(thing2))
             for item in thing2:
@@ -433,7 +433,7 @@ class TestObjectSerializer(test_base.TestCase):
 class TestRegistry(test_base.TestCase):
     @mock.patch('mogan.objects.base.objects')
     def test_hook_chooses_newer_properly(self, mock_objects):
-        reg = base.NimbleObjectRegistry()
+        reg = base.MoganObjectRegistry()
         reg.registration_hook(MyObj, 0)
 
         class MyNewerObj(object):

@@ -18,7 +18,7 @@ import fixtures
 from oslo_config import cfg
 from oslo_policy import opts as policy_opts
 
-from mogan.common import policy as nimble_policy
+from mogan.common import policy as mogan_policy
 
 CONF = cfg.CONF
 
@@ -39,5 +39,5 @@ class PolicyFixture(fixtures.Fixture):
             policy_file.write(policy_data)
         policy_opts.set_defaults(CONF)
         CONF.set_override('policy_file', self.policy_file_name, 'oslo_policy')
-        nimble_policy._ENFORCER = None
-        self.addCleanup(nimble_policy.get_enforcer().clear)
+        mogan_policy._ENFORCER = None
+        self.addCleanup(mogan_policy.get_enforcer().clear)

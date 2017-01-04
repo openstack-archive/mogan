@@ -17,11 +17,11 @@ from mogan.common import exception
 from mogan.tests import base
 
 
-class TestNimbleException(base.TestCase):
+class TestMoganException(base.TestCase):
     def test____init__(self):
         expected = b'\xc3\xa9\xe0\xaf\xb2\xe0\xbe\x84'
         if six.PY3:
             expected = expected.decode('utf-8')
         message = six.unichr(233) + six.unichr(0x0bf2) + six.unichr(3972)
-        exc = exception.NimbleException(message)
+        exc = exception.MoganException(message)
         self.assertEqual(expected, exc.__str__())

@@ -29,7 +29,7 @@ import six
 import testscenarios
 import testtools
 
-from mogan.common import config as nimble_config
+from mogan.common import config as mogan_config
 from mogan.tests import policy_fixture
 
 
@@ -74,7 +74,7 @@ class TestCase(base.BaseTestCase):
                           sqlite_synchronous=False,
                           group='database')
         CONF.set_override('glance_api_servers', 'fake-glance', 'glance')
-        nimble_config.parse_args([], default_config_files=[])
+        mogan_config.parse_args([], default_config_files=[])
 
     def config(self, **kw):
         """Override config options for a test."""

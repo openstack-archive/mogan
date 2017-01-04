@@ -16,7 +16,7 @@ from keystoneauth1 import identity as kaidentity
 from keystoneauth1 import loading as kaloading
 from oslo_config import cfg
 
-from mogan.conf import auth as nimble_auth
+from mogan.conf import auth as mogan_auth
 from mogan.tests import base
 
 
@@ -28,7 +28,7 @@ class AuthConfTestCase(base.TestCase):
                     group='keystone')
         self.test_group = 'test_group'
         self.cfg_fixture.conf.register_group(cfg.OptGroup(self.test_group))
-        nimble_auth.register_auth_opts(self.cfg_fixture.conf, self.test_group)
+        mogan_auth.register_auth_opts(self.cfg_fixture.conf, self.test_group)
         self.config(auth_type='password',
                     group=self.test_group)
         # NOTE(pas-ha) this is due to auth_plugin options
@@ -44,7 +44,7 @@ class AuthConfTestCase(base.TestCase):
                     group=self.test_group)
 
     def test_add_auth_opts(self):
-        opts = nimble_auth.add_auth_opts([])
+        opts = mogan_auth.add_auth_opts([])
         # check that there is no duplicates
         names = {o.dest for o in opts}
         self.assertEqual(len(names), len(opts))
@@ -56,7 +56,7 @@ class AuthConfTestCase(base.TestCase):
         self.assertTrue(expected.issubset(names))
 
     def test_load_auth(self):
-        auth = nimble_auth.load_auth(self.cfg_fixture.conf, self.test_group)
+        auth = mogan_auth.load_auth(self.cfg_fixture.conf, self.test_group)
         # NOTE(pas-ha) 'password' auth_plugin is used
         self.assertIsInstance(auth, kaidentity.generic.password.Password)
         self.assertEqual('http://127.0.0.1:9898', auth.auth_url)
@@ -66,5 +66,5 @@ class AuthConfTestCase(base.TestCase):
         # so when we set the required auth_url to None,
         # MissingOption is raised
         self.config(auth_url=None, group=self.test_group)
-        self.assertIsNone(nimble_auth.load_auth(
+        self.assertIsNone(mogan_auth.load_auth(
             self.cfg_fixture.conf, self.test_group))

@@ -38,7 +38,7 @@ ACTION = 'instance:create'
 CONF = cfg.CONF
 
 
-class ScheduleCreateInstanceTask(flow_utils.NimbleTask):
+class ScheduleCreateInstanceTask(flow_utils.MoganTask):
     """Activates a scheduler driver and handles any subsequent failure."""
 
     def __init__(self, manager):
@@ -60,7 +60,7 @@ class ScheduleCreateInstanceTask(flow_utils.NimbleTask):
         instance.save()
 
 
-class OnFailureRescheduleTask(flow_utils.NimbleTask):
+class OnFailureRescheduleTask(flow_utils.MoganTask):
     """Triggers a rescheduling request to be sent when reverting occurs.
 
     If rescheduling doesn't occur this task errors out the instance.
@@ -125,14 +125,14 @@ class OnFailureRescheduleTask(flow_utils.NimbleTask):
         try:
             self._reschedule(context, cause, instance=instance, **kwargs)
             return True
-        except exception.NimbleException:
+        except exception.MoganException:
             LOG.exception(_LE("Instance %s: rescheduling failed"),
                           instance.uuid)
 
         return False
 
 
-class SetInstanceInfoTask(flow_utils.NimbleTask):
+class SetInstanceInfoTask(flow_utils.MoganTask):
     """Set instance info to ironic node and validate it."""
 
     def __init__(self, ironicclient):
@@ -174,7 +174,7 @@ class SetInstanceInfoTask(flow_utils.NimbleTask):
         return False
 
 
-class BuildNetworkTask(flow_utils.NimbleTask):
+class BuildNetworkTask(flow_utils.MoganTask):
     """Build network for the instance."""
 
     def __init__(self, network_api, ironicclient):
@@ -273,7 +273,7 @@ class BuildNetworkTask(flow_utils.NimbleTask):
         return False
 
 
-class CreateInstanceTask(flow_utils.NimbleTask):
+class CreateInstanceTask(flow_utils.MoganTask):
     """Set instance info to ironic node and validate it."""
 
     def __init__(self, ironicclient):

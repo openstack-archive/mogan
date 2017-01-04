@@ -13,7 +13,7 @@
 import mock
 
 from oslo_config import cfg
-from oslo_context import context as nimble_context
+from oslo_context import context as mogan_context
 import oslo_messaging as messaging
 
 from mogan.common import rpc
@@ -72,7 +72,7 @@ class TestRequestContextSerializer(base.TestCase):
 
         self.mock_serializer = mock.MagicMock()
         self.serializer = rpc.RequestContextSerializer(self.mock_serializer)
-        self.context = nimble_context.RequestContext()
+        self.context = mogan_context.RequestContext()
         self.entity = {'foo': 'bar'}
 
     def test_serialize_entity(self):

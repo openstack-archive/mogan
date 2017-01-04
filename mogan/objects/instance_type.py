@@ -21,8 +21,8 @@ from mogan.objects import base
 from mogan.objects import fields as object_fields
 
 
-@base.NimbleObjectRegistry.register
-class InstanceType(base.NimbleObject, object_base.VersionedObjectDictCompat):
+@base.MoganObjectRegistry.register
+class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
     VERSION = '1.0'
 

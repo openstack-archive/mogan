@@ -28,7 +28,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
     def resource_setup(cls):
         super(BaremetalComputeAPITest, cls).resource_setup()
         for i in six.moves.xrange(3):
-            body = {"name": data_utils.rand_name('nimble_instance_type'),
+            body = {"name": data_utils.rand_name('mogan_instance_type'),
                     "description": "mogan instance type description",
                     'is_public': bool(data_utils.rand_int_id(0, 1))}
             resp = cls.baremetal_compute_client.create_instance_type(**body)
@@ -50,11 +50,11 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
     @test.idempotent_id('f6ad64af-abc9-456c-9109-bc27cd9af635')
     def test_type_create_show_delete(self):
         # Create an instance type
-        body = {"name": 'nimble_type_create',
+        body = {"name": 'mogan_type_create',
                 "description": "mogan instance type description",
                 'is_public': True}
         resp = self.baremetal_compute_client.create_instance_type(**body)
-        self.assertEqual('nimble_type_create', resp['name'])
+        self.assertEqual('mogan_type_create', resp['name'])
         self.assertEqual('mogan instance type description',
                          resp['description'])
         self.assertEqual(True, resp['is_public'])
@@ -62,7 +62,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
         self.assertIn('extra_specs', resp)
         self.assertIn('links', resp)
         resp = self.baremetal_compute_client.show_instance_type(resp['uuid'])
-        self.assertEqual('nimble_type_create', resp['name'])
+        self.assertEqual('mogan_type_create', resp['name'])
         self.assertEqual('mogan instance type description',
                          resp['description'])
         self.assertEqual(True, resp['is_public'])

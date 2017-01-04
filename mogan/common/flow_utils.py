@@ -30,7 +30,7 @@ def _make_task_name(cls, addons=None):
     return base_name + extra
 
 
-class NimbleTask(task.Task):
+class MoganTask(task.Task):
     """The root task class for all mogan tasks.
 
     It automatically names the given task using the module and class that
@@ -38,7 +38,7 @@ class NimbleTask(task.Task):
     """
 
     def __init__(self, addons=None, **kwargs):
-        super(NimbleTask, self).__init__(self.make_name(addons), **kwargs)
+        super(MoganTask, self).__init__(self.make_name(addons), **kwargs)
 
     @classmethod
     def make_name(cls, addons=None):

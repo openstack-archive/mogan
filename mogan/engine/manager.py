@@ -136,7 +136,7 @@ class EngineManager(base_manager.BaseEngineManager):
                        % {'state': node.provision_state,
                           'node': node.uuid})
                 LOG.error(msg)
-                raise exception.NimbleException(msg)
+                raise exception.MoganException(msg)
             else:
                 data['tries'] += 1
 
@@ -177,7 +177,7 @@ class EngineManager(base_manager.BaseEngineManager):
         except Exception:
             msg = _("Create manager instance flow failed.")
             LOG.exception(msg)
-            raise exception.NimbleException(msg)
+            raise exception.MoganException(msg)
 
         def _run_flow():
             # This code executes create instance flow. If something goes wrong,
