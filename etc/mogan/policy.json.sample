@@ -9,7 +9,7 @@
 # all access will be forbidden
 "deny": "!"
 # Full read/write API access
-"is_admin": "rule:admin_api or (rule:is_member and role:nimble_admin)"
+"is_admin": "rule:admin_api or (rule:is_member and role:mogan_admin)"
 # Admin or owner API access
 "admin_or_owner": "is_admin:True or project_id:%(project_id)s"
 # Admin or user API access

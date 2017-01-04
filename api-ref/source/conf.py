@@ -197,7 +197,7 @@ except Exception:
 # html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'nimbledoc'
+htmlhelp_basename = 'mogandoc'
 
 
 # -- Options for LaTeX output -------------------------------------------------

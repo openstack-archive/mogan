@@ -4,7 +4,7 @@
 Developer Quick-Start
 =====================
 
-This is a quick walkthrough to get you started developing code for Nimble.
+This is a quick walkthrough to get you started developing code for Mogan.
 This assumes you are already familiar with submitting code reviews to
 an OpenStack project.
 
@@ -139,7 +139,7 @@ upgrade it individually, if you need to::
 Running Unit Tests Locally
 ==========================
 
-If you haven't already, Nimble source code should be pulled directly from git::
+If you haven't already, Mogan source code should be pulled directly from git::
 
     # from your home or source directory
     cd ~
@@ -149,7 +149,7 @@ If you haven't already, Nimble source code should be pulled directly from git::
 Running Unit and Style Tests
 ----------------------------
 
-All unit tests should be run using tox. To run Nimble's entire test suite::
+All unit tests should be run using tox. To run Mogan's entire test suite::
 
     # to run the py27, py34, py35 unit tests, and the style tests
     tox
@@ -211,14 +211,14 @@ the target name::
     tox -egenconfig
 
 
-Deploying Nimble with DevStack
-==============================
+Deploying Mogan with DevStack
+=============================
 
-DevStack may be configured to deploy Nimble, It is easy to develop Nimble
-with the devstack environment. Nimble depends on Ironic, Neutron, and Glance
+DevStack may be configured to deploy Mogan, It is easy to develop Mogan
+with the devstack environment. Mogan depends on Ironic, Neutron, and Glance
 to create and schedule virtual machines to simulate bare metal servers.
 It is highly recommended to deploy on an expendable virtual machine and not
-on your personal work station. Deploying Nimble with DevStack requires a
+on your personal work station. Deploying Mogan with DevStack requires a
 machine running Ubuntu 14.04 (or later) or Fedora 20 (or later). Make sure
 your machine is fully up to date and has the latest packages installed before
 beginning this process.
@@ -239,14 +239,14 @@ Switch to the stack user and clone DevStack::
     sudo su - stack
     git clone https://git.openstack.org/openstack-dev/devstack.git devstack
 
-Create devstack/local.conf with minimal settings required to enable Nimble
+Create devstack/local.conf with minimal settings required to enable Mogan
 
 .. note::
     As Ironic tempest configuration depends on baremetal flavor, we have to
     temporarily disable tempest in the devstack config file to make it work
     with Ironic.
     It's ok to enable Horizon, Nova and Cinder services, they don't impact
-    Nimble at all, disable them in the demo configuration to only deploy the
+    Mogan at all, disable them in the demo configuration to only deploy the
     dependent services
 
 ::
@@ -266,8 +266,8 @@ Create devstack/local.conf with minimal settings required to enable Nimble
     # Enable Ironic plugin
     enable_plugin ironic git://git.openstack.org/openstack/ironic
 
-    # Enable Nimble plugin
-    enable_plugin nimble git://git.openstack.org/openstack/nimble
+    # Enable Mogan plugin
+    enable_plugin mogan git://git.openstack.org/openstack/nimble
 
     # Enable Neutron which is required by Ironic and disable nova-network.
     disable_service n-net
@@ -335,8 +335,8 @@ Create devstack/local.conf with minimal settings required to enable Nimble
 
       GIT_BASE=https://git.openstack.org
 
-      # Enable Nimble plugin
-      enable_plugin nimble https://git.openstack.org/openstack/nimble
+      # Enable Mogan plugin
+      enable_plugin mogan https://git.openstack.org/openstack/nimble
 
 Run stack.sh::
 
@@ -350,7 +350,7 @@ Source credentials, and spawn an instance as the ``demo`` user::
     image=$(openstack image show $DEFAULT_IMAGE_NAME -f value -c id)
 
     # spawn instance
-    As our nimbleclient is not ready now, will add this soon...
+    As our moganclient is not ready now, will add this soon...
 
 Building developer documentation
 ================================
@@ -368,19 +368,19 @@ commands to build the documentation set:
     tox -edocs
 
     #Now use your browser to open the top-level index.html located at:
-    nimble/doc/build/html/index.html
+    mogan/doc/build/html/index.html
 
 
 - On a remote machine::
 
     # Go to the directory that contains the docs
-    cd ~/nimble/doc/source/
+    cd ~/mogan/doc/source/
 
     # Build the docs
     tox -edocs
 
     # Change directory to the newly built HTML files
-    cd ~/nimble/doc/build/html/
+    cd ~/mogan/doc/build/html/
 
     # Create a server using python on port 8000
     python -m SimpleHTTPServer 8000

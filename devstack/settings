@@ -1,30 +1,30 @@
 # Devstack settings
 
-# We have to add Nimble to enabled services for run_process to work
+# We have to add Mogan to enabled services for run_process to work
 # Now we just support to run services in separate processes and screens:
-# enable_service nimble nimble-api nimble-engine
-enable_service nimble nimble-api nimble-engine
+# enable_service mogan mogan-api mogan-engine
+enable_service mogan mogan-api mogan-engine
 
 # Set up default repos
-NIMBLE_REPO=${NIMBLE_REPO:-${GIT_BASE}/openstack/nimble.git}
-NIMBLE_BRANCH=${NIMBLE_BRANCH:-master}
-#NIMBLE_DASHBOARD_REPO=${NIMBLE_DASHBOARD_REPO:-${GIT_BASE}/openstack/nimble-dashboard.git}
-#NIMBLE_DASHBOARD_BRANCH=${NIMBLE_DASHBOARD_BRANCH:-${NIMBLE_BRANCH}}
+MOGAN_REPO=${MOGAN_REPO:-${GIT_BASE}/openstack/nimble.git}
+MOGAN_BRANCH=${MOGAN_BRANCH:-master}
+#MOGAN_DASHBOARD_REPO=${MOGAN_DASHBOARD_REPO:-${GIT_BASE}/openstack/nimble-dashboard.git}
+#MOGAN_DASHBOARD_BRANCH=${MOGAN_DASHBOARD_BRANCH:-${MOGAN_BRANCH}}
 
-NIMBLE_PYTHONCLIENT_REPO=${NIMBLE_PYTHONCLIENT_REPO:-${GIT_BASE}/openstack/python-nimbleclient.git}
-NIMBLE_PYTHONCLIENT_BRANCH=${NIMBLE_PYTHONCLIENT_BRANCH:-master}
-NIMBLE_PYTHONCLIENT_DIR=${DEST}/python-nimbleclient
+MOGAN_PYTHONCLIENT_REPO=${MOGAN_PYTHONCLIENT_REPO:-${GIT_BASE}/openstack/python-nimbleclient.git}
+MOGAN_PYTHONCLIENT_BRANCH=${MOGAN_PYTHONCLIENT_BRANCH:-master}
+MOGAN_PYTHONCLIENT_DIR=${DEST}/python-nimbleclient
 
 # Set up default directories
-NIMBLE_DIR=$DEST/nimble
-NIMBLE_DASHBOARD_DIR=$DEST/nimble-dashboard
-NIMBLE_CONF_DIR=${NIMBLE_CONF_DIR:-/etc/nimble}
-NIMBLE_CONF_FILE=${NIMBLE_CONF_DIR}/nimble.conf
-NIMBLE_DEBUG=${NIMBLE_DEBUG:-True}
+MOGAN_DIR=$DEST/nimble
+MOGAN_DASHBOARD_DIR=$DEST/nimble-dashboard
+MOGAN_CONF_DIR=${MOGAN_CONF_DIR:-/etc/mogan}
+MOGAN_CONF_FILE=${MOGAN_CONF_DIR}/mogan.conf
+MOGAN_DEBUG=${MOGAN_DEBUG:-True}
 
-NIMBLE_SERVICE_HOST=${NIMBLE_SERVICE_HOST:-$SERVICE_HOST}
-NIMBLE_SERVICE_PORT=${NIMBLE_SERVICE_PORT:-6688}
-NIMBLE_SERVICE_PROTOCOL=${NIMBLE_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
+MOGAN_SERVICE_HOST=${MOGAN_SERVICE_HOST:-$SERVICE_HOST}
+MOGAN_SERVICE_PORT=${MOGAN_SERVICE_PORT:-6688}
+MOGAN_SERVICE_PROTOCOL=${MOGAN_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
 
-NIMBLE_ADMIN_USER=${NIMBLE_ADMIN_USER:-nimble}
-NIMBLE_DEFAULT_INSTANCE_TYPE=${NIMBLE_DEFAULT_INSTANCE_TYPE:-small}
+MOGAN_ADMIN_USER=${MOGAN_ADMIN_USER:-mogan}
+MOGAN_DEFAULT_INSTANCE_TYPE=${MOGAN_DEFAULT_INSTANCE_TYPE:-small}
