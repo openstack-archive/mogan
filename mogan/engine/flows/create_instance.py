@@ -289,6 +289,10 @@ class CreateInstanceTask(flow_utils.MoganTask):
 
     def _wait_for_active(self, instance):
         """Wait for the node to be marked as ACTIVE in Ironic."""
+        instance.refresh()
+        if instance.status in (status.DELETING, status.ERROR, status.DELETED):
+            raise exception.InstanceDeployFailure(
+                _("Instance %s provisioning was aborted") % instance.uuid)
 
         node = ironic.get_node_by_instance(self.ironicclient,
                                            instance.uuid)

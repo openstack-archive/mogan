@@ -87,3 +87,8 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         updates = self.obj_get_changes()
         self.dbapi.instance_update(context, self.uuid, updates)
         self.obj_reset_changes()
+
+    def refresh(self, context=None):
+        """Refresh the object by re-fetching from the DB."""
+        current = self.__class__.get(context, self.uuid)
+        self.obj_refresh(current)
