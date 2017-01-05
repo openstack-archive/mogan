@@ -177,12 +177,11 @@ class SetInstanceInfoTask(flow_utils.MoganTask):
 class BuildNetworkTask(flow_utils.MoganTask):
     """Build network for the instance."""
 
-    def __init__(self, network_api, ironicclient):
+    def __init__(self, manager):
         requires = ['instance', 'requested_networks', 'context']
         super(BuildNetworkTask, self).__init__(addons=[ACTION],
                                                requires=requires)
-        self.network_api = network_api
-        self.ironicclient = ironicclient
+        self.manager = manager
         # These exception types will trigger the network to be cleaned.
         self.network_cleaned_exc_types = [
             exception.NetworkError,
@@ -193,7 +192,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
 
     def _build_networks(self, context, instance, requested_networks):
         node_uuid = instance.node_uuid
-        ironic_ports = ironic.get_ports_from_node(self.ironicclient,
+        ironic_ports = ironic.get_ports_from_node(self.manager.ironicclient,
                                                   node_uuid,
                                                   detail=True)
         LOG.debug(_('Find ports %(ports)s for node %(node)s') %
@@ -213,14 +212,14 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 # Match the specified port type with physical interface type
                 if vif.get('port_type') == pif.extra.get('port_type'):
                     try:
-                        port = self.network_api.create_port(
+                        port = self.manager.network_api.create_port(
                             context, vif['net_id'], pif.address, instance.uuid)
                         port_dict = port['port']
                         network_info[port_dict['id']] = {
                             'network': port_dict['network_id'],
                             'mac_address': port_dict['mac_address'],
                             'fixed_ips': port_dict['fixed_ips']}
-                        ironic.plug_vif(self.ironicclient, pif.uuid,
+                        ironic.plug_vif(self.manager.ironicclient, pif.uuid,
                                         port_dict['id'])
                     except Exception:
                         # Set network_info here, so we can clean up the created
@@ -232,22 +231,6 @@ class BuildNetworkTask(flow_utils.MoganTask):
                             "Build network for instance failed."))
 
         return network_info
-
-    def _destroy_networks(self, context, instance):
-        LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(network_info)s",
-                  {'uuid': instance.uuid,
-                   'network_info': str(instance.network_info)})
-
-        ports = instance.network_info.keys()
-        for port in ports:
-            self.network_api.delete_port(context, port, instance.uuid)
-
-        ironic_ports = ironic.get_ports_from_node(self.ironicclient,
-                                                  instance.node_uuid,
-                                                  detail=True)
-        for pif in ironic_ports:
-            if 'vif_port_id' in pif.extra:
-                ironic.unplug_vif(self.ironicclient, pif.uuid)
 
     def execute(self, context, instance, requested_networks):
         network_info = self._build_networks(
@@ -265,7 +248,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 LOG.debug("Instance %s: cleaning up node networks",
                           instance.uuid)
                 if instance.network_info:
-                    self._destroy_networks(context, instance)
+                    self.manager.destroy_networks(context, instance)
                     # Unset network_info here as we have destroyed it.
                     instance.network_info = {}
                 return True
@@ -371,8 +354,7 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
     instance_flow.add(ScheduleCreateInstanceTask(manager),
                       OnFailureRescheduleTask(manager.engine_rpcapi),
                       SetInstanceInfoTask(manager.ironicclient),
-                      BuildNetworkTask(manager.network_api,
-                                       manager.ironicclient),
+                      BuildNetworkTask(manager),
                       CreateInstanceTask(manager.ironicclient))
 
     # Now load (but do not run) the flow using the provided initial data.
