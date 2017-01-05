@@ -75,6 +75,12 @@ class EngineManager(base_manager.BaseEngineManager):
             LOG.debug('Instance has been destroyed from under us while '
                       'trying to set it to ERROR', instance=instance)
 
+    def destroy_networks(self, context, instance):
+        """Destroy an instance`s networks."""
+        LOG.debug("Destroy instance`s networks")
+
+        self._destroy_networks(context, instance)
+
     def _destroy_networks(self, context, instance):
         LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(network_info)s",
                   {'uuid': instance.uuid,
