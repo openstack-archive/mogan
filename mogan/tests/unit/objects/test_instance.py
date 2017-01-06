@@ -83,3 +83,10 @@ class TestInstanceObject(base.DbTestCase):
             instance.save(self.context)
             mock_instance_update.assert_called_once_with(
                 self.context, uuid, updates)
+
+    def test_save_after_refresh(self):
+        db_instance = utils.create_test_instance(context=self.ctxt)
+        instance = objects.Instance.get(self.context, db_instance.uuid)
+        instance.refresh(self.context)
+        instance.name = 'refresh'
+        instance.save(self.context)

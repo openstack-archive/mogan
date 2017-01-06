@@ -92,3 +92,4 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         """Refresh the object by re-fetching from the DB."""
         current = self.__class__.get(context, self.uuid)
         self.obj_refresh(current)
+        self.obj_reset_changes()
