@@ -239,16 +239,32 @@ class EngineManager(base_manager.BaseEngineManager):
 
         return self._instance_states(context, instance)
 
-    def _set_power_state(self, context, instance, state):
-        ironic.set_power_state(self.ironicclient, instance.node_uuid, state)
-        LOG.info(_LI('Successfully set ironic node power state: %s'),
-                 state)
+    def _wait_for_power_state(self, instance):
+        """Wait for the node to complete a power state change."""
+        try:
+            node = ironic.get_node_by_instance(self.ironicclient,
+                                               instance.uuid)
+        except ironic_exc.NotFound:
+            LOG.debug("While waiting for node to complete a power state "
+                      "change, it dissociate with the instance.",
+                      instance=instance)
+            raise exception.InstanceNotFound()
+
+        if node.target_power_state == ironic_states.NOSTATE:
+            raise loopingcall.LoopingCallDone()
 
     def set_power_state(self, context, instance, state):
-        """Get an instance states."""
-        LOG.debug("set power state...")
+        """Set power state for the specified instance."""
+        LOG.debug('Power %(state)s called for instance %(instance)s',
+                  {'state': state,
+                   'instance': instance})
+        ironic.set_power_state(self.ironicclient, instance.node_uuid, state)
 
-        return self._set_power_state(context, instance, state)
+        timer = loopingcall.FixedIntervalLoopingCall(
+                    self._wait_for_power_state, instance, state)
+        timer.start(interval=CONF.ironic.api_retry_interval).wait()
+        LOG.info(_LI('Successfully set node power state: %s'),
+                 state, instance=instance)
 
     @messaging.expected_exceptions(exception.NodeNotFound)
     def get_ironic_node(self, context, instance_uuid, fields):
