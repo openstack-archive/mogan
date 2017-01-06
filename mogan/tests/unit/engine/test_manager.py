@@ -148,10 +148,14 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
 
         self.assertFalse(destroy_inst_mock.called)
 
+    @mock.patch.object(ironic, 'get_node_by_instance')
     @mock.patch.object(ironic, 'set_power_state')
-    def test_change_instance_power_state(self, set_power_mock,
-                                         refresh_cache_mock):
+    def test_change_instance_power_state(
+            self, set_power_mock, get_node_mock, refresh_cache_mock):
         instance = obj_utils.create_test_instance(self.context)
+        fake_node = mock.MagicMock()
+        fake_node.target_power_state = ironic_states.NOSTATE
+        get_node_mock.return_value = fake_node
         refresh_cache_mock.side_effect = None
         self._start_service()
 
@@ -161,6 +165,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
 
         set_power_mock.assert_called_once_with(mock.ANY, instance.node_uuid,
                                                ironic_states.POWER_ON)
+        get_node_mock.assert_called_once_with(mock.ANY, instance.uuid)
 
     @mock.patch.object(ironic, 'get_node_states')
     def test_get_instance_states(self, get_states_mock, refresh_cache_mock):
