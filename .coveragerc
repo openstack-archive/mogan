@@ -1,7 +1,7 @@
 [run]
 branch = True
-source = nimble
-omit = nimble/tests/*
+source = mogan
+omit = mogan/tests/*
 
 [report]
 ignore_errors = True
