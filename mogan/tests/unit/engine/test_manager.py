@@ -37,9 +37,9 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
     @mock.patch.object(ironic, 'unplug_vif')
     @mock.patch.object(ironic, 'get_ports_from_node')
     @mock.patch.object(network_api.API, 'delete_port')
-    def test__destroy_networks(self, delete_port_mock,
-                               get_ports_mock, unplug_vif_mock,
-                               refresh_cache_mock):
+    def test_destroy_networks(self, delete_port_mock,
+                              get_ports_mock, unplug_vif_mock,
+                              refresh_cache_mock):
         instance = obj_utils.create_test_instance(self.context)
         delete_port_mock.side_effect = None
         port = mock.MagicMock()
@@ -50,7 +50,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         refresh_cache_mock.side_effect = None
         self._start_service()
 
-        self.service._destroy_networks(self.context, instance)
+        self.service.destroy_networks(self.context, instance)
         self._stop_service()
 
         delete_port_mock.assert_called_once_with(
@@ -111,7 +111,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
 
     @mock.patch.object(ironic, 'get_node_by_instance')
     @mock.patch.object(manager.EngineManager, '_destroy_instance')
-    @mock.patch.object(manager.EngineManager, '_destroy_networks')
+    @mock.patch.object(manager.EngineManager, 'destroy_networks')
     def test_delete_instance(self, destroy_net_mock,
                              destroy_inst_mock, get_node_mock,
                              refresh_cache_mock):
