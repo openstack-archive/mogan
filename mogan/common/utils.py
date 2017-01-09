@@ -17,6 +17,7 @@
 
 import re
 
+from oslo_concurrency import lockutils
 from oslo_log import log as logging
 import six
 
@@ -24,6 +25,8 @@ from mogan.common import exception
 from mogan.common.i18n import _LW
 
 LOG = logging.getLogger(__name__)
+
+synchronized = lockutils.synchronized_with_prefix('mogan-')
 
 
 def safe_rstrip(value, chars=None):

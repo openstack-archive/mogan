@@ -17,6 +17,8 @@ from ironicclient import exceptions as client_e
 from oslo_log import log as logging
 
 from mogan.common.i18n import _LE
+from mogan.common.i18n import _LW
+from mogan.common import states
 from mogan.engine.baremetal import ironic_states
 
 LOG = logging.getLogger(__name__)
@@ -24,6 +26,29 @@ LOG = logging.getLogger(__name__)
 _NODE_FIELDS = ('uuid', 'power_state', 'target_power_state', 'provision_state',
                 'target_provision_state', 'last_error', 'maintenance',
                 'properties', 'instance_uuid')
+
+_POWER_STATE_MAP = {
+    ironic_states.POWER_ON: states.POWER_ON,
+    ironic_states.NOSTATE: states.NOSTATE,
+    ironic_states.POWER_OFF: states.POWER_OFF,
+}
+
+
+def map_power_state(state):
+    try:
+        return _POWER_STATE_MAP[state]
+    except KeyError:
+        LOG.warning(_LW("Power state %s not found."), state)
+        return states.NOSTATE
+
+
+def get_power_state(ironicclient, instance_uuid):
+    try:
+        node = ironicclient.call('node.get_by_instance_uuid',
+                                 instance_uuid, fields=('power_state',))
+        return map_power_state(node.power_state)
+    except client_e.NotFound:
+        return map_power_state(ironic_states.NOSTATE)
 
 
 def get_ports_from_node(ironicclient, node_uuid, detail=False):
