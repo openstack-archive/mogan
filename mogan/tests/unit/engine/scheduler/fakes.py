@@ -17,9 +17,6 @@
 Fakes For Scheduler tests.
 """
 
-from oslo_versionedobjects import base as object_base
-
-
 from mogan.engine.scheduler import filter_scheduler
 from mogan.engine.scheduler import node_manager
 from mogan.objects import base
@@ -33,7 +30,7 @@ class FakeFilterScheduler(filter_scheduler.FilterScheduler):
 
 
 @base.MoganObjectRegistry.register
-class FakeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
+class FakeNode(base.MoganObject):
     fields = {
         'id': object_fields.IntegerField(),
         'uuid': object_fields.UUIDField(nullable=True),

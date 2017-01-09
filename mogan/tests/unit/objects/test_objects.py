@@ -31,7 +31,7 @@ gettext.install('mogan')
 
 
 @base.MoganObjectRegistry.register
-class MyObj(base.MoganObject, object_base.VersionedObjectDictCompat):
+class MyObj(base.MoganObject):
     VERSION = '1.1'
 
     fields = {'foo': fields.IntegerField(),
@@ -154,7 +154,7 @@ class _TestObject(object):
 
     def test_load_in_base(self):
         @base.MoganObjectRegistry.register_if(False)
-        class Foo(base.MoganObject, object_base.VersionedObjectDictCompat):
+        class Foo(base.MoganObject):
             fields = {'foobar': fields.IntegerField()}
         obj = Foo(self.context)
 
@@ -326,8 +326,7 @@ class _TestObject(object):
 
     def test_obj_fields(self):
         @base.MoganObjectRegistry.register_if(False)
-        class TestObj(base.MoganObject,
-                      object_base.VersionedObjectDictCompat):
+        class TestObj(base.MoganObject):
             fields = {'foo': fields.IntegerField()}
             obj_extra_fields = ['bar']
 
@@ -341,8 +340,7 @@ class _TestObject(object):
 
     def test_refresh_object(self):
         @base.MoganObjectRegistry.register_if(False)
-        class TestObj(base.MoganObject,
-                      object_base.VersionedObjectDictCompat):
+        class TestObj(base.MoganObject):
             fields = {'foo': fields.IntegerField(),
                       'bar': fields.StringField()}
 

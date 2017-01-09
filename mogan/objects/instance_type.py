@@ -14,15 +14,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_versionedobjects import base as object_base
-
 from mogan.db import api as dbapi
 from mogan.objects import base
 from mogan.objects import fields as object_fields
 
 
 @base.MoganObjectRegistry.register
-class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
+class InstanceType(base.MoganObject):
     # Version 1.0: Initial version
     VERSION = '1.0'
 

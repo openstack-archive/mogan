@@ -215,7 +215,7 @@ def authorize_wsgi(api_name, act=None, need_target=True):
                     # empty, then follow authorize method will fail and throw
                     # an exception
                     if isinstance(resource,
-                                  object_base.VersionedObjectDictCompat):
+                                  object_base.VersionedObject):
                         target = {'project_id': resource.project_id,
                                   'user_id': resource.user_id}
                 except Exception:
