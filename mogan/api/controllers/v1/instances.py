@@ -140,13 +140,13 @@ class InstanceStatesController(rest.RestController):
                  state is not valid or if the instance is in CLEANING state.
 
         """
-        rpc_instance = self._resource or self._get_resource(instance_uuid)
-
         if target not in ["on", "off", "reboot"]:
             # ironic will throw InvalidStateRequested
             raise exception.InvalidActionParameterValue(
                 value=target, action="power",
                 instance=instance_uuid)
+
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
         pecan.request.engine_api.power(
             pecan.request.context, rpc_instance, target)
         # At present we do not catch the Exception from ironicclient.
