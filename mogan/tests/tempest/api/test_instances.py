@@ -72,5 +72,5 @@ class BaremetalComputeAPIInstancesTest(base.BaseBaremetalComputeTest):
         self.baremetal_compute_client.delete_instance(
             self.instance_ids[0])
         self.instance_ids.remove(self.instance_ids[0])
-        # FIXME(liusheng) time to wait for deleting completed
-        time.sleep(180)
+        self._wait_for_instances_status(self.instance_ids[0], 'deleted',
+                                        10, 900)

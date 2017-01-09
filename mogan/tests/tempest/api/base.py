@@ -92,24 +92,30 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
 
     @classmethod
     def _wait_for_instances_status(cls, inst_id, status,
-                                   build_interval, build_timeout):
+                                   wait_interval, wait_timeout):
         """Waits for a Instance to reach a given status."""
         inst_status = None
         start = int(time.time())
 
         while inst_status != status:
-            time.sleep(build_interval)
-            body = cls.baremetal_compute_client.show_instance(inst_id)
-            inst_status = body['status']
+            time.sleep(wait_interval)
+            try:
+                body = cls.baremetal_compute_client.show_instance(inst_id)
+                inst_status = body['status']
+            except lib_exc.NotFound:
+                if status == 'deleted':
+                    break
+                else:
+                    raise
             if inst_status == 'error' and status != 'error':
                 msg = ('Failed to provision instance %s' % inst_id)
                 raise exception.InstanceDeployFailure(msg)
 
-            if int(time.time()) - start >= build_timeout:
+            if int(time.time()) - start >= wait_timeout:
                 message = ('Instance %s failed to reach %s status '
                            '(current %s) within the required time (%s s).' %
                            (inst_id, status, inst_status,
-                            build_timeout))
+                            wait_timeout))
                 raise lib_exc.TimeoutException(message)
 
     @staticmethod
