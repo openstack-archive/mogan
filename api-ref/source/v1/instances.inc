@@ -296,8 +296,7 @@ Instance Management (instances)
 Instances can be managed through several sub-resources.
 
 A Instance can be rebooted, turned on, or turned off by requesting a change to
-its power state. This is handled asynchronously and tracked in the
-``target_power_state`` field after the request is received.
+its power state. This is handled asynchronously.
 
 
 Instance State Summary
@@ -322,7 +321,6 @@ Response
 .. rest_parameters:: parameters.yaml
 
     - power_state: power_state
-    - target_power_state: target_power_state
 
 **Example instance state:**
 

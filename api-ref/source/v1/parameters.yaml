@@ -210,13 +210,6 @@ project_id_body:
   in: body
   required: true
   type: string
-target_power_state:
-  description: |
-    If a power state transition has been requested, this field represents the
-    requested (ie, "target") state.
-  in: body
-  required: true
-  type: string
 type_description:
   description: |
     The description of the type.

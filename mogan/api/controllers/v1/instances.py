@@ -85,15 +85,11 @@ class InstanceStates(base.APIBase):
     # Just support power state at present.
     # We can expend other fields for other type state.
     power_state = wtypes.text
-    """Represent the current (not transition) power state of the instance"""
-
-    target_power_state = wtypes.text
-    """The user modified desired power state of the instance."""
+    """Represent the current power state of the instance"""
 
     @classmethod
     def sample(cls):
-        sample = cls(target_power_state=ir_states.POWER_ON,
-                     power_state=ir_states.POWER_ON)
+        sample = cls(power_state=ir_states.POWER_ON)
         return sample
 
 
