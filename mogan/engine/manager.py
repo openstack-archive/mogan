@@ -35,6 +35,8 @@ from mogan.engine.baremetal import ironic_states
 from mogan.engine import base_manager
 from mogan.engine.flows import create_instance
 from mogan.engine import status
+from mogan.notifications import base as notifications
+from mogan.objects import fields
 
 LOG = log.getLogger(__name__)
 
@@ -163,6 +165,10 @@ class EngineManager(base_manager.BaseEngineManager):
                         request_spec=None, filter_properties=None):
         """Perform a deployment."""
         LOG.debug("Starting instance...", instance=instance)
+        notifications.notify_about_instance_action(
+            context, instance, self.host,
+            action=fields.NotificationAction.CREATE,
+            phase=fields.NotificationPhase.START)
 
         if filter_properties is None:
             filter_properties = {}
