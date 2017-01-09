@@ -103,6 +103,7 @@ class InstanceStatesController(rest.RestController):
 
     _custom_actions = {
         'power': ['PUT'],
+        'provision': ['PUT'],
     }
 
     _resource = None
@@ -156,6 +157,38 @@ class InstanceStatesController(rest.RestController):
 
         # Set the HTTP Location Header, user can get the power_state
         # by locaton.
+        url_args = '/'.join([instance_uuid, 'states'])
+        pecan.response.location = link.build_url('instances', url_args)
+
+    @policy.authorize_wsgi("mogan:instance", "rebuild")
+    @expose.expose(None, types.uuid, wtypes.text, types.uuid,
+                   status_code=http_client.ACCEPTED)
+    def provision(self, instance_uuid, target, image):
+        """Asynchronous trigger the provisioning of the instance.
+
+        This will set the target provision state of the instance, and
+        a background task will begin which actually applies the state
+        change. This call will return a 202 (Accepted) indicating the
+        request was accepted and is in progress; the client should
+        continue to GET the status of this instance to observe the
+        status of the requested action.
+
+        :param instance_uuid: UUID of an instance.
+        :param target: The desired provision state of the instance or verb.
+        """
+
+        if target not in (ir_states.REBUILD,)
+            raise exception.InvalidActionParameterValue(
+                value=target, action="provision",
+                instance=instance_uuid)
+
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
+        # if target == ir_states.REBUILD:
+        #     pecan.request.engine_api.rebuild(pecan.request.context,
+        #                                      rpc_instance, target,
+        #                                      image)
+
+        # Set the HTTP Location Header
         url_args = '/'.join([instance_uuid, 'states'])
         pecan.response.location = link.build_url('instances', url_args)
 
