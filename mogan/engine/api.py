@@ -125,16 +125,15 @@ class API(object):
     def _delete_instance(self, context, instance):
         # Initialize state machine
         fsm = states.machine.copy()
-        fsm.initialize(start_state=instance.status,
-                       target_state=states.DELETED)
+        fsm.initialize(start_state=instance.status)
 
         fsm.process_event('delete')
         try:
             instance.status = fsm.current_state
             instance.save()
         except exception.InstanceNotFound:
-            LOG.debug("Instance %s is not found while deleting",
-                      instance.uuid)
+            LOG.debug("Instance is not found while deleting",
+                      instance=instance)
             return
         self.engine_rpcapi.delete_instance(context, instance)
 
@@ -149,17 +148,20 @@ class API(object):
 
     def power(self, context, instance, target):
         """Set power state of an instance."""
+        LOG.debug("Going to try to set instance power state to %s",
+                  target, instance=instance)
+        fsm = states.machine.copy()
+        fsm.initialize(start_state=instance.status)
+        fsm.process_event(states.POWER_ACTION_MAP[target])
+        try:
+            instance.status = fsm.current_state
+            instance.save()
+        except exception.InstanceNotFound:
+            LOG.debug("Instance is not found while setting power state",
+                      instance=instance)
+            return
+
         self.engine_rpcapi.set_power_state(context, instance, target)
-
-    def get_ironic_node(self, context, instance_uuid, fields):
-        """Get a ironic node by instance UUID."""
-        return self.engine_rpcapi.get_ironic_node(context,
-                                                  instance_uuid,
-                                                  fields)
-
-    def get_ironic_node_list(self, context, fields):
-        """Get a list of ironic node."""
-        return self.engine_rpcapi.get_ironic_node_list(context, fields)
 
     def list_availability_zones(self, context):
         """Get a list of availability zones."""

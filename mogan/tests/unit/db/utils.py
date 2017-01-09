@@ -47,6 +47,7 @@ def get_test_instance(**kw):
                              'c18e8a1a870d4c08a0b51ced6e0b6459'),
         'user_id': kw.get('user_id', 'cdbf77d47f1d4d04ad9b7ff62b672467'),
         'status': kw.get('status', states.ACTIVE),
+        'power_state': kw.get('power_state', 'power on'),
         'instance_type_uuid': kw.get('instance_type_uuid',
                                      '28708dff-283c-449e-9bfa-a48c93480c86'),
         'availability_zone': kw.get('availability_zone', 'test_az'),

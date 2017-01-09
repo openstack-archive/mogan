@@ -27,6 +27,26 @@ from mogan.common import fsm
 
 LOG = logging.getLogger(__name__)
 
+##############
+# Power states
+##############
+
+POWER_ON = 'power on'
+""" Instance is powered on. """
+
+POWER_OFF = 'power off'
+""" Instance is powered off. """
+
+NOSTATE = None
+""" No state information """
+
+POWER_ACTION_MAP = {
+    'on': 'start',
+    'off': 'stop',
+    'reboot': 'reboot',
+}
+
+
 #################
 # Instance states
 #################
