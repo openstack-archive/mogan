@@ -30,12 +30,14 @@ from mogan.common.i18n import _LE
 from mogan.common.i18n import _LI
 from mogan.common.i18n import _LW
 from mogan.common import states
+from mogan.common import utils
 from mogan.conf import CONF
 from mogan.engine.baremetal import ironic
 from mogan.engine.baremetal import ironic_states
 from mogan.engine import base_manager
 from mogan.engine.flows import create_instance
 from mogan.notifications import base as notifications
+from mogan import objects
 from mogan.objects import fields
 
 LOG = log.getLogger(__name__)
@@ -70,6 +72,127 @@ class EngineManager(base_manager.BaseEngineManager):
         run_immediately=True)
     def _sync_node_resources(self, context):
         self._refresh_cache()
+
+    @periodic_task.periodic_task(spacing=CONF.engine.sync_power_state_interval,
+                                 run_immediately=True)
+    def _sync_power_states(self, context):
+        """Align power states between the database and the hypervisor."""
+        db_instances = objects.Instance.list(context)
+
+        # Only fetching the necessary fields, will skip synchronizing if
+        # target_power_state is not None.
+        node_fields = ('instance_uuid', 'power_state', 'target_power_state')
+
+        try:
+            nodes = ironic.get_node_list(self.ironicclient,
+                                         maintenance=False,
+                                         associated=True,
+                                         fields=node_fields,
+                                         limit=0)
+        except Exception as e:
+            LOG.warning(
+                _LW("Failed to retrieve node list when synchronizing power "
+                    "states: %(msg)s") % {"msg": e})
+            # Just retrun if we fail to get nodes real power state.
+            return
+
+        node_dict = {node.instance_uuid: node for node in nodes
+                     if node.target_power_state is None}
+
+        if not node_dict:
+            LOG.warning(_LW("While synchronizing instance power states, "
+                            "found none instance with stable power state "
+                            "on the hypervisor."))
+            return
+
+        def _sync(db_instance, node_power_state):
+            # This must be synchronized as we query state from two separate
+            # sources, the driver (ironic) and the database. They are set
+            # (in stop_instance) and read, in sync.
+            @utils.synchronized(db_instance.uuid)
+            def sync_instance_power_state():
+                self._sync_instance_power_state(context, db_instance,
+                                                node_power_state)
+
+            try:
+                sync_instance_power_state()
+            except Exception:
+                LOG.exception(_LE("Periodic sync_power_state task had an "
+                                  "error while processing an instance."),
+                              instance=db_instance)
+
+            self._syncs_in_progress.pop(db_instance.uuid)
+
+        for db_instance in db_instances:
+            # process syncs asynchronously - don't want instance locking to
+            # block entire periodic task thread
+            uuid = db_instance.uuid
+            if uuid in self._syncs_in_progress:
+                LOG.debug('Sync power state already in progress for %s', uuid)
+                continue
+
+            if db_instance.status not in states.STABLE_STATES:
+                LOG.info(_LI("During sync_power_state the instance has a "
+                             "pending task (%(task)s). Skip."),
+                         {'task': db_instance.status},
+                         instance=db_instance)
+                continue
+
+            if uuid not in node_dict:
+                continue
+
+            node_power_state = node_dict[uuid].power_state
+            if db_instance.power_state != node_power_state:
+                LOG.debug('Triggering sync for uuid %s', uuid)
+                self._syncs_in_progress[uuid] = True
+                self._sync_power_pool.spawn_n(_sync, db_instance,
+                                              node_power_state)
+
+    def _sync_instance_power_state(self, context, db_instance,
+                                   node_power_state):
+        """Align instance power state between the database and hypervisor.
+
+        If the instance is not found on the hypervisor, but is in the database,
+        then a stop() API will be called on the instance.
+        """
+
+        # We re-query the DB to get the latest instance info to minimize
+        # (not eliminate) race condition.
+        db_instance.refresh()
+        db_power_state = db_instance.power_state
+
+        if db_instance.status not in states.STABLE_STATES:
+            # on the receiving end of mogan-engine, it could happen
+            # that the DB instance already report the new resident
+            # but the actual BM has not showed up on the hypervisor
+            # yet. In this case, let's allow the loop to continue
+            # and run the state sync in a later round
+            LOG.info(_LI("During sync_power_state the instance has a "
+                         "pending task (%(task)s). Skip."),
+                     {'task': db_instance.task_state},
+                     instance=db_instance)
+            return
+
+        if node_power_state != db_power_state:
+            LOG.info(_LI('During _sync_instance_power_state the DB '
+                         'power_state (%(db_power_state)s) does not match '
+                         'the node_power_state from the hypervisor '
+                         '(%(node_power_state)s). Updating power_state in the '
+                         'DB to match the hypervisor.'),
+                     {'db_power_state': db_power_state,
+                      'node_power_state': node_power_state},
+                     instance=db_instance)
+            # power_state is always updated from hypervisor to db
+            db_instance.power_state = node_power_state
+            db_instance.save()
+
+    def _set_instance_obj_error_state(self, context, instance):
+        try:
+            instance.status = states.ERROR
+            instance.save()
+        except exception.InstanceNotFound:
+            LOG.debug('Instance has been destroyed from under us while '
+                      'trying to set it to ERROR', instance=instance)
 
     def destroy_networks(self, context, instance):
         LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(network_info)s",
@@ -279,14 +402,31 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def set_power_state(self, context, instance, state):
         """Set power state for the specified instance."""
-        LOG.debug('Power %(state)s called for instance %(instance)s',
-                  {'state': state,
-                   'instance': instance})
-        ironic.set_power_state(self.ironicclient, instance.node_uuid, state)
 
-        timer = loopingcall.FixedIntervalLoopingCall(
-            self._wait_for_power_state, instance)
-        timer.start(interval=CONF.ironic.api_retry_interval).wait()
+        # Initialize state machine
+        fsm = states.machine.copy()
+        fsm.initialize(start_state=instance.status)
+
+        @utils.synchronized(instance.uuid)
+        def do_set_power_state():
+            LOG.debug('Power %(state)s called for instance %(instance)s',
+                      {'state': state,
+                       'instance': instance})
+            ironic.set_power_state(self.ironicclient,
+                                   instance.node_uuid,
+                                   state)
+
+            timer = loopingcall.FixedIntervalLoopingCall(
+                self._wait_for_power_state, instance)
+            timer.start(interval=CONF.ironic.api_retry_interval).wait()
+
+            fsm.process_event('done')
+            instance.power_state = ironic.get_power_state(self.ironicclient,
+                                                          instance.uuid)
+            instance.status = fsm.current_state
+            instance.save()
+
+        do_set_power_state()
         LOG.info(_LI('Successfully set node power state: %s'),
                  state, instance=instance)
 
