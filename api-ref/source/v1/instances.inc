@@ -104,6 +104,7 @@ Response
   - description: instance_description
   - uuid: instance_uuid
   - status: instance_status
+  - power_state: instance_power_state
   - links: links
 
 **Example List of Instances: JSON response**

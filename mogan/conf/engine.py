@@ -40,7 +40,16 @@ opts = [
                help=_('Default scheduler driver to use')),
     cfg.StrOpt('default_schedule_zone',
                help=_("Availability zone to use when user doesn't "
-                      "specify one."))
+                      "specify one.")),
+    cfg.IntOpt('sync_power_state_pool_size',
+               default=1000,
+               help=_("Number of greenthreads available for use to sync "
+                      "power states. Any positive integer representing "
+                      "greenthreads count.")),
+    cfg.IntOpt('sync_power_state_interval',
+               default=600,
+               help=_("Interval to sync power states between the database "
+                      "and Ironic, in seconds.")),
 ]
 
 
