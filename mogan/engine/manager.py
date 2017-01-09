@@ -67,6 +67,113 @@ class EngineManager(base_manager.BaseEngineManager):
     def _sync_node_resources(self, context):
         self._refresh_cache()
 
+    @periodic_task.periodic_task(spacing=CONF.sync_power_state_interval,
+                                 run_immediately=True)
+    def _sync_power_states(self, context):
+        """Align power states between the database and the hypervisor."""
+        db_instances = objects.Instance.list(pecan.request.context)
+
+        # Only fetching the necessary fields, will skip syncing if
+        # target_power_state is not None.
+        node_fields = ['instance_uuid', 'power_state', 'target_power_state']
+
+        try:
+            nodes = pecan.request.engine_api.get_ironic_node_list(
+                pecan.request.context, maintenance=False, associated=True,
+                fields=node_fields, limit=0)
+            node_list = nodes['nodes']
+        except Exception as e:
+            LOG.warning(
+                _LW("Failed to retrieve node list when synchronizing power "
+                    "states: %(msg)s") % {"msg": e})
+            # Just retrun if we fail to get nodes real power state.
+            return
+
+         node_dict = {node['instance_uuid']: node for node in node_list
+                      if node['target_power_state'] is None}
+
+         if not node_dict:
+            LOG.warning(_LW("While synchronizing instance power states, "
+                            "found none instance on the hypervisor."))
+            return
+
+        def _sync(db_instance, node_power_state):
+            try:
+                self._sync_instance_power_state(context, db_instance,
+                                                node_power_state)
+            except Exception:
+                LOG.exception(_LE("Periodic sync_power_state task had an "
+                                  "error while processing an instance."),
+                              instance=db_instance)
+
+            self._syncs_in_progress.pop(db_instance.uuid)
+
+        for db_instance in db_instances:
+            # process syncs asynchronously - don't want instance locking to
+            # block entire periodic task thread
+            uuid = db_instance.uuid
+            if uuid in self._syncs_in_progress:
+                LOG.debug('Sync power state already in progress for %s', uuid)
+                continue
+
+            if db_instance.task_state is not None:
+                LOG.info(_LI("During sync_power_state the instance has a "
+                             "pending task (%(task)s). Skip."),
+                         {'task': db_instance.task_state}, instance=db_instance)
+                continue
+
+            if uuid not in node_dict:
+                continue
+
+            node_power_state = node_dict[uuid]['power_state']
+            if db_instance.power_state != node_power_state:
+                LOG.debug('Triggering sync for uuid %s', uuid)
+                self._syncs_in_progress[uuid] = True
+                self._sync_power_pool.spawn_n(_sync, db_instance,
+                                              node_power_state)
+
+    # This must be synchronized as we query state from two separate sources,
+    # the driver (ironic) and the database. They are set (in stop_instance)
+    # and read, in sync.
+    @utils.synchronized(db_instance.uuid)
+    def _sync_instance_power_state(self, context, db_instance,
+                                   node_power_state):
+        """Align instance power state between the database and hypervisor.
+
+        If the instance is not found on the hypervisor, but is in the database,
+        then a stop() API will be called on the instance.
+        """
+
+        # We re-query the DB to get the latest instance info to minimize
+        # (not eliminate) race condition.
+        db_instance.refresh()
+        db_power_state = db_instance.power_state
+
+        elif db_instance.task_state is not None:
+            # on the receiving end of nova-compute, it could happen
+            # that the DB instance already report the new resident
+            # but the actual BM has not showed up on the hypervisor
+            # yet. In this case, let's allow the loop to continue
+            # and run the state sync in a later round
+            LOG.info(_LI("During sync_power_state the instance has a "
+                         "pending task (%(task)s). Skip."),
+                     {'task': db_instance.task_state},
+                     instance=db_instance)
+            return
+
+        if node_power_state != db_power_state:
+            LOG.info(_LI('During _sync_instance_power_state the DB '
+                         'power_state (%(db_power_state)s) does not match '
+                         'the vm_power_state from the hypervisor '
+                         '(%(node_power_state)s). Updating power_state in the '
+                         'DB to match the hypervisor.'),
+                     {'db_power_state': db_power_state,
+                      'node_power_state': node_power_state},
+                     instance=db_instance)
+            # power_state is always updated from hypervisor to db
+            db_instance.power_state = vm_power_state
+            db_instance.save()
+
     def _set_instance_obj_error_state(self, context, instance):
         try:
             instance.status = status.ERROR

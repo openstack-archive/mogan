@@ -43,6 +43,9 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self.notifier = rpc.get_notifier()
         self.ironicclient = ironic.IronicClientWrapper()
         self.engine_rpcapi = rpcapi.EngineAPI()
+        self._sync_power_pool = greenpool.GreenPool(
+            size=CONF.sync_power_state_pool_size)
+        self._syncs_in_progress = {}
         self._started = False
 
     def init_host(self):

@@ -30,14 +30,12 @@ from mogan.api.controllers.v1 import utils as api_utils
 from mogan.api import expose
 from mogan.common import exception
 from mogan.common.i18n import _
-from mogan.common.i18n import _LW
 from mogan.common import policy
 from mogan.engine.baremetal import ironic_states as ir_states
 from mogan import objects
 
 _DEFAULT_INSTANCE_RETURN_FIELDS = ('uuid', 'name', 'description',
-                                   'status')
-_NODE_FIELDS = ['power_state', 'instance_uuid']
+                                   'status', 'power_state')
 
 LOG = log.getLogger(__name__)
 
@@ -290,27 +288,6 @@ class InstanceController(rest.RestController):
                                           project_only=project_only)
         instances_data = [instance.as_dict() for instance in instances]
 
-        if fields is None or 'power_state' in fields:
-            try:
-                nodes = pecan.request.engine_api.get_ironic_node_list(
-                    pecan.request.context, fields=_NODE_FIELDS)
-                node_list = nodes['nodes']
-            except Exception as e:
-                LOG.warning(
-                    _LW("Failed to retrieve node list from"
-                        "ironic api: %(msg)s") % {"msg": e})
-                node_list = []
-
-            if node_list:
-                node_dict = {node['instance_uuid']: node for node in node_list
-                             if node['instance_uuid']}
-                # Merge mogan instance info with ironic node power state
-                for instance_data in instances_data:
-                    uuid = instance_data['uuid']
-                    if uuid in node_dict:
-                        instance_data['power_state'] = \
-                            node_dict[uuid]['power_state']
-
         return InstanceCollection.convert_with_links(instances_data,
                                                      fields=fields)
 
@@ -341,21 +318,6 @@ class InstanceController(rest.RestController):
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
         instance_data = rpc_instance.as_dict()
-        if (fields is None or 'power_state' in fields and
-                instance_data['node_uuid']):
-            # Only fetch node info if fields parameter is not specified
-            # or node fields is not requested and when instance is really
-            # associated with a ironic node.
-            try:
-                node = pecan.request.engine_api.get_ironic_node(
-                    pecan.request.context, instance_uuid, _NODE_FIELDS)
-                instance_data['power_state'] = node['power_state']
-            except Exception as e:
-                LOG.warning(
-                    _LW("Failed to retrieve node by instance_uuid"
-                        " %(instance_uuid)s from ironic api: %(msg)s") % {
-                        "instance_uuid": instance_uuid,
-                        "msg": e})
 
         return Instance.convert_with_links(instance_data, fields=fields)
 

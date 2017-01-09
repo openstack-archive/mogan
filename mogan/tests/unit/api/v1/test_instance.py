@@ -70,17 +70,13 @@ class TestInstanceAuthorization(v1_test.APITestV1):
         headers = self.gen_headers(self.context)
         self.post_json('/instances', body, headers=headers, status=201)
 
-    @mock.patch('mogan.engine.api.API.get_ironic_node')
-    def test_instance_get_one_by_owner(self, mock_get_node):
-        mock_get_node.return_value = {'power_state': 'power on'}
+    def test_instance_get_one_by_owner(self):
         # not admin but the owner
         self.context.tenant = self.instance1.project_id
         headers = self.gen_headers(self.context, roles="no-admin")
         self.get_json('/instances/%s' % self.instance1.uuid, headers=headers)
 
-    @mock.patch('mogan.engine.api.API.get_ironic_node')
-    def test_instance_get_one_by_admin(self, mock_get_node):
-        mock_get_node.return_value = {'power_state': 'power on'}
+    def test_instance_get_one_by_admin(self):
         # when the evil tenant is admin, he can do everything.
         self.context.tenant = self.evil_project
         headers = self.gen_headers(self.context, roles="admin")
@@ -116,10 +112,8 @@ class TestPatch(v1_test.APITestV1):
         self.assertEqual('application/json', response.content_type)
         self.assertTrue(response.json['error_message'])
 
-    @mock.patch('mogan.engine.api.API.get_ironic_node')
     @mock.patch.object(timeutils, 'utcnow')
-    def test_replace_singular(self, mock_utcnow, mock_get_node):
-        mock_get_node.return_value = {'power_state': 'power on'}
+    def test_replace_singular(self, mock_utcnow):
         description = 'instance-new-description'
         test_time = datetime.datetime(2000, 1, 1, 0, 0)
 
@@ -137,9 +131,7 @@ class TestPatch(v1_test.APITestV1):
             result['updated_at']).replace(tzinfo=None)
         self.assertEqual(test_time, return_updated_at)
 
-    @mock.patch('mogan.engine.api.API.get_ironic_node')
-    def test_replace_multi(self, mock_get_node):
-        mock_get_node.return_value = {'power_state': 'power on'}
+    def test_replace_multi(self):
         extra = {"foo1": "bar1", "foo2": "bar2", "foo3": "bar3"}
         uuid = uuidutils.generate_uuid()
         instance = utils.create_test_instance(name='test1', uuid=uuid,
@@ -157,9 +149,7 @@ class TestPatch(v1_test.APITestV1):
         extra["foo2"] = new_value
         self.assertEqual(extra, result['extra'])
 
-    @mock.patch('mogan.engine.api.API.get_ironic_node')
-    def test_remove_singular(self, mock_get_node):
-        mock_get_node.return_value = {'power_state': 'power on'}
+    def test_remove_singular(self):
         uuid = uuidutils.generate_uuid()
         instance = utils.create_test_instance(name='test2', uuid=uuid,
                                               extra={'a': 'b'})
@@ -176,9 +166,7 @@ class TestPatch(v1_test.APITestV1):
         self.assertEqual(instance.uuid, result['uuid'])
         self.assertEqual(instance.extra, result['extra'])
 
-    @mock.patch('mogan.engine.api.API.get_ironic_node')
-    def test_remove_multi(self, mock_get_node):
-        mock_get_node.return_value = {'power_state': 'power on'}
+    def test_remove_multi(self):
         extra = {"foo1": "bar1", "foo2": "bar2", "foo3": "bar3"}
         uuid = uuidutils.generate_uuid()
         instance = utils.create_test_instance(name='test3', extra=extra,
@@ -235,9 +223,7 @@ class TestPatch(v1_test.APITestV1):
         self.assertEqual(http_client.BAD_REQUEST, response.status_int)
         self.assertTrue(response.json['error_message'])
 
-    @mock.patch('mogan.engine.api.API.get_ironic_node')
-    def test_add_multi(self, mock_get_node):
-        mock_get_node.return_value = {'power_state': 'power on'}
+    def test_add_multi(self):
         response = self.patch_json('/instances/%s' % self.instance.uuid,
                                    [{'path': '/extra/foo1', 'value': 'bar1',
                                      'op': 'add'},
