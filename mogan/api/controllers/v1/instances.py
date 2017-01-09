@@ -160,6 +160,38 @@ class InstanceStatesController(rest.RestController):
         pecan.response.location = link.build_url('instances', url_args)
 
 
+class InstanceNetworks(base.APIBase):
+    """API representation of the networks of an instance."""
+
+
+class InstanceNetworksController(rest.RestController):
+
+    _custom_actions = {
+        'floatingip': ['PUT'],
+        'port': ['PUT'],
+        'security_group': ['PUT'],
+        'firewall': ['PUT'],
+    }
+
+    @policy.authorize_wsgi("mogan:instance", "get_networks")
+    @expose.expose(InstanceStates, types.uuid)
+    def get(self, instance_uuid):
+        """List the networks info of the instance.
+
+        :param instance_uuid: the UUID of a instance.
+        """
+
+    @policy.authorize_wsgi("mogan:instance", "set_fip")
+    @expose.expose(None, types.uuid, wtypes.text,
+                   status_code=http_client.ACCEPTED)
+    def floatingip(self, instance_uuid, fip):
+        """Set the floating ip of the instance.
+
+        :param instance_uuid: the UUID of a instance.
+        :param fip: including addFloatingIP and removeFloatingIP.
+        """
+
+
 class Instance(base.APIBase):
     """API representation of a instance.
 
