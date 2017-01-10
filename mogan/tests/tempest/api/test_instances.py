@@ -12,8 +12,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import time
-
 from mogan.tests.tempest.api import base
 
 
@@ -71,6 +69,6 @@ class BaremetalComputeAPIInstancesTest(base.BaseBaremetalComputeTest):
         # Test delete
         self.baremetal_compute_client.delete_instance(
             self.instance_ids[0])
+        self._wait_for_instances_status(self.instance_ids[0], 'deleted',
+                                        10, 900)
         self.instance_ids.remove(self.instance_ids[0])
-        # FIXME(liusheng) time to wait for deleting completed
-        time.sleep(180)
