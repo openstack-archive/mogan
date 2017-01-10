@@ -11,7 +11,7 @@ Create Instance
 
 .. rest_method:: POST /instances
 
-Creates a instance.
+Creates an instance.
 
 The progress of this operation depends on the location of the
 requested image, network I/O, selected type, and other factors.
@@ -160,9 +160,9 @@ Response
 Show Instance Details
 =====================
 
-.. rest_method:: GET /instances/{instance_ident}
+.. rest_method:: GET /instances/{instance_uuid}
 
-Shows details for a instance. By default, this will return the full
+Shows details of an instance. By default, this will return the full
 representation of the resource; an optional fields parameter can be supplied to
 return only the specified set.
 
@@ -176,7 +176,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - instance_ident: instance_ident
+  - instance_uuid: instance_ident
   - fields: fields
 
 Response
@@ -210,7 +210,7 @@ Response
 Update Instance
 ===============
 
-.. rest_method:: PATCH /instances/{instances_uuid}
+.. rest_method:: PATCH /instances/{instance_uuid}
 
 Updates the infromation stored about an instance.
 
@@ -227,7 +227,7 @@ The BODY of the PATCH request must be a JSON PATCH document, adhering to
 
 .. rest_parameters:: parameters.yaml
 
-  - instance_ident: instance_ident
+  - instance_uuid: instance_ident
 
 **Example Update Instance: JSON request**
 
@@ -264,7 +264,7 @@ Response
 Delete Instance
 ===============
 
-.. rest_method:: DELETE /instances/{instances_uuid}
+.. rest_method:: DELETE /instances/{instance_uuid}
 
 Deletes an instance.
 
@@ -281,7 +281,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - instance_ident: instance_ident
+  - instance_uuid: instance_ident
 
 Response
 --------
@@ -302,7 +302,7 @@ its power state. This is handled asynchronously.
 Instance State Summary
 ======================
 
-.. rest_method:: GET /v1/instances/{instance_ident}/states
+.. rest_method:: GET /v1/instances/{instance_uuid}/states
 
 Get a summary of the Instance's current power status.
 
@@ -313,7 +313,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-    - instance_ident: instance_ident
+    - instance_uuid: instance_ident
 
 Response
 --------
@@ -330,7 +330,7 @@ Response
 Change Instance Power State
 ===========================
 
-.. rest_method:: PUT /v1/instances/{instance_ident}/states/power
+.. rest_method:: PUT /v1/instances/{instance_uuid}/states/power
 
 Request a change to the Instance's power state.
 
@@ -346,7 +346,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-    - instance_ident: instance_ident
+    - instance_uuid: instance_ident
     - target: power_state
 
 **Example request to power off a Instance:**
