@@ -63,7 +63,8 @@ class EngineManager(base_manager.BaseEngineManager):
             self.node_cache = node_cache
 
     @periodic_task.periodic_task(
-        spacing=CONF.engine.sync_node_resource_interval)
+        spacing=CONF.engine.sync_node_resource_interval,
+        run_immediately=True)
     def _sync_node_resources(self, context):
         self._refresh_cache()
 

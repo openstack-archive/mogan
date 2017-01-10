@@ -60,9 +60,6 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self._worker_pool = greenpool.GreenPool(
             size=CONF.engine.workers_pool_size)
 
-        # Refresh node cache on startup
-        self._refresh_cache()
-
         self._started = True
 
     def del_host(self):
