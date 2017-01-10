@@ -71,8 +71,7 @@ class EngineAPI(object):
     def set_power_state(self, context, instance, state):
         """Signal to engine service to perform power action on instance."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        # need return?
-        return cctxt.call(context, 'set_power_state',
+        return cctxt.cast(context, 'set_power_state',
                           instance=instance, state=state)
 
     def get_ironic_node(self, context, instance_uuid, fields):

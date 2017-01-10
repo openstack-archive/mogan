@@ -124,7 +124,7 @@ class RPCAPITestCase(base.DbTestCase):
 
     def test_set_power_state(self):
         self._test_rpcapi('set_power_state',
-                          'call',
+                          'cast',
                           version='1.0',
                           instance=self.fake_instance_obj,
                           state='power on')
