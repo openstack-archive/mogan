@@ -393,6 +393,10 @@ class TestObjectVersions(test_base.TestCase):
 
     def test_object_version_check(self):
         classes = base.MoganObjectRegistry.obj_classes()
+        # We will test the notification objects specifically, here
+        # we only test the versioned objects.
+        for noti_cls in base.MoganObjectRegistry.notification_classes:
+            classes.pop(noti_cls.__name__, None)
         checker = object_fixture.ObjectVersionChecker(obj_classes=classes)
         # Compute the difference between actual fingerprints and
         # expect fingerprints. expect = actual = {} if there is no change.
