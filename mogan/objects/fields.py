@@ -159,3 +159,17 @@ class NotificationActionField(object_fields.BaseEnumField):
 
 class NotificationPriorityField(object_fields.BaseEnumField):
     AUTO_TYPE = NotificationPriority()
+
+
+class InstanceTaskState(object_fields.BaseEnumField):
+    SCHEDULING = 'scheduling'
+    NETWORKING = 'networking'
+    SPAWNING = 'spawning'
+    REBOOTING = 'rebooting'
+    POWERING_OFF = 'powering-off'
+    POWERING_ON = 'powering-on'
+    REBUILDING = 'rebuilding'
+    DELETING = 'deleting'
+
+    ALL = (SCHEDULING, NETWORKING, SPAWNING, REBOOTING, POWERING_OFF,
+           POWERING_ON, REBUILDING, DELETING)

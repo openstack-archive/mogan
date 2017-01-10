@@ -36,6 +36,7 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'project_id': object_fields.UUIDField(nullable=True),
         'user_id': object_fields.UUIDField(nullable=True),
         'status': object_fields.StringField(nullable=True),
+        'task_state': object_fields.StringField(nullable=True),
         'instance_type_uuid': object_fields.UUIDField(nullable=True),
         'availability_zone': object_fields.StringField(nullable=True),
         'image_uuid': object_fields.UUIDField(nullable=True),
