@@ -19,9 +19,9 @@ from oslo_log import log
 from oslo_utils import timeutils
 
 from mogan.common import exception
+from mogan.common import states
 from mogan.conf import CONF
 from mogan.engine import rpcapi
-from mogan.engine import status
 from mogan import image
 from mogan import objects
 
@@ -46,7 +46,7 @@ class API(object):
 
         base_options = {
             'image_uuid': image_uuid,
-            'status': status.BUILDING,
+            'status': states.BUILDING,
             'user_id': context.user,
             'project_id': context.tenant,
             'instance_type_uuid': instance_type['uuid'],
@@ -63,7 +63,7 @@ class API(object):
 
         instance = objects.Instance(context=context)
         instance.update(base_options)
-        instance.status = status.BUILDING
+        instance.status = states.BUILDING
         instance.create()
 
         return instance
@@ -125,7 +125,7 @@ class API(object):
 
     def _delete_instance(self, context, instance):
         try:
-            instance.status = status.DELETING
+            instance.status = states.DELETING
             instance.deleted_at = timeutils.utcnow()
             instance.save()
         except exception.InstanceNotFound:

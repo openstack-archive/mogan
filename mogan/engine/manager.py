@@ -20,6 +20,7 @@ from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import loopingcall
 from oslo_service import periodic_task
+from oslo_utils import timeutils
 import six
 
 from mogan.common import exception
@@ -28,12 +29,12 @@ from mogan.common.i18n import _
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LI
 from mogan.common.i18n import _LW
+from mogan.common import states
 from mogan.conf import CONF
 from mogan.engine.baremetal import ironic
 from mogan.engine.baremetal import ironic_states
 from mogan.engine import base_manager
 from mogan.engine.flows import create_instance
-from mogan.engine import status
 
 LOG = log.getLogger(__name__)
 
@@ -70,7 +71,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def _set_instance_obj_error_state(self, context, instance):
         try:
-            instance.status = status.ERROR
+            instance.status = states.ERROR
             instance.save()
         except exception.InstanceNotFound:
             LOG.debug('Instance has been destroyed from under us while '
@@ -163,6 +164,11 @@ class EngineManager(base_manager.BaseEngineManager):
         """Perform a deployment."""
         LOG.debug("Starting instance...", instance=instance)
 
+        # Initialize state machine
+        fsm = states.machine.copy()
+        target_state = states.ACTIVE
+        fsm.initialize(start_state=instance.status, target_state=target_state)
+
         if filter_properties is None:
             filter_properties = {}
 
@@ -191,12 +197,21 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             _run_flow()
         except Exception as e:
-            self._set_instance_obj_error_state(context, instance)
+            fsm.process_event('error')
+            instance.status = fsm.current_state
+            instance.save()
             LOG.error(_LE("Created instance %(uuid)s failed."
                           "Exception: %(exception)s"),
                       {"uuid": instance.uuid,
                        "exception": e})
         else:
+            # Advance the state model for the given event. Note that this
+            # doesn't alter the instance in any way. This may raise
+            # InvalidState, if this event is not allowed in the current state.
+            fsm.process_event('done')
+            instance.status = fsm.current_state
+            instance.launched_at = timeutils.utcnow()
+            instance.save()
             LOG.info(_LI("Created instance %s successfully."), instance.uuid)
         finally:
             return instance
@@ -223,7 +238,7 @@ class EngineManager(base_manager.BaseEngineManager):
                                   "instance resources."),
                               instance=instance)
 
-        instance.status = status.DELETED
+        instance.status = states.DELETED
         instance.save()
         instance.destroy()
 

@@ -18,7 +18,6 @@ import traceback
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_service import loopingcall
-from oslo_utils import timeutils
 import taskflow.engines
 from taskflow.patterns import linear_flow
 
@@ -27,10 +26,10 @@ from mogan.common import flow_utils
 from mogan.common.i18n import _
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LI
+from mogan.common import states
 from mogan.common import utils
 from mogan.engine.baremetal import ironic
 from mogan.engine.baremetal import ironic_states
-from mogan.engine import status
 
 LOG = logging.getLogger(__name__)
 
@@ -273,7 +272,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
     def _wait_for_active(self, instance):
         """Wait for the node to be marked as ACTIVE in Ironic."""
         instance.refresh()
-        if instance.status in (status.DELETING, status.ERROR, status.DELETED):
+        if instance.status in (states.DELETING, states.ERROR, states.DELETED):
             raise exception.InstanceDeployFailure(
                 _("Instance %s provisioning was aborted") % instance.uuid)
 
@@ -284,9 +283,6 @@ class CreateInstanceTask(flow_utils.MoganTask):
             # job is done
             LOG.debug("Ironic node %(node)s is now ACTIVE",
                       dict(node=node.uuid))
-            instance.status = status.ACTIVE
-            instance.launched_at = timeutils.utcnow()
-            instance.save()
             raise loopingcall.LoopingCallDone()
 
         if node.target_provision_state in (ironic_states.DELETED,
