@@ -13,6 +13,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""
+The Mogan console auth Service
+"""
 
-MANAGER_TOPIC = 'mogan.engine_manager'
-MANAGER_CONSOLEAUTH_TOPIC = 'mogan.console_auth'
+import sys
+
+from oslo_config import cfg
+from oslo_service import service
+
+from mogan.common import constants
+from mogan.common import service as mogan_service
+
+CONF = cfg.CONF
+
+
+def main():
+    # Parse config file and command line options, then start logging
+    mogan_service.prepare_service(sys.argv)
+
+    mgr = mogan_service.RPCService(CONF.host,
+                                   'mogan.consoleauth.manager',
+                                   'ConsoleAuthManager',
+                                   constants.MANAGER_CONSOLEAUTH_TOPIC)
+
+    launcher = service.launch(CONF, mgr)
+    launcher.wait()

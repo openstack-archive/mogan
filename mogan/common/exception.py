@@ -300,4 +300,12 @@ class InstanceIsLocked(Invalid):
     msg_fmt = _("Instance %(instance_uuid)s is locked")
 
 
+class InvalidToken(Invalid):
+    msg_fmt = _("Invalid token: %(token)s")
+
+
+class ConsoleNotAvailable(MoganException):
+    _msg_fmt = _("Console not available.")
+
+
 ObjectActionError = obj_exc.ObjectActionError
