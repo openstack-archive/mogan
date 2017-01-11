@@ -418,6 +418,28 @@ class InstanceCollection(base.APIBase):
         return collection
 
 
+class InstanceVNCConsole(base.APIBase):
+    """API representation of the networks of an instance."""
+
+    console = {wtypes.text: types.jsontype}
+    """The network information of the instance"""
+
+
+class InstanceVNCConsoleController(InstanceControllerBase):
+    """REST controller for Instance."""
+
+    @policy.authorize_wsgi("mogan:instance", "get_vnc_console")
+    @expose.expose(InstanceVNCConsole, types.uuid)
+    def get(self, instance_uuid):
+        """List the networks info of the instance.
+
+        :param instance_uuid: the UUID of a instance.
+        """
+        console = pecan.request.engine_api.get_vnc_console(
+            pecan.request.context, instance_uuid, 'shellinabox')
+        return InstanceVNCConsole(console=console)
+
+
 class InstanceController(InstanceControllerBase):
     """REST controller for Instance."""
 
@@ -425,6 +447,9 @@ class InstanceController(InstanceControllerBase):
     """Expose the state controller action as a sub-element of instances"""
 
     networks = InstanceNetworksController()
+    """Expose the network controller action as a sub-element of instances"""
+
+    vnc_console = InstanceVNCConsoleController()
     """Expose the network controller action as a sub-element of instances"""
 
     _custom_actions = {
@@ -588,3 +613,4 @@ class InstanceController(InstanceControllerBase):
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
         pecan.request.engine_api.delete(pecan.request.context, rpc_instance)
+

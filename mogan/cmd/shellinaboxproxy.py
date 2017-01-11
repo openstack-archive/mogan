@@ -1,4 +1,3 @@
-# Copyright 2016 Huawei Technologies Co.,LTD.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,6 +12,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import sys
 
-MANAGER_TOPIC = 'mogan.engine_manager'
-MANAGER_CONSOLEAUTH_TOPIC = 'mogan.console_auth'
+from mogan.conf import CONF
+from mogan.console import shellinaboxproxy
+from mogan.common import service as mogan_service
+from mogan.conf import shellinabox
+
+shellinabox.register_cli_opts(CONF)
+
+
+def main():
+    mogan_service.prepare_service(sys.argv)
+
+    server_address = (CONF.shellinabox_console.shellinaboxproxy_host,
+                      CONF.shellinabox_console.shellinaboxproxy_port)
+
+    httpd = shellinaboxproxy.ThreadingHTTPServer(
+        server_address,
+        shellinaboxproxy.ProxyHandler)
+    httpd.service_start()

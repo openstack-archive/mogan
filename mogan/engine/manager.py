@@ -21,7 +21,9 @@ import oslo_messaging as messaging
 from oslo_service import loopingcall
 from oslo_service import periodic_task
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 import six
+import six.moves.urllib.parse as urlparse
 
 from mogan.common import exception
 from mogan.common import flow_utils
@@ -466,3 +468,117 @@ class EngineManager(base_manager.BaseEngineManager):
                 azs.add(az)
 
         return {'availability_zones': list(azs)}
+
+    @staticmethod
+    def _log_ironic_polling(what, node):
+        power_state = (None if node.power_state is None else
+                       '"%s"' % node.power_state)
+        tgt_power_state = (None if node.target_power_state is None else
+                           '"%s"' % node.target_power_state)
+        prov_state = (None if node.provision_state is None else
+                      '"%s"' % node.provision_state)
+        tgt_prov_state = (None if node.target_provision_state is None else
+                          '"%s"' % node.target_provision_state)
+        LOG.debug('Still waiting for ironic node %(node)s to %(what)s: '
+                  'power_state=%(power_state)s, '
+                  'target_power_state=%(tgt_power_state)s, '
+                  'provision_state=%(prov_state)s, '
+                  'target_provision_state=%(tgt_prov_state)s',
+                  dict(what=what,
+                       node=node.uuid,
+                       power_state=power_state,
+                       tgt_power_state=tgt_power_state,
+                       prov_state=prov_state,
+                       tgt_prov_state=tgt_prov_state))
+
+    def get_vnc_console(self, context, instance_uuid=None, console_type=None):
+        node = ironic.get_node_by_instance(self.ironicclient,
+                                           instance_uuid)
+        node_uuid = node.uuid
+
+        def _get_console():
+            """Request ironicclient to acquire node console."""
+            try:
+                return self.ironicclient.call('node.get_console', node_uuid)
+            except (ironic_exc.InternalServerError,  # Validations
+                    ironic_exc.BadRequest) as e:  # Maintenance
+                LOG.error(_LE('Failed to acquire console information for '
+                              'instance %(inst)s: %(reason)s'),
+                          {'inst': instance_uuid,
+                           'reason': e})
+                raise exception.ConsoleNotAvailable()
+
+        def _wait_state(state):
+            """Wait for the expected console mode to be set on node."""
+            console = _get_console()
+            if console['console_enabled'] == state:
+                raise loopingcall.LoopingCallDone(retvalue=console)
+
+            self._log_ironic_polling('set console mode', node)
+
+            # Return False to start backing off
+            return False
+
+        def _enable_console(mode):
+            """Request ironicclient to enable/disable node console."""
+            try:
+                self.ironicclient.call('node.set_console_mode', node_uuid,
+                                       mode)
+            except (ironic_exc.InternalServerError,  # Validations
+                    ironic_exc.BadRequest) as e:  # Maintenance
+                LOG.error(_LE('Failed to set console mode to "%(mode)s" '
+                              'for instance %(inst)s: %(reason)s'),
+                          {'mode': mode,
+                           'inst': instance_uuid,
+                           'reason': e})
+                raise exception.ConsoleNotAvailable()
+
+            # Waiting for the console state to change (disabled/enabled)
+            try:
+                timer = loopingcall.BackOffLoopingCall(_wait_state, state=mode)
+                return timer.start(
+                    starting_interval=1, timeout=10, jitter=0.5).wait()
+            except loopingcall.LoopingCallTimeOut:
+                LOG.error(_LE('Timeout while waiting for console mode to be '
+                              'set to "%(mode)s" on node %(node)s'),
+                          {'mode': mode,
+                           'node': node_uuid})
+                raise exception.ConsoleNotAvailable()
+
+        # Acquire the console
+        _enable_console(True)
+        console = _get_console()
+
+        # NOTE: Resetting console is a workaround to force acquiring
+        # console when it has already been acquired by another user/operator.
+        # IPMI serial console does not support multi session, so
+        # resetting console will deactivate any active one without
+        # warning the operator.
+        if console['console_enabled']:
+            try:
+                # Disable console
+                _enable_console(False)
+                # Then re-enable it
+                console = _enable_console(True)
+            except exception.ConsoleNotAvailable:
+                # NOTE: We try to do recover on failure.
+                # But if recover fails, the console may remain in
+                # "disabled" state and cause any new connection
+                # will be refused.
+                console = _enable_console(True)
+
+        if console['console_enabled']:
+            token = uuidutils.generate_uuid()
+            access_url = '%s?token=%s' % (
+                CONF.shellinabox_console.shellinabox_base_url, token)
+            console_url = console['console_info']['url']
+            parsed_url = urlparse.urlparse(console_url)
+            return {'access_url': access_url,
+                    'token': token,
+                    'host': parsed_url.hostname,
+                    'port': parsed_url.port,
+                    'internal_access_path': None}
+        else:
+            LOG.debug('Console is disabled for instance %s',
+                      instance_uuid)
+            raise exception.ConsoleNotAvailable()
