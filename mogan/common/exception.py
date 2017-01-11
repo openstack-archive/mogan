@@ -300,4 +300,7 @@ class InstanceIsLocked(Invalid):
     msg_fmt = _("Instance %(instance_uuid)s is locked")
 
 
+class InvalidToken(Invalid):
+    msg_fmt = _("Invalid token: %(token)s")
+
 ObjectActionError = obj_exc.ObjectActionError
