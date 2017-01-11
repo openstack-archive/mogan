@@ -16,8 +16,8 @@
 
 from oslo_utils import uuidutils
 
+from mogan.common import states
 from mogan.db import api as db_api
-from mogan.engine import status
 
 
 def get_test_instance(**kw):
@@ -46,7 +46,7 @@ def get_test_instance(**kw):
         'project_id': kw.get('project_id',
                              'c18e8a1a870d4c08a0b51ced6e0b6459'),
         'user_id': kw.get('user_id', 'cdbf77d47f1d4d04ad9b7ff62b672467'),
-        'status': kw.get('status', status.ACTIVE),
+        'status': kw.get('status', states.ACTIVE),
         'instance_type_uuid': kw.get('instance_type_uuid',
                                      '28708dff-283c-449e-9bfa-a48c93480c86'),
         'availability_zone': kw.get('availability_zone', 'test_az'),
