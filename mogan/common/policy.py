@@ -112,6 +112,9 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:set_lock_state',
                        'rule:default',
                        description='Lock/UnLock an instance'),
+    policy.RuleDefault('mogan:instance:get_vnc_console',
+                       'rule:default',
+                       description='Get vnc console for an instance'),
 ]
 
 FUNC_PARAMS_INTERESTED = {
