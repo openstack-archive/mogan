@@ -19,6 +19,7 @@ import mock
 from oslo_config import cfg
 
 from mogan.common import exception
+from mogan.common import states
 from mogan.engine.baremetal import ironic
 from mogan.engine.baremetal import ironic_states
 from mogan.engine import manager
@@ -117,7 +118,8 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
                              refresh_cache_mock):
         fake_node = mock.MagicMock()
         fake_node.provision_state = ironic_states.ACTIVE
-        instance = obj_utils.create_test_instance(self.context)
+        instance = obj_utils.create_test_instance(
+            self.context, status=states.DELETING)
         destroy_net_mock.side_effect = None
         destroy_inst_mock.side_effect = None
         refresh_cache_mock.side_effect = None
@@ -137,7 +139,8 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
             self, destroy_inst_mock, get_node_mock, refresh_cache_mock):
         fake_node = mock.MagicMock()
         fake_node.provision_state = 'foo'
-        instance = obj_utils.create_test_instance(self.context)
+        instance = obj_utils.create_test_instance(
+            self.context, status=states.DELETING)
         destroy_inst_mock.side_effect = None
         refresh_cache_mock.side_effect = None
         get_node_mock.return_value = fake_node
