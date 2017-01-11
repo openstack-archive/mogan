@@ -261,13 +261,14 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.debug('Power %(state)s called for instance %(instance)s',
                   {'state': state,
                    'instance': instance})
-        ironic.set_power_state(self.ironicclient, instance.node_uuid, state)
-
-        timer = loopingcall.FixedIntervalLoopingCall(
-            self._wait_for_power_state, instance)
-        timer.start(interval=CONF.ironic.api_retry_interval).wait()
-        LOG.info(_LI('Successfully set node power state: %s'),
-                 state, instance=instance)
+        # ironic.set_power_state(self.ironicclient, instance.node_uuid, state)
+        import pdb; pdb.set_trace()
+        self.get_serial_console(context, instance)
+        # timer = loopingcall.FixedIntervalLoopingCall(
+        #     self._wait_for_power_state, instance)
+        # timer.start(interval=CONF.ironic.api_retry_interval).wait()
+        # LOG.info(_LI('Successfully set node power state: %s'),
+        #          state, instance=instance)
 
     @messaging.expected_exceptions(exception.NodeNotFound)
     def get_ironic_node(self, context, instance_uuid, fields):
@@ -301,3 +302,165 @@ class EngineManager(base_manager.BaseEngineManager):
                 azs.add(az)
 
         return {'availability_zones': list(azs)}
+
+
+    def _get_node_console_with_reset(self, instance):
+        """Acquire console information for an instance.
+
+        If the console is enabled, the console will be re-enabled
+        before returning.
+
+        :param instance: nova instance
+        :return: a dictionary with below values
+            { 'node': ironic node
+              'console_info': node console info }
+        :raise ConsoleNotAvailable: if console is unavailable
+            for the instance
+        """
+        node = ironic.get_node_by_instance(self.ironicclient,
+                                           instance.uuid)
+        node_uuid=node.uuid
+
+        def _get_console():
+            """Request ironicclient to acquire node console."""
+            try:
+                return self.ironicclient.call('node.get_console', node_uuid)
+            except Exception as e:  # Maintenance
+                LOG.error(_LE('Failed to acquire console information for '
+                              'instance %(inst)s: %(reason)s'),
+                          {'inst': instance.uuid,
+                           'reason': e})
+                raise Exception('test')
+
+        def _wait_state(state):
+            """Wait for the expected console mode to be set on node."""
+            console = _get_console()
+            if console['console_enabled'] == state:
+                raise loopingcall.LoopingCallDone(retvalue=console)
+
+            _log_ironic_polling('set console mode', node, instance)
+
+            # Return False to start backing off
+            return False
+
+        def _enable_console(mode):
+            """Request ironicclient to enable/disable node console."""
+            try:
+                self.ironicclient.call('node.set_console_mode', node_uuid,
+                                       mode)
+            except Exception as e:  # Maintenance
+                LOG.error(_LE('Failed to set console mode to "%(mode)s" '
+                              'for instance %(inst)s: %(reason)s'),
+                          {'mode': mode,
+                           'inst': instance.uuid,
+                           'reason': e})
+                raise Exception('test')
+
+            # Waiting for the console state to change (disabled/enabled)
+            try:
+                timer = loopingcall.BackOffLoopingCall(_wait_state, state=mode)
+                return timer.start(
+                    starting_interval=1,
+                    timeout=CONF.ironic.serial_console_state_timeout,
+                    jitter=0.5).wait()
+            except loopingcall.LoopingCallTimeOut:
+                LOG.error(_LE('Timeout while waiting for console mode to be '
+                              'set to "%(mode)s" on node %(node)s'),
+                          {'mode': mode,
+                           'node': node_uuid})
+                raise Exception('test')
+
+        # Acquire the console
+        console = _get_console()
+
+        # NOTE: Resetting console is a workaround to force acquiring
+        # console when it has already been acquired by another user/operator.
+        # IPMI serial console does not support multi session, so
+        # resetting console will deactivate any active one without
+        # warning the operator.
+        if console['console_enabled']:
+            try:
+                # Disable console
+                _enable_console(False)
+                # Then re-enable it
+                console = _enable_console(True)
+            except Exception:
+                # NOTE: We try to do recover on failure.
+                # But if recover fails, the console may remain in
+                # "disabled" state and cause any new connection
+                # will be refused.
+                console = _enable_console(True)
+
+        if console['console_enabled']:
+            return {'node': node,
+                    'console_info': console['console_info']}
+        else:
+            LOG.debug('Console is disabled for instance %s',
+                      instance.uuid)
+            raise Exception()
+
+    def get_serial_console(self, context, instance):
+        """Acquire serial console information.
+
+        :param context: request context
+        :param instance: nova instance
+        :return: ConsoleSerial object
+        :raise ConsoleTypeUnavailable: if serial console is unavailable
+            for the instance
+        """
+        import six.moves.urllib.parse as urlparse
+        LOG.debug('Getting serial console', instance=instance)
+        try:
+            result = self._get_node_console_with_reset(instance)
+        except Exception:
+            raise Exception("_get_node_console_with_reset failed")
+
+        node = result['node']
+        console_info = result['console_info']
+
+        if console_info["type"] != "socat":
+            LOG.warning(_LW('Console type "%(type)s" (of ironic node '
+                            '%(node)s) does not support Nova serial console'),
+                        {'type': console_info["type"],
+                         'node': node.uuid},
+                        instance=instance)
+            raise Exception("_get_node_console_with_reset failed")
+
+        # Parse and check the console url
+        url = urlparse.urlparse(console_info["url"])
+        try:
+            scheme = url.scheme
+            hostname = url.hostname
+            port = url.port
+            if not (scheme and hostname and port):
+                raise AssertionError()
+        except (ValueError, AssertionError):
+            LOG.error(_LE('Invalid Socat console URL "%(url)s" '
+                          '(ironic node %(node)s)'),
+                      {'url': console_info["url"],
+                       'node': node.uuid},
+                      instance=instance)
+            raise Exception("_get_node_console_with_reset failed")
+
+
+def _log_ironic_polling(what, node, instance):
+    power_state = (None if node.power_state is None else
+                   '"%s"' % node.power_state)
+    tgt_power_state = (None if node.target_power_state is None else
+                       '"%s"' % node.target_power_state)
+    prov_state = (None if node.provision_state is None else
+                  '"%s"' % node.provision_state)
+    tgt_prov_state = (None if node.target_provision_state is None else
+                      '"%s"' % node.target_provision_state)
+    LOG.debug('Still waiting for ironic node %(node)s to %(what)s: '
+              'power_state=%(power_state)s, '
+              'target_power_state=%(tgt_power_state)s, '
+              'provision_state=%(prov_state)s, '
+              'target_provision_state=%(tgt_prov_state)s',
+              dict(what=what,
+                   node=node.uuid,
+                   power_state=power_state,
+                   tgt_power_state=tgt_power_state,
+                   prov_state=prov_state,
+                   tgt_prov_state=tgt_prov_state),
+              instance=instance)

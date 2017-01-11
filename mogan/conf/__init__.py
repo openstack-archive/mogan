@@ -24,6 +24,7 @@ from mogan.conf import ironic
 from mogan.conf import keystone
 from mogan.conf import neutron
 from mogan.conf import scheduler
+from mogan.conf import serial_console
 
 CONF = cfg.CONF
 
@@ -36,3 +37,4 @@ ironic.register_opts(CONF)
 keystone.register_opts(CONF)
 neutron.register_opts(CONF)
 scheduler.register_opts(CONF)
+serial_console.register_opts(CONF)
