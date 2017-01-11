@@ -28,12 +28,12 @@ from mogan.common.i18n import _
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LI
 from mogan.common.i18n import _LW
+from mogan.common import states
 from mogan.conf import CONF
 from mogan.engine.baremetal import ironic
 from mogan.engine.baremetal import ironic_states
 from mogan.engine import base_manager
 from mogan.engine.flows import create_instance
-from mogan.engine import status
 
 LOG = log.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def _set_instance_obj_error_state(self, context, instance):
         try:
-            instance.status = status.ERROR
+            instance.status = states.ERROR
             instance.save()
         except exception.InstanceNotFound:
             LOG.debug('Instance has been destroyed from under us while '
@@ -223,7 +223,7 @@ class EngineManager(base_manager.BaseEngineManager):
                                   "instance resources."),
                               instance=instance)
 
-        instance.status = status.DELETED
+        instance.status = states.DELETED
         instance.save()
         instance.destroy()
 

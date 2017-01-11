@@ -257,4 +257,12 @@ class AZNotFound(NotFound):
     msg_fmt = _("The availability zone could not be found.")
 
 
+class InvalidState(Conflict):
+    _msg_fmt = _("Invalid resource state.")
+
+
+class Duplicate(MoganException):
+    _msg_fmt = _("Resource already exists.")
+
+
 ObjectActionError = obj_exc.ObjectActionError
