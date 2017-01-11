@@ -29,12 +29,12 @@ from mogan.common.i18n import _
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LI
 from mogan.common.i18n import _LW
+from mogan.common import states
 from mogan.conf import CONF
 from mogan.engine.baremetal import ironic
 from mogan.engine.baremetal import ironic_states
 from mogan.engine import base_manager
 from mogan.engine.flows import create_instance
-from mogan.engine import status
 from mogan.notifications import base as notifications
 from mogan.objects import fields
 
@@ -70,14 +70,6 @@ class EngineManager(base_manager.BaseEngineManager):
         run_immediately=True)
     def _sync_node_resources(self, context):
         self._refresh_cache()
-
-    def _set_instance_obj_error_state(self, context, instance):
-        try:
-            instance.status = status.ERROR
-            instance.save()
-        except exception.InstanceNotFound:
-            LOG.debug('Instance has been destroyed from under us while '
-                      'trying to set it to ERROR', instance=instance)
 
     def destroy_networks(self, context, instance):
         LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(network_info)s",
@@ -170,6 +162,10 @@ class EngineManager(base_manager.BaseEngineManager):
             action=fields.NotificationAction.CREATE,
             phase=fields.NotificationPhase.START)
 
+        # Initialize state machine
+        fsm = states.machine.copy()
+        fsm.initialize(start_state=instance.status, target_state=states.ACTIVE)
+
         if filter_properties is None:
             filter_properties = {}
 
@@ -198,12 +194,21 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             _run_flow()
         except Exception as e:
-            self._set_instance_obj_error_state(context, instance)
+            fsm.process_event('error')
+            instance.status = fsm.current_state
+            instance.save()
             LOG.error(_LE("Created instance %(uuid)s failed."
                           "Exception: %(exception)s"),
                       {"uuid": instance.uuid,
                        "exception": e})
         else:
+            # Advance the state model for the given event. Note that this
+            # doesn't alter the instance in any way. This may raise
+            # InvalidState, if this event is not allowed in the current state.
+            fsm.process_event('done')
+            instance.status = fsm.current_state
+            instance.launched_at = timeutils.utcnow()
+            instance.save()
             LOG.info(_LI("Created instance %s successfully."), instance.uuid)
         finally:
             return instance
@@ -211,6 +216,11 @@ class EngineManager(base_manager.BaseEngineManager):
     def delete_instance(self, context, instance):
         """Delete an instance."""
         LOG.debug("Deleting instance...")
+
+        # Initialize state machine
+        fsm = states.machine.copy()
+        fsm.initialize(start_state=instance.status,
+                       target_state=states.DELETED)
 
         try:
             node = ironic.get_node_by_instance(self.ironicclient,
@@ -229,8 +239,13 @@ class EngineManager(base_manager.BaseEngineManager):
                 LOG.exception(_LE("Error while trying to clean up "
                                   "instance resources."),
                               instance=instance)
+                fsm.process_event('error')
+                instance.status = fsm.current_state
+                instance.save()
+                return
 
-        instance.status = status.DELETED
+        fsm.process_event('done')
+        instance.status = fsm.current_state
         instance.deleted_at = timeutils.utcnow()
         instance.save()
         instance.destroy()
