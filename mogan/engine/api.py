@@ -16,7 +16,6 @@
 """Handles all requests relating to compute resources"""
 
 from oslo_log import log
-from oslo_utils import timeutils
 
 from mogan.common import exception
 from mogan.conf import CONF
@@ -126,7 +125,6 @@ class API(object):
     def _delete_instance(self, context, instance):
         try:
             instance.status = status.DELETING
-            instance.deleted_at = timeutils.utcnow()
             instance.save()
         except exception.InstanceNotFound:
             LOG.debug("Instance %s is not found while deleting",
