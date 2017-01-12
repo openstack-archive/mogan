@@ -257,7 +257,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
 
 
 class CreateInstanceTask(flow_utils.MoganTask):
-    """Set instance info to ironic node and validate it."""
+    """Build and deploy the instance."""
 
     def __init__(self, ironicclient):
         requires = ['instance', 'context']
