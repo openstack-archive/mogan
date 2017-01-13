@@ -20,6 +20,7 @@ from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import loopingcall
 from oslo_service import periodic_task
+from oslo_utils import timeutils
 import six
 
 from mogan.common import exception
@@ -224,6 +225,7 @@ class EngineManager(base_manager.BaseEngineManager):
                               instance=instance)
 
         instance.status = status.DELETED
+        instance.deleted_at = timeutils.utcnow()
         instance.save()
         instance.destroy()
 
