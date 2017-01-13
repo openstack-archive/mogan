@@ -146,7 +146,7 @@ class NotificationAction(BaseMoganEnum):
     SHUTDOWN = 'shutdown'
     CREATE = 'create'
 
-    ALL = (UPDATE, EXCEPTION, DELETE, POWER_OFF)
+    ALL = (UPDATE, EXCEPTION, DELETE, CREATE, POWER_OFF)
 
 
 class NotificationPhaseField(object_fields.BaseEnumField):

@@ -14,10 +14,13 @@
 
 import mock
 
+from mogan.notifications import base as notification_base
 from mogan.notifications.objects import base as notification
 from mogan.objects import base
 from mogan.objects import fields
+from mogan.objects import instance as inst_obj
 from mogan.tests import base as test_base
+from mogan.tests.unit.db import utils as db_utils
 
 
 class TestNotificationBase(test_base.TestCase):
@@ -218,3 +221,38 @@ class TestNotificationBase(test_base.TestCase):
         self.assertEqual(2, len(self.TestNotification.samples))
         self.assertIn('test-update-1.json', self.TestNotification.samples)
         self.assertIn('test-update-2.json', self.TestNotification.samples)
+
+
+class TestInstanceActionNotification(test_base.TestCase):
+    @mock.patch('mogan.notifications.objects.instance.'
+                'InstanceActionNotification._emit')
+    def test_send_version_instance_action(self, mock_emit):
+        # Make sure that the notification payload chooses the values in
+        # instance.flavor.$value instead of instance.$value
+        fake_inst_values = db_utils.get_test_instance()
+        instance = inst_obj.Instance(**fake_inst_values)
+        notification_base.notify_about_instance_action(
+            mock.MagicMock(),
+            instance,
+            'test-host',
+            fields.NotificationAction.CREATE,
+            fields.NotificationPhase.START,
+            'mogan-compute')
+        self.assertEqual('instance.create.start',
+                         mock_emit.call_args_list[0][1]['event_type'])
+        self.assertEqual('mogan-compute:test-host',
+                         mock_emit.call_args_list[0][1]['publisher_id'])
+        payload = mock_emit.call_args_list[0][1]['payload'][
+            'mogan_object.data']
+        self.assertEqual(fake_inst_values['uuid'], payload['uuid'])
+        self.assertEqual(fake_inst_values['instance_type_uuid'],
+                         payload['instance_type_uuid'])
+        self.assertEqual(fake_inst_values['status'], payload['status'])
+        self.assertEqual(fake_inst_values['user_id'], payload['user_id'])
+        self.assertEqual(fake_inst_values['availability_zone'],
+                         payload['availability_zone'])
+        self.assertEqual(fake_inst_values['name'], payload['name'])
+        self.assertEqual(fake_inst_values['image_uuid'], payload['image_uuid'])
+        self.assertEqual(fake_inst_values['project_id'], payload['project_id'])
+        self.assertEqual(fake_inst_values['description'],
+                         payload['description'])
