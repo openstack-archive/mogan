@@ -6,18 +6,18 @@
 enable_service mogan mogan-api mogan-engine
 
 # Set up default repos
-MOGAN_REPO=${MOGAN_REPO:-${GIT_BASE}/openstack/nimble.git}
+MOGAN_REPO=${MOGAN_REPO:-${GIT_BASE}/openstack/mogan.git}
 MOGAN_BRANCH=${MOGAN_BRANCH:-master}
-#MOGAN_DASHBOARD_REPO=${MOGAN_DASHBOARD_REPO:-${GIT_BASE}/openstack/nimble-dashboard.git}
+#MOGAN_DASHBOARD_REPO=${MOGAN_DASHBOARD_REPO:-${GIT_BASE}/openstack/mogan-dashboard.git}
 #MOGAN_DASHBOARD_BRANCH=${MOGAN_DASHBOARD_BRANCH:-${MOGAN_BRANCH}}
 
-MOGAN_PYTHONCLIENT_REPO=${MOGAN_PYTHONCLIENT_REPO:-${GIT_BASE}/openstack/python-nimbleclient.git}
+MOGAN_PYTHONCLIENT_REPO=${MOGAN_PYTHONCLIENT_REPO:-${GIT_BASE}/openstack/python-moganclient.git}
 MOGAN_PYTHONCLIENT_BRANCH=${MOGAN_PYTHONCLIENT_BRANCH:-master}
-MOGAN_PYTHONCLIENT_DIR=${DEST}/python-nimbleclient
+MOGAN_PYTHONCLIENT_DIR=${DEST}/python-moganclient
 
 # Set up default directories
-MOGAN_DIR=$DEST/nimble
-MOGAN_DASHBOARD_DIR=$DEST/nimble-dashboard
+MOGAN_DIR=$DEST/mogan
+MOGAN_DASHBOARD_DIR=$DEST/mogan-dashboard
 MOGAN_CONF_DIR=${MOGAN_CONF_DIR:-/etc/mogan}
 MOGAN_CONF_FILE=${MOGAN_CONF_DIR}/mogan.conf
 MOGAN_DEBUG=${MOGAN_DEBUG:-True}
