@@ -14,7 +14,7 @@ Project Resources
 
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/mogan
-* Source: http://git.openstack.org/cgit/openstack/nimble
+* Source: http://git.openstack.org/cgit/openstack/mogan
 * Bugs: http://bugs.launchpad.net/mogan
 * Wiki: https://wiki.openstack.org/wiki/Mogan
 

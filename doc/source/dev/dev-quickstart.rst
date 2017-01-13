@@ -143,8 +143,8 @@ If you haven't already, Mogan source code should be pulled directly from git::
 
     # from your home or source directory
     cd ~
-    git clone https://git.openstack.org/openstack/nimble
-    cd nimble
+    git clone https://git.openstack.org/openstack/mogan
+    cd mogan
 
 Running Unit and Style Tests
 ----------------------------
@@ -164,7 +164,7 @@ name. For example::
     If tests are run under py27 and then run under py34 or py35 the following error may occur::
 
       db type could not be determined
-      ERROR: InvocationError: '/home/ubuntu/nimble/.tox/py35/bin/ostestr'
+      ERROR: InvocationError: '/home/ubuntu/mogan/.tox/py35/bin/ostestr'
 
     To overcome this error remove the file `.testrepository/times.dbm`
     and then run the py34 or py35 test.
@@ -267,7 +267,7 @@ Create devstack/local.conf with minimal settings required to enable Mogan
     enable_plugin ironic git://git.openstack.org/openstack/ironic
 
     # Enable Mogan plugin
-    enable_plugin mogan git://git.openstack.org/openstack/nimble
+    enable_plugin mogan git://git.openstack.org/openstack/mogan
 
     # Enable Neutron which is required by Ironic and disable nova-network.
     disable_service n-net
@@ -336,7 +336,7 @@ Create devstack/local.conf with minimal settings required to enable Mogan
       GIT_BASE=https://git.openstack.org
 
       # Enable Mogan plugin
-      enable_plugin mogan https://git.openstack.org/openstack/nimble
+      enable_plugin mogan https://git.openstack.org/openstack/mogan
 
 Run stack.sh::
 
