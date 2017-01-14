@@ -11,8 +11,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import collections
 
 import mock
+from oslo_versionedobjects import fixture as object_fixture
 
 from mogan.notifications import base as notification_base
 from mogan.notifications.objects import base as notification
@@ -221,6 +223,76 @@ class TestNotificationBase(test_base.TestCase):
         self.assertEqual(2, len(self.TestNotification.samples))
         self.assertIn('test-update-1.json', self.TestNotification.samples)
         self.assertIn('test-update-2.json', self.TestNotification.samples)
+
+
+notification_object_data = {
+    'InstancePayload': '1.0-897d5e392176f1e1d004f7d6f88482b3',
+    'InstanceActionPayload': '1.0-a0ff2469842cf5e19acdf0d3d53a90c5',
+    'InstanceActionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
+    'ExceptionPayload': '1.0-7c31986d8d78bed910c324965c431e18',
+    'ExceptionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
+    'EventType': '1.0-93493dd78bdfed806fca70c91d85cbb4',
+    'NotificationPublisher': '1.0-4b0b0d662b21eeed0b23617f3f11794b'
+}
+
+
+class TestNotificationObjectVersions(test_base.TestCase):
+    def setUp(self):
+        super(test_base.TestCase, self).setUp()
+        base.MoganObjectRegistry.register_notification_objects()
+
+    def test_versions(self):
+        noti_class = base.MoganObjectRegistry.notification_classes
+        classes = {cls.__name__: [cls] for cls in noti_class}
+        checker = object_fixture.ObjectVersionChecker(obj_classes=classes)
+        # Compute the difference between actual fingerprints and
+        # expect fingerprints. expect = actual = {} if there is no change.
+        expect, actual = checker.test_hashes(notification_object_data)
+        self.assertEqual(expect, actual,
+                         "Some objects fields or remotable methods have been "
+                         "modified. Please make sure the version of those "
+                         "objects have been bumped and then update "
+                         "expected_object_fingerprints with the new hashes. ")
+
+    def test_notification_payload_version_depends_on_the_schema(self):
+        @base.MoganObjectRegistry.register_if(False)
+        class TestNotificationPayload(notification.NotificationPayloadBase):
+            VERSION = '1.0'
+
+            SCHEMA = {
+                'field_1': ('source_field', 'field_1'),
+                'field_2': ('source_field', 'field_2'),
+            }
+
+            fields = {
+                'extra_field': fields.StringField(),  # filled by ctor
+                'field_1': fields.StringField(),  # filled by the schema
+                'field_2': fields.IntegerField(),   # filled by the schema
+            }
+
+        checker = object_fixture.ObjectVersionChecker(
+            {'TestNotificationPayload': (TestNotificationPayload,)})
+
+        old_hash = checker.get_hashes(extra_data_func=get_extra_data)
+        TestNotificationPayload.SCHEMA['field_3'] = ('source_field',
+                                                     'field_3')
+        new_hash = checker.get_hashes(extra_data_func=get_extra_data)
+
+        self.assertNotEqual(old_hash, new_hash)
+
+
+def get_extra_data(obj_class):
+    extra_data = tuple()
+
+    # Get the SCHEMA items to add to the fingerprint
+    # if we are looking at a notification
+    if issubclass(obj_class, notification.NotificationPayloadBase):
+        schema_data = collections.OrderedDict(
+            sorted(obj_class.SCHEMA.items()))
+
+        extra_data += (schema_data,)
+
+    return extra_data
 
 
 class TestInstanceActionNotification(test_base.TestCase):
