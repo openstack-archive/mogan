@@ -67,6 +67,19 @@ def get_test_instance(**kw):
     }
 
 
+def get_test_quota(**kw):
+    return {
+        'id': kw.get('id', 123),
+        'resource_name': kw.get('resource_name', 'instances'),
+        'project_id': kw.get('project_id',
+                             'c18e8a1a870d4c08a0b51ced6e0b6459'),
+        'hard_limit': kw.get('hard_limit', 10),
+        'allocated': kw.get('allocated', 0),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
+    }
+
+
 def create_test_instance(context={}, **kw):
     """Create test instance entry in DB and return Instance DB object.
 
@@ -111,3 +124,22 @@ def create_test_instance_type(context={}, **kw):
     dbapi = db_api.get_instance()
 
     return dbapi.instance_type_create(context, instance_type)
+
+
+def create_test_quota(context={}, **kw):
+    """Create test quota entry in DB and return quota DB object.
+
+    Function to be used to create test Quota objects in the database.
+
+    :param context: The request context, for access checks.
+    :param kw: kwargs with overriding values for instance's attributes.
+    :returns: Test Quota DB object.
+
+    """
+    quota = get_test_quota(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del quota['id']
+    dbapi = db_api.get_instance()
+
+    return dbapi.quota_create(context, quota)

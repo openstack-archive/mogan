@@ -57,6 +57,18 @@ opts = [
                     'behavior of every instance having the same name, set '
                     'this option to "%(name)s".  Valid keys for the '
                     'template are: name, uuid, count.'),
+    cfg.StrOpt('quota_driver',
+               help=_("Specify the quota driver which is used in Mogan "
+                      "service.")),
+    cfg.IntOpt('reservation_expire',
+               default=86400,
+               help=_('Number of seconds until a reservation expires')),
+    cfg.IntOpt('until_refresh',
+               default=0,
+               help=_('Count of reservations until usage is refreshed')),
+    cfg.IntOpt('max_age',
+               default=0,
+               help=_('Number of seconds between subsequent usage refreshes')),
 ]
 
 opt_group = cfg.OptGroup(name='api',
