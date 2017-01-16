@@ -115,3 +115,52 @@ class Connection(object):
 
         This creates or updates a nic db entry.
         """
+
+    @abc.abstractmethod
+    def quota_get(self, context, project_id, resource_name):
+        """Get quota value of a resource"""
+
+    @abc.abstractmethod
+    def quota_get_all(self, context, project_only=False):
+        """Get all quotas value of resources"""
+
+    @abc.abstractmethod
+    def quota_create(self, context, values):
+        """Create a quota of a resource"""
+
+    @abc.abstractmethod
+    def quota_destroy(self, context, project_id, resource_name):
+        """Delete a quota of a resource"""
+
+    @abc.abstractmethod
+    def quota_update(self, context, project_id, resource_name, updates):
+        """Delete a quota of a resource"""
+
+    @abc.abstractmethod
+    def quota_get_all_by_project(self, context, project_id):
+        """Get quota by project id"""
+
+    @abc.abstractmethod
+    def quota_usage_get_all_by_project(self, context, project_id):
+        """Get quota usage by project id"""
+
+    @abc.abstractmethod
+    def quota_allocated_get_all_by_project(self, context, project_id):
+        """Get quota usage by project id"""
+
+    @abc.abstractmethod
+    def quota_reserve(self, context, resources, quotas, deltas, expire,
+                      until_refresh, max_age, project_id):
+        """Reserve quota of resource"""
+
+    @abc.abstractmethod
+    def reservation_commit(self, context, reservations, project_id):
+        """Commit reservation of quota usage"""
+
+    @abc.abstractmethod
+    def reservation_rollback(self, context, reservations, project_id):
+        """Reservation rollback"""
+
+    @abc.abstractmethod
+    def reservation_expire(self, context):
+        """expire all reservations which has been expired"""
