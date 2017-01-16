@@ -21,10 +21,8 @@ from oslo_utils import importutils
 
 from mogan.common.i18n import _
 from mogan.common import ironic
-from mogan.common import rpc
 from mogan.conf import CONF
 from mogan.db import api as dbapi
-from mogan.engine import rpcapi
 from mogan import network
 
 
@@ -40,9 +38,7 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self.network_api = network.API()
         scheduler_driver = CONF.scheduler.scheduler_driver
         self.scheduler = importutils.import_object(scheduler_driver)
-        self.notifier = rpc.get_notifier()
         self.ironicclient = ironic.IronicClientWrapper()
-        self.engine_rpcapi = rpcapi.EngineAPI()
         self._started = False
 
     def init_host(self):
