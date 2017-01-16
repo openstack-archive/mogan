@@ -300,4 +300,34 @@ class InstanceIsLocked(Invalid):
     msg_fmt = _("Instance %(instance_uuid)s is locked")
 
 
+class InvalidReservationExpiration(Invalid):
+    message = _("Invalid reservation expiration %(expire)s.")
+
+
+class QuotaNotFound(NotFound):
+    message = _("Quota %(quota_name)s could not be found.")
+
+
+class ProjectQuotaNotFound(QuotaNotFound):
+    message = _("Quota for project %(project_id)s could not be found.")
+
+
+class QuotaResourceUnknown(QuotaNotFound):
+    message = _("Unknown quota resources %(unknown)s.")
+
+
+class OverQuota(MoganException):
+    message = _("Quota exceeded for resources: %(overs)s")
+
+
+class QuotaAlreadyExists(MoganException):
+    _msg_fmt = _("Quota with name %(name)s and project %(project_id)s already"
+                 " exists.")
+
+
+class ReservationAlreadyExists(MoganException):
+    _msg_fmt = _("Reservation with name %(name)s and project %(project_id)s "
+                 "already exists.")
+
+
 ObjectActionError = obj_exc.ObjectActionError
