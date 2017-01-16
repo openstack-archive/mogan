@@ -48,6 +48,18 @@ opts = [
                        "the service, this option should be False; note, you "
                        "will want to change public API endpoint to represent "
                        "SSL termination URL with 'public_endpoint' option.")),
+    cfg.StrOpt('quota_driver',
+               help=_("Specify the quota driver which is used in Mogan "
+                      "service.")),
+    cfg.IntOpt('reservation_expire',
+               default=86400,
+               help=_('Number of seconds until a reservation expires')),
+    cfg.IntOpt('until_refresh',
+               default=0,
+               help=_('Count of reservations until usage is refreshed')),
+    cfg.IntOpt('max_age',
+               default=0,
+               help=_('Number of seconds between subsequent usage refreshes')),
 ]
 
 opt_group = cfg.OptGroup(name='api',
