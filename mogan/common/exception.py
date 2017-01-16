@@ -282,4 +282,34 @@ class FloatingIpMultipleFoundForAddress(MoganException):
     msg_fmt = _("Multiple floating IPs are found for address %(address)s.")
 
 
+class InvalidReservationExpiration(Invalid):
+    message = _("Invalid reservation expiration %(expire)s.")
+
+
+class QuotaNotFound(NotFound):
+    message = _("Quota %(quota_name)s could not be found.")
+
+
+class ProjectQuotaNotFound(QuotaNotFound):
+    message = _("Quota for project %(project_id)s could not be found.")
+
+
+class QuotaResourceUnknown(QuotaNotFound):
+    message = _("Unknown quota resources %(unknown)s.")
+
+
+class OverQuota(MoganException):
+    message = _("Quota exceeded for resources: %(overs)s")
+
+
+class QuotaAlreadyExists(MoganException):
+    _msg_fmt = _("Quota with name %(name)s and project %(project_id)s already"
+                 " exists.")
+
+
+class ReservationAlreadyExists(MoganException):
+    _msg_fmt = _("Reservation with name %(name)s and project %(project_id)s "
+                 "already exists.")
+
+
 ObjectActionError = obj_exc.ObjectActionError
