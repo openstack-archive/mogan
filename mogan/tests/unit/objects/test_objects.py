@@ -386,6 +386,7 @@ expected_object_fingerprints = {
     'InstanceType': '1.0-589b096651fcdb30898ff50f748dd948',
     'MyObj': '1.1-aad62eedc5a5cc8bcaf2982c285e753f',
     'FakeNode': '1.0-07813a70fee67557d8a71ad96f31cee7',
+    'Quota': '1.0-c8caa082f4d726cb63fdc5943f7cd186',
 }
 
 
