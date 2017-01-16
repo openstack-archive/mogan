@@ -265,4 +265,24 @@ class DuplicateState(Conflict):
     _msg_fmt = _("Resource already exists.")
 
 
+class InvalidReservationExpiration(Invalid):
+    message = _("Invalid reservation expiration %(expire)s.")
+
+
+class QuotaNotFound(NotFound):
+    message = _("Quota could not be found")
+
+
+class ProjectQuotaNotFound(QuotaNotFound):
+    message = _("Quota for project %(project_id)s could not be found.")
+
+
+class QuotaResourceUnknown(QuotaNotFound):
+    message = _("Unknown quota resources %(unknown)s.")
+
+
+class OverQuota(MoganException):
+    message = _("Quota exceeded for resources: %(overs)s")
+
+
 ObjectActionError = obj_exc.ObjectActionError
