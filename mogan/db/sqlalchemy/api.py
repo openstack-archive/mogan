@@ -289,6 +289,34 @@ class Connection(api.Connection):
             raise exception.InstanceTypeExtraSpecsNotFound(
                 extra_specs_key=key, type_id=type_id)
 
+    def quota_get(self, context, project_id, resource_name):
+        query = model_query(
+            context,
+            models.Quota,
+            instance=True).filter_by(uuid=project_id, resource=resource_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.QuotaNotFound(quota_name=resource_name)
+
+    def quota_create(self, context, values):
+        quota = models.Quota()
+        quota.update(values)
+
+        with _session_for_write() as session:
+            try:
+                session.add(quota)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                project_id = values['project_id']
+                raise exception.QuotaAlreadyExists(name=values['name'],
+                                                   project_id=project_id)
+            return quota
+
+    def quota_get_all(self, context, project_only):
+        return model_query(context, models.Quota,
+                           instance=True, project_only=project_only)
+
 
 def _type_get_id_from_type_query(context, type_id):
     return model_query(context, models.InstanceTypes). \
