@@ -20,18 +20,22 @@ import threading
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils as sqlalchemyutils
+from oslo_log import log as logging
 from oslo_utils import strutils
+from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload
+from sqlalchemy.sql import func
 
 from mogan.common import exception
-from mogan.common.i18n import _
+from mogan.common.i18n import _, _LW
 from mogan.db import api
 from mogan.db.sqlalchemy import models
 
 
 _CONTEXT = threading.local()
+LOG = logging.getLogger(__name__)
 
 
 def get_backend():
@@ -108,6 +112,7 @@ class Connection(api.Connection):
     """SqlAlchemy connection."""
 
     def __init__(self):
+        self.QUOTA_SYNC_FUNCTIONS = {'_sync_instances': self._sync_instances}
         pass
 
     def instance_type_create(self, context, values):
@@ -288,6 +293,327 @@ class Connection(api.Connection):
         if result == 0:
             raise exception.InstanceTypeExtraSpecsNotFound(
                 extra_specs_key=key, type_id=type_id)
+
+    def quota_get(self, context, project_id, resource_name):
+        query = model_query(
+            context,
+            models.Quota,
+            instance=True).filter_by(project_id=project_id,
+                                     resource_name=resource_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.QuotaNotFound(quota_name=resource_name)
+
+    def quota_create(self, context, values):
+        quota = models.Quota()
+        quota.update(values)
+
+        with _session_for_write() as session:
+            try:
+                session.add(quota)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                project_id = values['project_id']
+                raise exception.QuotaAlreadyExists(name=values['name'],
+                                                   project_id=project_id)
+            return quota
+
+    def quota_get_all(self, context, project_only):
+        return model_query(context, models.Quota,
+                           instance=True, project_only=project_only)
+
+    def quota_destroy(self, context, project_id, resource_name):
+        with _session_for_write():
+            query = model_query(context, models.Quota, instance=True)
+            query = query.filter_by(project_id=project_id,
+                                    resource_name=resource_name)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.QuotaNotFound(quota_name=resource_name)
+
+    def _do_update_quota(self, context, project_id, resource_name, updates):
+        with _session_for_write():
+            query = model_query(context, models.Quota, instance=True)
+            query = query.filter_by(project_id=project_id,
+                                    resource_name=resource_name)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.QuotaNotFound(quota_name=resource_name)
+
+            ref.update(updates)
+        return ref
+
+    def quota_update(self, context, project_id, resource_name, updates):
+        if 'resource_name' in updates or 'project_id' in updates:
+            msg = _("Cannot overwrite resource_name/project_id for "
+                    "an existing Quota.")
+            raise exception.InvalidParameterValue(err=msg)
+        try:
+            return self._do_update_quota(context, project_id, resource_name,
+                                         updates)
+        except db_exc.DBDuplicateEntry:
+            pass
+
+    def quota_get_all_by_project(self, context, project_id):
+        return model_query(context, models.Quota,
+                           instance=True, project_id=project_id)
+
+    def quota_usage_get_all_by_project(self, context, project_id):
+        rows = model_query(context, models.QuotaUsage, instance=True,
+                           project_id=project_id)
+        result = {'project_id': project_id}
+        for row in rows:
+            result[row.resource] = dict(in_use=row.in_use,
+                                        reserved=row.reserved)
+        return result
+
+    def quota_allocated_get_all_by_project(self, context, project_id):
+        rows = model_query(context, models.Quota, instance=True,
+                           project_id=project_id)
+        result = {'project_id': project_id}
+        for row in rows:
+            result[row.resource] = row.allocated
+        return result
+
+    def _get_quota_usages(self, context, session, project_id):
+        # Broken out for testability
+        rows = model_query(context, models.QuotaUsage,
+                           instance=True, project_id=project_id).\
+            order_by(models.QuotaUsage.id.asc()).\
+            with_lockmode('update').all()
+        return {row.resource: row for row in rows}
+
+    def quota_allocated_update(self, context, project_id, resource, allocated):
+        with _session_for_write():
+            quota_ref = self.quota_get(context, project_id, resource)
+            quota_ref.update({'allocated': allocated})
+        return quota_ref
+
+    def _quota_usage_create(self, context, project_id, resource, in_use,
+                            reserved, until_refresh, session=None):
+        quota_usage_ref = models.QuotaUsage()
+        quota_usage_ref.project_id = project_id
+        quota_usage_ref.resource_name = resource
+        quota_usage_ref.in_use = in_use
+        quota_usage_ref.reserved = reserved
+        quota_usage_ref.until_refresh = until_refresh
+        try:
+            session.add(quota_usage_ref)
+            session.flush()
+        except db_exc.DBDuplicateEntry:
+            raise exception.QuotaAlreadyExists(name=resource,
+                                               project_id=project_id)
+        return quota_usage_ref
+
+    def _reservation_create(self, context, uuid, usage, project_id, resource,
+                            delta, expire, session=None, allocated_id=None):
+        usage_id = usage['id'] if usage else None
+        reservation_ref = models.Reservation()
+        reservation_ref.uuid = uuid
+        reservation_ref.usage_id = usage_id
+        reservation_ref.project_id = project_id
+        reservation_ref.resource = resource
+        reservation_ref.delta = delta
+        reservation_ref.expire = expire
+        reservation_ref.allocated_id = allocated_id
+        try:
+            session.add(reservation_ref)
+            session.flush()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ReservationAlreadyExists(name=resource,
+                                                     project_id=project_id)
+        return reservation_ref
+
+    def _sync_instances(self, context, project_id):
+        query = model_query(context,
+                            func.count(models.Instance.id), instance=True).\
+            filter_by(project_id=project_id)
+        result = query.first()
+        return {'instances': result[0] or 0}
+
+    def quota_reserve(self, context, resources, quotas, deltas, expire,
+                      until_refresh, max_age, project_id,
+                      is_allocated_reserve=False):
+        elevated = context.elevated()
+        with _session_for_write() as session:
+            if project_id is None:
+                project_id = context.project_id
+            # Get the current usages
+            usages = self._get_quota_usages(context, project_id)
+            allocated = self.quota_allocated_get_all_by_project(context,
+                                                                project_id)
+            allocated.pop('project_id')
+
+            # Handle usage refresh
+            work = set(deltas.keys())
+            while work:
+                resource = work.pop()
+
+                # Do we need to refresh the usage?
+                refresh = False
+                if resource not in usages:
+                    usages[resource] = self._quota_usage_create(
+                        elevated, project_id, resource, 0, 0,
+                        until_refresh or None, session=session)
+                    refresh = True
+                elif usages[resource].in_use < 0:
+                    refresh = True
+                elif usages[resource].until_refresh is not None:
+                    usages[resource].until_refresh -= 1
+                    if usages[resource].until_refresh <= 0:
+                        refresh = True
+                elif max_age and usages[resource].updated_at is not None and (
+                    (usages[resource].updated_at -
+                        timeutils.utcnow()).seconds >= max_age):
+                    refresh = True
+
+                # OK, refresh the usage
+                if refresh:
+                    # Grab the sync routine
+                    sync = self.QUOTA_SYNC_FUNCTIONS[resources[resource].sync]
+                    updates = sync(elevated, project_id)
+                    for res, in_use in updates.items():
+                        # Make sure we have a destination for the usage!
+                        if res not in usages:
+                            usages[res] = self._quota_usage_create(
+                                elevated, project_id, res, 0, 0,
+                                until_refresh or None, session=session)
+
+                        # Update the usage
+                        usages[res].in_use = in_use
+                        usages[res].until_refresh = until_refresh or None
+
+                        # Because more than one resource may be refreshed
+                        # by the call to the sync routine, and we don't
+                        # want to double-sync, we make sure all refreshed
+                        # resources are dropped from the work set.
+                        work.discard(res)
+
+            # Check for deltas that would go negative
+            if is_allocated_reserve:
+                unders = [r for r, delta in deltas.items()
+                          if delta < 0 and delta + allocated.get(r, 0) < 0]
+            else:
+                unders = [r for r, delta in deltas.items()
+                          if delta < 0 and delta + usages[r].in_use < 0]
+
+            # Now, let's check the quotas
+            overs = [r for r, delta in deltas.items()
+                     if quotas[r] >= 0 and delta >= 0 and
+                     quotas[r] < delta + usages[r].total + allocated.get(r, 0)]
+
+            # Create the reservations
+            if not overs:
+                reservations = []
+                for resource, delta in deltas.items():
+                    usage = usages[resource]
+                    allocated_id = None
+                    if is_allocated_reserve:
+                        try:
+                            quota = self.quota_get(context, project_id,
+                                                   resource)
+                        except exception.ProjectQuotaNotFound:
+                            # If we were using the default quota, create DB
+                            # entry
+                            quota = self.quota_create(context,
+                                                      project_id,
+                                                      resource,
+                                                      quotas[resource], 0)
+                        # Since there's no reserved/total for allocated, update
+                        # allocated immediately and subtract on rollback
+                        # if needed
+                        self.quota_allocated_update(context, project_id,
+                                                    resource,
+                                                    quota.allocated + delta)
+                        allocated_id = quota.id
+                        usage = None
+                    reservation = self._reservation_create(
+                        elevated, uuidutils.generate_uuid(), usage, project_id,
+                        resource, delta, expire, session=session,
+                        allocated_id=allocated_id)
+
+                    reservations.append(reservation.uuid)
+
+                    # Also update the reserved quantity
+                    if delta > 0 and not is_allocated_reserve:
+                        usages[resource].reserved += delta
+
+        if unders:
+            LOG.warning(_LW("Change will make usage less than 0 for the "
+                            "following resources: %s"), unders)
+        if overs:
+            usages = {k: dict(in_use=v.in_use, reserved=v.reserved,
+                              allocated=allocated.get(k, 0))
+                      for k, v in usages.items()}
+            raise exception.OverQuota(overs=sorted(overs), quotas=quotas,
+                                      usages=usages)
+        return reservations
+
+    def _dict_with_usage_id(self, usages):
+        return {row.id: row for row in usages.values()}
+
+    def _quota_reservations(self, context, reservations):
+        """Return the relevant reservations."""
+
+        # Get the listed reservations
+        return model_query(context, models.Reservation, instance=True).\
+            filter(models.Reservation.uuid.in_(reservations)).\
+            with_lockmode('update').\
+            all()
+
+    def reservation_commit(self, context, reservations, project_id):
+        with _session_for_write() as session:
+            usages = self._get_quota_usages(context, session, project_id)
+            usages = self._dict_with_usage_id(usages)
+
+            for reservation in self._quota_reservations(context,
+                                                        reservations):
+                # Allocated reservations will have already been bumped
+                if not reservation.allocated_id:
+                    usage = usages[reservation.usage_id]
+                    if reservation.delta >= 0:
+                        usage.reserved -= reservation.delta
+                    usage.in_use += reservation.delta
+
+                reservation.delete(session=session)
+
+    def reservation_rollback(self, context, reservations, project_id):
+        with _session_for_write() as session:
+            usages = self._get_quota_usages(context, session, project_id)
+            usages = self._dict_with_usage_id(usages)
+            for reservation in self._quota_reservations(context,
+                                                        reservations):
+                if reservation.allocated_id:
+                    reservation.quota.allocated -= reservation.delta
+                else:
+                    usage = usages[reservation.usage_id]
+                    if reservation.delta >= 0:
+                        usage.reserved -= reservation.delta
+
+                reservation.delete(session=session)
+
+    def reservation_expire(self, context):
+        with _session_for_write() as session:
+            current_time = timeutils.utcnow()
+            results = model_query(context, models.Reservation,
+                                  instance=True).\
+                filter(models.Reservation.expire < current_time).\
+                all()
+
+            if results:
+                for reservation in results:
+                    if reservation.delta >= 0:
+                        if reservation.allocated_id:
+                            reservation.quota.allocated -= reservation.delta
+                            reservation.quota.save(session=session)
+                        else:
+                            reservation.usage.reserved -= reservation.delta
+                            reservation.usage.save(session=session)
+
+                    reservation.delete(session=session)
 
 
 def _type_get_id_from_type_query(context, type_id):
