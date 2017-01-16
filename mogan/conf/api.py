@@ -48,6 +48,9 @@ opts = [
                        "the service, this option should be False; note, you "
                        "will want to change public API endpoint to represent "
                        "SSL termination URL with 'public_endpoint' option.")),
+    cfg.StrOpt('quota_driver',
+               help=_("Specify the quota driver which is used in Mogan "
+                      "service.")),
 ]
 
 opt_group = cfg.OptGroup(name='api',
