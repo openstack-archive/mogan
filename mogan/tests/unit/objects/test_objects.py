@@ -389,7 +389,8 @@ expected_object_fingerprints = {
     'MyObj': '1.1-aad62eedc5a5cc8bcaf2982c285e753f',
     'FakeNode': '1.0-07813a70fee67557d8a71ad96f31cee7',
     'InstanceNic': '1.0-78744332fe105f9c1796dc5295713d9f',
-    'InstanceNics': '1.0-33a2e1bb91ad4082f9f63429b77c1244'
+    'InstanceNics': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
+    'Quota': '1.0-c8caa082f4d726cb63fdc5943f7cd186',
 }
 
 
