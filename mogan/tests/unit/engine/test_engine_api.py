@@ -20,9 +20,9 @@ from oslo_config import cfg
 from oslo_context import context
 
 from mogan.common import exception
+from mogan.common import states
 from mogan.engine import api as engine_api
 from mogan.engine import rpcapi as engine_rpcapi
-from mogan.engine import status
 from mogan import objects
 from mogan.tests.unit.db import base
 from mogan.tests.unit.db import utils as db_utils
@@ -58,7 +58,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
 
         self.assertEqual('fake-user', base_opts['user_id'])
         self.assertEqual('fake-project', base_opts['project_id'])
-        self.assertEqual(status.BUILDING, base_opts['status'])
+        self.assertEqual(states.BUILDING, base_opts['status'])
         self.assertEqual(instance_type.uuid, base_opts['instance_type_uuid'])
         self.assertEqual({'k1', 'v1'}, base_opts['extra'])
         self.assertEqual('test_az', base_opts['availability_zone'])
@@ -68,7 +68,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_inst_create.return_value = mock.MagicMock()
 
         base_options = {'image_uuid': 'fake-uuid',
-                        'status': status.BUILDING,
+                        'status': states.BUILDING,
                         'user_id': 'fake-user',
                         'project_id': 'fake-project',
                         'instance_type_uuid': 'fake-type-uuid',
@@ -90,7 +90,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         instance_type = self._create_instance_type()
 
         base_options = {'image_uuid': 'fake-uuid',
-                        'status': status.BUILDING,
+                        'status': states.BUILDING,
                         'user_id': 'fake-user',
                         'project_id': 'fake-project',
                         'instance_type_uuid': 'fake-type-uuid',
@@ -132,7 +132,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         instance_type = self._create_instance_type()
 
         base_options = {'image_uuid': 'fake-uuid',
-                        'status': status.BUILDING,
+                        'status': states.BUILDING,
                         'user_id': 'fake-user',
                         'project_id': 'fake-project',
                         'instance_type_uuid': 'fake-type-uuid',
