@@ -231,6 +231,23 @@ class MigrationCheckersMixin(object):
         self.assertIsInstance(nodes.c.provision_updated_at.type,
                               sqlalchemy.types.DateTime)
 
+    def _check_807ec8037947(self, engine, data):
+        nodes = db_utils.get_table(engine, 'quotas')
+        col_names = [column.name for column in nodes.c]
+        self.assertIn('created_at', col_names)
+        self.assertIsInstance(nodes.c.resource_name.type,
+                              sqlalchemy.types.String)
+        nodes = db_utils.get_table(engine, 'quota_usages')
+        col_names = [column.name for column in nodes.c]
+        self.assertIn('created_at', col_names)
+        self.assertIsInstance(nodes.c.resource_name.type,
+                              sqlalchemy.types.String)
+        nodes = db_utils.get_table(engine, 'reservations')
+        col_names = [column.name for column in nodes.c]
+        self.assertIn('created_at', col_names)
+        self.assertIsInstance(nodes.c.resource_name.type,
+                              sqlalchemy.types.String)
+
     def test_upgrade_and_version(self):
         with patch_with_engine(self.engine):
             self.migration_api.upgrade('head')
