@@ -146,3 +146,68 @@ class InstanceTypeExtraSpecs(Base):
         foreign_keys=instance_type_uuid,
         primaryjoin='InstanceTypeExtraSpecs.instance_type_uuid '
                     '== InstanceTypes.uuid')
+
+
+class Quota(Base):
+    """Represents a single quota override for a project."""
+
+    __tablename__ = 'quotas'
+    __table_args__ = (
+        schema.UniqueConstraint('resource_name', 'project_id',
+                                name='uniq_quotas0resource_name'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    resource_name = Column(String(255), nullable=False)
+    project_id = Column(String(36), nullable=False)
+    hard_limit = Column(Integer, nullable=False)
+    allocated = Column(Integer, default=0)
+
+
+class QuotaUsage(Base):
+    """Represents the current usage for a given resource."""
+
+    __tablename__ = 'quota_usages'
+    __table_args__ = (
+        schema.UniqueConstraint('resource_name', 'project_id',
+                                name='uniq_quotas0resource_name'),
+        table_args()
+    )
+
+    id = Column(Integer, primary_key=True)
+    project_id = Column(String(255), index=True)
+    resource_name = Column(String(255))
+    in_use = Column(Integer)
+    reserved = Column(Integer)
+    until_refresh = Column(Integer, nullable=True)
+
+    @property
+    def total(self):
+        return self.in_use + self.reserved
+
+
+class Reservation(Base):
+    """Represents a resource reservation for quotas."""
+
+    __tablename__ = 'reservations'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_reservation0uuid'),
+        table_args()
+    )
+
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=False)
+    usage_id = Column(Integer, ForeignKey('quota_usages.id'), nullable=True)
+    allocated_id = Column(Integer, ForeignKey('quotas.id'), nullable=True)
+    project_id = Column(String(255), index=True)
+    resource_name = Column(String(255))
+    delta = Column(Integer)
+    expire = Column(DateTime, nullable=False)
+
+    usage = orm.relationship(
+        "QuotaUsage", foreign_keys=usage_id,
+        primaryjoin='Reservation.usage_id == QuotaUsage.id')
+
+    quota = orm.relationship(
+        "Quota", foreign_keys=allocated_id,
+        primaryjoin='Reservation.allocated_id == Quota.id')
