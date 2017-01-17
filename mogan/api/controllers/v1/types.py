@@ -66,6 +66,27 @@ class BooleanType(wtypes.UserType):
         return BooleanType.validate(value)
 
 
+class IntegerType(wtypes.UserType):
+    """A simple integer type."""
+
+    basetype = wtypes.text
+    name = 'integer'
+
+    @staticmethod
+    def validate(value):
+        try:
+            return int(value)
+        except ValueError as e:
+            # raise Invalid to return 400 (BadRequest) in the API
+            raise exception.Invalid(e)
+
+    @staticmethod
+    def frombasetype(value):
+        if value is None:
+            return None
+        return IntegerType.validate(value)
+
+
 class JsonType(wtypes.UserType):
     """A simple JSON type."""
 
@@ -121,6 +142,7 @@ uuid = UuidType()
 # Can't call it 'json' because that's the name of the stdlib module
 jsontype = JsonType()
 listtype = ListType()
+integer = IntegerType()
 
 
 class JsonPatchType(wtypes.Base):

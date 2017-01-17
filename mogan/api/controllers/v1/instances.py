@@ -65,6 +65,8 @@ _CREATE_INSTANCE_SCHEMA = {
                 'additionalProperties': False,
             },
         },
+        'min_count': {'type': 'integer', 'minimum': 1},
+        'max_count': {'type': 'integer', 'minimum': 'min_count'},
         'extra': {
             'type': 'object',
             'patternProperties': {
@@ -204,6 +206,12 @@ class Instance(base.APIBase):
 
     extra = {wtypes.text: types.jsontype}
     """The meta data of the instance"""
+
+    min_num = types.integer
+    """The minimum of the instances to create"""
+
+    max_num = types.integer
+    """The maximum of the instances to create"""
 
     def __init__(self, **kwargs):
         super(Instance, self).__init__(**kwargs)
@@ -391,7 +399,9 @@ class InstanceController(rest.RestController):
                 description=instance.get('description'),
                 availability_zone=instance.get('availability_zone'),
                 extra=instance.get('extra'),
-                requested_networks=requested_networks)
+                requested_networks=requested_networks,
+                min_count=instance.get('min_count'),
+                max_count=instance.get('max_count'))
         except exception.InstanceTypeNotFound:
             msg = (_("InstanceType %s could not be found") %
                    instance_type_uuid)
