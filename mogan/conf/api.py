@@ -48,6 +48,16 @@ opts = [
                        "the service, this option should be False; note, you "
                        "will want to change public API endpoint to represent "
                        "SSL termination URL with 'public_endpoint' option.")),
+    cfg.StrOpt('multi_instance_name_template',
+               default='%(name)s-%(count)d',
+               help='When creating multiple instances with a single request '
+                    'using the os-multiple-create API extension, this '
+                    'template will be used to build the instance name for '
+                    'each instance. The benefit is that the instances '
+                    'end up with different hostnames. To restore legacy '
+                    'behavior of every instance having the same name, set '
+                    'this option to "%(name)s".  Valid keys for the '
+                    'template are: name, uuid, count.'),
 ]
 
 opt_group = cfg.OptGroup(name='api',

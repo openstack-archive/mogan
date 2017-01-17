@@ -58,6 +58,12 @@ def get_client(token=None):
     return clientv20.Client(**params)
 
 
+def _ensure_requested_network_ordering(accessor, unordered, preferred):
+    """Sort a list with respect to the preferred network ordering."""
+    if preferred:
+        unordered.sort(key=lambda i: preferred.index(accessor(i)))
+
+
 class API(object):
     """API for interacting with the neutron 2.x API."""
 
@@ -94,3 +100,15 @@ class API(object):
                    {'vif': port_id, 'instance': instance_uuid, 'exc': e})
             LOG.exception(msg)
             raise exception.NetworkError(msg)
+
+    def validate_networks(self, context, requested_networks, num_instances):
+        """Validate that the tenant can use the requested networks.
+
+        Return the number of instances than can be successfully allocated
+        with the requested network configuration.
+        """
+        LOG.debug('validate_networks() for %s', requested_networks)
+        # TODO(little): check the network port number and return the actual
+        # num_instances
+
+        return num_instances
