@@ -87,11 +87,28 @@ def upgrade():
         sa.Column('availability_zone', sa.String(length=255), nullable=True),
         sa.Column('node_uuid', sa.String(length=36), nullable=True),
         sa.Column('extra', sa.Text(), nullable=True),
+        sa.Column('fault', sa.Text(), nullable=True),
         sa.Column('deleted', sa.Integer(), nullable=False),
         sa.Column('locked', sa.Boolean(), nullable=True),
         sa.Column('locked_by', sa.Enum('admin', 'owner'), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('uuid', name='uniq_instances0uuid'),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
+        'instance_faults',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('instance_uuid', sa.String(length=36), nullable=True),
+        sa.Column('code', sa.Integer(), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('deleted_at', sa.DateTime(), nullable=True),
+        sa.Column('message', sa.String(length=255), nullable=True),
+        sa.Column('detail', sa.Text(), nullable=True),
+        sa.Column('deleted', sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(['instance_uuid'], ['instances.uuid']),
+        sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
