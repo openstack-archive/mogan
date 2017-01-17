@@ -105,7 +105,7 @@ class RPCAPITestCase(base.DbTestCase):
         self._test_rpcapi('create_instance',
                           'cast',
                           version='1.0',
-                          instance=self.fake_instance_obj,
+                          instances=[self.fake_instance_obj],
                           requested_networks=[],
                           request_spec=None,
                           filter_properties=None)
