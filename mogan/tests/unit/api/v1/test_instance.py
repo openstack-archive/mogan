@@ -61,7 +61,7 @@ class TestInstanceAuthorization(v1_test.APITestV1):
     def test_instance_post(self, mock_get, mock_engine_create):
         mock_get.side_effect = None
         mock_engine_create.side_effect = None
-        mock_engine_create.return_value = self.instance1
+        mock_engine_create.return_value = [self.instance1]
         body = gen_post_body()
         self.context.roles = "no-admin"
         # we can not prevent the evil tenant, quota will limite him.
