@@ -123,7 +123,7 @@ class TestInstances(v1_test.APITestV1):
                     {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31'}],
                 'extra': {'fake_key': 'fake_value'}
             }
-            responses.append(
+            responses.extend(
                 self.post_json('/instances', test_body, status=201))
         return responses
 

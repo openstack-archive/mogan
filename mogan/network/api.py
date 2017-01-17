@@ -135,3 +135,15 @@ class API(object):
                  'fixed_ip_address': fixed_address}
         client.update_floatingip(fip['id'], {'floatingip': param})
         return fip
+
+    def validate_networks(self, context, requested_networks, num_instances):
+        """Validate that the tenant can use the requested networks.
+
+        Return the number of instances than can be successfully allocated
+        with the requested network configuration.
+        """
+        LOG.debug('validate_networks() for %s', requested_networks)
+        # TODO(little): check the network port number and return the actual
+        # num_instances
+
+        return num_instances
