@@ -63,6 +63,7 @@ Response
   - user_id: user_id_body
   - updated_at: updated_at
   - created_at: created_at
+  - fault_info: fault_info
   - extra: extra
 
 **Example Create Instance: JSON response**
@@ -150,6 +151,7 @@ Response
   - updated_at: updated_at
   - created_at: created_at
   - launched_at: launched_at
+  - fault_info: fault_info
   - extra: extra
 
 **Example Detailed list of Instances: JSON response**
@@ -200,6 +202,7 @@ Response
   - updated_at: updated_at
   - created_at: created_at
   - launched_at: launched_at
+  - fault_info: fault_info
   - extra: extra
 
 **Example Instance Details: JSON response**
@@ -254,6 +257,7 @@ Response
   - user_id: user_id_body
   - updated_at: updated_at
   - created_at: created_at
+  - fault_info: fault_info
   - extra: extra
 
 **Example Update Instance: JSON response**

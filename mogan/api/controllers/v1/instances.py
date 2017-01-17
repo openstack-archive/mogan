@@ -293,6 +293,9 @@ class Instance(base.APIBase):
     launched_at = datetime.datetime
     """The UTC date and time of the instance launched"""
 
+    fault_info = {wtypes.text: types.jsontype}
+    """The fault information of the instance"""
+
     extra = {wtypes.text: types.jsontype}
     """The meta data of the instance"""
 
