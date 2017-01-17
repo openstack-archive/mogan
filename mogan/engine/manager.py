@@ -196,6 +196,7 @@ class EngineManager(base_manager.BaseEngineManager):
         except Exception as e:
             fsm.process_event('error')
             instance.status = fsm.current_state
+            instance.fault_info = str(e)
             instance.save()
             LOG.error(_LE("Created instance %(uuid)s failed."
                           "Exception: %(exception)s"),

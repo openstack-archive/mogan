@@ -43,6 +43,7 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'node_uuid': object_fields.UUIDField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),
+        'fault_info': object_fields.StringField(nullable=True),
         'deleted': object_fields.BooleanField(default=False),
         'deleted_at': object_fields.DateTimeField(nullable=True),
     }
