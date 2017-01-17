@@ -178,7 +178,7 @@ class TestInstances(v1_test.APITestV1):
         self._prepare_instance(4)
         resps = self.get_json('/instances/detail')['instances']
         self.assertEqual(4, len(resps))
-        self.assertEqual(16, len(resps[0].keys()))
+        self.assertEqual(17, len(resps[0].keys()))
         self.assertEqual('test_instance_0', resps[0]['name'])
         self.assertEqual('just test instance 0', resps[0]['description'])
         self.assertEqual('building', resps[0]['status'])

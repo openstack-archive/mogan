@@ -27,3 +27,4 @@ def register_all():
     # need to receive it via RPC.
     __import__('mogan.objects.instance_type')
     __import__('mogan.objects.instance')
+    __import__('mogan.objects.instance_fault')

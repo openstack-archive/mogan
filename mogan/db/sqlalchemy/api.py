@@ -15,6 +15,7 @@
 
 """SQLAlchemy storage backend."""
 
+import functools
 import threading
 
 from oslo_db import exception as db_exc
@@ -24,6 +25,7 @@ from oslo_utils import strutils
 from oslo_utils import uuidutils
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload
+from sqlalchemy.sql.expression import desc
 
 from mogan.common import exception
 from mogan.common.i18n import _
@@ -32,6 +34,7 @@ from mogan.db.sqlalchemy import models
 
 
 _CONTEXT = threading.local()
+main_context_manager = enginefacade.transaction_context()
 
 
 def get_backend():
@@ -104,9 +107,54 @@ def _dict_with_extra_specs(inst_type_query):
     return inst_type_dict
 
 
+def _context_manager_from_context(context):
+    if context:
+        try:
+            return context.db_connection
+        except AttributeError:
+            pass
+
+
+def get_context_manager(context):
+    """Get a database context manager object.
+
+    :param context: The request context that can contain a context manager
+    """
+    return _context_manager_from_context(context) or main_context_manager
+
+
+def pick_context_manager_writer(f):
+    """Decorator to use a writer db context manager.
+
+    The db context manager will be picked from the RequestContext.
+
+    Wrapped function must have a RequestContext in the arguments.
+    """
+    @functools.wraps(f)
+    def wrapped(context, *args, **kwargs):
+        ctxt_mgr = get_context_manager(context)
+        with ctxt_mgr.writer.using(context):
+            return f(context, *args, **kwargs)
+    return wrapped
+
+
+def pick_context_manager_reader(f):
+    """Decorator to use a reader db context manager.
+
+    The db context manager will be picked from the RequestContext.
+
+    Wrapped function must have a RequestContext in the arguments.
+    """
+    @functools.wraps(f)
+    def wrapped(context, *args, **kwargs):
+        ctxt_mgr = get_context_manager(context)
+        with ctxt_mgr.reader.using(context):
+            return f(context, *args, **kwargs)
+    return wrapped
+
+
 class Connection(api.Connection):
     """SqlAlchemy connection."""
-
     def __init__(self):
         pass
 
@@ -288,6 +336,38 @@ class Connection(api.Connection):
         if result == 0:
             raise exception.InstanceTypeExtraSpecsNotFound(
                 extra_specs_key=key, type_id=type_id)
+
+    @pick_context_manager_writer
+    def instance_fault_create(context, values):
+        """Create a new InstanceFault."""
+
+        fault = models.InstanceFault()
+        fault.update(values)
+
+        with _session_for_write() as session:
+            session.add(fault)
+            session.flush()
+            return fault
+
+    @pick_context_manager_reader
+    def instance_fault_get_by_instance_uuids(context, instance_uuids):
+        """Get all instance faults for the provided instance_uuids."""
+        if not instance_uuids:
+            return {}
+
+        rows = model_query(context, models.InstanceFault, read_deleted='no').\
+            filter(models.InstanceFault.instance_uuid.in_(instance_uuids)).\
+            order_by(desc("created_at"), desc("id")).all()
+
+        output = {}
+        for instance_uuid in instance_uuids:
+            output[instance_uuid] = []
+
+        for row in rows:
+            data = dict(row)
+            output[row['instance_uuid']].append(data)
+
+        return output
 
 
 def _type_get_id_from_type_query(context, type_id):

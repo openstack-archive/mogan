@@ -21,9 +21,10 @@ from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
 from oslo_db.sqlalchemy import types as db_types
 import six.moves.urllib.parse as urlparse
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Text
 from sqlalchemy import orm
 from sqlalchemy import schema, String, Integer
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlalchemy.ext.declarative import declarative_base
 
 from mogan.common import paths
@@ -33,6 +34,10 @@ _DEFAULT_SQL_CONNECTION = 'sqlite:///' + paths.state_path_def('mogan.sqlite')
 
 
 db_options.set_defaults(CONF, _DEFAULT_SQL_CONNECTION, 'mogan.sqlite')
+
+
+def MediumText():
+    return Text().with_variant(MEDIUMTEXT(), 'mysql')
 
 
 def table_args():
@@ -146,3 +151,21 @@ class InstanceTypeExtraSpecs(Base):
         foreign_keys=instance_type_uuid,
         primaryjoin='InstanceTypeExtraSpecs.instance_type_uuid '
                     '== InstanceTypes.uuid')
+
+
+class InstanceFault(Base):
+    """Represents fault info for instance"""
+
+    __tablename__ = "instance_faults"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    instance_uuid = Column(String(36),
+                           ForeignKey('instances.uuid'))
+    code = Column(Integer(), nullable=False)
+    message = Column(String(255))
+    details = Column(MediumText())
+    instance = orm.relationship(
+        Instance,
+        backref=orm.backref('instance_faults', uselist=False),
+        foreign_keys=instance_uuid,
+        primaryjoin='Instance.uuid == InstanceFault.instance_uuid')
