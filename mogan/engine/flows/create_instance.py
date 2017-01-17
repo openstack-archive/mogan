@@ -324,7 +324,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
         return False
 
 
-def get_flow(context, manager, instance, requested_networks, request_spec,
+def get_flow(context, manager, instances, requested_networks, request_spec,
              filter_properties):
 
     """Constructs and returns the manager entrypoint flow
