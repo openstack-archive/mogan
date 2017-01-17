@@ -14,11 +14,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_db import exception as db_exc
+from oslo_log import log as logging
 from oslo_versionedobjects import base as object_base
 
+from mogan.common.i18n import _LE
 from mogan.db import api as dbapi
+from mogan import objects
 from mogan.objects import base
 from mogan.objects import fields as object_fields
+
+OPTIONAL_ATTRS = ['fault', ]
+
+
+LOG = logging.getLogger(__name__)
 
 
 @base.MoganObjectRegistry.register
@@ -51,10 +60,41 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     }
 
     @staticmethod
+    def _from_db_object(instance, db_inst, expected_attrs=None):
+        """Method to help with migration to objects.
+
+        Converts a database entity to a formal object.
+
+        :param instance: An object of the Instance class.
+        :param db_inst: A DB Instance model of the object
+        :return: The object of the class with the database entity added
+        """
+        for field in set(instance.fields) - set(OPTIONAL_ATTRS):
+            instance[field] = db_inst[field]
+
+        if expected_attrs is None:
+            expected_attrs = []
+        if 'fault' in expected_attrs:
+            instance._load_fault(instance._context, instance.uuid)
+        instance.obj_reset_changes()
+        return instance
+
+    @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [Instance._from_db_object(cls(context), obj)
-                for obj in db_objects]
+        instances = []
+        for obj in db_objects:
+            expected_attrs = []
+            if obj["status"] == "error":
+                expected_attrs.append("fault")
+            instances.append(Instance._from_db_object(cls(context),
+                                                      obj,
+                                                      expected_attrs))
+        return instances
+
+    def _load_fault(self, context, instance_uuid):
+        self.fault = objects.InstanceFault.get_latest_for_instance(
+            context=context, instance_uuid=instance_uuid)
 
     @classmethod
     def list(cls, context, project_only=False):
@@ -66,8 +106,13 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get(cls, context, uuid):
         """Find a instance and return a Instance object."""
+        expected_attrs = []
         db_instance = cls.dbapi.instance_get(context, uuid)
-        instance = Instance._from_db_object(cls(context), db_instance)
+        if db_instance["status"] == "error":
+            expected_attrs.append("fault")
+        instance = Instance._from_db_object(cls(context),
+                                            db_instance,
+                                            expected_attrs)
         return instance
 
     def create(self, context=None):
@@ -88,6 +133,17 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     def save(self, context=None):
         """Save updates to this Instance."""
         updates = self.obj_get_changes()
+        for field in self.fields:
+            if (self.obj_attr_is_set(field) and
+                    isinstance(self.fields[field], object_fields.ObjectField)):
+                try:
+                    getattr(self, '_save_%s' % field)(context)
+                except AttributeError:
+                    LOG.exception(_LE('No save handler for %s'), field,
+                                  instance=self)
+                except db_exc.DBReferenceError as exp:
+                    if exp.key != 'instance_uuid':
+                        raise
         self.dbapi.instance_update(context, self.uuid, updates)
         self.obj_reset_changes()
 
