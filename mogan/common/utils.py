@@ -15,9 +15,12 @@
 
 """Utilities and helper functions."""
 
+import eventlet
+import functools
 import re
 
 from oslo_concurrency import lockutils
+from oslo_context import context as common_context
 from oslo_log import log as logging
 import six
 
