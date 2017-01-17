@@ -84,7 +84,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
                 'image_uuid': cls.image_id,
                 "networks": [{"net_id": cls.net_id}]
                 }
-        resp = cls.baremetal_compute_client.create_instance(**body)
+        resp = cls.baremetal_compute_client.create_instance(**body)[0]
         cls.instance_ids.append(resp['uuid'])
         if wait_until_active:
             cls._wait_for_instances_status(resp['uuid'], 'active', 15, 900)
