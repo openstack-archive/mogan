@@ -16,12 +16,15 @@
 """Handles all requests relating to compute resources"""
 
 from oslo_log import log
+from oslo_utils import excutils
+from oslo_utils import uuidutils
 
 from mogan.common import exception
 from mogan.common import states
 from mogan.conf import CONF
 from mogan.engine import rpcapi
 from mogan import image
+from mogan import network
 from mogan import objects
 
 LOG = log.getLogger(__name__)
@@ -34,14 +37,24 @@ class API(object):
         super(API, self).__init__(**kwargs)
         self.image_api = image_api or image.API()
         self.engine_rpcapi = rpcapi.EngineAPI()
+        self.network_api = network.API()
 
     def _get_image(self, context, image_uuid):
         return self.image_api.get(context, image_uuid)
 
     def _validate_and_build_base_options(self, context, instance_type,
                                          image_uuid, name, description,
-                                         availability_zone, extra):
+                                         availability_zone, extra,
+                                         requested_networks,
+                                         max_count):
         """Verify all the input parameters"""
+
+        # Note:  max_count is the number of instances requested by the user,
+        # max_network_count is the maximum number of instances taking into
+        # account any network quotas
+        max_network_count = self._check_requested_networks(context,
+                                                           requested_networks,
+                                                           max_count)
 
         base_options = {
             'image_uuid': image_uuid,
@@ -55,52 +68,140 @@ class API(object):
             'availability_zone': availability_zone}
 
         # return the validated options
-        return base_options
+        return base_options, max_network_count
 
-    def _provision_instances(self, context, base_options):
-        # TODO(zhenguo): Reserve quotas
+    def _new_instance_name_from_template(self, uuid, name, index):
+        """Apply the template to instance name.
 
-        instance = objects.Instance(context=context)
-        instance.update(base_options)
-        instance.status = states.BUILDING
-        instance.create()
+        Apply name template for multi-instance scenario.
+
+        :param uuid: The uuid of instance.
+        :param name: The name of instance.
+        :param index: The index of instance.
+        :return: The new name of instance.
+        """
+        params = {
+            'uuid': uuid,
+            'name': name,
+            'count': index + 1,
+        }
+        try:
+            new_name = (CONF.api.multi_instance_display_name_template %
+                        params)
+        except (KeyError, TypeError):
+            LOG.exception('Failed to set instance name using '
+                          'multi_instance_display_name_template.')
+            new_name = name
+        return new_name
+
+    def _populate_instance_names(self, instance, num_instances, index):
+        """Rename the instance name in multi-instance scenario.
+
+        This is for rename instance in multi-instance scenario.
+
+        :param instance: The instance object.
+        :param num_instances: The number of instances
+        :param index: the index of the instance
+        :return: The instance object
+        """
+        if num_instances > 1:
+            instance.name = self._new_instance_name_from_template(
+                instance.uuid, instance.name, index)
 
         return instance
 
+    def _check_num_instances_quota(self, context, min_count, max_count):
+        # TODO(little): check quotas
+        return max_count, max_count
+
+    def _provision_instances(self, context, base_options,
+                             min_count, max_count):
+        # TODO(zhenguo): Reserve quotas
+        # TODO(little): finish to return num_instances according quota
+        num_instances, quotas = self._check_num_instances_quota(
+            context, min_count, max_count)
+
+        LOG.debug("Going to record %s instances to db...", num_instances)
+
+        instances = []
+        try:
+            for num in range(num_instances):
+                instance = objects.Instance(context=context)
+                instance.update(base_options)
+                instance.status = states.BUILDING
+                instance.uuid = uuidutils.generate_uuid()
+                # Refactor name of the instance.
+                self._populate_instance_names(instance, num_instances, num)
+
+                instance.create()
+                instances.append(instance)
+        except Exception:
+            with excutils.save_and_reraise_exception():
+                try:
+                    for instance in instances:
+                        try:
+                            instance.destroy()
+                        except exception.ObjectActionError:
+                            pass
+                finally:
+                    # TODO(little): quota release
+                    pass
+
+        return instances
+
+    def _check_requested_networks(self, context, requested_networks,
+                                  max_count):
+        """Check if the networks requested belongs to the project
+        and the fixed IP address for each network provided is within
+        same the network block
+        """
+        if requested_networks is not None:
+            # Temporary transition
+            requested_networks = requested_networks.as_tuples()
+        return self.network_api.validate_networks(context, requested_networks,
+                                                  max_count)
+
     def _create_instance(self, context, instance_type, image_uuid,
                          name, description, availability_zone, extra,
-                         requested_networks):
+                         requested_networks, min_count, max_count):
         """Verify all the input parameters"""
+        min_count = min_count or 1
+        max_count = max_count or min_count
 
         # Verify the specified image exists
         if image_uuid:
             self._get_image(context, image_uuid)
 
-        base_options = self._validate_and_build_base_options(
+        base_options, max_net_count = self._validate_and_build_base_options(
             context, instance_type, image_uuid, name, description,
-            availability_zone, extra)
+            availability_zone, extra, requested_networks, max_count)
 
-        instance = self._provision_instances(context, base_options)
+        # TODO(little): To check the max_count and max_net_count
+
+        instances = self._provision_instances(context, base_options,
+                                              min_count, max_count)
 
         request_spec = {
-            'instance_id': instance.uuid,
+            'instance_id': instances[0].uuid,
             'instance_properties': {
-                'availability_zone': instance.availability_zone,
-                'instance_type_uuid': instance.instance_type_uuid,
+                'availability_zone': instances[0].availability_zone,
+                'instance_type_uuid': instances[0].instance_type_uuid,
             },
             'instance_type': dict(instance_type),
+            'num_instances': len(instances)
         }
 
-        self.engine_rpcapi.create_instance(context, instance,
+        self.engine_rpcapi.create_instance(context, instances,
                                            requested_networks,
                                            request_spec,
                                            filter_properties=None)
 
-        return instance
+        return instances
 
     def create(self, context, instance_type, image_uuid,
                name=None, description=None, availability_zone=None,
-               extra=None, requested_networks=None):
+               extra=None, requested_networks=None, min_count=None,
+               max_count=None):
         """Provision instances
 
         Sending instance information to the engine and will handle
@@ -120,7 +221,8 @@ class API(object):
         return self._create_instance(context, instance_type,
                                      image_uuid, name, description,
                                      availability_zone, extra,
-                                     requested_networks)
+                                     requested_networks, min_count,
+                                     max_count)
 
     def _delete_instance(self, context, instance):
         # Initialize state machine
