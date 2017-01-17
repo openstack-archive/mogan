@@ -14,11 +14,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_db import exception as db_exc
+from oslo_log import log as logging
 from oslo_versionedobjects import base as object_base
 
+from mogan.common.i18n import _LE
 from mogan.db import api as dbapi
+from mogan import objects
 from mogan.objects import base
 from mogan.objects import fields as object_fields
+
+OPTIONAL_ATTRS = ['fault', ]
+
+
+LOG = logging.getLogger(__name__)
 
 
 @base.MoganObjectRegistry.register
@@ -44,17 +53,51 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'node_uuid': object_fields.UUIDField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),
+        'fault': object_fields.ObjectField('InstanceFault', nullable=True),
         'deleted': object_fields.BooleanField(default=False),
         'deleted_at': object_fields.DateTimeField(nullable=True),
         'locked': object_fields.BooleanField(default=False),
         'locked_by': object_fields.StringField(nullable=True),
     }
 
+    def __init__(self, context=None, **kwargs):
+        self._context = context
+        super(Instance, self).__init__(context=context, **kwargs)
+
+    @staticmethod
+    def _from_db_object(instance, db_inst, expected_attrs=None):
+        """Method to help with migration to objects.
+
+        Converts a database entity to a formal object.
+
+        :param instance: An object of the Instance class.
+        :param db_inst: A DB Instance model of the object
+        :return: The object of the class with the database entity added
+        """
+        for field in instance.fields:
+            if field in OPTIONAL_ATTRS:
+                continue
+            instance[field] = db_inst[field]
+
+        if expected_attrs is None:
+            expected_attrs = []
+        if 'fault' in expected_attrs:
+            instance._load_fault(instance._context, instance.uuid)
+        else:
+            instance.fault = None
+        instance.obj_reset_changes()
+        return instance
+
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [Instance._from_db_object(cls(context), obj)
+
+        return [Instance._from_db_object(cls(context), obj, ('fault', ))
                 for obj in db_objects]
+
+    def _load_fault(self, context, instance_uuid):
+        self.fault = objects.InstanceFault.get_latest_for_instance(
+            context=context, instance_uuid=instance_uuid)
 
     @classmethod
     def list(cls, context, project_only=False):
@@ -88,6 +131,17 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     def save(self, context=None):
         """Save updates to this Instance."""
         updates = self.obj_get_changes()
+        for field in self.fields:
+            if (self.obj_attr_is_set(field) and
+                    isinstance(self.fields[field], object_fields.ObjectField)):
+                try:
+                    getattr(self, '_save_%s' % field)(context)
+                except AttributeError:
+                    LOG.exception(_LE('No save handler for %s'), field,
+                                  instance=self)
+                except db_exc.DBReferenceError as exp:
+                    if exp.key != 'instance_uuid':
+                        raise
         self.dbapi.instance_update(context, self.uuid, updates)
         self.obj_reset_changes()
 
