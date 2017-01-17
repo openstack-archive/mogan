@@ -24,7 +24,7 @@ from mogan import objects
 from mogan.objects import base
 from mogan.objects import fields as object_fields
 
-OPTIONAL_ATTRS = ['nics', ]
+OPTIONAL_ATTRS = ['nics', 'fault', ]
 
 
 LOG = logging.getLogger(__name__)
@@ -80,9 +80,7 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         :param db_inst: A DB Instance model of the object
         :return: The object of the class with the database entity added
         """
-        for field in instance.fields:
-            if field in OPTIONAL_ATTRS:
-                continue
+        for field in set(instance.fields) - set(OPTIONAL_ATTRS):
             instance[field] = db_inst[field]
 
         if expected_attrs is None:
@@ -91,6 +89,8 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
             instance._load_instance_nics(instance._context, instance.uuid)
         else:
             instance.nics = None
+        if 'fault' in expected_attrs:
+            instance._load_fault(instance._context, instance.uuid)
 
         instance.obj_reset_changes()
         return instance
@@ -102,9 +102,19 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [Instance._from_db_object(cls(context), obj,
-                                         ('nics', ))
-                for obj in db_objects]
+        instances = []
+        for obj in db_objects:
+            expected_attrs = ['nics']
+            if obj["status"] == "error":
+                expected_attrs.append("fault")
+            instances.append(Instance._from_db_object(cls(context),
+                                                      obj,
+                                                      expected_attrs))
+        return instances
+
+    def _load_fault(self, context, instance_uuid):
+        self.fault = objects.InstanceFault.get_latest_for_instance(
+            context=context, instance_uuid=instance_uuid)
 
     def _save_nics(self, context):
         for nic_obj in self.nics or []:
@@ -126,9 +136,13 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get(cls, context, uuid):
         """Find a instance and return a Instance object."""
+        expected_attrs = ['nics']
         db_instance = cls.dbapi.instance_get(context, uuid)
-        instance = Instance._from_db_object(cls(context), db_instance,
-                                            ('nics', ))
+        if db_instance["status"] == "error":
+            expected_attrs.append("fault")
+        instance = Instance._from_db_object(cls(context),
+                                            db_instance,
+                                            expected_attrs)
         return instance
 
     def create(self, context=None):

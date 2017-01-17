@@ -94,7 +94,6 @@ def upgrade():
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
-
     op.create_table(
         'instance_nics',
         sa.Column('created_at', sa.DateTime(), nullable=True),
@@ -108,6 +107,20 @@ def upgrade():
         sa.Column('fixed_ips', sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(['instance_uuid'], ['instances.uuid'], ),
         sa.PrimaryKeyConstraint('port_id'),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
+        'instance_faults',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('instance_uuid', sa.String(length=36), nullable=True),
+        sa.Column('code', sa.Integer(), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('message', sa.String(length=255), nullable=True),
+        sa.Column('detail', sa.Text(), nullable=True),
+        sa.ForeignKeyConstraint(['instance_uuid'], ['instances.uuid']),
+        sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )

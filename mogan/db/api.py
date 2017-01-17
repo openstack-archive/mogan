@@ -115,3 +115,11 @@ class Connection(object):
 
         This creates or updates a nic db entry.
         """
+    # Instances Faults
+    @abc.abstractmethod
+    def instance_fault_create(self, context, values):
+        """Create a new Instance Fault."""
+
+    @abc.abstractmethod
+    def instance_fault_get_by_instance_uuids(self, context, instance_uuids):
+        """Get all instance faults for the provided instance_uuids."""
