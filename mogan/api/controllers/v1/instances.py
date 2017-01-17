@@ -45,6 +45,58 @@ _DEFAULT_INSTANCE_RETURN_FIELDS = ('uuid', 'name', 'description',
 
 LOG = log.getLogger(__name__)
 
+_CREATE_INSTANCE_SCHEMA = {
+    "$schema": "http://json-schema.org/schema#",
+    "title": "Create instance schema",
+    "type": "object",
+    "properties": {
+        'name': {'type': 'string', 'minLength': 1, 'maxLength': 255},
+        'description': {'type': 'string', 'minLength': 1, 'maxLength': 255},
+        'availability_zone': {'type': 'string', 'minLength': 1,
+                              'maxLength': 255},
+        'image_uuid': {'type': 'string', 'format': 'uuid'},
+        'instance_type_uuid': {'type': 'string', 'format': 'uuid'},
+        'networks': {
+            'type': 'array', 'minItems': 1,
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'net_id': {'type': 'string', 'format': 'uuid'},
+                    'port_type': {'type': 'string', 'minLength': 1,
+                                  'maxLength': 255},
+                },
+                'required': ['net_id'],
+                'additionalProperties': False,
+            },
+        },
+        'min_count': {'type': 'integer', 'minimum': 1},
+        'max_count': {'type': 'integer', 'minimum': 1},
+        'extra': {
+            'type': 'object',
+            'patternProperties': {
+                '^[a-zA-Z0-9-_:. ]{1,255}$': {
+                    'type': 'string', 'maxLength': 255
+                }
+            },
+            'additionalProperties': False
+        }
+    },
+    'required': ['name', 'image_uuid', 'instance_type_uuid', 'networks'],
+    'additionalProperties': False,
+}
+
+_ASSOCIATE_FIP_SCHEMA = {
+    "$schema": "http://json-schema.org/schema#",
+    "title": "Associate floating ip schema",
+    'type': 'object',
+    'properties': {
+        'address': {'type': 'string', 'format': 'ip-address'},
+        'fixed_address': {'type': 'string', 'format': 'ip-address'}
+    },
+    'required': ['address'],
+    'additionalProperties': False
+}
+
 
 class InstanceStates(base.APIBase):
     """API representation of the states of a instance."""
@@ -296,6 +348,12 @@ class Instance(base.APIBase):
     extra = {wtypes.text: types.jsontype}
     """The meta data of the instance"""
 
+    min_num = types.integer
+    """The minimum of the instances to create"""
+
+    max_num = types.integer
+    """The maximum of the instances to create"""
+
     def __init__(self, **kwargs):
         super(Instance, self).__init__(**kwargs)
         self.fields = []
@@ -417,7 +475,7 @@ class InstanceController(InstanceControllerBase):
         return self._get_instance_collection(all_tenants=all_tenants)
 
     @policy.authorize_wsgi("mogan:instance", "create", False)
-    @expose.expose(Instance, body=types.jsontype,
+    @expose.expose(InstanceCollection, body=types.jsontype,
                    status_code=http_client.CREATED)
     def post(self, instance):
         """Create a new instance.
@@ -434,7 +492,7 @@ class InstanceController(InstanceControllerBase):
             instance_type = objects.InstanceType.get(pecan.request.context,
                                                      instance_type_uuid)
 
-            instance = pecan.request.engine_api.create(
+            instances = pecan.request.engine_api.create(
                 pecan.request.context,
                 instance_type,
                 image_uuid=image_uuid,
@@ -442,7 +500,9 @@ class InstanceController(InstanceControllerBase):
                 description=instance.get('description'),
                 availability_zone=instance.get('availability_zone'),
                 extra=instance.get('extra'),
-                requested_networks=requested_networks)
+                requested_networks=requested_networks,
+                min_count=instance.get('min_count'),
+                max_count=instance.get('max_count'))
         except exception.InstanceTypeNotFound:
             msg = (_("InstanceType %s could not be found") %
                    instance_type_uuid)
@@ -461,9 +521,9 @@ class InstanceController(InstanceControllerBase):
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
 
-        # Set the HTTP Location Header
-        pecan.response.location = link.build_url('instance', instance.uuid)
-        return Instance.convert_with_links(instance)
+        # Set the HTTP Location Header for the first instance.
+        pecan.response.location = link.build_url('instance', instances[0].uuid)
+        return InstanceCollection.convert_with_links(instances)
 
     @policy.authorize_wsgi("mogan:instance", "update")
     @wsme.validate(types.uuid, [InstancePatchType])
