@@ -24,6 +24,7 @@ from oslo_utils import strutils
 from oslo_utils import uuidutils
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload
+from sqlalchemy.sql.expression import desc
 
 from mogan.common import exception
 from mogan.common.i18n import _
@@ -210,6 +211,10 @@ class Connection(api.Connection):
             count = query.soft_delete()
             if count != 1:
                 raise exception.InstanceNotFound(instance=instance_id)
+            instance_faults = model_query(
+                context, models.InstanceFault, instance=True).filter_by(
+                instance_uuid=instance_id)
+            instance_faults.soft_delete()
 
     def instance_update(self, context, instance_id, values):
         if 'uuid' in values:
@@ -288,6 +293,37 @@ class Connection(api.Connection):
         if result == 0:
             raise exception.InstanceTypeExtraSpecsNotFound(
                 extra_specs_key=key, type_id=type_id)
+
+    def instance_fault_create(context, values):
+        """Create a new InstanceFault."""
+
+        fault = models.InstanceFault()
+        fault.update(values)
+
+        with _session_for_write() as session:
+            session.add(fault)
+            session.flush()
+            return fault
+
+    def instance_fault_get_by_instance_uuids(context, instance_uuids):
+        """Get all instance faults for the provided instance_uuids."""
+
+        if not instance_uuids:
+            return {}
+
+        rows = model_query(context, models.InstanceFault, read_deleted='no').\
+            filter_by(models.InstanceFault.instance_uuid.in_(instance_uuids)).\
+            order_by(desc("created_at"), desc("id")).all()
+
+        output = {}
+        for instance_uuid in instance_uuids:
+            output[instance_uuid] = []
+
+        for row in rows:
+            data = dict(row)
+            output[row['instance_uuid']].append(data)
+
+        return output
 
 
 def _type_get_id_from_type_query(context, type_id):
