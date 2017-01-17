@@ -320,6 +320,7 @@ class EngineManager(base_manager.BaseEngineManager):
             fsm.process_event('error')
             instance.power_state = states.NOSTATE
             instance.status = fsm.current_state
+            instance.fault_info = str(e)
             instance.save()
             LOG.error(_LE("Created instance %(uuid)s failed."
                           "Exception: %(exception)s"),

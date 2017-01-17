@@ -87,6 +87,7 @@ def upgrade():
         sa.Column('availability_zone', sa.String(length=255), nullable=True),
         sa.Column('node_uuid', sa.String(length=36), nullable=True),
         sa.Column('extra', sa.Text(), nullable=True),
+        sa.Column('fault_info', sa.String(length=255), nullable=True),
         sa.Column('deleted', sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('uuid', name='uniq_instances0uuid'),
