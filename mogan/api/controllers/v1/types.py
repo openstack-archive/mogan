@@ -121,6 +121,7 @@ uuid = UuidType()
 # Can't call it 'json' because that's the name of the stdlib module
 jsontype = JsonType()
 listtype = ListType()
+integer = wtypes.IntegerType(maximum=0)
 
 
 class JsonPatchType(wtypes.Base):

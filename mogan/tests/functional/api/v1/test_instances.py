@@ -128,7 +128,8 @@ class TestInstances(v1_test.APITestV1):
         return responses
 
     def test_instance_post(self):
-        resp = self._prepare_instance(1)[0].json
+        resp_mogan = self._prepare_instance(1)[0].json
+        resp = resp_mogan['instances'][0]
         self.assertEqual('test_instance_0', resp['name'])
         self.assertEqual('building', resp['status'])
         self.assertEqual(self.INSTANCE_UUIDS[0], resp['uuid'])
