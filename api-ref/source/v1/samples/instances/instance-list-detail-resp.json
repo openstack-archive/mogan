@@ -38,6 +38,7 @@
             "status": "building",
             "updated_at": "2016-10-17T04:12:44+00:00",
             "launched_at": null,
+            "fault": {},
             "user_id": "cdbf77d47f1d4d04ad9b7ff62b672467",
             "uuid": "f978ef48-d4af-4dad-beec-e6174309bc71",
             "extra": {
