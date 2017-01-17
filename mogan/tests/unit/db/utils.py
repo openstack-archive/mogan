@@ -58,6 +58,7 @@ def get_test_instance(**kw):
         'launched_at': kw.get('launched_at'),
         'deleted_at': kw.get('deleted_at'),
         'extra': kw.get('extra', {}),
+        'fault_info': kw.get('fault_info', None),
         'deleted': kw.get('deleted', False),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),

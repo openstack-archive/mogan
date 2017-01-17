@@ -80,6 +80,7 @@ class Instance(Base):
     node_uuid = Column(String(36), nullable=True)
     launched_at = Column(DateTime, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
+    fault_info = Column(String(255), nullable=True)
     extra = Column(db_types.JsonEncodedDict)
     deleted = Column(Boolean, default=False)
 
