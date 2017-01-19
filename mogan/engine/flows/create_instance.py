@@ -147,7 +147,8 @@ class SetInstanceInfoTask(flow_utils.MoganTask):
         ]
 
     def execute(self, context, instance):
-        ironic.set_instance_info(self.ironicclient, instance)
+        node = ironic.get_node(self.ironicclient, instance.node_uuid)
+        ironic.set_instance_info(self.ironicclient, instance, node)
         # validate we are ready to do the deploy
         validate_chk = ironic.validate_node(self.ironicclient,
                                             instance.node_uuid)

@@ -73,7 +73,7 @@ def unplug_vif(ironicclient, ironic_port_id):
         pass
 
 
-def set_instance_info(ironicclient, instance):
+def set_instance_info(ironicclient, instance, node):
 
     patch = []
     # Associate the node with an instance
@@ -84,7 +84,7 @@ def set_instance_info(ironicclient, instance):
                   'value': instance.image_uuid})
     # TODO(zhenguo) Add partition support
     patch.append({'path': '/instance_info/root_gb', 'op': 'add',
-                  'value': '10'})
+                  'value': str(node.properties.get('local_gb', 0))})
 
     ironicclient.call("node.update", instance.node_uuid, patch)
 
@@ -108,6 +108,13 @@ def get_node_by_instance(ironicclient, instance_uuid, fields=None):
         fields = _NODE_FIELDS
     return ironicclient.call('node.get_by_instance_uuid',
                              instance_uuid, fields=fields)
+
+
+def get_node(ironicclient, node_uuid, fields=None):
+    if fields is None:
+        fields = _NODE_FIELDS
+    """Get a node by its UUID."""
+    return ironicclient.call('node.get', node_uuid, fields=fields)
 
 
 def destroy_node(ironicclient, node_uuid):

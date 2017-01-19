@@ -69,7 +69,7 @@ class CreateInstanceFlowTestCase(base.TestCase):
 
         task.execute(self.ctxt, instance_obj)
         mock_set_inst.assert_called_once_with(fake_ironicclient,
-                                              instance_obj)
+                                              instance_obj, mock.ANY)
         mock_validate.assert_called_once_with(fake_ironicclient,
                                               instance_obj.node_uuid)
 
