@@ -82,16 +82,11 @@ def set_instance_info(ironicclient, instance):
     # Add the required fields to deploy a node.
     patch.append({'path': '/instance_info/image_source', 'op': 'add',
                   'value': instance.image_uuid})
+    # TODO(zhenguo) Add partition support
     patch.append({'path': '/instance_info/root_gb', 'op': 'add',
                   'value': '10'})
     patch.append({'path': '/instance_info/swap_mb', 'op': 'add',
                   'value': '0'})
-    patch.append({'path': '/instance_info/display_name',
-                  'op': 'add', 'value': instance.name})
-    patch.append({'path': '/instance_info/vcpus', 'op': 'add',
-                  'value': '1'})
-    patch.append({'path': '/instance_info/memory_mb', 'op': 'add',
-                  'value': '10240'})
     patch.append({'path': '/instance_info/local_gb', 'op': 'add',
                   'value': '10'})
 
