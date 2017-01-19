@@ -175,18 +175,6 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         get_node_mock.assert_called_once_with(mock.ANY, instance.uuid)
         get_power_mock.assert_called_once_with(mock.ANY, instance.uuid)
 
-    @mock.patch.object(ironic, 'get_node_states')
-    def test_get_instance_states(self, get_states_mock, refresh_cache_mock):
-        instance = obj_utils.create_test_instance(self.context)
-        get_states_mock.return_value = mock.MagicMock()
-        refresh_cache_mock.side_effect = None
-        self._start_service()
-
-        self.service.instance_states(self.context, instance)
-        self._stop_service()
-
-        get_states_mock.assert_called_once_with(mock.ANY, instance.node_uuid)
-
     @mock.patch.object(ironic, 'get_node_by_instance')
     def test_get_ironic_node(self, get_node_mock, refresh_cache_mock):
         instance = obj_utils.create_test_instance(self.context)

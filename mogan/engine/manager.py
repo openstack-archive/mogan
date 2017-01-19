@@ -378,19 +378,6 @@ class EngineManager(base_manager.BaseEngineManager):
         instance.save()
         instance.destroy()
 
-    def _instance_states(self, context, instance):
-        states = ironic.get_node_states(self.ironicclient,
-                                        instance.node_uuid)
-        LOG.info(_LI('Successfully get ironic node states: %s'),
-                 states)
-        return states.to_dict()
-
-    def instance_states(self, context, instance):
-        """Get an instance states."""
-        LOG.debug("get instance states")
-
-        return self._instance_states(context, instance)
-
     def _wait_for_power_state(self, instance):
         """Wait for the node to complete a power state change."""
         try:

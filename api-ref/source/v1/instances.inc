@@ -305,7 +305,7 @@ Instance State Summary
 
 .. rest_method:: GET /v1/instances/{instance_uuid}/states
 
-Get a summary of the Instance's current power status.
+Get a summary of the Instance's current states.
 
 Normal response code: 200
 
@@ -321,7 +321,8 @@ Response
 
 .. rest_parameters:: parameters.yaml
 
-    - power_state: power_state
+  - power_state: power_state
+  - status: instance_status
 
 **Example instance state:**
 

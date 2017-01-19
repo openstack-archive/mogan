@@ -144,11 +144,6 @@ def get_node_list(ironicclient, **kwargs):
     return node_list
 
 
-def get_node_states(ironicclient, node_uuid):
-    return ironicclient.call("node.states", node_uuid)
-    # Do we need to catch NotFound exception.
-
-
 def set_power_state(ironicclient, node_uuid, state):
     ironicclient.call("node.set_power_state", node_uuid, state)
     # Do we need to catch NotFound exception.

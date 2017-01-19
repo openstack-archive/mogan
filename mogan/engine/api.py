@@ -142,10 +142,6 @@ class API(object):
         LOG.debug("Going to try to delete instance %s", instance.uuid)
         self._delete_instance(context, instance)
 
-    def states(self, context, instance):
-        """Get instance states."""
-        return self.engine_rpcapi.instance_states(context, instance)
-
     def power(self, context, instance, target):
         """Set power state of an instance."""
         LOG.debug("Going to try to set instance power state to %s",

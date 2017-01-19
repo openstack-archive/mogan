@@ -31,6 +31,7 @@ from mogan.api import expose
 from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common import policy
+from mogan.common import states
 from mogan.engine.baremetal import ironic_states as ir_states
 from mogan import objects
 
@@ -80,14 +81,16 @@ _CREATE_INSTANCE_SCHEMA = {
 
 class InstanceStates(base.APIBase):
     """API representation of the states of a instance."""
-    # Just support power state at present.
-    # We can expend other fields for other type state.
+
     power_state = wtypes.text
     """Represent the current power state of the instance"""
 
+    status = wtypes.text
+    """Represent the current status of the instance"""
+
     @classmethod
     def sample(cls):
-        sample = cls(power_state=ir_states.POWER_ON)
+        sample = cls(power_state=ir_states.POWER_ON, status=states.ACTIVE)
         return sample
 
 
@@ -115,9 +118,8 @@ class InstanceStatesController(rest.RestController):
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
 
-        rpc_states = pecan.request.engine_api.states(pecan.request.context,
-                                                     rpc_instance)
-        return InstanceStates(**rpc_states)
+        return InstanceStates(power_state=rpc_instance.power_state,
+                              status=rpc_instance.status)
 
     @policy.authorize_wsgi("mogan:instance", "set_power_state")
     @expose.expose(None, types.uuid, wtypes.text,
