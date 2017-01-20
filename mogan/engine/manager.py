@@ -50,9 +50,6 @@ _UNPROVISION_STATES = (ironic_states.ACTIVE, ironic_states.DEPLOYFAIL,
 class EngineManager(base_manager.BaseEngineManager):
     """Mogan Engine manager main class."""
 
-    RPC_API_VERSION = '1.0'
-
-    target = messaging.Target(version=RPC_API_VERSION)
     _lock = threading.Lock()
 
     def _refresh_cache(self):
