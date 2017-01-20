@@ -87,6 +87,7 @@ class API(object):
             'instance_properties': {
                 'availability_zone': instance.availability_zone,
                 'instance_type_uuid': instance.instance_type_uuid,
+                'networks': requested_networks,
             },
             'instance_type': dict(instance_type),
         }

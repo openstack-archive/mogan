@@ -18,7 +18,7 @@ Fakes For Scheduler tests.
 """
 
 from oslo_versionedobjects import base as object_base
-
+from oslo_versionedobjects import fields
 
 from mogan.engine.scheduler import filter_scheduler
 from mogan.engine.scheduler import node_manager
@@ -38,21 +38,25 @@ class FakeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
         'id': object_fields.IntegerField(),
         'uuid': object_fields.UUIDField(nullable=True),
         'properties': object_fields.FlexibleDictField(nullable=True),
+        'ports': fields.ListOfDictOfNullableStringsField(nullable=True),
     }
 
 
 fakenode1 = FakeNode(id=1, uuid='1a617131-cdbc-45dc-afff-f21f17ae054e',
                      properties={'capabilities': '',
                                  'availability_zone': 'az1',
-                                 'instance_type': 'type1'})
+                                 'instance_type': 'type1'},
+                     ports=[])
 fakenode2 = FakeNode(id=2, uuid='2a617131-cdbc-45dc-afff-f21f17ae054e',
                      properties={'capabilities': '',
                                  'availability_zone': 'az2',
-                                 'instance_type': 'type2'})
+                                 'instance_type': 'type2'},
+                     ports=[])
 fakenode3 = FakeNode(id=3, uuid='3a617131-cdbc-45dc-afff-f21f17ae054e',
                      properties={'capabilities': '',
                                  'availability_zone': 'az3',
-                                 'instance_type': 'type3'})
+                                 'instance_type': 'type3'},
+                     ports=[])
 
 
 class FakeNodeState(node_manager.NodeState):

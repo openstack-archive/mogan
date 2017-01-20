@@ -38,6 +38,7 @@ class NodeState(object):
         self.availability_zone = node.properties.get('availability_zone') \
             or CONF.engine.default_schedule_zone
         self.instance_type = node.properties.get('instance_type')
+        self.ports = node.ports
 
 
 class NodeManager(object):

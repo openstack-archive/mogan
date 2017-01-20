@@ -61,7 +61,13 @@ class EngineManager(base_manager.BaseEngineManager):
                                      maintenance=False,
                                      provision_state=ironic_states.AVAILABLE,
                                      associated=False, limit=0)
+        ports = ironic.get_port_list(self.ironicclient, limit=0,
+                                     fields=('uuid', 'node_uuid', 'extra',
+                                             'address'))
         for node in nodes:
+            # Add ports to the associated node
+            node.ports = [port for port in ports
+                          if node.uuid == port.node_uuid]
             node_cache[node.uuid] = node
 
         with self._lock:

@@ -35,7 +35,8 @@ opts = [
                 default=[
                     'AvailabilityZoneFilter',
                     'InstanceTypeFilter',
-                    'CapabilitiesFilter'
+                    'CapabilitiesFilter',
+                    'PortsFilter'
                 ],
                 help=_('Which filter class names to use for filtering nodes '
                        'when not specified in the request.')),

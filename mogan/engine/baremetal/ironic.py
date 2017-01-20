@@ -144,6 +144,22 @@ def get_node_list(ironicclient, **kwargs):
     return node_list
 
 
+def get_port_list(ironicclient, **kwargs):
+    """Helper function to return the list of ports.
+
+    If unable to connect ironic server, an empty list is returned.
+
+    :returns: a list of raw port from ironic
+
+    """
+    try:
+        port_list = ironicclient.call("port.list", **kwargs)
+    except client_e.ClientException as e:
+        LOG.exception(_LE("Could not get ports from ironic. Reason: "
+                          "%(detail)s"), {'detail': e.message})
+        port_list = []
+    return port_list
+
+
 def set_power_state(ironicclient, node_uuid, state):
     ironicclient.call("node.set_power_state", node_uuid, state)
-    # Do we need to catch NotFound exception.
