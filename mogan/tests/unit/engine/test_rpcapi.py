@@ -20,22 +20,12 @@ import mock
 from oslo_config import cfg
 from oslo_messaging import _utils as messaging_utils
 
-from mogan.engine import manager as engine_manager
 from mogan.engine import rpcapi as engine_rpcapi
 from mogan import objects
-from mogan.tests import base as tests_base
 from mogan.tests.unit.db import base
 from mogan.tests.unit.db import utils as dbutils
 
 CONF = cfg.CONF
-
-
-class EngineRPCAPITestCase(tests_base.TestCase):
-
-    def test_versions_in_sync(self):
-        self.assertEqual(
-            engine_manager.EngineManager.RPC_API_VERSION,
-            engine_rpcapi.EngineAPI.RPC_API_VERSION)
 
 
 class RPCAPITestCase(base.DbTestCase):
