@@ -97,6 +97,9 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:get_networks',
                        'rule:default',
                        description='Get Instance network information'),
+    policy.RuleDefault('mogan:instance:associate_floatingip',
+                       'rule:default',
+                       description='Associate a floating ip with an instance'),
 ]
 
 

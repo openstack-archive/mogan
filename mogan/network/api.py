@@ -94,3 +94,24 @@ class API(object):
                    {'vif': port_id, 'instance': instance_uuid, 'exc': e})
             LOG.exception(msg)
             raise exception.NetworkError(msg)
+
+    def _get_floating_ip_by_address(self, client, address):
+        """Get floating IP from floating IP address."""
+        if not address:
+            raise exception.FloatingIpNotFoundForAddress(address=address)
+        fips = self._safe_get_floating_ips(client, floating_ip_address=address)
+        if len(fips) == 0:
+            raise exception.FloatingIpNotFoundForAddress(address=address)
+        elif len(fips) > 1:
+            raise exception.FloatingIpMultipleFoundForAddress(address=address)
+        return fips[0]
+
+    def associate_floating_ip(self, context, floating_address,
+                              port_id, fixed_address):
+        """Associate a floating IP with a fixed IP."""
+
+        client = get_client(context)
+        fip = self._get_floating_ip_by_address(client, floating_address)
+        param = {'port_id': port_id,
+                 'fixed_ip_address': fixed_address}
+        client.update_floatingip(fip['id'], {'floatingip': param})
