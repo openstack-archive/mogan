@@ -97,6 +97,11 @@ class OperationNotPermitted(NotAuthorized):
     _msg_fmt = _("Operation not permitted.")
 
 
+class Forbidden(MoganException):
+    msg_fmt = _("Forbidden")
+    code = 403
+
+
 class HTTPForbidden(NotAuthorized):
     _msg_fmt = _("Access was denied to the following resource: %(resource)s")
 
@@ -263,6 +268,14 @@ class InvalidState(Invalid):
 
 class DuplicateState(Conflict):
     _msg_fmt = _("Resource already exists.")
+
+
+class FloatingIpNotFoundForAddress(NotFound):
+    msg_fmt = _("Floating IP not found for address %(address)s.")
+
+
+class FloatingIpMultipleFoundForAddress(MoganException):
+    msg_fmt = _("Multiple floating IPs are found for address %(address)s.")
 
 
 ObjectActionError = obj_exc.ObjectActionError

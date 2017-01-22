@@ -30,3 +30,5 @@
 "mogan:instance:set_power_state": "rule:default"
 # Get Instance network information
 "mogan:instance:get_networks": "rule:default"
+# Associate floating IP to instance
+"mogan:instance:associate_floatingip": "rule:default"
