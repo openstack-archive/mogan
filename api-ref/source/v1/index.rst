@@ -8,5 +8,5 @@ Baremetal Compute API V1 (CURRENT)
 
 .. include:: urls.inc
 .. include:: instances.inc
-.. include:: types.inc
+.. include:: instance_types.inc
 .. include:: availability_zones.inc

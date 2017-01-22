@@ -1,10 +1,10 @@
 .. -*- rst -*-
 
-======
- Type
-======
+===============
+ Instance Type
+===============
 
-Show and manage Types.
+Show and manage Instance Types.
 
 Types are a way to describe the basic dimensions of a instance to be
 created including how much ``cpu``, ``ram``, and ``disk space`` are
@@ -45,8 +45,8 @@ Response
 .. literalinclude:: samples/types/types-list-resp.json
    :language: javascript
 
-Create Type
-===========
+Create Instance Type
+====================
 
 .. rest_method:: POST /types
 
@@ -94,8 +94,8 @@ Response
 .. literalinclude:: samples/types/type-create-post-resp.json
    :language: javascript
 
-Update Type
-===========
+Update Instance Type
+====================
 
 .. rest_method:: PUT /types/{type_uuid}
 
@@ -114,9 +114,10 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-   - name: type_name
-   - description: type_description
-   - is_public: type_is_public_not_required
+  - type_uuid: type_uuid_path
+  - name: type_name
+  - description: type_description
+  - is_public: type_is_public_not_required
 
 **Example Update Type**
 
@@ -142,8 +143,8 @@ Response
 .. literalinclude:: samples/types/type-update-put-resp.json
    :language: javascript
 
-Show Type Details
-===================
+Show Instance Type Details
+==========================
 
 .. rest_method:: GET /types/{type_uuid}
 
@@ -180,8 +181,8 @@ Response
    :language: javascript
 
 
-Delete Type
-=============
+Delete Instance Type
+====================
 
 .. rest_method:: DELETE /types/{type_uuid}
 
@@ -239,7 +240,7 @@ Response
    :language: javascript
 
 
-Create/update Extra Spec
+Create/Update Extra Spec
 ========================
 
 .. rest_method:: PATCH /types/{type_uuid}/extraspecs
@@ -292,7 +293,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - type_id: type_uuid_path
+  - type_uuid: type_uuid_path
   - key: spec_key_path
 
 Response
