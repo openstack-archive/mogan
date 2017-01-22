@@ -1,0 +1,18 @@
+{
+  "ports" : {
+    "b95c5372-437e-4dfc-99d0-084549d48c49" : {
+      "network" : "8cea9878-3d75-4001-9aab-5a69dce0c328",
+      "mac_address" : "52:54:00:1f:5b:20",
+      "fixed_ips" : [
+        {
+          "ip_address" : "11.0.0.7",
+          "subnet_id" : "fd9cf9ea-b4c6-4532-8b75-2756a7041433"
+        },
+        {
+          "ip_address" : "fd65:e420:7cd2::9",
+          "subnet_id" : "a9043703-f3be-4c94-af19-5a23a4e4b54c"
+        }
+      ]
+    }
+  }
+}

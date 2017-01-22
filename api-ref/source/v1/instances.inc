@@ -354,3 +354,31 @@ Request
 **Example request to power off a Instance:**
 
 .. literalinclude:: samples/instances/instance-set-power-off.json
+
+
+Instance Network Summary
+========================
+
+.. rest_method:: GET /v1/instances/{instance_uuid}/networks
+
+Get a summary of the Instance's networks.
+
+Normal response code: 200
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+    - instance_uuid: instance_ident
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - ports: network_info
+
+**Example instance network:**
+
+.. literalinclude:: samples/instances/instance-get-network-response.json
