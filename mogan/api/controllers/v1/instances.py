@@ -17,6 +17,7 @@ import datetime
 
 import jsonschema
 from oslo_log import log
+from oslo_utils import netutils
 import pecan
 from pecan import rest
 from six.moves import http_client
@@ -30,9 +31,11 @@ from mogan.api.controllers.v1 import utils as api_utils
 from mogan.api import expose
 from mogan.common import exception
 from mogan.common.i18n import _
+from mogan.common.i18n import _LW
 from mogan.common import policy
 from mogan.common import states
 from mogan.engine.baremetal import ironic_states as ir_states
+from mogan import network
 from mogan import objects
 
 _DEFAULT_INSTANCE_RETURN_FIELDS = ('uuid', 'name', 'description',
@@ -156,6 +159,111 @@ class InstanceStatesController(rest.RestController):
         pecan.response.location = link.build_url('instances', url_args)
 
 
+class FloatingIP(base.APIBase):
+    """API representation of the floatingip information for an instance."""
+
+    id = types.uuid
+    """The ID of the floating IP"""
+
+    port_id = types.uuid
+    """The ID of the port that associated to"""
+
+
+class FloatingIPController(rest.RestController):
+    """REST controller for Instance floatingips."""
+
+    def __init__(self, *args, **kwargs):
+        super(FloatingIPController, self).__init__(*args, **kwargs)
+        self.network_api = network.API()
+
+    _resource = None
+
+    # This _resource is used for authorization.
+    def _get_resource(self, uuid, *args, **kwargs):
+        self._resource = objects.Instance.get(pecan.request.context, uuid)
+        return self._resource
+
+    @policy.authorize_wsgi("mogan:instance", "associate_floatingip", False)
+    @expose.expose(FloatingIP, types.uuid, types.jsontype,
+                   status_code=http_client.CREATED)
+    def post(self, instance_uuid, floatingip):
+        """Add(Associate) Floating Ip.
+
+        :param floatingip: The floating IP within the request body.
+        """
+        instance = self._resource or self._get_resource(instance_uuid)
+        address = floatingip['address']
+        ports = instance.network_info
+
+        if not ports:
+            msg = _('No ports associated to instance')
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.BAD_REQUEST)
+
+        fixed_address = None
+        if 'fixed_address' in floatingip:
+            fixed_address = floatingip['fixed_address']
+            for port_id, port in ports.items():
+                for port_address in port['fixed_ips']:
+                    if port_address['ip_address'] == fixed_address:
+                        break
+                else:
+                    continue
+                break
+            else:
+                msg = _('Specified fixed address not assigned to instance')
+                raise wsme.exc.ClientSideError(
+                    msg, status_code=http_client.BAD_REQUEST)
+
+        if not fixed_address:
+            for port_id, port in ports.items():
+                for port_address in port['fixed_ips']:
+                    if netutils.is_valid_ipv4(port_address['ip_address']):
+                        fixed_address = port_address['ip_address']
+                        break
+                else:
+                    continue
+                break
+            else:
+                msg = _('Unable to associate floating IP %(address)s '
+                        'to any fixed IPs for instance %(id)s. '
+                        'Instance has no fixed IPv4 addresses to '
+                        'associate.') % ({'address': address,
+                                          'id': instance.uuid})
+                raise wsme.exc.ClientSideError(
+                    msg, status_code=http_client.BAD_REQUEST)
+            if len(ports) > 1:
+                LOG.warning(_LW('multiple ports exist, using the first '
+                                'IPv4 fixed_ip: %s'), fixed_address)
+
+        try:
+            fip = self.network_api.associate_floating_ip(
+                pecan.request.context, floating_address=address,
+                port_id=port_id, fixed_address=fixed_address)
+        except exception.FloatingIpNotFoundForAddress:
+            msg = _('floating IP not found')
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.NOT_FOUND)
+        except exception.Forbidden as e:
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.FORBIDDEN)
+        except Exception as e:
+            msg = _('Unable to associate floating IP %(address)s to '
+                    'fixed IP %(fixed_address)s for instance %(id)s. '
+                    'Error: %(error)s') % ({'address': address,
+                                            'fixed_address': fixed_address,
+                                            'id': instance.uuid, 'error': e})
+            LOG.exception(msg)
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.BAD_REQUEST)
+
+        # Set the HTTP Location Header, user can get the floating ips
+        # by locaton.
+        url_args = '/'.join([instance_uuid, 'networks'])
+        pecan.response.location = link.build_url('instances', url_args)
+        return FloatingIP(id=fip['id'], port_id=fip['port_id'])
+
+
 class InstanceNetworks(base.APIBase):
     """API representation of the networks of an instance."""
 
@@ -165,6 +273,9 @@ class InstanceNetworks(base.APIBase):
 
 class InstanceNetworksController(rest.RestController):
     """REST controller for Instance networks."""
+
+    floatingip = FloatingIPController()
+    """Expose floatingip as a sub-element of networks"""
 
     _resource = None
 
