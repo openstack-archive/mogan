@@ -17,6 +17,7 @@ Project Resources
 * Source: http://git.openstack.org/cgit/openstack/mogan
 * Bugs: http://bugs.launchpad.net/mogan
 * Wiki: https://wiki.openstack.org/wiki/Mogan
+* APIs: http://111.20.68.219:7950/v1/
 
 Project status, bugs and BPs are tracked on Launchpad:
 
