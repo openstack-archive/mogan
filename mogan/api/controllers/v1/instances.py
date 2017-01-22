@@ -156,6 +156,35 @@ class InstanceStatesController(rest.RestController):
         pecan.response.location = link.build_url('instances', url_args)
 
 
+class InstanceNetworks(base.APIBase):
+    """API representation of the networks of an instance."""
+
+    ports = {wtypes.text: types.jsontype}
+    """The network information of the instance"""
+
+
+class InstanceNetworksController(rest.RestController):
+    """REST controller for Instance networks."""
+
+    _resource = None
+
+    # This _resource is used for authorization.
+    def _get_resource(self, uuid, *args, **kwargs):
+        self._resource = objects.Instance.get(pecan.request.context, uuid)
+        return self._resource
+
+    @policy.authorize_wsgi("mogan:instance", "get_networks")
+    @expose.expose(InstanceNetworks, types.uuid)
+    def get(self, instance_uuid):
+        """List the networks info of the instance.
+
+        :param instance_uuid: the UUID of a instance.
+        """
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
+
+        return InstanceNetworks(ports=rpc_instance.network_info)
+
+
 class Instance(base.APIBase):
     """API representation of a instance.
 
@@ -264,6 +293,10 @@ class InstanceController(rest.RestController):
     """REST controller for Instance."""
 
     states = InstanceStatesController()
+    """Expose the state controller action as a sub-element of instances"""
+
+    networks = InstanceNetworksController()
+    """Expose the network controller action as a sub-element of instances"""
 
     _custom_actions = {
         'detail': ['GET']

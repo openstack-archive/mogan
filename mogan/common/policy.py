@@ -94,6 +94,9 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:set_power_state',
                        'rule:default',
                        description='Change Instance power status'),
+    policy.RuleDefault('mogan:instance:get_networks',
+                       'rule:default',
+                       description='Get Instance network information'),
 ]
 
 
