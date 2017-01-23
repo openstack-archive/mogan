@@ -28,3 +28,5 @@
 "mogan:instance:update": "rule:default"
 # Change Instance power status
 "mogan:instance:set_power_state": "rule:default"
+# Get Instance network information
+"mogan:instance:get_networks": "rule:default"
