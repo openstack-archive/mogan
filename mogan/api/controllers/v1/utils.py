@@ -28,24 +28,6 @@ JSONPATCH_EXCEPTIONS = (jsonpatch.JsonPatchException,
                         KeyError)
 
 
-def validate_limit(limit):
-    if limit is None:
-        return CONF.api.max_limit
-
-    if limit <= 0:
-        raise wsme.exc.ClientSideError(_("Limit must be positive"))
-
-    return min(CONF.api.max_limit, limit)
-
-
-def validate_sort_dir(sort_dir):
-    if sort_dir not in ['asc', 'desc']:
-        raise wsme.exc.ClientSideError(_("Invalid sort direction: %s. "
-                                         "Acceptable values are "
-                                         "'asc' or 'desc'") % sort_dir)
-    return sort_dir
-
-
 def apply_jsonpatch(doc, patch):
     for p in patch:
         if p['op'] == 'add' and p['path'].count('/') == 1:
