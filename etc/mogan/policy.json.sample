@@ -26,7 +26,11 @@
 "mogan:instance:delete": "rule:default"
 # Update Instance records
 "mogan:instance:update": "rule:default"
-# Change Instance power status
-"mogan:instance:set_power_state": "rule:default"
+# Start an instance
+"mogan:instance:set_power_state:on": "rule:default"
+# Stop an instance
+"mogan:instance:set_power_state:off": "rule:default"
+# Reboot an instance
+"mogan:instance:set_power_state:reboot": "rule:default"
 # Get Instance network information
 "mogan:instance:get_networks": "rule:default"
