@@ -226,8 +226,8 @@ class TestNotificationBase(test_base.TestCase):
 
 
 notification_object_data = {
-    'InstancePayload': '1.0-897d5e392176f1e1d004f7d6f88482b3',
-    'InstanceActionPayload': '1.0-a0ff2469842cf5e19acdf0d3d53a90c5',
+    'InstancePayload': '1.0-e0f5f1a93307435bff6ccb1b69d66003',
+    'InstanceActionPayload': '1.0-406ba4240e7dc166a10069484397c3e1',
     'InstanceActionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
     'ExceptionPayload': '1.0-7c31986d8d78bed910c324965c431e18',
     'ExceptionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
@@ -328,3 +328,5 @@ class TestInstanceActionNotification(test_base.TestCase):
         self.assertEqual(fake_inst_values['project_id'], payload['project_id'])
         self.assertEqual(fake_inst_values['description'],
                          payload['description'])
+        self.assertEqual(fake_inst_values['power_state'],
+                         payload['power_state'])
