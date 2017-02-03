@@ -41,7 +41,9 @@ opts = [
                 help=_('Which filter class names to use for filtering nodes '
                        'when not specified in the request.')),
     cfg.ListOpt('scheduler_default_weighers',
-                default=[],
+                default=[
+                    'PortWeigher',
+                ],
                 help=_('Which weigher class names to use for weighing '
                        'nodes.')),
     cfg.StrOpt('scheduler_weight_handler',
@@ -49,6 +51,9 @@ opts = [
                        'OrderedNodeWeightHandler',
                help=_('Which handler to use for selecting the node after '
                       'weighing')),
+    cfg.FloatOpt('port_weight_multiplier',
+                 default=-1.0,
+                 help=_('Node ports quantity weight multipler ratio.')),
 ]
 
 
