@@ -1,0 +1,9 @@
+Code-Review+1: liusheng <liusheng2048@gmail.com>
+Code-Review+2: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Workflow+1: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 03 Feb 2017 11:16:44 +0000
+Reviewed-on: https://review.openstack.org/428662
+Project: openstack/mogan
+Branch: refs/heads/master
