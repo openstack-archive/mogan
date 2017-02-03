@@ -23,6 +23,7 @@ from mogan.conf import CONF
 from mogan.engine import rpcapi
 from mogan import image
 from mogan import objects
+from mogan.objects import quota
 
 LOG = log.getLogger(__name__)
 
@@ -34,6 +35,8 @@ class API(object):
         super(API, self).__init__(**kwargs)
         self.image_api = image_api or image.API()
         self.engine_rpcapi = rpcapi.EngineAPI()
+        self.quota = quota.Quota()
+        self.quota.register_resource(objects.quota.InstanceResource())
 
     def _get_image(self, context, image_uuid):
         return self.image_api.get(context, image_uuid)
@@ -80,7 +83,13 @@ class API(object):
             context, instance_type, image_uuid, name, description,
             availability_zone, extra)
 
+        reserve_opts = {'instances': 1}
+        reservations = self.quota.reserve(context, reserve_opts)
+
         instance = self._provision_instances(context, base_options)
+
+        if reservations:
+            self.quota.commit(context, reservations)
 
         request_spec = {
             'instance_id': instance.uuid,
@@ -136,6 +145,10 @@ class API(object):
             LOG.debug("Instance is not found while deleting",
                       instance=instance)
             return
+        reserve_opts = {'instances': -1}
+        reservations = self.quota.reserve(context, reserve_opts)
+        if reservations:
+            self.quota.commit(context, reservations)
         self.engine_rpcapi.delete_instance(context, instance)
 
     def delete(self, context, instance):
