@@ -282,6 +282,12 @@ class EngineManager(base_manager.BaseEngineManager):
                         {'node': instance.node_uuid, 'instance': instance.uuid,
                          'reason': six.text_type(e)})
 
+    def _rollback_instances_quota(self, context, number):
+        reserve_opts = {'instances': number}
+        reservations = self.quota.reserve(context, reserve_opts)
+        if reservations:
+            self.quota.commit(context, reservations)
+
     def create_instance(self, context, instance, requested_networks,
                         request_spec=None, filter_properties=None):
         """Perform a deployment."""
@@ -308,6 +314,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 filter_properties,
             )
         except Exception:
+            self._rollback_instances_quota(context, -1)
             msg = _("Create manager instance flow failed.")
             LOG.exception(msg)
             raise exception.MoganException(msg)
@@ -327,6 +334,7 @@ class EngineManager(base_manager.BaseEngineManager):
             instance.power_state = states.NOSTATE
             instance.status = fsm.current_state
             instance.save()
+             self._rollback_instances_quota(context, -1)
             LOG.error(_LE("Created instance %(uuid)s failed."
                           "Exception: %(exception)s"),
                       {"uuid": instance.uuid,
@@ -375,6 +383,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 instance.power_state = states.NOSTATE
                 instance.status = fsm.current_state
                 instance.save()
+                 self._rollback_instances_quota(context, 1)
                 return
 
         fsm.process_event('done')

@@ -80,7 +80,13 @@ class API(object):
             context, instance_type, image_uuid, name, description,
             availability_zone, extra)
 
+        reserve_opts = {'instances': 1}
+        reservations = self.quota.reserve(context, reserve_opts)
+
         instance = self._provision_instances(context, base_options)
+
+        if reservations:
+            self.quota.commit(context, reservations)
 
         request_spec = {
             'instance_id': instance.uuid,
@@ -136,6 +142,10 @@ class API(object):
             LOG.debug("Instance is not found while deleting",
                       instance=instance)
             return
+        reserve_opts = {'instances': -1}
+        reservations = self.quota.reserve(context, reserve_opts)
+        if reservations:
+            self.quota.commit(context, reservations)
         self.engine_rpcapi.delete_instance(context, instance)
 
     def delete(self, context, instance):
