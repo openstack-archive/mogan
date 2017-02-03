@@ -13,9 +13,10 @@
 from neutronclient.common import exceptions as neutron_exceptions
 from neutronclient.v2_0 import client as clientv20
 from oslo_log import log as logging
+from oslo_utils import excutils
 
 from mogan.common import exception
-from mogan.common.i18n import _
+from mogan.common.i18n import _, _LE
 from mogan.common import keystone
 from mogan.conf import CONF
 
@@ -94,3 +95,43 @@ class API(object):
                    {'vif': port_id, 'instance': instance_uuid, 'exc': e})
             LOG.exception(msg)
             raise exception.NetworkError(msg)
+
+    def _safe_get_floating_ips(self, client, **kwargs):
+        """Get floating IP gracefully handling 404 from Neutron."""
+        try:
+            return client.list_floatingips(**kwargs)['floatingips']
+        # If a neutron plugin does not implement the L3 API a 404 from
+        # list_floatingips will be raised.
+        except neutron_exceptions.NotFound:
+            return []
+        except neutron_exceptions.NeutronClientException as e:
+            # bug/1513879 neutron client is currently using
+            # NeutronClientException when there is no L3 API
+            if e.status_code == 404:
+                return []
+            with excutils.save_and_reraise_exception():
+                LOG.exception(_LE('Unable to access floating IP for %s'),
+                              ', '.join(['%s %s' % (k, v)
+                                         for k, v in kwargs.items()]))
+
+    def _get_floating_ip_by_address(self, client, address):
+        """Get floating IP from floating IP address."""
+        if not address:
+            raise exception.FloatingIpNotFoundForAddress(address=address)
+        fips = self._safe_get_floating_ips(client, floating_ip_address=address)
+        if len(fips) == 0:
+            raise exception.FloatingIpNotFoundForAddress(address=address)
+        elif len(fips) > 1:
+            raise exception.FloatingIpMultipleFoundForAddress(address=address)
+        return fips[0]
+
+    def associate_floating_ip(self, context, floating_address,
+                              port_id, fixed_address):
+        """Associate a floating IP with a fixed IP."""
+
+        client = get_client(context.auth_token)
+        fip = self._get_floating_ip_by_address(client, floating_address)
+        param = {'port_id': port_id,
+                 'fixed_ip_address': fixed_address}
+        client.update_floatingip(fip['id'], {'floatingip': param})
+        return fip
