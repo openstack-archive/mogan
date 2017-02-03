@@ -138,10 +138,11 @@ class EngineManager(base_manager.BaseEngineManager):
                 continue
 
             if db_instance.status not in (states.ACTIVE, states.STOPPED):
-                LOG.info(_LI("During sync_power_state the instance has a "
-                             "pending task (%(task)s). Skip."),
-                         {'task': db_instance.status},
-                         instance=db_instance)
+                if db_instance.status in states.UNSTABLE_STATES:
+                    LOG.info(_LI("During sync_power_state the instance has a "
+                                 "pending task (%(task)s). Skip."),
+                             {'task': db_instance.status},
+                             instance=db_instance)
                 continue
 
             if uuid not in node_dict:
