@@ -28,8 +28,7 @@ class InstancePayload(base.NotificationPayloadBase):
         'launched_at': ('instance', 'launched_at'),
         'updated_at': ('instance', 'updated_at'),
         'status': ('instance', 'status'),
-        # TODO(liusheng) the instance object hasn't power_state attribute
-        # 'power_state': ('instance', 'power_state'),
+        'power_state': ('instance', 'power_state'),
         'instance_type_uuid': ('instance', 'instance_type_uuid'),
         'description': ('instance', 'description')
     }
@@ -44,7 +43,7 @@ class InstancePayload(base.NotificationPayloadBase):
         'instance_type_uuid': fields.UUIDField(nullable=False),
         'image_uuid': fields.UUIDField(nullable=True),
         'availability_zone': fields.StringField(nullable=True),
-        # 'power_state':  fields.StringField(nullable=True),
+        'power_state': fields.StringField(nullable=True),
         'created_at': fields.DateTimeField(nullable=True),
         'launched_at': fields.DateTimeField(nullable=True),
         'updated_at': fields.DateTimeField(nullable=True),
