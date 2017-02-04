@@ -255,13 +255,12 @@ class FloatingIPController(rest.RestController):
             fip = self.network_api.associate_floating_ip(
                 pecan.request.context, floating_address=address,
                 port_id=port_id, fixed_address=fixed_address)
-        except exception.FloatingIpNotFoundForAddress:
-            msg = _('floating IP not found')
+        except exception.FloatingIpNotFoundForAddress as e:
             raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.NOT_FOUND)
+                e.message, status_code=http_client.NOT_FOUND)
         except exception.Forbidden as e:
             raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.FORBIDDEN)
+                e.message, status_code=http_client.FORBIDDEN)
         except Exception as e:
             msg = _('Unable to associate floating IP %(address)s to '
                     'fixed IP %(fixed_address)s for instance %(id)s. '
