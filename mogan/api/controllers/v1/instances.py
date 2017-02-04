@@ -109,20 +109,22 @@ class InstanceStates(base.APIBase):
         return sample
 
 
-class InstanceStatesController(rest.RestController):
-    # Note(Shaohe Feng) we follow ironic restful api define.
-    # We can refactor this API, if we do not like ironic pattern.
-
-    _custom_actions = {
-        'power': ['PUT'],
-    }
-
+class InstanceControllerBase(rest.RestController):
     _resource = None
 
     # This _resource is used for authorization.
     def _get_resource(self, uuid, *args, **kwargs):
         self._resource = objects.Instance.get(pecan.request.context, uuid)
         return self._resource
+
+
+class InstanceStatesController(InstanceControllerBase):
+    # Note(Shaohe Feng) we follow ironic restful api define.
+    # We can refactor this API, if we do not like ironic pattern.
+
+    _custom_actions = {
+        'power': ['PUT'],
+    }
 
     @policy.authorize_wsgi("mogan:instance", "get_states")
     @expose.expose(InstanceStates, types.uuid)
@@ -181,19 +183,12 @@ class FloatingIP(base.APIBase):
     """The ID of the port that associated to"""
 
 
-class FloatingIPController(rest.RestController):
+class FloatingIPController(InstanceControllerBase):
     """REST controller for Instance floatingips."""
 
     def __init__(self, *args, **kwargs):
         super(FloatingIPController, self).__init__(*args, **kwargs)
         self.network_api = network.API()
-
-    _resource = None
-
-    # This _resource is used for authorization.
-    def _get_resource(self, uuid, *args, **kwargs):
-        self._resource = objects.Instance.get(pecan.request.context, uuid)
-        return self._resource
 
     @policy.authorize_wsgi("mogan:instance", "associate_floatingip", False)
     @expose.expose(FloatingIP, types.uuid, types.jsontype,
@@ -286,18 +281,11 @@ class InstanceNetworks(base.APIBase):
     """The network information of the instance"""
 
 
-class InstanceNetworksController(rest.RestController):
+class InstanceNetworksController(InstanceControllerBase):
     """REST controller for Instance networks."""
 
     floatingip = FloatingIPController()
     """Expose floatingip as a sub-element of networks"""
-
-    _resource = None
-
-    # This _resource is used for authorization.
-    def _get_resource(self, uuid, *args, **kwargs):
-        self._resource = objects.Instance.get(pecan.request.context, uuid)
-        return self._resource
 
     @policy.authorize_wsgi("mogan:instance", "get_networks")
     @expose.expose(InstanceNetworks, types.uuid)
@@ -415,7 +403,7 @@ class InstanceCollection(base.APIBase):
         return collection
 
 
-class InstanceController(rest.RestController):
+class InstanceController(InstanceControllerBase):
     """REST controller for Instance."""
 
     states = InstanceStatesController()
@@ -427,13 +415,6 @@ class InstanceController(rest.RestController):
     _custom_actions = {
         'detail': ['GET']
     }
-
-    _resource = None
-
-    # This _resource is used for authorization.
-    def _get_resource(self, uuid, *args, **kwargs):
-        self._resource = objects.Instance.get(pecan.request.context, uuid)
-        return self._resource
 
     def _get_instance_collection(self, fields=None, all_tenants=False):
         context = pecan.request.context
