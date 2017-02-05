@@ -119,8 +119,6 @@ class InstanceControllerBase(rest.RestController):
 
 
 class InstanceStatesController(InstanceControllerBase):
-    # Note(Shaohe Feng) we follow ironic restful api define.
-    # We can refactor this API, if we do not like ironic pattern.
 
     _custom_actions = {
         'power': ['PUT'],
