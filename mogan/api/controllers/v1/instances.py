@@ -15,7 +15,6 @@
 
 import datetime
 
-import jsonschema
 from oslo_log import log
 from oslo_utils import netutils
 import pecan
@@ -26,9 +25,12 @@ from wsme import types as wtypes
 
 from mogan.api.controllers import base
 from mogan.api.controllers import link
+from mogan.api.controllers.v1.schemas import floating_ips as fip_schemas
+from mogan.api.controllers.v1.schemas import instances as inst_schemas
 from mogan.api.controllers.v1 import types
 from mogan.api.controllers.v1 import utils as api_utils
 from mogan.api import expose
+from mogan.api import validation
 from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common.i18n import _LW
@@ -42,56 +44,6 @@ _DEFAULT_INSTANCE_RETURN_FIELDS = ('uuid', 'name', 'description',
                                    'status', 'power_state')
 
 LOG = log.getLogger(__name__)
-
-_CREATE_INSTANCE_SCHEMA = {
-    "$schema": "http://json-schema.org/schema#",
-    "title": "Create instance schema",
-    "type": "object",
-    "properties": {
-        'name': {'type': 'string', 'minLength': 1, 'maxLength': 255},
-        'description': {'type': 'string', 'minLength': 1, 'maxLength': 255},
-        'availability_zone': {'type': 'string', 'minLength': 1,
-                              'maxLength': 255},
-        'image_uuid': {'type': 'string', 'format': 'uuid'},
-        'instance_type_uuid': {'type': 'string', 'format': 'uuid'},
-        'networks': {
-            'type': 'array', 'minItems': 1,
-            'items': {
-                'type': 'object',
-                'properties': {
-                    'net_id': {'type': 'string', 'format': 'uuid'},
-                    'port_type': {'type': 'string', 'minLength': 1,
-                                  'maxLength': 255},
-                },
-                'required': ['net_id'],
-                'additionalProperties': False,
-            },
-        },
-        'extra': {
-            'type': 'object',
-            'patternProperties': {
-                '^[a-zA-Z0-9-_:. ]{1,255}$': {
-                    'type': 'string', 'maxLength': 255
-                }
-            },
-            'additionalProperties': False
-        }
-    },
-    'required': ['name', 'image_uuid', 'instance_type_uuid', 'networks'],
-    'additionalProperties': False,
-}
-
-_ASSOCIATE_FIP_SCHEMA = {
-    "$schema": "http://json-schema.org/schema#",
-    "title": "Associate floating ip schema",
-    'type': 'object',
-    'properties': {
-        'address': {'type': 'string', 'format': 'ip-address'},
-        'fixed_address': {'type': 'string', 'format': 'ip-address'}
-    },
-    'required': ['address'],
-    'additionalProperties': False
-}
 
 
 class InstanceStates(base.APIBase):
@@ -198,8 +150,7 @@ class FloatingIPController(InstanceControllerBase):
 
         :param floatingip: The floating IP within the request body.
         """
-        # Add jsonschema validate
-        _check_create_body(floatingip, _ASSOCIATE_FIP_SCHEMA)
+        validation.check_schema(floatingip, fip_schemas.add_floating_ip)
 
         instance = self._resource or self._get_resource(instance_uuid)
         address = floatingip['address']
@@ -475,8 +426,7 @@ class InstanceController(InstanceControllerBase):
 
         :param instance: a instance within the request body.
         """
-        # Add jsonschema validate
-        _check_create_body(instance, _CREATE_INSTANCE_SCHEMA)
+        validation.check_schema(instance, inst_schemas.create_instance)
 
         requested_networks = instance.pop('networks', None)
         instance_type_uuid = instance.get('instance_type_uuid')
@@ -559,19 +509,3 @@ class InstanceController(InstanceControllerBase):
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
         pecan.request.engine_api.delete(pecan.request.context, rpc_instance)
-
-
-def _check_create_body(body, schema):
-    """Ensure all necessary keys are present and correct in create body.
-
-    Check that the user-specified create body is in the expected format and
-    include the required information.
-
-    :param body: create  body
-    :raises: InvalidParameterValue if validation of create body fails.
-    """
-    try:
-        jsonschema.validate(body, schema)
-    except jsonschema.ValidationError as exc:
-        raise exception.InvalidParameterValue(_('Invalid create body: %s') %
-                                              exc)
