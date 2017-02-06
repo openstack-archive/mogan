@@ -54,7 +54,9 @@ def get_power_state(ironicclient, instance_uuid):
 def get_ports_from_node(ironicclient, node_uuid, detail=False):
     """List the MAC addresses and the port types from a node."""
     ports = ironicclient.call("node.list_ports", node_uuid, detail=detail)
-    return ports
+    portgroups = ironicclient.call("portgroup.list", node=node_uuid,
+                                   detail=detail)
+    return ports + portgroups
 
 
 def plug_vif(ironicclient, ironic_port_id, port_id):
@@ -159,6 +161,23 @@ def get_port_list(ironicclient, **kwargs):
                           "%(detail)s"), {'detail': e.message})
         port_list = []
     return port_list
+
+
+def get_portgroup_list(ironicclient, **kwargs):
+    """Helper function to return the list of portgroups.
+
+    If unable to connect ironic server, an empty list is returned.
+
+    :returns: a list of raw port from ironic
+
+    """
+    try:
+        portgroup_list = ironicclient.call("portgroup.list", **kwargs)
+    except client_e.ClientException as e:
+        LOG.exception(_LE("Could not get portgroups from ironic. Reason: "
+                          "%(detail)s"), {'detail': e.message})
+        portgroup_list = []
+    return portgroup_list
 
 
 def set_power_state(ironicclient, node_uuid, state):
