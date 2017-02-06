@@ -177,12 +177,19 @@ class Connection(api.Connection):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
+        instance_nics = values.pop('instance_nics', [])
         instance = models.Instance()
         instance.update(values)
-
+        nic_refs = []
+        for nic in instance_nics:
+            nic_ref = models.InstanceNic()
+            nic_ref.update(nic)
+            nic_refs.append(nic_ref)
         with _session_for_write() as session:
             try:
                 session.add(instance)
+                for nic_r in nic_refs:
+                    session.add(nic_r)
                 session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.InstanceAlreadyExists(name=values['name'])
@@ -206,10 +213,12 @@ class Connection(api.Connection):
         with _session_for_write():
             query = model_query(context, models.Instance, instance=True)
             query = add_identity_filter(query, instance_id)
-
             count = query.soft_delete()
             if count != 1:
                 raise exception.InstanceNotFound(instance=instance_id)
+            instance_nics = model_query(context, models.InstanceNic).filter_by(
+                instance_uuid=instance_id)
+            instance_nics.delete()
 
     def instance_update(self, context, instance_id, values):
         if 'uuid' in values:
@@ -288,6 +297,23 @@ class Connection(api.Connection):
         if result == 0:
             raise exception.InstanceTypeExtraSpecsNotFound(
                 extra_specs_key=key, type_id=type_id)
+
+    def instance_nic_update_or_create(self, context, port_id, values):
+        with _session_for_write() as session:
+            query = model_query(context, models.InstanceNic).filter_by(
+                port_id=port_id)
+            nic = query.first()
+            if not nic:
+                nic = models.InstanceNic()
+            values.update(port_id=port_id)
+            nic.update(values)
+            session.add(nic)
+            session.flush()
+        return nic
+
+    def instance_nics_get_by_instance_uuid(self, context, instance_uuid):
+        return model_query(context, models.InstanceNic).filter_by(
+            instance_uuid=instance_uuid).all()
 
 
 def _type_get_id_from_type_query(context, type_id):
