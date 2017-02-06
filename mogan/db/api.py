@@ -102,3 +102,16 @@ class Connection(object):
         This deletes the key/value pairs specified in the
         extra specs dict argument
         """
+
+    @abc.abstractmethod
+    def instance_nics_get_by_instance_uuid(self, context, instance_uuid):
+        """Get the Nics info of an instnace.
+
+        This query the Nics info of the specified instance.
+        """
+
+    def instance_nic_update_or_create(self, context, port_id, values):
+        """Update/Create a nic db entry.
+
+        This creates or updates a nic db entry.
+        """

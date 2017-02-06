@@ -80,8 +80,8 @@ class CreateInstanceFlowTestCase(base.TestCase):
         fake_requested_networks = mock.MagicMock()
         task = create_instance.BuildNetworkTask(fake_engine_manager)
         instance_obj = obj_utils.get_test_instance(self.ctxt)
-        mock_build_networks.side_effect = None
-        mock_save.side_effect = None
+        mock_build_networks.return_value = None
+        mock_save.return_value = None
 
         task.execute(self.ctxt, instance_obj, fake_requested_networks)
         mock_build_networks.assert_called_once_with(self.ctxt,
