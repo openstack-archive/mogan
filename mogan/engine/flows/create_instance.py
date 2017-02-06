@@ -30,6 +30,7 @@ from mogan.common import states
 from mogan.common import utils
 from mogan.engine.baremetal import ironic
 from mogan.engine.baremetal import ironic_states
+from mogan import objects
 
 LOG = logging.getLogger(__name__)
 
@@ -206,7 +207,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                    'vif_count': len(requested_networks),
                    'pif_count': len(ironic_ports)})
 
-        network_info = {}
+        nics = []
         for vif in requested_networks:
             for pif in ironic_ports:
                 # Match the specified port type with physical interface type
@@ -215,30 +216,36 @@ class BuildNetworkTask(flow_utils.MoganTask):
                         port = self.manager.network_api.create_port(
                             context, vif['net_id'], pif.address, instance.uuid)
                         port_dict = port['port']
-                        network_info[port_dict['id']] = {
-                            'network': port_dict['network_id'],
-                            'mac_address': port_dict['mac_address'],
-                            'fixed_ips': port_dict['fixed_ips']}
                         ironic.plug_vif(self.manager.ironicclient, pif.uuid,
                                         port_dict['id'])
+                        nic_dict = {'port_id': port_dict['id'],
+                                    'network_id': port_dict['network_id'],
+                                    'mac_address': port_dict['mac_address'],
+                                    'fixed_ips': port_dict['fixed_ips'],
+                                    'port_type': vif.get('port_type')}
+                        nic = objects.InstanceNic(nic_dict)
+                        nics.append(nic)
                     except Exception:
                         # Set network_info here, so we can clean up the created
                         # networks during reverting.
-                        instance.network_info = network_info
+                        instance.instance_nics = objects.InstanceNics(
+                            context=context, instance_uuid=instance.uuid,
+                            nics=nics)
                         LOG.error(_LE("Instance %s: create network failed"),
                                   instance.uuid)
                         raise exception.NetworkError(_(
                             "Build network for instance failed."))
-
-        return network_info
+        return objects.InstanceNics(context=context,
+                                    instance_uuid=instance.uuid,
+                                    nics=nics)
 
     def execute(self, context, instance, requested_networks):
-        network_info = self._build_networks(
+        isntance_nics = self._build_networks(
             context,
             instance,
             requested_networks)
 
-        instance.network_info = network_info
+        instance.instance_nics = isntance_nics
         instance.save()
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
