@@ -14,11 +14,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_db import exception as db_exc
+from oslo_log import log as logging
 from oslo_versionedobjects import base as object_base
 
+from mogan.common.i18n import _LE
 from mogan.db import api as dbapi
+from mogan import objects
 from mogan.objects import base
 from mogan.objects import fields as object_fields
+
+OPTIONAL_ATTRS = ['instance_nics', ]
+
+
+LOG = logging.getLogger(__name__)
 
 
 @base.MoganObjectRegistry.register
@@ -40,7 +49,8 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'instance_type_uuid': object_fields.UUIDField(nullable=True),
         'availability_zone': object_fields.StringField(nullable=True),
         'image_uuid': object_fields.UUIDField(nullable=True),
-        'network_info': object_fields.FlexibleDictField(nullable=True),
+        'instance_nics': object_fields.ObjectField('InstanceNics',
+                                                   nullable=True),
         'node_uuid': object_fields.UUIDField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),
@@ -50,11 +60,60 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'locked_by': object_fields.StringField(nullable=True),
     }
 
+    def __init__(self, context=None, **kwargs):
+        instance_nics = kwargs.pop('instance_nics', None)
+        if instance_nics and isinstance(instance_nics, list):
+            nics_obj = objects.InstanceNics.from_list_dict(
+                context=context, instance_uuid=kwargs['uuid'],
+                raw_nics=instance_nics)
+            kwargs['instance_nics'] = nics_obj
+        super(Instance, self).__init__(context=context, **kwargs)
+
+    @staticmethod
+    def _from_db_object(instance, db_inst, expected_attrs=None):
+        """Method to help with migration to objects.
+
+        Converts a database entity to a formal object.
+
+        :param instance: An object of the Instance class.
+        :param db_inst: A DB Instance model of the object
+        :return: The object of the class with the database entity added
+        """
+        for field in instance.fields:
+            if field in OPTIONAL_ATTRS:
+                continue
+            instance[field] = db_inst[field]
+
+        if expected_attrs is None:
+            expected_attrs = []
+        if 'instance_nics' in expected_attrs:
+            instance._load_instance_nics(instance._context, instance.uuid)
+        else:
+            instance.instance_nics = None
+
+        instance.obj_reset_changes()
+        return instance
+
+    def _load_instance_nics(self, context, instance_uuid):
+        self.instance_nics = objects.InstanceNics.get_by_instance_uuid(
+            context=context, instance_uuid=instance_uuid)
+
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [Instance._from_db_object(cls(context), obj)
+        return [Instance._from_db_object(cls(context), obj,
+                                         ('instance_nics', ))
                 for obj in db_objects]
+
+    def _save_instance_nics(self, context):
+        if self.instance_nics:
+            self.instance_nics.save()
+
+    def as_dict(self):
+        data = super(Instance, self).as_dict()
+        if 'instance_nics' in data:
+            data.update(network_info=data['instance_nics'].to_legacy_dict())
+        return data
 
     @classmethod
     def list(cls, context, project_only=False):
@@ -67,7 +126,8 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     def get(cls, context, uuid):
         """Find a instance and return a Instance object."""
         db_instance = cls.dbapi.instance_get(context, uuid)
-        instance = Instance._from_db_object(cls(context), db_instance)
+        instance = Instance._from_db_object(cls(context), db_instance,
+                                            ('instance_nics', ))
         return instance
 
     def create(self, context=None):
@@ -76,9 +136,14 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         # Since we need to avoid passing False down to the DB layer
         # (which uses an integer), we can always default it to zero here.
         values['deleted'] = 0
-
+        instance_nics = values.pop('instance_nics', None)
+        if instance_nics:
+            values['instance_nics'] = instance_nics.to_list_dict()
         db_instance = self.dbapi.instance_create(context, values)
-        self._from_db_object(self, db_instance)
+        expected_attrs = None
+        if 'instance_nics' in values:
+            expected_attrs = ['instance_nics']
+        self._from_db_object(self, db_instance, expected_attrs)
 
     def destroy(self, context=None):
         """Delete the Instance from the DB."""
@@ -88,6 +153,20 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     def save(self, context=None):
         """Save updates to this Instance."""
         updates = self.obj_get_changes()
+        changed_fields = updates.keys()
+        for field in changed_fields:
+            if (self.obj_attr_is_set(field) and
+                    isinstance(self.fields[field], object_fields.ObjectField)
+                    and getattr(self, field, None) is not None):
+                try:
+                    getattr(self, '_save_%s' % field)(context)
+                except AttributeError:
+                    LOG.exception(_LE('No save handler for %s'), field,
+                                  instance=self)
+                except db_exc.DBReferenceError as exp:
+                    if exp.key != 'instance_uuid':
+                        raise
+                updates.pop(field)
         self.dbapi.instance_update(context, self.uuid, updates)
         self.obj_reset_changes()
 

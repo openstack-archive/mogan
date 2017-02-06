@@ -82,7 +82,6 @@ def upgrade():
         sa.Column('power_state', sa.String(length=15), nullable=True),
         sa.Column('instance_type_uuid', sa.String(length=36), nullable=True),
         sa.Column('image_uuid', sa.String(length=36), nullable=True),
-        sa.Column('network_info', sa.Text(), nullable=True),
         sa.Column('launched_at', sa.DateTime(), nullable=True),
         sa.Column('availability_zone', sa.String(length=255), nullable=True),
         sa.Column('node_uuid', sa.String(length=36), nullable=True),
@@ -92,6 +91,22 @@ def upgrade():
         sa.Column('locked_by', sa.Enum('admin', 'owner'), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('uuid', name='uniq_instances0uuid'),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+
+    op.create_table(
+        'instance_nics',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('instance_uuid', sa.String(length=36), nullable=False),
+        sa.Column('port_id', sa.String(length=36), nullable=False),
+        sa.Column('mac_address', sa.String(length=36), nullable=True),
+        sa.Column('network_id', sa.String(length=36), nullable=True),
+        sa.Column('port_type', sa.String(length=64), nullable=True),
+        sa.Column('floating_ip', sa.String(length=64), nullable=True),
+        sa.Column('fixed_ips', sa.Text(), nullable=True),
+        sa.PrimaryKeyConstraint('port_id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
