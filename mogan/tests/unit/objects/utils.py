@@ -54,9 +54,7 @@ def get_test_instance(ctxt, **kw):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
         del db_instance['id']
-    instance = objects.Instance(ctxt)
-    for key in db_instance:
-        setattr(instance, key, db_instance[key])
+    instance = objects.Instance(ctxt, **db_instance)
     return instance
 
 

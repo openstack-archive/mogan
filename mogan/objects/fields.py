@@ -24,6 +24,9 @@ from mogan.common import utils
 
 Field = object_fields.Field
 ObjectField = object_fields.ObjectField
+ListOfObjectsField = object_fields.ListOfObjectsField
+ListOfDictOfNullableStringsField \
+    = object_fields.ListOfDictOfNullableStringsField
 
 
 class IntegerField(object_fields.IntegerField):
