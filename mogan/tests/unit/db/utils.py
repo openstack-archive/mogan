@@ -21,22 +21,23 @@ from mogan.db import api as db_api
 
 
 def get_test_instance(**kw):
-    fake_network_info = {
-        "2ea04c3d-6dc9-4285-836f-3b355008c84e": {
-            "fixed_ips": [
-                {
-                    "subnet_id": "3aa1202b-9269-4c51-8eb3-cfac689fadda",
-                    "ip_address": "11.1.0.11"
-                },
-                {
-                    "subnet_id": "56a2438f-877b-423f-ab7b-166c1aeafdde",
-                    "ip_address": "2001:db8:8000:0:5054:ff:fe6a:b7cc"
-                }
-            ],
-            "network": "bf942f63-c284-4eb8-925b-c2fa1a89ed33",
-            "mac_address": "52:54:00:6a:b7:cc"
-        }
-    }
+    fake_instance_nics = [{
+        'port_id': '2ea04c3d-6dc9-4285-836f-3b355008c84e',
+        'network_id': 'bf942f63-c284-4eb8-925b-c2fa1a89ed33',
+        'mac_address': '52:54:00:6a:b7:cc',
+        'fixed_ips': [
+            {
+                "subnet_id": "3aa1202b-9269-4c51-8eb3-cfac689fadda",
+                "ip_address": "11.1.0.11"
+            },
+            {
+                "subnet_id": "56a2438f-877b-423f-ab7b-166c1aeafdde",
+                "ip_address": "2001:db8:8000:0:5054:ff:fe6a:b7cc"
+            }
+        ],
+        'port_type': 'test_type',
+        'floating_ip': '',
+    }, ]
 
     return {
         'id': kw.get('id', 123),
@@ -53,7 +54,7 @@ def get_test_instance(**kw):
         'availability_zone': kw.get('availability_zone', 'test_az'),
         'image_uuid': kw.get('image_uuid',
                              'ac3b2291-b9ef-45f6-8eeb-21ac568a64a5'),
-        'network_info': kw.get('network_info', fake_network_info),
+        'instance_nics': kw.get('instance_nics', fake_instance_nics),
         'node_uuid': kw.get('node_uuid',
                             'f978ef48-d4af-4dad-beec-e6174309bc71'),
         'launched_at': kw.get('launched_at'),

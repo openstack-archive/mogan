@@ -77,12 +77,29 @@ class Instance(Base):
     instance_type_uuid = Column(String(36), nullable=True)
     availability_zone = Column(String(255), nullable=True)
     image_uuid = Column(String(36), nullable=True)
-    network_info = Column(db_types.JsonEncodedDict)
     node_uuid = Column(String(36), nullable=True)
     launched_at = Column(DateTime, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
     extra = Column(db_types.JsonEncodedDict)
     deleted = Column(Boolean, default=False)
+
+
+class InstanceNic(Base):
+    """Represents the NIC info for instances."""
+
+    __tablename__ = 'instance_nics'
+    instance_uuid = Column(String(36), nullable=True)
+    port_id = Column(String(36), primary_key=True)
+    mac_address = Column(String(32), nullable=False)
+    network_id = Column(String(36), nullable=True)
+    fixed_ips = Column(db_types.JsonEncodedDict)
+    port_type = Column(String(64), nullable=True)
+    floating_ip = Column(String(64), nullable=True)
+    _instance = orm.relationship(
+        Instance,
+        backref=orm.backref('instance_nics', uselist=False),
+        foreign_keys=instance_uuid,
+        primaryjoin='Instance.uuid == InstanceNic.instance_uuid')
 
 
 class InstanceTypes(Base):
