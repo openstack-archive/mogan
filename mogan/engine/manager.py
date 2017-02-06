@@ -206,11 +206,11 @@ class EngineManager(base_manager.BaseEngineManager):
                       'trying to set it to ERROR', instance=instance)
 
     def destroy_networks(self, context, instance):
-        LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(network_info)s",
+        LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(instance_nics)s",
                   {'uuid': instance.uuid,
-                   'network_info': str(instance.network_info)})
+                   'instance_nics': str(instance.instance_nics)})
 
-        ports = instance.network_info.keys()
+        ports = instance.instance_nics.get_port_ids()
         for port in ports:
             self.network_api.delete_port(context, port, instance.uuid)
 
