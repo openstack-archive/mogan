@@ -17,8 +17,11 @@
 from oslo_versionedobjects import base as object_base
 
 from mogan.db import api as dbapi
+from mogan import objects
 from mogan.objects import base
 from mogan.objects import fields as object_fields
+
+OPTIONAL_ATTRS = ['instance_nics', ]
 
 
 @base.MoganObjectRegistry.register
@@ -40,7 +43,7 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'instance_type_uuid': object_fields.UUIDField(nullable=True),
         'availability_zone': object_fields.StringField(nullable=True),
         'image_uuid': object_fields.UUIDField(nullable=True),
-        'network_info': object_fields.FlexibleDictField(nullable=True),
+        'instance_nics': object_fields.ObjectField('InstanceNicList'),
         'node_uuid': object_fields.UUIDField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),
@@ -49,10 +52,46 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     }
 
     @staticmethod
+    def _from_db_object(instance, db_inst, expected_attrs=None):
+        """Method to help with migration to objects.
+
+        Converts a database entity to a formal object.
+
+        :param instance: An object of the Instance class.
+        :param db_inst: A DB Instance model of the object
+        :return: The object of the class with the database entity added
+        """
+        for field in db_inst.fields:
+            if field in OPTIONAL_ATTRS:
+                continue
+            instance[field] = db_inst[field]
+
+        if expected_attrs is None:
+            expected_attrs = []
+        if 'instance_nics' in expected_attrs:
+            instance._load_instance_nics(instance.context, instance.uuid)
+        else:
+            instance.instance_nics = None
+
+        instance.obj_reset_changes()
+        return instance
+
+    def _load_instance_nics(self, context, instance_uuid):
+        self.instance_nics = objects.InstanceNicList.get_by_instance_uuid(
+            context=context, instance_uuid=instance_uuid)
+
+    @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [Instance._from_db_object(cls(context), obj)
+        return [Instance._from_db_object(cls(context), obj,
+                                         ('instance_nics', ))
                 for obj in db_objects]
+
+    def _save_instance_nics(self, context):
+        instance_nics = self.instance_nics or []
+        for nic in instance_nics:
+            nic.save()
+        self.security_groups.obj_reset_changes()
 
     @classmethod
     def list(cls, context, project_only=False):

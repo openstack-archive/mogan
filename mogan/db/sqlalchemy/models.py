@@ -85,6 +85,26 @@ class Instance(Base):
     deleted = Column(Boolean, default=False)
 
 
+class InstanceNic(Base):
+    """Represents the NIC info for instances."""
+
+    __tablename__ = 'instance_nics'
+    instance_uuid = Column(String(36), nullable=True)
+    port_id = Column(String(36), primary_key=True)
+    mac_address = Column(String(32), nullable=False)
+    network_id = Column(String(36), nullable=True)
+    fixed_ip = Column(db_types.JsonEncodedDict)
+    port_type = Column(String(64), nullable=True)
+    floating_ip = Column(String(64), nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted = Column(Boolean, default=False)
+    _instance = orm.relationship(
+        Instance,
+        backref=orm.backref('instance_nics', uselist=False),
+        foreign_keys=instance_uuid,
+        primaryjoin='Instance.uuid == InstanceNic.instance_uuid')
+
+
 class InstanceTypes(Base):
     """Represents possible types for instances."""
 
