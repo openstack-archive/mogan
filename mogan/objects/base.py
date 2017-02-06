@@ -84,6 +84,9 @@ class MoganObject(object_base.VersionedObject):
                     for k in self.fields
                     if hasattr(self, k))
 
+    def obj_load_attr(self, attr):
+        setattr(self, attr, None)
+
     def obj_refresh(self, loaded_object):
         """Applies updates for objects that inherit from base. MoganObject.
 

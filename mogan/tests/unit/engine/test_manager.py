@@ -42,6 +42,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
                               get_ports_mock, unplug_vif_mock,
                               refresh_cache_mock):
         instance = obj_utils.create_test_instance(self.context)
+        inst_port_id = instance.instance_nics[0].port_id
         delete_port_mock.side_effect = None
         port = mock.MagicMock()
         port.extra = {'vif_port_id': 'fake-vif'}
@@ -55,8 +56,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         self._stop_service()
 
         delete_port_mock.assert_called_once_with(
-            self.context, '2ea04c3d-6dc9-4285-836f-3b355008c84e',
-            instance.uuid)
+            self.context, inst_port_id, instance.uuid)
         get_ports_mock.assert_called_once_with(
             mock.ANY, instance.node_uuid, detail=True)
         unplug_vif_mock.assert_called_once_with(mock.ANY, 'fake-uuid')
