@@ -26,7 +26,7 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 # The API version required by the Ironic driver
-IRONIC_API_VERSION = (1, 21)
+IRONIC_API_VERSION = (1, 29)
 
 
 class IronicClientWrapper(object):

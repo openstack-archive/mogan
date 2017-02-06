@@ -64,6 +64,10 @@ class EngineManager(base_manager.BaseEngineManager):
         ports = ironic.get_port_list(self.ironicclient, limit=0,
                                      fields=('uuid', 'node_uuid', 'extra',
                                              'address'))
+        portgroups = ironic.get_portgroup_list(self.ironicclient, limit=0,
+                                               fields=('uuid', 'node_uuid',
+                                                       'extra', 'address'))
+        ports += portgroups
         for node in nodes:
             # Add ports to the associated node
             node.ports = [port for port in ports
