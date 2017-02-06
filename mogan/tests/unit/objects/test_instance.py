@@ -12,6 +12,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import copy
 
 import mock
 from oslo_context import context
@@ -62,7 +63,8 @@ class TestInstanceObject(base.DbTestCase):
             instance = objects.Instance(self.context, **self.fake_instance)
             values = instance.obj_get_changes()
             instance.create(self.context)
-            mock_instance_create.assert_called_once_with(self.context, values)
+            mock_instance_create.assert_called_once_with(self.context,
+                                                         self.fake_instance)
             self.assertEqual(self.fake_instance['uuid'], instance['uuid'])
 
     def test_destroy(self):
@@ -77,12 +79,22 @@ class TestInstanceObject(base.DbTestCase):
         uuid = self.fake_instance['uuid']
         with mock.patch.object(self.dbapi, 'instance_update',
                                autospec=True) as mock_instance_update:
-            mock_instance_update.return_value = self.fake_instance
-            instance = objects.Instance(self.context, **self.fake_instance)
-            updates = instance.obj_get_changes()
-            instance.save(self.context)
-            mock_instance_update.assert_called_once_with(
-                self.context, uuid, updates)
+            with mock.patch.object(self.dbapi, 'instance_nic_update_or_create',
+                               autospec=True) as mock_instance_nic_update:
+                mock_instance_update.return_value = self.fake_instance
+                instance_nics = self.fake_instance['instance_nics']
+                port_id = instance_nics[0]['port_id']
+                instance = objects.Instance(self.context, **self.fake_instance)
+                updates = instance.obj_get_changes()
+                updates.pop('instance_nics', None)
+                instance.save(self.context)
+                mock_instance_update.assert_called_once_with(
+                    self.context, uuid, updates)
+                expected_called_nic = copy.deepcopy(instance_nics[0])
+                expected_called_nic.update(instance_uuid=uuid)
+                expected_called_nic.pop('port_id')
+                mock_instance_nic_update.assert_called_once_with(
+                    self.context, port_id, expected_called_nic)
 
     def test_save_after_refresh(self):
         db_instance = utils.create_test_instance(context=self.ctxt)
