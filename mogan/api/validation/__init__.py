@@ -31,8 +31,10 @@ def check_schema(body, schema):
     :param body: create body
     :raises: InvalidParameterValue if validation of create body fails.
     """
+    validator = jsonschema.Draft4Validator(
+        schema, format_checker=jsonschema.FormatChecker())
     try:
-        jsonschema.validate(body, schema)
+        validator.validate(body)
     except jsonschema.ValidationError as exc:
         raise exception.InvalidParameterValue(_('Invalid create body: %s') %
                                               exc)
