@@ -24,7 +24,8 @@ from mogan.objects import fields as object_fields
 @base.MoganObjectRegistry.register
 class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Added locked_by and locked
+    VERSION = '1.1'
 
     dbapi = dbapi.get_instance()
 
@@ -46,6 +47,8 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'extra': object_fields.FlexibleDictField(nullable=True),
         'deleted': object_fields.BooleanField(default=False),
         'deleted_at': object_fields.DateTimeField(nullable=True),
+        'locked': object_fields.BooleanField(default=False),
+        'locked_by': object_fields.StringField(nullable=True),
     }
 
     @staticmethod
