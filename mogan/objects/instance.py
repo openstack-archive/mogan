@@ -46,6 +46,8 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'extra': object_fields.FlexibleDictField(nullable=True),
         'deleted': object_fields.BooleanField(default=False),
         'deleted_at': object_fields.DateTimeField(nullable=True),
+        'locked': object_fields.BooleanField(default=False),
+        'locked_by': object_fields.StringField(nullable=True),
     }
 
     @staticmethod

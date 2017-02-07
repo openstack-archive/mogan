@@ -62,6 +62,8 @@ def get_test_instance(**kw):
         'deleted': kw.get('deleted', False),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),
+        'locked': kw.get('locked', False),
+        'locked_by': kw.get('locked_by', None),
     }
 
 

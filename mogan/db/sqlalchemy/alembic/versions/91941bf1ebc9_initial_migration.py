@@ -88,6 +88,8 @@ def upgrade():
         sa.Column('node_uuid', sa.String(length=36), nullable=True),
         sa.Column('extra', sa.Text(), nullable=True),
         sa.Column('deleted', sa.Integer(), nullable=False),
+        sa.Column('locked', sa.Boolean(), nullable=True),
+        sa.Column('locked_by', sa.Enum('admin', 'owner'), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('uuid', name='uniq_instances0uuid'),
         mysql_ENGINE='InnoDB',

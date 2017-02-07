@@ -21,7 +21,7 @@ from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
 from oslo_db.sqlalchemy import types as db_types
 import six.moves.urllib.parse as urlparse
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey
 from sqlalchemy import orm
 from sqlalchemy import schema, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
@@ -83,6 +83,9 @@ class Instance(Base):
     deleted_at = Column(DateTime, nullable=True)
     extra = Column(db_types.JsonEncodedDict)
     deleted = Column(Boolean, default=False)
+
+    locked = Column(Boolean)
+    locked_by = Column(Enum('owner', 'admin'))
 
 
 class InstanceTypes(Base):
