@@ -460,7 +460,8 @@ class EngineManager(base_manager.BaseEngineManager):
 
         azs = set()
         for node in node_cache:
-            az = node.properties.get('availability_zone')
+            az = node.properties.get('availability_zone') \
+                or CONF.engine.default_availability_zone
             if az is not None:
                 azs.add(az)
 
