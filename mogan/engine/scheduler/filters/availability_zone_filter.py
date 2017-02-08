@@ -24,8 +24,7 @@ class AvailabilityZoneFilter(filters.BaseNodeFilter):
 
     def node_passes(self, node_state, filter_properties):
         spec = filter_properties.get('request_spec', {})
-        props = spec.get('instance_properties', {})
-        availability_zone = props.get('availability_zone')
+        availability_zone = spec.get('availability_zone')
 
         if availability_zone:
             return availability_zone == node_state.availability_zone

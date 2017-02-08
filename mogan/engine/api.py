@@ -82,14 +82,16 @@ class API(object):
 
         instance = self._provision_instances(context, base_options)
 
+        if not availability_zone:
+            availability_zone = CONF.engine.default_schedule_zone
         request_spec = {
             'instance_id': instance.uuid,
             'instance_properties': {
-                'availability_zone': instance.availability_zone,
                 'instance_type_uuid': instance.instance_type_uuid,
                 'networks': requested_networks,
             },
             'instance_type': dict(instance_type),
+            'availability_zone': availability_zone,
         }
 
         self.engine_rpcapi.create_instance(context, instance,
@@ -115,8 +117,6 @@ class API(object):
             azs = self.engine_rpcapi.list_availability_zones(context)
             if availability_zone not in azs['availability_zones']:
                 raise exception.AZNotFound
-        else:
-            availability_zone = CONF.engine.default_schedule_zone
 
         return self._create_instance(context, instance_type,
                                      image_uuid, name, description,
