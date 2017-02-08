@@ -70,6 +70,7 @@ class API(object):
             'port': {
                 'network_id': network_uuid,
                 'mac_address': mac,
+                'device_id': instance_uuid,
             }
         }
 
