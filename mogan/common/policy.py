@@ -106,6 +106,9 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:associate_floatingip',
                        'rule:default',
                        description='Associate a floating ip with an instance'),
+    policy.RuleDefault('mogan:instance:disassociate_floatingip',
+                       'rule:default',
+                       description='Disassociate a floating ip'),
 ]
 
 FUNC_PARAMS_INTERESTED = {

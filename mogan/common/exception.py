@@ -270,6 +270,10 @@ class DuplicateState(Conflict):
     _msg_fmt = _("Resource already exists.")
 
 
+class PortNotFound(NotFound):
+    msg_fmt = _("Port id %(port_id)s could not be found.")
+
+
 class FloatingIpNotFoundForAddress(NotFound):
     msg_fmt = _("Floating IP not found for address %(address)s.")
 

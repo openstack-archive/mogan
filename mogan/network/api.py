@@ -84,6 +84,21 @@ class API(object):
             raise exception.NetworkError(msg)
         return port
 
+    def _show_port(self, client, port_id):
+        """Return the port for the client given the port id."""
+
+        try:
+            result = client.show_port(port_id)
+            return result.get('port')
+        except neutron_exceptions.PortNotFoundClient:
+            raise exception.PortNotFound(port_id=port_id)
+        except neutron_exceptions.Unauthorized:
+            raise exception.Forbidden()
+        except neutron_exceptions.NeutronClientException as e:
+            msg = (_("Failed to access port %(port_id)s: %(reason)s") %
+                   {'port_id': port_id, 'reason': e})
+            raise exception.NetworkError(msg)
+
     def delete_port(self, context, port_id, instance_uuid):
         """Delete neutron port."""
 
@@ -126,6 +141,33 @@ class API(object):
             raise exception.FloatingIpMultipleFoundForAddress(address=address)
         return fips[0]
 
+    def get_floating_ip_by_address(self, context, address):
+        """Return a floating IP given an address."""
+        client = get_client(context.auth_token)
+        fip = self._get_floating_ip_by_address(client, address)
+        return fip
+
+    def get_instance_id_by_floating_address(self, context, address):
+        """Return the instance id a floating IP's fixed IP is allocated to."""
+        client = get_client(context.auth_token)
+        fip = self._get_floating_ip_by_address(client, address)
+        if not fip['port_id']:
+            return None
+
+        try:
+            port = self._show_port(client, fip['port_id'])
+        except exception.PortNotFound:
+            # NOTE: Here is a potential race condition between _show_port() and
+            # _get_floating_ip_by_address(). fip['port_id'] shows a port which
+            # is the server instance's. At _get_floating_ip_by_address(),
+            # Neutron returns the list which includes the instance. Just after
+            # that, the deletion of the instance happens and Neutron returns
+            # 404 on _show_port().
+            LOG.debug('The port(%s) is not found', fip['port_id'])
+            return None
+
+        return port['device_id']
+
     def associate_floating_ip(self, context, floating_address,
                               port_id, fixed_address):
         """Associate a floating IP with a fixed IP."""
@@ -136,3 +178,10 @@ class API(object):
                  'fixed_ip_address': fixed_address}
         client.update_floatingip(fip['id'], {'floatingip': param})
         return fip
+
+    def disassociate_floating_ip(self, context, address):
+        """Disassociate a floating IP from the instance."""
+
+        client = get_client(context.auth_token)
+        fip = self._get_floating_ip_by_address(client, address)
+        client.update_floatingip(fip['id'], {'floatingip': {'port_id': None}})

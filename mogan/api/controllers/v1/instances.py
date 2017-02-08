@@ -146,6 +146,7 @@ class FloatingIPController(InstanceControllerBase):
     def post(self, instance_uuid, floatingip):
         """Add(Associate) Floating Ip.
 
+        :param instance_uuid: UUID of a instance.
         :param floatingip: The floating IP within the request body.
         """
         validation.check_schema(floatingip, fip_schemas.add_floating_ip)
@@ -220,6 +221,61 @@ class FloatingIPController(InstanceControllerBase):
         url_args = '/'.join([instance_uuid, 'networks'])
         pecan.response.location = link.build_url('instances', url_args)
         return FloatingIP(id=fip['id'], port_id=fip['port_id'])
+
+    @policy.authorize_wsgi("mogan:instance", "disassociate_floatingip")
+    @expose.expose(None, types.uuid, types.jsontype,
+                   status_code=http_client.NO_CONTENT)
+    def delete(self, instance_uuid, floatingip):
+        """Dissociate floating_ip from an instance.
+
+        :param instance_uuid: UUID of a instance.
+        :param floatingip: The floating IP within the request body.
+        """
+        validation.check_schema(floatingip, fip_schemas.remove_floating_ip)
+        address = floatingip['address']
+
+        # get the floating ip object
+        try:
+            floating_ip = self.network_api.get_floating_ip_by_address(
+                pecan.request.context, address)
+        except exception.FloatingIpNotFoundForAddress:
+            msg = _("floating IP not found")
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.NOT_FOUND)
+
+        # get the associated instance object (if any)
+        try:
+            instance_id =\
+                self.network_api.get_instance_id_by_floating_address(
+                    pecan.request.context, address)
+        except exception.FloatingIpNotFoundForAddress as e:
+            raise wsme.exc.ClientSideError(
+                e.message, status_code=http_client.NOT_FOUND)
+        except exception.FloatingIpMultipleFoundForAddress as e:
+            raise wsme.exc.ClientSideError(
+                e.message, status_code=http_client.CONFLICT)
+
+        # disassociate if associated
+        if (floating_ip.get('port_id') and instance_id == instance_uuid):
+            try:
+                self.network_api.disassociate_floating_ip(
+                    pecan.request.context, address)
+            except exception.Forbidden as e:
+                raise wsme.exc.ClientSideError(
+                    e.message, status_code=http_client.FORBIDDEN)
+            except exception.CannotDisassociateAutoAssignedFloatingIP:
+                msg = _('Cannot disassociate auto assigned floating IP')
+                raise wsme.exc.ClientSideError(
+                    msg, status_code=http_client.FORBIDDEN)
+            except exception.FloatingIpNotAssociated:
+                msg = _('Floating IP is not associated')
+                raise wsme.exc.ClientSideError(
+                    msg, status_code=http_client.BAD_REQUEST)
+        else:
+            msg = _("Floating IP %(address)s is not associated with instance "
+                    "%(id)s.") % {'address': address, 'id': instance_uuid}
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.BAD_REQUEST)
 
 
 class InstanceNetworks(base.APIBase):
