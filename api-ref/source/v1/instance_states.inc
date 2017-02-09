@@ -64,3 +64,34 @@ Request
 **Example request to power off a Instance:**
 
 .. literalinclude:: samples/instances/instance-set-power-off.json
+
+
+Change Instance Lock State
+===========================
+
+.. rest_method:: PUT /v1/instances/{instance_uuid}/states/lock
+
+Request a change to the Instance's lockstate.
+
+Normal response code: 202
+
+Error codes:
+    - 409 (ClientError)
+    - 400 (BadRequest)
+    - 403 (Forbidden)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+    - instance_uuid: instance_ident
+    - target: lock_state
+
+**Example request to lock an Instance:**
+
+.. literalinclude:: samples/instances/lock-instance.json
+
+**Example request to unlock an Instance:**
+
+.. literalinclude:: samples/instances/unlock-instance.json
