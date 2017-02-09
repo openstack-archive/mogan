@@ -138,3 +138,44 @@ class ComputeAPIUnitTest(base.DbTestCase):
             [{'uuid': 'fake'}])
 
         mock_list_az.assert_called_once_with(self.context)
+
+    def _create_fake_instance_obj(self, fake_instance):
+        fake_instance_obj = objects.Instance(self.context, **fake_instance)
+        fake_instance_obj.create(self.context)
+        return fake_instance_obj
+
+    def test_lock_by_owner(self):
+        fake_instance = db_utils.get_test_instance(
+            user_id=self.user_id, project_id=self.project_id)
+        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        self.engine_api.lock(self.context, fake_instance_obj)
+        self.assertTrue(fake_instance_obj.locked)
+        self.assertEqual('owner', fake_instance_obj.locked_by)
+
+    def test_unlock_by_owner(self):
+        fake_instance = db_utils.get_test_instance(
+            user_id=self.user_id, project_id=self.project_id,
+            locked=True, locked_by='owner')
+        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        self.engine_api.unlock(self.context, fake_instance_obj)
+        self.assertFalse(fake_instance_obj.locked)
+        self.assertEqual(None, fake_instance_obj.locked_by)
+
+    def test_lock_by_admin(self):
+        fake_instance = db_utils.get_test_instance(
+            user_id=self.user_id, project_id=self.project_id)
+        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        admin_context = context.get_admin_context()
+        self.engine_api.lock(admin_context, fake_instance_obj)
+        self.assertTrue(fake_instance_obj.locked)
+        self.assertEqual('admin', fake_instance_obj.locked_by)
+
+    def test_unlock_by_admin(self):
+        fake_instance = db_utils.get_test_instance(
+            user_id=self.user_id, project_id=self.project_id,
+            locked=True, locked_by='owner')
+        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        admin_context = context.get_admin_context()
+        self.engine_api.unlock(admin_context, fake_instance_obj)
+        self.assertFalse(fake_instance_obj.locked)
+        self.assertEqual(None, fake_instance_obj.locked_by)
