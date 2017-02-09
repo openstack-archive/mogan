@@ -11,9 +11,6 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   readme
-   installation
-   usage
    contributing
    dev/dev-quickstart
 
