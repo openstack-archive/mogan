@@ -35,6 +35,13 @@ class TestAuthorizeWsgi(base.TestCase):
             'argspec': [['self', 'instance_uuid', 'target']]}
         self.fake_power = power
 
+        def lock(self, instance_uuid, target):
+            pass
+
+        lock.__dict__['_pecan'] = {
+            'argspec': [['self', 'instance_uuid', 'target']]}
+        self.fake_lock = lock
+
     @mock.patch('pecan.request')
     def test_authorize_power_action_owner(self, mocked_pecan_request):
         mocked_pecan_request.context = self.ctxt
@@ -63,4 +70,34 @@ class TestAuthorizeWsgi(base.TestCase):
         self.assertEqual(403, mocked_pecan_response.status)
         self.assertEqual('Access was denied to the following resource: '
                          'mogan:instance:set_power_state:reboot',
+                         data['faultstring'])
+
+    @mock.patch('pecan.request')
+    def test_authorize_lock_action_owner(self, mocked_pecan_request):
+        mocked_pecan_request.context = self.ctxt
+
+        policy.authorize_wsgi("mogan:instance", "set_lock_state")(
+            self.fake_lock)(self.fake_controller, 'fake_instance_id', True)
+
+    @mock.patch('pecan.request')
+    def test_authorize_lock_action_admin(self, mocked_pecan_request):
+        mocked_pecan_request.context = context.get_admin_context()
+
+        policy.authorize_wsgi("mogan:instance", "set_lock_state")(
+            self.fake_lock)(self.fake_controller, 'fake_instance_id', True)
+
+    @mock.patch('pecan.response')
+    @mock.patch('pecan.request')
+    def test_authorize_lock_action_failed(self, mocked_pecan_request,
+                                          mocked_pecan_response):
+        mocked_pecan_request.context = context.RequestContext(
+            tenant='non-exist-tenant',
+            user='non-exist-user')
+
+        data = policy.authorize_wsgi("mogan:instance", "set_lock_state")(
+            self.fake_lock)(self.fake_controller, 'fake_instance_id',
+                            True)
+        self.assertEqual(403, mocked_pecan_response.status)
+        self.assertEqual('Access was denied to the following resource: '
+                         'mogan:instance:set_lock_state',
                          data['faultstring'])

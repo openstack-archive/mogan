@@ -166,6 +166,12 @@ links:
   in: body
   required: true
   type: array
+lock_state:
+  description: |
+    The request to lock instance or not.
+  in: body
+  required: true
+  type: boolean
 network_info:
   description: |
     The port info in the requested network for the instance, with fixed_ip, mac_address, and

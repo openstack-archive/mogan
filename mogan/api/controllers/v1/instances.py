@@ -123,6 +123,34 @@ class InstanceStatesController(InstanceControllerBase):
         pecan.response.location = link.build_url('instances', url_args)
 
 
+class InstanceLockController(InstanceControllerBase):
+
+    @policy.authorize_wsgi("mogan:instance", "set_lock_state")
+    @expose.expose(None, types.uuid, types.boolean,
+                   status_code=http_client.ACCEPTED)
+    def put(self, instance_uuid, target):
+        """Set the lock state of the instance.
+
+        :param instance_uuid: the UUID of a instance.
+        :param target: the desired target to change lock state,
+                       true or false
+        """
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
+        context = pecan.request.context
+
+        # Target is True, means lock an instance
+        if target:
+            pecan.request.engine_api.lock(context, rpc_instance)
+
+        # Else, unlock the instance
+        else:
+            # Try to unlock an instance with non-admin or non-owner
+            if not pecan.request.engine_api.is_expected_locked_by(
+                    context, rpc_instance):
+                raise exception.Forbidden()
+            pecan.request.engine_api.unlock(context, rpc_instance)
+
+
 class FloatingIP(base.APIBase):
     """API representation of the floatingip information for an instance."""
 
@@ -359,6 +387,9 @@ class InstanceController(InstanceControllerBase):
 
     networks = InstanceNetworksController()
     """Expose the network controller action as a sub-element of instances"""
+
+    lock = InstanceLockController()
+    """Expose the lock controller action as a sub-element of instances"""
 
     _custom_actions = {
         'detail': ['GET']
