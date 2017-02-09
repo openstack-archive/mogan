@@ -74,6 +74,7 @@ class InstanceStatesController(InstanceControllerBase):
 
     _custom_actions = {
         'power': ['PUT'],
+        'lock': ['PUT'],
     }
 
     @policy.authorize_wsgi("mogan:instance", "get_states")
@@ -121,6 +122,31 @@ class InstanceStatesController(InstanceControllerBase):
         # by locaton.
         url_args = '/'.join([instance_uuid, 'states'])
         pecan.response.location = link.build_url('instances', url_args)
+
+    @policy.authorize_wsgi("mogan:instance", "set_lock_state")
+    @expose.expose(None, types.uuid, types.boolean,
+                   status_code=http_client.ACCEPTED)
+    def lock(self, instance_uuid, target):
+        """Set the lock state of the instance.
+
+        :param instance_uuid: the UUID of a instance.
+        :param target: the desired target to change lock state,
+                       true or false
+        """
+        rpc_instance = self._resource or self._get_resource(instance_uuid)
+        context = pecan.request.context
+
+        # Target is True, means lock an instance
+        if target:
+            pecan.request.engine_api.lock(context, rpc_instance)
+
+        # Else, unlock the instance
+        else:
+            # Try to unlock an instance with non-admin or non-owner
+            if not pecan.request.engine_api.is_expected_locked_by(
+                    context, rpc_instance):
+                raise exception.Forbidden()
+            pecan.request.engine_api.unlock(context, rpc_instance)
 
 
 class FloatingIP(base.APIBase):
