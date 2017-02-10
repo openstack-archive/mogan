@@ -53,6 +53,15 @@ opts = [
                default=600,
                help=_("Interval to sync power states between the database "
                       "and Ironic, in seconds.")),
+    cfg.IntOpt('check_retry_interval',
+               default=2,
+               min=0,
+               help=_("The number of seconds to wait before retrying "
+                      "the request.")),
+    cfg.StrOpt('engine_driver',
+               default='mogan.engine.drivers.ironic.driver.IronicEngineDriver',
+               help=_("Interval to sync power states between the database "
+                      "and Ironic, in seconds.")),
 ]
 
 
