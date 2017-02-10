@@ -27,8 +27,8 @@ from mogan.common.i18n import _
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LI
 from mogan.common import utils
-from mogan.engine.baremetal import ironic
 from mogan import objects
+
 
 LOG = logging.getLogger(__name__)
 
@@ -131,13 +131,13 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
 
 class SetInstanceInfoTask(flow_utils.MoganTask):
-    """Set instance info to ironic node and validate it."""
+    """Set instance info to baremetal node and validate it."""
 
-    def __init__(self, ironicclient):
+    def __init__(self, driver):
         requires = ['instance', 'context']
         super(SetInstanceInfoTask, self).__init__(addons=[ACTION],
                                                   requires=requires)
-        self.ironicclient = ironicclient
+        self.driver = driver
         # These exception types will trigger the instance info to be cleaned.
         self.instance_info_cleaned_exc_types = [
             exception.ValidationError,
@@ -146,11 +146,11 @@ class SetInstanceInfoTask(flow_utils.MoganTask):
         ]
 
     def execute(self, context, instance):
-        node = ironic.get_node(self.ironicclient, instance.node_uuid)
-        ironic.set_instance_info(self.ironicclient, instance, node)
+        node = self.driver.get_node(instance.node_uuid)
+        self.driver.set_instance_info(instance, node)
         # validate we are ready to do the deploy
-        validate_chk = ironic.validate_node(self.ironicclient,
-                                            instance.node_uuid)
+        validate_chk = self.driver.validate_node(instance.node_uuid)
+
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
             raise exception.ValidationError(_(
@@ -161,13 +161,13 @@ class SetInstanceInfoTask(flow_utils.MoganTask):
                    'power': validate_chk.power})
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
-        # Check if we have a cause which need to clean up ironic node
+        # Check if we have a cause which need to clean up baremetal node
         # instance info.
         for failure in flow_failures.values():
             if failure.check(*self.instance_info_cleaned_exc_types):
                 LOG.debug("Instance %s: cleaning up node instance info",
                           instance.uuid)
-                ironic.unset_instance_info(self.ironicclient, instance)
+                self.driver.unset_instance_info(instance)
                 return True
 
         return False
@@ -191,31 +191,31 @@ class BuildNetworkTask(flow_utils.MoganTask):
 
     def _build_networks(self, context, instance, requested_networks):
         node_uuid = instance.node_uuid
-        ironic_ports = ironic.get_ports_from_node(self.manager.ironicclient,
-                                                  node_uuid,
-                                                  detail=True)
+        bm_ports = self.manager.driver.get_ports_from_node(node_uuid,
+                                                           detail=True)
+
         LOG.debug(_('Find ports %(ports)s for node %(node)s') %
-                  {'ports': ironic_ports, 'node': node_uuid})
-        if len(requested_networks) > len(ironic_ports):
+                  {'ports': bm_ports, 'node': node_uuid})
+        if len(requested_networks) > len(bm_ports):
             raise exception.InterfacePlugException(_(
                 "Ironic node: %(id)s virtual to physical interface count"
                 "  mismatch"
                 " (Vif count: %(vif_count)d, Pif count: %(pif_count)d)")
                 % {'id': instance.node_uuid,
                    'vif_count': len(requested_networks),
-                   'pif_count': len(ironic_ports)})
+                   'pif_count': len(bm_ports)})
 
         nics_obj = objects.InstanceNics(context)
         for vif in requested_networks:
-            for pif in ironic_ports:
+            for pif in bm_ports:
                 # Match the specified port type with physical interface type
                 if vif.get('port_type') == pif.extra.get('port_type'):
                     try:
                         port = self.manager.network_api.create_port(
                             context, vif['net_id'], pif.address, instance.uuid)
                         port_dict = port['port']
-                        ironic.plug_vif(self.manager.ironicclient, pif.uuid,
-                                        port_dict['id'])
+
+                        self.manager.driver.plug_vif(pif.uuid, port_dict['id'])
                         nic_dict = {'port_id': port_dict['id'],
                                     'network_id': port_dict['network_id'],
                                     'mac_address': port_dict['mac_address'],
@@ -224,6 +224,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                                     'instance_uuid': instance.uuid}
                         nics_obj.objects.append(objects.InstanceNic(
                             context, **nic_dict))
+
                     except Exception:
                         # Set nics here, so we can clean up the
                         # created networks during reverting.
@@ -273,11 +274,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
         ]
 
     def _build_instance(self, context, instance):
-        ironic.do_node_deploy(self.manager.ironicclient, instance.node_uuid)
-
-        timer = loopingcall.FixedIntervalLoopingCall(
-            self.manager.wait_for_active, instance)
-        timer.start(interval=CONF.ironic.api_retry_interval).wait()
+        self.manager.driver.do_node_deploy(instance)
         LOG.info(_LI('Successfully provisioned Ironic node %s'),
                  instance.node_uuid)
 
@@ -289,8 +286,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
         for failure in flow_failures.values():
             if failure.check(*self.instance_cleaned_exc_types):
                 LOG.debug("Instance %s: destroy ironic node", instance.uuid)
-                ironic.destroy_node(self.manager.ironicclient,
-                                    instance.node_uuid)
+                self.manger.driver.destroy(instance)
                 return True
 
         return False
@@ -304,8 +300,8 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
     This flow will do the following:
 
     1. Schedule a node to create instance
-    2. Set instance info to ironic node and validate it's ready to deploy
-    3. Build networks for the instance and set port id back to ironic port
+    2. Set instance info to baremetal node and validate it's ready to deploy
+    3. Build networks for the instance and set port id back to baremetal port
     4. Do node deploy and handle errors.
     """
 
@@ -325,7 +321,7 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
 
     instance_flow.add(ScheduleCreateInstanceTask(manager),
                       OnFailureRescheduleTask(manager.engine_rpcapi),
-                      SetInstanceInfoTask(manager.ironicclient),
+                      SetInstanceInfoTask(manager.driver),
                       BuildNetworkTask(manager),
                       CreateInstanceTask(manager))
 

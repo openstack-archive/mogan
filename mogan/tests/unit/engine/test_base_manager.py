@@ -16,7 +16,6 @@ import eventlet
 import mock
 from oslo_config import cfg
 
-from mogan.engine.baremetal import ironic
 from mogan.tests.unit.db import base as tests_db_base
 from mogan.tests.unit.engine import mgr_utils
 
@@ -24,15 +23,14 @@ from mogan.tests.unit.engine import mgr_utils
 CONF = cfg.CONF
 
 
-@mock.patch.object(ironic, 'get_node_list')
 class StartStopTestCase(mgr_utils.ServiceSetUpMixin, tests_db_base.DbTestCase):
-    def test_prevent_double_start(self, mock_node_list):
+    def test_prevent_double_start(self):
         self._start_service()
         self.assertRaisesRegex(RuntimeError, 'already running',
                                self.service.init_host)
 
     @mock.patch.object(eventlet.greenpool.GreenPool, 'waitall')
-    def test_del_host_waits_on_workerpool(self, wait_mock, mock_node_list):
+    def test_del_host_waits_on_workerpool(self, wait_mock):
         self._start_service()
         self.service.del_host()
         self.assertTrue(wait_mock.called)
