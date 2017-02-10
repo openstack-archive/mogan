@@ -57,6 +57,10 @@ opts = [
                default=600,
                help=_("Interval to sync maintenance states between the "
                       "database and Ironic, in seconds.")),
+    cfg.StrOpt('engine_driver',
+               default='ironic.IronicDriver',
+               choices=['ironic.IronicDriver'],
+               help=_("Which driver to use, default to ironic driver."))
 ]
 
 
