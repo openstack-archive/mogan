@@ -18,8 +18,9 @@ import mock
 from oslo_context import context
 from oslo_utils import uuidutils
 
-from mogan.engine.baremetal import ironic
+from mogan.engine.drivers.ironic.driver import IronicEngineDriver
 from mogan.engine.flows import create_instance
+from mogan.engine import manager
 from mogan.engine.scheduler import filter_scheduler as scheduler
 from mogan import objects
 from mogan.tests import base
@@ -56,22 +57,22 @@ class CreateInstanceFlowTestCase(base.TestCase):
                                               fake_filter_props)
         self.assertEqual(fake_uuid, instance_obj.node_uuid)
 
-    @mock.patch.object(ironic, 'validate_node')
-    @mock.patch.object(ironic, 'set_instance_info')
-    def test_set_instance_info_task_execute(self, mock_set_inst,
+    @mock.patch.object(IronicEngineDriver, 'validate_node')
+    @mock.patch.object(IronicEngineDriver, 'set_instance_info')
+    @mock.patch.object(IronicEngineDriver, 'get_node')
+    def test_set_instance_info_task_execute(self, mock_get_node, mock_set_inst,
                                             mock_validate):
-        fake_ironicclient = mock.MagicMock()
-        task = create_instance.SetInstanceInfoTask(
-            fake_ironicclient)
+        flow_manager = manager.EngineManager('test-host', 'test-topic')
+        task = create_instance.SetInstanceInfoTask(flow_manager.driver)
         instance_obj = obj_utils.get_test_instance(self.ctxt)
+        mock_get_node.side_effect = None
         mock_set_inst.side_effect = None
         mock_validate.side_effect = None
 
         task.execute(self.ctxt, instance_obj)
-        mock_set_inst.assert_called_once_with(fake_ironicclient,
-                                              instance_obj, mock.ANY)
-        mock_validate.assert_called_once_with(fake_ironicclient,
-                                              instance_obj.node_uuid)
+        mock_get_node.assert_called_once_with(instance_obj.node_uuid)
+        mock_set_inst.assert_called_once_with(instance_obj, mock.ANY)
+        mock_validate.assert_called_once_with(instance_obj.node_uuid)
 
     @mock.patch.object(objects.instance.Instance, 'save')
     @mock.patch.object(create_instance.BuildNetworkTask, '_build_networks')
