@@ -49,6 +49,17 @@ POWER_ACTION_MAP = {
 }
 
 
+#####################
+# Provisioning states
+#####################
+
+REBUILD = 'rebuild'
+""" Node is to be rebuilt.
+This is not used as a state, but rather as a "verb" when changing the node's
+provision_state via the REST API.
+"""
+
+
 #################
 # Instance states
 #################
