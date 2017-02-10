@@ -87,3 +87,10 @@ def make_pretty_name(method):
         except AttributeError:
             pass
     return ".".join(meth_pieces)
+
+
+def check_isinstance(obj, cls):
+    """Checks that obj is of type cls, and lets PyLint infer types."""
+    if isinstance(obj, cls):
+        return obj
+    raise Exception(_('Expected object of type: %s') % (str(cls)))

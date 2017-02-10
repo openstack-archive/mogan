@@ -36,7 +36,6 @@ from mogan.common.i18n import _
 from mogan.common.i18n import _LW
 from mogan.common import policy
 from mogan.common import states
-from mogan.engine.baremetal import ironic_states as ir_states
 from mogan import network
 from mogan import objects
 
@@ -60,7 +59,7 @@ class InstanceStates(base.APIBase):
 
     @classmethod
     def sample(cls):
-        sample = cls(power_state=ir_states.POWER_ON,
+        sample = cls(power_state=states.POWER_ON,
                      status=states.ACTIVE, locked=False)
         return sample
 
@@ -172,13 +171,13 @@ class InstanceStatesController(InstanceControllerBase):
         """
 
         # Currently we only support rebuild target
-        if target not in (ir_states.REBUILD,):
+        if target not in (states.REBUILD,):
             raise exception.InvalidActionParameterValue(
                 value=target, action="provision",
                 instance=instance_uuid)
 
         rpc_instance = self._resource or self._get_resource(instance_uuid)
-        if target == ir_states.REBUILD:
+        if target == states.REBUILD:
             try:
                 pecan.request.engine_api.rebuild(pecan.request.context,
                                                  rpc_instance)
