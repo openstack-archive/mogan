@@ -36,3 +36,33 @@ Response
 **Example instance network:**
 
 .. literalinclude:: samples/instances/instance-get-network-response.json
+
+
+Add (Associate) Floating IP
+===========================
+
+.. rest_method:: POST /v1/instances/{instance_uuid}/networks/floatingips
+
+Adds a floating IP address to an instance, which associates
+that address with the instance.
+
+If an instance is connected to multiple networks, you can associate a
+floating IP address with a specific fixed IP address by using the
+optional ``fixed_address`` parameter.
+
+Normal response code: 204
+
+Error codes: 400,401,403,404,409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+    - instance_uuid: instance_ident
+    - address: address
+    - fixed_address: fixed_address
+
+**Example request to Add (Associate) Floating IP to an instance:**
+
+.. literalinclude:: samples/instances/instance-associate-fip-req.json

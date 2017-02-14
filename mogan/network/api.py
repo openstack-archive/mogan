@@ -177,7 +177,6 @@ class API(object):
         param = {'port_id': port_id,
                  'fixed_ip_address': fixed_address}
         client.update_floatingip(fip['id'], {'floatingip': param})
-        return fip
 
     def disassociate_floating_ip(self, context, address):
         """Disassociate a floating IP from the instance."""

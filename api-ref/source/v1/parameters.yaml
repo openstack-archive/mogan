@@ -64,6 +64,12 @@ user_id:
 
 # variables in body
 
+address:
+  description: |
+    The floating IP address.
+  in: body
+  required: true
+  type: string
 availability_zone:
   description: |
     The availability zone from which to launch the instance. When you provision resources,
@@ -107,6 +113,12 @@ extra:
   in: body
   required: false
   type: object
+fixed_address:
+  description: |
+    The fixed IP address with which you want to associate the floating IP address.
+  in: body
+  required: false
+  type: string
 imageRef:
   description: |
     The UUID of the image to use for your instance.
