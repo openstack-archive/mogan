@@ -123,16 +123,6 @@ class InstanceStatesController(InstanceControllerBase):
         pecan.response.location = link.build_url('instances', url_args)
 
 
-class FloatingIP(base.APIBase):
-    """API representation of the floatingip information for an instance."""
-
-    id = types.uuid
-    """The ID of the floating IP"""
-
-    port_id = types.uuid
-    """The ID of the port that associated to"""
-
-
 class FloatingIPController(InstanceControllerBase):
     """REST controller for Instance floatingips."""
 
@@ -141,8 +131,8 @@ class FloatingIPController(InstanceControllerBase):
         self.network_api = network.API()
 
     @policy.authorize_wsgi("mogan:instance", "associate_floatingip", False)
-    @expose.expose(FloatingIP, types.uuid, types.jsontype,
-                   status_code=http_client.CREATED)
+    @expose.expose(None, types.uuid, body=types.jsontype,
+                   status_code=http_client.NO_CONTENT)
     def post(self, instance_uuid, floatingip):
         """Add(Associate) Floating Ip.
 
@@ -197,7 +187,7 @@ class FloatingIPController(InstanceControllerBase):
                                 'IPv4 fixed_ip: %s'), fixed_address)
 
         try:
-            fip = self.network_api.associate_floating_ip(
+            self.network_api.associate_floating_ip(
                 pecan.request.context, floating_address=address,
                 port_id=port_id, fixed_address=fixed_address)
         except exception.FloatingIpNotFoundForAddress as e:
@@ -215,12 +205,6 @@ class FloatingIPController(InstanceControllerBase):
             LOG.exception(msg)
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
-
-        # Set the HTTP Location Header, user can get the floating ips
-        # by locaton.
-        url_args = '/'.join([instance_uuid, 'networks'])
-        pecan.response.location = link.build_url('instances', url_args)
-        return FloatingIP(id=fip['id'], port_id=fip['port_id'])
 
     @policy.authorize_wsgi("mogan:instance", "disassociate_floatingip")
     @expose.expose(None, types.uuid, types.jsontype,
