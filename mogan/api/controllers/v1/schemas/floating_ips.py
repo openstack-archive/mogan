@@ -26,13 +26,3 @@ add_floating_ip = {
     'required': ['address'],
     'additionalProperties': False
 }
-
-
-remove_floating_ip = {
-    'type': 'object',
-    'properties': {
-        'address': parameter_types.ip_address,
-    },
-    'required': ['address'],
-    'additionalProperties': False
-}

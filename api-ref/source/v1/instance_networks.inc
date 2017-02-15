@@ -66,3 +66,24 @@ Request
 **Example request to Add (Associate) Floating IP to an instance:**
 
 .. literalinclude:: samples/instances/instance-associate-fip-req.json
+
+
+Remove (Disassociate) Floating IP
+=================================
+
+.. rest_method:: DELETE /v1/instances/{instance_uuid}/networks/floatingips/{fip_address}
+
+Removes, or disassociates, a floating IP address from an instance.
+
+Normal response codes: 204
+
+Error response codes: badRequest(400), unauthorized(401), forbidden(403),
+itemNotFound(404), conflict(409)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+    - instance_uuid: instance_ident
+    - fip_address: address_path

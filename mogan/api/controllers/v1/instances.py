@@ -207,17 +207,18 @@ class FloatingIPController(InstanceControllerBase):
                 msg, status_code=http_client.BAD_REQUEST)
 
     @policy.authorize_wsgi("mogan:instance", "disassociate_floatingip")
-    @expose.expose(None, types.uuid, types.jsontype,
+    @expose.expose(None, types.uuid, wtypes.text,
                    status_code=http_client.NO_CONTENT)
-    def delete(self, instance_uuid, floatingip):
+    def delete(self, instance_uuid, address):
         """Dissociate floating_ip from an instance.
 
         :param instance_uuid: UUID of a instance.
         :param floatingip: The floating IP within the request body.
         """
-        validation.check_schema(floatingip, fip_schemas.remove_floating_ip)
-        address = floatingip['address']
-
+        if not netutils.is_valid_ipv4(address):
+            msg = "Invalid IP address %s" % address
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.BAD_REQUEST)
         # get the floating ip object
         try:
             floating_ip = self.network_api.get_floating_ip_by_address(

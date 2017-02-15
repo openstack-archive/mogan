@@ -9,6 +9,12 @@ openstack-request-id:
   type: string
 
 # variables in path
+address_path:
+  description: |
+    The floating IP address.
+  in: path
+  required: true
+  type: string
 api_version:
   in: path
   required: true
