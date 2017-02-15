@@ -37,6 +37,8 @@ create_instance = {
                 'additionalProperties': False,
             },
         },
+        'min_count': {'type': 'integer', 'minimum': 1},
+        'max_count': {'type': 'integer', 'minimum': 1},
         'extra': parameter_types.extra,
     },
     'required': ['name', 'image_uuid', 'instance_type_uuid', 'networks'],
