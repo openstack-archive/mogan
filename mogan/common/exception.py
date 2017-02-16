@@ -282,4 +282,18 @@ class FloatingIpMultipleFoundForAddress(MoganException):
     msg_fmt = _("Multiple floating IPs are found for address %(address)s.")
 
 
+# TODO(zhenguo) Change to inherit from QuotaError.
+class PortLimitExceeded(MoganException):
+    msg_fmt = _("Maximum number of ports exceeded")
+
+
+class NetworkNotFound(NotFound):
+    msg_fmt = _("Network %(network_id)s could not be found.")
+
+
+class NetworkRequiresSubnet(Invalid):
+    msg_fmt = _("Network %(network_uuid)s requires a subnet in order to boot"
+                " instances on.")
+
+
 ObjectActionError = obj_exc.ObjectActionError

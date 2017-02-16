@@ -80,10 +80,14 @@ class TestInstances(v1_test.APITestV1):
         self.image_api = mock.Mock()
         self.useFixture(mockpatch.Patch('mogan.image.api.API',
                                         return_value=self.image_api))
+        self.network_api = mock.Mock()
+        self.useFixture(mockpatch.Patch('mogan.network.api.API',
+                                        return_value=self.network_api))
         self.rpc_api.get_ironic_node.return_value = _get_fake_node()
         self.rpc_api.list_availability_zones.return_value = {
             'availability_zones': ['test_zone']}
         self.image_api.get.return_value = _get_fake_image()
+        self.network_api.validate_networks.return_value = 100
         super(TestInstances, self).setUp()
         self._prepare_instance_type()
         self.addCleanup(self._clean_instances)
