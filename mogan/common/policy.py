@@ -109,6 +109,9 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:disassociate_floatingip',
                        'rule:default',
                        description='Disassociate a floating ip'),
+    policy.RuleDefault('mogan:instance:set_lock_state',
+                       'rule:default',
+                       description='Lock/UnLock an instance'),
 ]
 
 FUNC_PARAMS_INTERESTED = {

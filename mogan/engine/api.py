@@ -267,3 +267,31 @@ class API(object):
     def list_availability_zones(self, context):
         """Get a list of availability zones."""
         return self.engine_rpcapi.list_availability_zones(context)
+
+    def lock(self, context, instance):
+        """Lock the given instance."""
+
+        is_owner = instance.project_id == context.project_id
+        if instance.locked and is_owner:
+            return
+
+        LOG.debug('Locking', instance=instance)
+        instance.locked = True
+        instance.locked_by = 'owner' if is_owner else 'admin'
+        instance.save()
+
+    def unlock(self, context, instance):
+        """Unlock the given instance."""
+
+        LOG.debug('Unlocking', instance=instance)
+        instance.locked = False
+        instance.locked_by = None
+        instance.save()
+
+    def is_expected_locked_by(self, context, instance):
+        is_owner = instance.project_id == context.project_id
+        expect_locked_by = 'owner' if is_owner else 'admin'
+        locked_by = instance.locked_by
+        if locked_by and locked_by != expect_locked_by:
+            return False
+        return True
