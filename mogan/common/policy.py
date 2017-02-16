@@ -190,12 +190,10 @@ def _add_action_extra(action, fn, *args, **kwargs):
         fn_args = fn.__dict__['_pecan']['argspec'][0][1:]
         for param in FUNC_PARAMS_INTERESTED[func_name]:
             if param in kwargs:
-                if kwargs[param]:
-                    action = '%s:%s' % (action, kwargs[param])
+                action = '%s:%s' % (action, kwargs[param])
             elif param in fn_args:
                 param_value = args[fn_args.index(param)]
-                if param_value:
-                    action = '%s:%s' % (action, param_value)
+                action = '%s:%s' % (action, param_value)
     return action
 
 
