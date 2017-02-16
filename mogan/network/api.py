@@ -185,6 +185,52 @@ class API(object):
         fip = self._get_floating_ip_by_address(client, address)
         client.update_floatingip(fip['id'], {'floatingip': {'port_id': None}})
 
+    def _get_available_networks(self, context, project_id,
+                                net_ids, client):
+        """Return a network list available for the tenant."""
+
+        # This search will also include 'shared' networks.
+        search_opts = {'id': net_ids}
+        nets = client.list_networks(**search_opts).get('networks', [])
+
+        _ensure_requested_network_ordering(
+            lambda x: x['id'],
+            nets,
+            net_ids)
+
+        return nets
+
+    def _ports_needed_per_instance(self, context, client, requested_networks):
+
+        ports_needed_per_instance = 0
+        net_ids_requested = []
+        for request in requested_networks:
+            ports_needed_per_instance += 1
+            net_ids_requested.append(request['net_id'])
+
+        # Now check to see if all requested networks exist
+        if net_ids_requested:
+            nets = self._get_available_networks(
+                context, context.project_id, net_ids_requested,
+                client)
+
+            for net in nets:
+                if not net.get('subnets'):
+                    raise exception.NetworkRequiresSubnet(
+                        network_uuid=net['id'])
+
+            if len(nets) != len(net_ids_requested):
+                requested_netid_set = set(net_ids_requested)
+                returned_netid_set = set([net['id'] for net in nets])
+                lostid_set = requested_netid_set - returned_netid_set
+                if lostid_set:
+                    id_str = ''
+                    for _id in lostid_set:
+                        id_str = id_str and id_str + ', ' + _id or _id
+                    raise exception.NetworkNotFound(network_id=id_str)
+
+        return ports_needed_per_instance
+
     def validate_networks(self, context, requested_networks, num_instances):
         """Validate that the tenant can use the requested networks.
 
@@ -192,7 +238,39 @@ class API(object):
         with the requested network configuration.
         """
         LOG.debug('validate_networks() for %s', requested_networks)
-        # TODO(little): check the network port number and return the actual
-        # num_instances
+
+        client = get_client(context.auth_token)
+        ports_needed_per_instance = self._ports_needed_per_instance(
+            context, client, requested_networks)
+
+        # Check the quota and return how many of the requested number of
+        # instances can be created
+        if ports_needed_per_instance:
+            quotas = client.show_quota(context.project_id)['quota']
+            if quotas.get('port', -1) == -1:
+                # Unlimited Port Quota
+                return num_instances
+
+            # We only need the port count so only ask for ids back.
+            params = dict(tenant_id=context.project_id, fields=['id'])
+            ports = client.list_ports(**params)['ports']
+            free_ports = quotas.get('port') - len(ports)
+            if free_ports < 0:
+                msg = (_("The number of defined ports: %(ports)d "
+                         "is over the limit: %(quota)d") %
+                       {'ports': len(ports),
+                        'quota': quotas.get('port')})
+                raise exception.PortLimitExceeded(msg)
+            ports_needed = ports_needed_per_instance * num_instances
+            if free_ports >= ports_needed:
+                return num_instances
+            else:
+                return free_ports // ports_needed_per_instance
 
         return num_instances
+
+
+def _ensure_requested_network_ordering(accessor, unordered, preferred):
+    """Sort a list with respect to the preferred network ordering."""
+    if preferred:
+        unordered.sort(key=lambda i: preferred.index(accessor(i)))
