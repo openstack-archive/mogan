@@ -20,6 +20,7 @@ from oslo_utils import excutils
 from oslo_utils import uuidutils
 
 from mogan.common import exception
+from mogan.common.i18n import _LI
 from mogan.common import states
 from mogan.conf import CONF
 from mogan.engine import rpcapi
@@ -118,12 +119,11 @@ class API(object):
 
     def _provision_instances(self, context, base_options,
                              min_count, max_count):
-        # TODO(zhenguo): Reserve quotas
         # TODO(little): finish to return num_instances according quota
         num_instances, quotas = self._check_num_instances_quota(
             context, min_count, max_count)
 
-        LOG.debug("Going to record %s instances to db...", num_instances)
+        LOG.debug("Going to run %s instances...", num_instances)
 
         instances = []
         try:
@@ -164,11 +164,6 @@ class API(object):
                          name, description, availability_zone, extra,
                          requested_networks, min_count, max_count):
         """Verify all the input parameters"""
-        min_count = min_count or 1
-        max_count = max_count or min_count
-
-        if min_count > max_count:
-            min_count = max_count
 
         # Verify the specified image exists
         if image_uuid:
@@ -178,7 +173,17 @@ class API(object):
             context, instance_type, image_uuid, name, description,
             availability_zone, extra, requested_networks, max_count)
 
-        # TODO(little): To check the max_count and max_net_count
+        # max_net_count is the maximum number of instances requested by the
+        # user adjusted for any network quota constraints, including
+        # consideration of connections to each requested network
+        if max_net_count < min_count:
+            raise exception.PortLimitExceeded()
+        elif max_net_count < max_count:
+            LOG.info(_LI("max count reduced from %(max_count)d to "
+                         "%(max_net_count)d due to network port quota"),
+                     {'max_count': max_count,
+                      'max_net_count': max_net_count})
+            max_count = max_net_count
 
         instances = self._provision_instances(context, base_options,
                                               min_count, max_count)

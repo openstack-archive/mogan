@@ -43,8 +43,10 @@ class ComputeAPIUnitTest(base.DbTestCase):
         type_obj.create(self.context)
         return type_obj
 
-    def test__validate_and_build_base_options(self):
+    @mock.patch('mogan.engine.api.API._check_requested_networks')
+    def test__validate_and_build_base_options(self, mock_check_nets):
         instance_type = self._create_instance_type()
+        mock_check_nets.return_value = 3
 
         base_opts, max_network_count = \
             self.engine_api._validate_and_build_base_options(
