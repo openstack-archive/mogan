@@ -467,6 +467,14 @@ class InstanceController(InstanceControllerBase):
         """
         validation.check_schema(instance, inst_schemas.create_instance)
 
+        min_count = instance.get('min_count', 1)
+        max_count = instance.get('max_count', min_count)
+
+        if min_count > max_count:
+            msg = _('min_count must be <= max_count')
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.BAD_REQUEST)
+
         requested_networks = instance.pop('networks', None)
         instance_type_uuid = instance.get('instance_type_uuid')
         image_uuid = instance.get('image_uuid')
@@ -484,8 +492,8 @@ class InstanceController(InstanceControllerBase):
                 availability_zone=instance.get('availability_zone'),
                 extra=instance.get('extra'),
                 requested_networks=requested_networks,
-                min_count=instance.get('min_count'),
-                max_count=instance.get('max_count'))
+                min_count=min_count,
+                max_count=max_count)
         except exception.InstanceTypeNotFound:
             msg = (_("InstanceType %s could not be found") %
                    instance_type_uuid)
