@@ -18,6 +18,7 @@
 from oslo_log import log
 from oslo_utils import excutils
 from oslo_utils import uuidutils
+import six
 
 from mogan.common import exception
 from mogan.common import states
@@ -28,6 +29,15 @@ from mogan import network
 from mogan import objects
 
 LOG = log.getLogger(__name__)
+
+
+def check_instance_lock(function):
+    @six.wraps(function)
+    def inner(self, context, instance, *args, **kwargs):
+        if instance.locked and not context.is_admin:
+            raise exception.InstanceIsLocked(instance_uuid=instance.uuid)
+        return function(self, context, instance, *args, **kwargs)
+    return inner
 
 
 class API(object):
@@ -242,11 +252,13 @@ class API(object):
             return
         self.engine_rpcapi.delete_instance(context, instance)
 
+    @check_instance_lock
     def delete(self, context, instance):
         """Delete an instance."""
         LOG.debug("Going to try to delete instance %s", instance.uuid)
         self._delete_instance(context, instance)
 
+    @check_instance_lock
     def power(self, context, instance, target):
         """Set power state of an instance."""
         LOG.debug("Going to try to set instance power state to %s",

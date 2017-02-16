@@ -282,4 +282,13 @@ class FloatingIpMultipleFoundForAddress(MoganException):
     msg_fmt = _("Multiple floating IPs are found for address %(address)s.")
 
 
+class InstanceInvalidState(Invalid):
+    msg_fmt = _("Instance %(instance_uuid)s in %(attr)s %(state)s. Cannot "
+                "%(method)s while the instance is in this state.")
+
+
+class InstanceIsLocked(InstanceInvalidState):
+    msg_fmt = _("Instance %(instance_uuid)s is locked")
+
+
 ObjectActionError = obj_exc.ObjectActionError
