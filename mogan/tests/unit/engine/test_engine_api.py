@@ -196,3 +196,45 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.engine_api.unlock(admin_context, fake_instance_obj)
         self.assertFalse(fake_instance_obj.locked)
         self.assertEqual(None, fake_instance_obj.locked_by)
+
+    @mock.patch('mogan.engine.api.API._delete_instance')
+    def test_delete_locked_instance_with_non_admin(self, mock_deleted):
+        fake_instance = db_utils.get_test_instance(
+            user_id=self.user_id, project_id=self.project_id,
+            locked=True, locked_by='owner')
+        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        self.assertRaises(exception.InstanceIsLocked,
+                          self.engine_api.delete,
+                          self.context, fake_instance_obj)
+        self.assertFalse(mock_deleted.called)
+
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'set_power_state')
+    def test_power_locked_instance_with_non_admin(self, mock_powered):
+        fake_instance = db_utils.get_test_instance(
+            user_id=self.user_id, project_id=self.project_id,
+            locked=True, locked_by='owner')
+        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        self.assertRaises(exception.InstanceIsLocked,
+                          self.engine_api.power,
+                          self.context, fake_instance_obj, 'reboot')
+        self.assertFalse(mock_powered.called)
+
+    @mock.patch('mogan.engine.api.API._delete_instance')
+    def test_delete_locked_instance_with_admin(self, mock_deleted):
+        fake_instance = db_utils.get_test_instance(
+            user_id=self.user_id, project_id=self.project_id,
+            locked=True, locked_by='owner')
+        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        admin_context = context.get_admin_context()
+        self.engine_api.delete(admin_context, fake_instance_obj)
+        self.assertTrue(mock_deleted.called)
+
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'set_power_state')
+    def test_power_locked_instance_with_admin(self, mock_powered):
+        fake_instance = db_utils.get_test_instance(
+            user_id=self.user_id, project_id=self.project_id,
+            locked=True, locked_by='owner')
+        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        admin_context = context.get_admin_context()
+        self.engine_api.power(admin_context, fake_instance_obj, 'reboot')
+        self.assertTrue(mock_powered.called)

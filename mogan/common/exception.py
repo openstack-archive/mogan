@@ -296,4 +296,8 @@ class NetworkRequiresSubnet(Invalid):
                 " instances on.")
 
 
+class InstanceIsLocked(Invalid):
+    msg_fmt = _("Instance %(instance_uuid)s is locked")
+
+
 ObjectActionError = obj_exc.ObjectActionError
