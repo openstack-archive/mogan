@@ -61,9 +61,11 @@ class API(object):
             'status': states.BUILDING,
             'user_id': context.user,
             'project_id': context.tenant,
+            'power_state': states.NOSTATE,
             'instance_type_uuid': instance_type['uuid'],
             'name': name,
             'description': description,
+            'locked': False,
             'extra': extra or {},
             'availability_zone': availability_zone}
 
@@ -128,7 +130,6 @@ class API(object):
             for num in range(num_instances):
                 instance = objects.Instance(context=context)
                 instance.update(base_options)
-                instance.status = states.BUILDING
                 instance.uuid = uuidutils.generate_uuid()
                 # Refactor name of the instance.
                 self._populate_instance_names(instance, num_instances, num)
