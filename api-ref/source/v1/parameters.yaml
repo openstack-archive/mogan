@@ -190,6 +190,26 @@ lock_state:
   in: body
   required: true
   type: boolean
+max_count_body:
+  description: |
+      The max number of servers to be created. Defaults to the value of ``min_count``.
+  in: body
+  required: false
+  type: integer
+min_count_body:
+  description: |
+    The min number of servers to be created. Defaults to 1.
+  in: body
+  required: false
+  type: integer
+multi_instacne_name_body:
+  description: |
+    A base name for creating unique names during multiple create. A unique
+    string will be appended to the end of this base name for every instacne
+    created.
+  in: body
+  required: true
+  type: string
 network_info:
   description: |
     The port info in the requested network for the instance, with fixed_ip, mac_address, and
