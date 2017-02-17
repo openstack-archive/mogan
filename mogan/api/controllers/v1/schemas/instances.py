@@ -40,6 +40,7 @@ create_instance = {
         'min_count': {'type': 'integer', 'minimum': 1},
         'max_count': {'type': 'integer', 'minimum': 1},
         'extra': parameter_types.extra,
+        'adminPass': parameter_types.admin_password,
     },
     'required': ['name', 'image_uuid', 'instance_type_uuid', 'networks'],
     'additionalProperties': False,
