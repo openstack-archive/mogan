@@ -81,7 +81,7 @@ There is a second kind of create call which can create multiple instances
 at once. This supports all the same parameters as create with a few additional
 attributes specific to multiple create.
 
-Error handling for multiple create is not as consistent as for single server
+Error handling for multiple create is not as consistent as for single instance
 create, and there is no guarantee that all the instances will be created
 successfully.
 
@@ -98,8 +98,8 @@ These are the parameters beyond single create that are supported.
 .. rest_parameters:: parameters.yaml
 
   - name: multi_instacne_name_body
-  - min_count(Optional): min_count_body
-  - max_count(Optional): max_count_body
+  - min_count: min_count_body
+  - max_count: max_count_body
 
 **Example Create Multiple Instance: JSON request**
 
@@ -109,7 +109,7 @@ These are the parameters beyond single create that are supported.
 Response
 --------
 
-The first instace will be returned. The returned paramaters is same to creating
+The first instance will be returned. The returned paramaters is same to creating
 a single instance's.
 
 **Example Create Multiple Instance: JSON response**

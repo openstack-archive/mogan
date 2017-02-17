@@ -192,13 +192,13 @@ lock_state:
   type: boolean
 max_count_body:
   description: |
-      The max number of servers to be created. Defaults to the value of ``min_count``.
+      The max number of instances to be created. Defaults to the value of ``min_count``.
   in: body
   required: false
   type: integer
 min_count_body:
   description: |
-    The min number of servers to be created. Defaults to 1.
+    The min number of instances to be created. Defaults to 1.
   in: body
   required: false
   type: integer
