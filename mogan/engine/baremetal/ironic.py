@@ -99,10 +99,10 @@ def unset_instance_info(ironicclient, instance):
     ironicclient.call("node.update", instance.node_uuid, patch)
 
 
-def do_node_deploy(ironicclient, node_uuid):
+def do_node_deploy(ironicclient, node_uuid, configdrive):
     # trigger the node deploy
     ironicclient.call("node.set_provision_state", node_uuid,
-                      ironic_states.ACTIVE)
+                      ironic_states.ACTIVE, configdrive=configdrive)
 
 
 def get_node_by_instance(ironicclient, instance_uuid, fields=None):

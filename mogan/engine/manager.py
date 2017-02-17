@@ -288,7 +288,8 @@ class EngineManager(base_manager.BaseEngineManager):
                          'reason': six.text_type(e)})
 
     def create_instance(self, context, instance, requested_networks,
-                        request_spec=None, filter_properties=None):
+                        admin_password, request_spec=None,
+                        filter_properties=None):
         """Perform a deployment."""
         LOG.debug("Starting instance...", instance=instance)
         notifications.notify_about_instance_action(
@@ -309,6 +310,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 self,
                 instance,
                 requested_networks,
+                admin_password,
                 request_spec,
                 filter_properties,
             )
