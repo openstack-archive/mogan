@@ -13,17 +13,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import pbr.version
+from oslo_config import cfg
 
-MOGAN_PRODUCT = "OpenStack Mogan"
+from mogan.common.i18n import _
 
-version_info = pbr.version.VersionInfo('mogan')
-version_string = version_info.version_string
+opts = [
+    cfg.StrOpt('config_drive_format',
+               default='iso9660',
+               choices=('iso9660', 'vfat'),
+               help=_('Configuration drive format that will contain '
+                      'metadata attached to the instance when it boots.')),
+    cfg.StrOpt('mkisofs_cmd',
+               default='genisoimage',
+               help=_('Name or path of the tool used for ISO image '
+                      'creation')),
+]
 
 
-def product_string():
-    return MOGAN_PRODUCT
-
-
-def version_string_with_package():
-    return version_info.version_string()
+def register_opts(conf):
+    conf.register_opts(opts, group='configdrive')
