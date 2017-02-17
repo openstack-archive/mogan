@@ -13,11 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import base64
+import gzip
+import shutil
+import tempfile
 import traceback
 
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_service import loopingcall
+from oslo_utils import excutils
+import six
 import taskflow.engines
 from taskflow.patterns import linear_flow
 
@@ -28,6 +34,8 @@ from mogan.common.i18n import _LE
 from mogan.common.i18n import _LI
 from mogan.common import utils
 from mogan.engine.baremetal import ironic
+from mogan.engine.baremetal import ironic_states
+from mogan.engine import configdrive
 from mogan import objects
 
 LOG = logging.getLogger(__name__)
@@ -66,7 +74,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
     def __init__(self, engine_rpcapi):
         requires = ['filter_properties', 'request_spec', 'instance',
-                    'requested_networks', 'context']
+                    'requested_networks', 'admin_password', 'context']
         super(OnFailureRescheduleTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
         self.engine_rpcapi = engine_rpcapi
@@ -83,7 +91,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         pass
 
     def _reschedule(self, context, cause, request_spec, filter_properties,
-                    instance, requested_networks):
+                    instance, requested_networks, admin_password):
         """Actions that happen during the rescheduling attempt occur here."""
 
         create_instance = self.engine_rpcapi.create_instance
@@ -107,6 +115,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             retry_info['exc'] = traceback.format_exception(*cause.exc_info)
 
         return create_instance(context, instance, requested_networks,
+                               admin_password=admin_password,
                                request_spec=request_spec,
                                filter_properties=filter_properties)
 
@@ -261,8 +270,8 @@ class BuildNetworkTask(flow_utils.MoganTask):
 class CreateInstanceTask(flow_utils.MoganTask):
     """Build and deploy the instance."""
 
-    def __init__(self, manager):
-        requires = ['instance', 'context']
+    def __init__(self, ironicclient):
+        requires = ['instance', 'context', 'admin_password']
         super(CreateInstanceTask, self).__init__(addons=[ACTION],
                                                  requires=requires)
         self.manager = manager
@@ -272,8 +281,56 @@ class CreateInstanceTask(flow_utils.MoganTask):
             loopingcall.LoopingCallTimeOut,
         ]
 
-    def _build_instance(self, context, instance):
-        ironic.do_node_deploy(self.manager.ironicclient, instance.node_uuid)
+    def _generate_configdrive(self, context, instance, extra_md=None):
+        """Generate a config drive.
+
+        :param instance: The instance object.
+        :param node: The node object.
+        :param extra_md: Optional, extra metadata to be added to the
+                         configdrive.
+
+        """
+        if not extra_md:
+            extra_md = {}
+
+        with tempfile.NamedTemporaryFile() as uncompressed:
+            with configdrive.ConfigDriveBuilder(instance_md=extra_md) as cdb:
+                cdb.make_drive(uncompressed.name)
+
+            with tempfile.NamedTemporaryFile() as compressed:
+                # compress config drive
+                with gzip.GzipFile(fileobj=compressed, mode='wb') as gzipped:
+                    uncompressed.seek(0)
+                    shutil.copyfileobj(uncompressed, gzipped)
+
+                # base64 encode config drive
+                compressed.seek(0)
+                return base64.b64encode(compressed.read())
+
+    def _build_instance(self, context, instance, admin_password):
+        # Config drive
+        configdrive_value = None
+        extra_md = {}
+        if admin_password:
+            extra_md['admin_pass'] = admin_password
+
+        try:
+            configdrive_value = self._generate_configdrive(
+                context, instance, extra_md=extra_md)
+        except Exception as e:
+            with excutils.save_and_reraise_exception():
+                msg = (_LE("Failed to build configdrive: %s") %
+                       six.text_type(e))
+                LOG.error(msg, instance=instance)
+
+        LOG.info(_LI("Config drive for instance %(instance)s on "
+                     "baremetal node %(node)s created."),
+                 {'instance': instance['uuid'],
+                  'node': instance.node_uuid})
+
+        # trigger the node deploy
+        ironic.do_node_deploy(self.ironicclient, instance.node_uuid,
+                              configdrive=configdrive_value)
 
         timer = loopingcall.FixedIntervalLoopingCall(
             self.manager.wait_for_active, instance)
@@ -281,8 +338,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
         LOG.info(_LI('Successfully provisioned Ironic node %s'),
                  instance.node_uuid)
 
-    def execute(self, context, instance):
-        self._build_instance(context, instance)
+    def execute(self, context, instance, admin_password):
+        self._build_instance(context, instance, admin_password)
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Check if we have a cause which need to clean up instance.
@@ -296,8 +353,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
         return False
 
 
-def get_flow(context, manager, instance, requested_networks, request_spec,
-             filter_properties):
+def get_flow(context, manager, instance, requested_networks, admin_password,
+             request_spec, filter_properties):
 
     """Constructs and returns the manager entrypoint flow
 
@@ -320,7 +377,8 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
         'filter_properties': filter_properties,
         'request_spec': request_spec,
         'instance': instance,
-        'requested_networks': requested_networks
+        'requested_networks': requested_networks,
+        'admin_password': admin_password,
     }
 
     instance_flow.add(ScheduleCreateInstanceTask(manager),

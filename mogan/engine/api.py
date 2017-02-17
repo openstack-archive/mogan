@@ -172,7 +172,8 @@ class API(object):
 
     def _create_instance(self, context, instance_type, image_uuid,
                          name, description, availability_zone, extra,
-                         requested_networks, min_count, max_count):
+                         requested_networks, min_count, max_count,
+                         admin_password):
         """Verify all the input parameters"""
 
         # Verify the specified image exists
@@ -213,6 +214,7 @@ class API(object):
         for instance in instances:
             self.engine_rpcapi.create_instance(context, instance,
                                                requested_networks,
+                                               admin_password,
                                                request_spec,
                                                filter_properties=None)
 
@@ -221,7 +223,7 @@ class API(object):
     def create(self, context, instance_type, image_uuid,
                name=None, description=None, availability_zone=None,
                extra=None, requested_networks=None, min_count=None,
-               max_count=None):
+               max_count=None, admin_password=None):
         """Provision instances
 
         Sending instance information to the engine and will handle
@@ -240,7 +242,7 @@ class API(object):
                                      image_uuid, name, description,
                                      availability_zone, extra,
                                      requested_networks, min_count,
-                                     max_count)
+                                     max_count, admin_password)
 
     def _delete_instance(self, context, instance):
         # Initialize state machine
