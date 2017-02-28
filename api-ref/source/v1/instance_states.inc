@@ -36,7 +36,7 @@ Response
 
 **Example instance state:**
 
-.. literalinclude:: samples/instances/instance-get-state-response.json
+.. literalinclude:: samples/instance_states/instance-get-state-response.json
 
 
 Change Instance Power State
@@ -63,7 +63,7 @@ Request
 
 **Example request to power off a Instance:**
 
-.. literalinclude:: samples/instances/instance-set-power-off.json
+.. literalinclude:: samples/instance_states/instance-set-power-off.json
 
 
 Change Instance Lock State
@@ -90,8 +90,8 @@ Request
 
 **Example request to lock an Instance:**
 
-.. literalinclude:: samples/instances/lock-instance.json
+.. literalinclude:: samples/instance_states/lock-instance.json
 
 **Example request to unlock an Instance:**
 
-.. literalinclude:: samples/instances/unlock-instance.json
+.. literalinclude:: samples/instance_states/unlock-instance.json
