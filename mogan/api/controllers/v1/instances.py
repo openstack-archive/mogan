@@ -55,9 +55,13 @@ class InstanceStates(base.APIBase):
     status = wtypes.text
     """Represent the current status of the instance"""
 
+    locked = types.boolean
+    """Represent the current lock state of the instance"""
+
     @classmethod
     def sample(cls):
-        sample = cls(power_state=ir_states.POWER_ON, status=states.ACTIVE)
+        sample = cls(power_state=ir_states.POWER_ON,
+                     status=states.ACTIVE, locked=False)
         return sample
 
 
@@ -87,7 +91,8 @@ class InstanceStatesController(InstanceControllerBase):
         rpc_instance = self._resource or self._get_resource(instance_uuid)
 
         return InstanceStates(power_state=rpc_instance.power_state,
-                              status=rpc_instance.status)
+                              status=rpc_instance.status,
+                              locked=rpc_instance.locked)
 
     @policy.authorize_wsgi("mogan:instance", "set_power_state")
     @expose.expose(None, types.uuid, wtypes.text,
