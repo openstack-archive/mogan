@@ -174,9 +174,9 @@ class FloatingIPController(InstanceControllerBase):
 
         instance = self._resource or self._get_resource(instance_uuid)
         address = floatingip['address']
-        ports = instance.network_info
+        instance_nics = instance.nics
 
-        if not ports:
+        if not instance_nics:
             msg = _('No ports associated to instance')
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
@@ -184,8 +184,8 @@ class FloatingIPController(InstanceControllerBase):
         fixed_address = None
         if 'fixed_address' in floatingip:
             fixed_address = floatingip['fixed_address']
-            for port_id, port in ports.items():
-                for port_address in port['fixed_ips']:
+            for nic in instance_nics:
+                for port_address in nic.fixed_ips:
                     if port_address['ip_address'] == fixed_address:
                         break
                 else:
@@ -197,8 +197,8 @@ class FloatingIPController(InstanceControllerBase):
                     msg, status_code=http_client.BAD_REQUEST)
 
         if not fixed_address:
-            for port_id, port in ports.items():
-                for port_address in port['fixed_ips']:
+            for nic in instance_nics:
+                for port_address in nic.fixed_ips:
                     if netutils.is_valid_ipv4(port_address['ip_address']):
                         fixed_address = port_address['ip_address']
                         break
@@ -213,14 +213,14 @@ class FloatingIPController(InstanceControllerBase):
                                           'id': instance.uuid})
                 raise wsme.exc.ClientSideError(
                     msg, status_code=http_client.BAD_REQUEST)
-            if len(ports) > 1:
+            if len(instance_nics) > 1:
                 LOG.warning(_LW('multiple ports exist, using the first '
                                 'IPv4 fixed_ip: %s'), fixed_address)
 
         try:
             self.network_api.associate_floating_ip(
                 pecan.request.context, floating_address=address,
-                port_id=port_id, fixed_address=fixed_address)
+                port_id=nic.port_id, fixed_address=fixed_address)
         except exception.FloatingIpNotFoundForAddress as e:
             raise wsme.exc.ClientSideError(
                 e.message, status_code=http_client.NOT_FOUND)
@@ -316,7 +316,8 @@ class InstanceNetworksController(InstanceControllerBase):
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
 
-        return InstanceNetworks(ports=rpc_instance.network_info)
+        return InstanceNetworks(
+            ports=rpc_instance.instance_nics.to_legacy_dict())
 
 
 class Instance(base.APIBase):
@@ -372,6 +373,15 @@ class Instance(base.APIBase):
         super(Instance, self).__init__(**kwargs)
         self.fields = []
         for field in objects.Instance.fields:
+            # TODO(liusheng) workaround to keep the output of API request same
+            # as before
+            if field == 'nics':
+                network_info = kwargs.get(field, None)
+                if network_info is not None:
+                    network_info = network_info.to_legacy_dict()
+                else:
+                    network_info = {}
+                setattr(self, 'network_info', network_info)
             # Skip fields we do not expose.
             if not hasattr(self, field):
                 continue
@@ -406,7 +416,7 @@ class InstancePatchType(types.JsonPatchType):
         return defaults + ['/project_id', '/user_id', '/status',
                            '/power_state', '/availability_zone',
                            '/instance_type_uuid', 'image_uuid',
-                           '/network_info', '/launched_at']
+                           '/isntance_nics', '/launched_at']
 
 
 class InstanceCollection(base.APIBase):
