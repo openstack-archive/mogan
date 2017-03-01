@@ -35,7 +35,7 @@ Response
 
 **Example instance network:**
 
-.. literalinclude:: samples/instances/instance-get-network-response.json
+.. literalinclude:: samples/instance_networks/instance-get-network-response.json
 
 
 Add (Associate) Floating IP
@@ -65,7 +65,7 @@ Request
 
 **Example request to Add (Associate) Floating IP to an instance:**
 
-.. literalinclude:: samples/instances/instance-associate-fip-req.json
+.. literalinclude:: samples/instance_networks/instance-associate-fip-req.json
 
 
 Remove (Disassociate) Floating IP

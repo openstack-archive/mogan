@@ -42,7 +42,7 @@ Response
 
 **Example List types**
 
-.. literalinclude:: samples/types/types-list-resp.json
+.. literalinclude:: samples/instance_types/types-list-resp.json
    :language: javascript
 
 Create Instance Type
@@ -72,7 +72,7 @@ Request
 
 **Example Create Type**
 
-.. literalinclude:: samples/types/type-create-post-req.json
+.. literalinclude:: samples/instance_types/type-create-post-req.json
    :language: javascript
 
 Response
@@ -91,7 +91,7 @@ Response
 
 **Example Create type**
 
-.. literalinclude:: samples/types/type-create-post-resp.json
+.. literalinclude:: samples/instance_types/type-create-post-resp.json
    :language: javascript
 
 Update Instance Type
@@ -121,7 +121,7 @@ Request
 
 **Example Update Type**
 
-.. literalinclude:: samples/types/type-update-put-req.json
+.. literalinclude:: samples/instance_types/type-update-put-req.json
    :language: javascript
 
 Response
@@ -140,7 +140,7 @@ Response
 
 **Example Update type**
 
-.. literalinclude:: samples/types/type-update-put-resp.json
+.. literalinclude:: samples/instance_types/type-update-put-resp.json
    :language: javascript
 
 Show Instance Type Details
@@ -177,7 +177,7 @@ Response
 
 **Example Show type Details**
 
-.. literalinclude:: samples/types/type-get-resp.json
+.. literalinclude:: samples/instance_types/type-get-resp.json
    :language: javascript
 
 
@@ -236,7 +236,7 @@ Response
 
 **Example List Extra Specs**
 
-.. literalinclude:: samples/types/type-extra-specs-list-resp.json
+.. literalinclude:: samples/instance_types/type-extra-specs-list-resp.json
    :language: javascript
 
 
@@ -261,7 +261,7 @@ Request
 
 **Example Create Extra Specs**
 
-.. literalinclude:: samples/types/type-extra-specs-patch-req.json
+.. literalinclude:: samples/instance_types/type-extra-specs-patch-req.json
    :language: javascript
 
 Response
@@ -273,7 +273,7 @@ Response
 
 **Example Create Extra Specs**
 
-.. literalinclude:: samples/types/type-extra-specs-patch-resp.json
+.. literalinclude:: samples/instance_types/type-extra-specs-patch-resp.json
    :language: javascript
 
 
