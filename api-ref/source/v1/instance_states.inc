@@ -32,6 +32,7 @@ Response
 .. rest_parameters:: parameters.yaml
 
   - power_state: power_state
+  - locked: lock_state
   - status: instance_status
 
 **Example instance state:**
