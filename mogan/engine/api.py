@@ -281,6 +281,22 @@ class API(object):
 
         self.engine_rpcapi.set_power_state(context, instance, target)
 
+    @check_instance_lock
+    def rebuild(self, context, instance):
+        """Rebuild an instance."""
+        fsm = states.machine.copy()
+        fsm.initialize(start_state=instance.status)
+        fsm.process_event('rebuild')
+        try:
+            instance.status = fsm.current_state
+            instance.save()
+        except exception.InstanceNotFound:
+            LOG.debug("Instance is not found while rebuilding",
+                      instance=instance)
+            return
+
+        self.engine_rpcapi.rebuild(context, instance)
+
     def list_availability_zones(self, context):
         """Get a list of availability zones."""
         return self.engine_rpcapi.list_availability_zones(context)
