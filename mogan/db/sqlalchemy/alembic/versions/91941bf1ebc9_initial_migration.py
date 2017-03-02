@@ -124,3 +124,55 @@ def upgrade():
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
+    op.create_table(
+        'quotas',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('project_id', sa.String(length=36), nullable=True),
+        sa.Column('resource_name', sa.String(length=255), nullable=True),
+        sa.Column('hard_limit', sa.Integer(), nullable=True),
+        sa.Column('allocated', sa.Integer(), nullable=True),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('resource_name', 'project_id',
+                            name='uniq_quotas0resource_name'),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
+        'quota_usages',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('project_id', sa.String(length=36), nullable=True),
+        sa.Column('resource_name', sa.String(length=255), nullable=True),
+        sa.Column('in_use', sa.Integer(), nullable=True),
+        sa.Column('reserved', sa.Integer(), nullable=True),
+        sa.Column('until_refresh', sa.Integer(), nullable=True),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('resource_name', 'project_id',
+                            name='uniq_quotas0resource_name'),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
+        'reservations',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('uuid', sa.String(length=36), nullable=True),
+        sa.Column('usage_id', sa.Integer(), nullable=False),
+        sa.Column('allocated_id', sa.Integer(), nullable=False),
+        sa.Column('project_id', sa.String(length=36), nullable=True),
+        sa.Column('resource_name', sa.String(length=255), nullable=True),
+        sa.Column('delta', sa.Integer(), nullable=True),
+        sa.Column('expire', sa.DateTime(), nullable=True),
+        sa.ForeignKeyConstraint(['usage_id'],
+                                ['quota_usages.id']),
+        sa.ForeignKeyConstraint(['allocated_id'],
+                                ['quotas.id']),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('uuid', name='uniq_reservation0uuid'),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
