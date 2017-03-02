@@ -26,10 +26,8 @@ from mogan.common import flow_utils
 from mogan.common.i18n import _
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LI
-from mogan.common import states
 from mogan.common import utils
 from mogan.engine.baremetal import ironic
-from mogan.engine.baremetal import ironic_states
 from mogan import objects
 
 LOG = logging.getLogger(__name__)
@@ -263,54 +261,22 @@ class BuildNetworkTask(flow_utils.MoganTask):
 class CreateInstanceTask(flow_utils.MoganTask):
     """Build and deploy the instance."""
 
-    def __init__(self, ironicclient):
+    def __init__(self, manager):
         requires = ['instance', 'context']
         super(CreateInstanceTask, self).__init__(addons=[ACTION],
                                                  requires=requires)
-        self.ironicclient = ironicclient
+        self.manager = manager
         # These exception types will trigger the instance to be cleaned.
         self.instance_cleaned_exc_types = [
             exception.InstanceDeployFailure,
             loopingcall.LoopingCallTimeOut,
         ]
 
-    def _wait_for_active(self, instance):
-        """Wait for the node to be marked as ACTIVE in Ironic."""
-        instance.refresh()
-        if instance.status in (states.DELETING, states.ERROR, states.DELETED):
-            raise exception.InstanceDeployFailure(
-                _("Instance %s provisioning was aborted") % instance.uuid)
-
-        node = ironic.get_node_by_instance(self.ironicclient,
-                                           instance.uuid)
-        LOG.debug('Current ironic node state is %s', node.provision_state)
-        if node.provision_state == ironic_states.ACTIVE:
-            # job is done
-            LOG.debug("Ironic node %(node)s is now ACTIVE",
-                      dict(node=node.uuid))
-            raise loopingcall.LoopingCallDone()
-
-        if node.target_provision_state in (ironic_states.DELETED,
-                                           ironic_states.AVAILABLE):
-            # ironic is trying to delete it now
-            raise exception.InstanceNotFound(instance_id=instance.uuid)
-
-        if node.provision_state in (ironic_states.NOSTATE,
-                                    ironic_states.AVAILABLE):
-            # ironic already deleted it
-            raise exception.InstanceNotFound(instance_id=instance.uuid)
-
-        if node.provision_state == ironic_states.DEPLOYFAIL:
-            # ironic failed to deploy
-            msg = (_("Failed to provision instance %(inst)s: %(reason)s")
-                   % {'inst': instance.uuid, 'reason': node.last_error})
-            raise exception.InstanceDeployFailure(msg)
-
     def _build_instance(self, context, instance):
-        ironic.do_node_deploy(self.ironicclient, instance.node_uuid)
+        ironic.do_node_deploy(self.manager.ironicclient, instance.node_uuid)
 
-        timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
-                                                     instance)
+        timer = loopingcall.FixedIntervalLoopingCall(
+            self.manager.wait_for_active, instance)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
         LOG.info(_LI('Successfully provisioned Ironic node %s'),
                  instance.node_uuid)
@@ -323,7 +289,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
         for failure in flow_failures.values():
             if failure.check(*self.instance_cleaned_exc_types):
                 LOG.debug("Instance %s: destroy ironic node", instance.uuid)
-                ironic.destroy_node(self.ironicclient, instance.node_uuid)
+                ironic.destroy_node(self.manager.ironicclient,
+                                    instance.node_uuid)
                 return True
 
         return False
@@ -360,7 +327,7 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
                       OnFailureRescheduleTask(manager.engine_rpcapi),
                       SetInstanceInfoTask(manager.ironicclient),
                       BuildNetworkTask(manager),
-                      CreateInstanceTask(manager.ironicclient))
+                      CreateInstanceTask(manager))
 
     # Now load (but do not run) the flow using the provided initial data.
     return taskflow.engines.load(instance_flow, store=create_what)
