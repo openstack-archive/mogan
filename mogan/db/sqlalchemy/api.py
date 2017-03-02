@@ -316,7 +316,7 @@ class Connection(api.Connection):
         return model_query(context, models.InstanceNic).filter_by(
             instance_uuid=instance_uuid).all()
 
-    def instance_fault_create(context, values):
+    def instance_fault_create(self, context, values):
         """Create a new InstanceFault."""
 
         fault = models.InstanceFault()
@@ -327,7 +327,7 @@ class Connection(api.Connection):
             session.flush()
             return fault
 
-    def instance_fault_get_by_instance_uuids(context, instance_uuids):
+    def instance_fault_get_by_instance_uuids(self, context, instance_uuids):
         """Get all instance faults for the provided instance_uuids."""
         if not instance_uuids:
             return {}
