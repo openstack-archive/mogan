@@ -51,7 +51,7 @@ class InstanceFault(base.MoganObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get_latest_for_instance(cls, context, instance_uuid):
         db_faults = cls.dbapi.instance_fault_get_by_instance_uuids(
-            [instance_uuid])
+            context, [instance_uuid])
         if instance_uuid in db_faults and db_faults[instance_uuid]:
             return cls._from_db_object(context, cls(),
                                        db_faults[instance_uuid][0])
