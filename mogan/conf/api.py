@@ -62,27 +62,7 @@ opts = [
 opt_group = cfg.OptGroup(name='api',
                          title='Options for the mogan-api service')
 
-quota_opts = [
-    cfg.StrOpt('quota_driver',
-               help=_("Specify the quota driver which is used in Mogan "
-                      "service.")),
-    cfg.IntOpt('reservation_expire',
-               default=86400,
-               help=_('Number of seconds until a reservation expires')),
-    cfg.IntOpt('until_refresh',
-               default=0,
-               help=_('Count of reservations until usage is refreshed')),
-    cfg.IntOpt('max_age',
-               default=0,
-               help=_('Number of seconds between subsequent usage refreshes')),
-]
-
-opt_quota_group = cfg.OptGroup(name='quota',
-                               title='Options for the mogan quota')
-
 
 def register_opts(conf):
     conf.register_group(opt_group)
     conf.register_opts(opts, group=opt_group)
-    conf.register_group(opt_quota_group)
-    conf.register_opts(quota_opts, group=opt_quota_group)
