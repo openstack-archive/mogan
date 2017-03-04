@@ -23,6 +23,7 @@ from mogan.conf import glance
 from mogan.conf import ironic
 from mogan.conf import keystone
 from mogan.conf import neutron
+from mogan.conf import quota
 from mogan.conf import scheduler
 
 CONF = cfg.CONF
@@ -35,4 +36,5 @@ glance.register_opts(CONF)
 ironic.register_opts(CONF)
 keystone.register_opts(CONF)
 neutron.register_opts(CONF)
+quota.register_opts(CONF)
 scheduler.register_opts(CONF)

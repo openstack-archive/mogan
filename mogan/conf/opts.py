@@ -20,6 +20,7 @@ import mogan.conf.glance
 import mogan.conf.ironic
 import mogan.conf.keystone
 import mogan.conf.neutron
+import mogan.conf.quota
 import mogan.conf.scheduler
 
 _default_opt_lists = [
@@ -38,6 +39,7 @@ _opts = [
     ('ironic', mogan.conf.ironic.opts),
     ('keystone', mogan.conf.keystone.opts),
     ('neutron', mogan.conf.neutron.opts),
+    ('quota', mogan.conf.quota.opts),
     ('scheduler', mogan.conf.scheduler.opts),
 ]
 
