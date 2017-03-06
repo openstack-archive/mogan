@@ -197,14 +197,6 @@ class EngineManager(base_manager.BaseEngineManager):
             db_instance.power_state = node_power_state
             db_instance.save()
 
-    def _set_instance_obj_error_state(self, context, instance):
-        try:
-            instance.status = states.ERROR
-            instance.save()
-        except exception.InstanceNotFound:
-            LOG.debug('Instance has been destroyed from under us while '
-                      'trying to set it to ERROR', instance=instance)
-
     def destroy_networks(self, context, instance):
         LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(instance_nics)s",
                   {'uuid': instance.uuid,
