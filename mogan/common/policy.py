@@ -112,10 +112,14 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:set_lock_state',
                        'rule:default',
                        description='Lock/UnLock an instance'),
+    policy.RuleDefault('mogan:instance:set_provision_state:rebuild',
+                       'rule:default',
+                       description='Rebuild an instance'),
 ]
 
 FUNC_PARAMS_INTERESTED = {
-    'power': ['target']
+    'power': ['target'],
+    'provision': ['target']
 }
 
 

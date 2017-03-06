@@ -69,6 +69,11 @@ class EngineAPI(object):
         return cctxt.cast(context, 'set_power_state',
                           instance=instance, state=state)
 
+    def rebuild(self, context, instance):
+        """Signal to engine service to rebuild an instance."""
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        return cctxt.cast(context, 'rebuild', instance=instance)
+
     def get_ironic_node(self, context, instance_uuid, fields):
         """Signal to engine service to get a ironic node."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)

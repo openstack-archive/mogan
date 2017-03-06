@@ -105,6 +105,12 @@ def do_node_deploy(ironicclient, node_uuid):
                       ironic_states.ACTIVE)
 
 
+def do_node_rebuild(ironicclient, node_uuid):
+    # trigger the node rebuild
+    ironicclient.call("node.set_provision_state", node_uuid,
+                      ironic_states.REBUILD)
+
+
 def get_node_by_instance(ironicclient, instance_uuid, fields=None):
     if fields is None:
         fields = _NODE_FIELDS

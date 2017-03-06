@@ -279,6 +279,38 @@ class EngineManager(base_manager.BaseEngineManager):
                         {'node': instance.node_uuid, 'instance': instance.uuid,
                          'reason': six.text_type(e)})
 
+    def wait_for_active(self, instance):
+        """Wait for the node to be marked as ACTIVE in Ironic."""
+        instance.refresh()
+        if instance.status in (states.DELETING, states.ERROR, states.DELETED):
+            raise exception.InstanceDeployFailure(
+                _("Instance %s provisioning was aborted") % instance.uuid)
+
+        node = ironic.get_node_by_instance(self.ironicclient,
+                                           instance.uuid)
+        LOG.debug('Current ironic node state is %s', node.provision_state)
+        if node.provision_state == ironic_states.ACTIVE:
+            # job is done
+            LOG.debug("Ironic node %(node)s is now ACTIVE",
+                      dict(node=node.uuid))
+            raise loopingcall.LoopingCallDone()
+
+        if node.target_provision_state in (ironic_states.DELETED,
+                                           ironic_states.AVAILABLE):
+            # ironic is trying to delete it now
+            raise exception.InstanceNotFound(instance_id=instance.uuid)
+
+        if node.provision_state in (ironic_states.NOSTATE,
+                                    ironic_states.AVAILABLE):
+            # ironic already deleted it
+            raise exception.InstanceNotFound(instance_id=instance.uuid)
+
+        if node.provision_state == ironic_states.DEPLOYFAIL:
+            # ironic failed to deploy
+            msg = (_("Failed to provision instance %(inst)s: %(reason)s")
+                   % {'inst': instance.uuid, 'reason': node.last_error})
+            raise exception.InstanceDeployFailure(msg)
+
     def create_instance(self, context, instance, requested_networks,
                         request_spec=None, filter_properties=None):
         """Perform a deployment."""
@@ -424,6 +456,49 @@ class EngineManager(base_manager.BaseEngineManager):
         do_set_power_state()
         LOG.info(_LI('Successfully set node power state: %s'),
                  state, instance=instance)
+
+    def _rebuild(self, context, instance):
+        """Perform rebuild action on the specified instance."""
+
+        try:
+            ironic.do_node_rebuild(self.ironicclient, instance.node_uuid)
+        except (ironic_exc.InternalServerError,
+                ironic_exc.BadRequest) as e:
+            msg = (_("Failed to request Ironic to rebuild instance "
+                     "%(inst)s: %(reason)s") % {'inst': instance.uuid,
+                                                'reason': six.text_type(e)})
+            raise exception.InstanceDeployFailure(msg)
+
+        # Although the target provision state is REBUILD, it will actually go
+        # to ACTIVE once the redeploy is finished.
+        timer = loopingcall.FixedIntervalLoopingCall(self.wait_for_active,
+                                                     instance)
+        timer.start(interval=CONF.ironic.api_retry_interval).wait()
+
+    def rebuild(self, context, instance):
+        """Perform rebuild action on the specified instance."""
+
+        LOG.debug('Rebuild called for instance', instance=instance)
+        # Initialize state machine
+        fsm = states.machine.copy()
+        fsm.initialize(start_state=instance.status)
+
+        try:
+            self._rebuild(context, instance)
+        except Exception as e:
+            fsm.process_event('error')
+            instance.status = fsm.current_state
+            instance.save()
+            LOG.error(_LE("Rebuild instance %(uuid)s failed."
+                          "Exception: %(exception)s"),
+                      {"uuid": instance.uuid,
+                       "exception": e})
+            return
+
+        fsm.process_event('done')
+        instance.status = fsm.current_state
+        instance.save()
+        LOG.info(_LI('Instance was successfully rebuilt'), instance=instance)
 
     @messaging.expected_exceptions(exception.NodeNotFound)
     def get_ironic_node(self, context, instance_uuid, fields):
