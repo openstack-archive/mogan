@@ -89,7 +89,10 @@ STOPPED = 'stopped'
 REBUILDING = 'rebuilding'
 """ The server is in rebuilding process """
 
-STABLE_STATES = (ACTIVE, ERROR, DELETED, STOPPED)
+MAINTENANCE = 'maintenance'
+""" The server is in maintenance """
+
+STABLE_STATES = (ACTIVE, ERROR, DELETED, STOPPED, MAINTENANCE)
 """States that will not transition unless receiving a request."""
 
 UNSTABLE_STATES = (BUILDING, DELETING, POWERING_ON, POWERING_OFF, REBOOTING,
@@ -154,6 +157,9 @@ machine.add_transition(STOPPED, DELETING, 'delete')
 
 # from error* states
 machine.add_transition(ERROR, DELETING, 'delete')
+
+# from maintenance* states
+machine.add_transition(MAINTENANCE, DELETING, 'delete')
 
 # from *ing states
 machine.add_transition(BUILDING, ACTIVE, 'done')
