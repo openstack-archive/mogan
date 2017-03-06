@@ -53,6 +53,10 @@ opts = [
                default=600,
                help=_("Interval to sync power states between the database "
                       "and Ironic, in seconds.")),
+    cfg.IntOpt('sync_maintenance_interval',
+               default=600,
+               help=_("Interval to sync maintenance states between the "
+                      "database and Ironic, in seconds.")),
 ]
 
 

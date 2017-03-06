@@ -89,6 +89,9 @@ STOPPED = 'stopped'
 REBUILDING = 'rebuilding'
 """ The server is in rebuilding process """
 
+MAINTENANCE = 'maintenance'
+""" The server is in maintenance """
+
 STABLE_STATES = (ACTIVE, ERROR, DELETED, STOPPED)
 """States that will not transition unless receiving a request."""
 
