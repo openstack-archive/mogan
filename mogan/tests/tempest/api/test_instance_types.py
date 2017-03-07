@@ -16,8 +16,8 @@
 import six
 
 from tempest.common.utils import data_utils
+from tempest.lib import decorators
 from tempest.lib import exceptions as lib_exc
-from tempest import test
 
 from mogan.tests.tempest.api import base
 
@@ -34,7 +34,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
             resp = cls.baremetal_compute_client.create_instance_type(**body)
             cls.type_ids.append(resp['uuid'])
 
-    @test.idempotent_id('4b256d35-47a9-4195-8f7e-56ceb4ce4737')
+    @decorators.idempotent_id('4b256d35-47a9-4195-8f7e-56ceb4ce4737')
     def test_type_list(self):
         # List instance types
         type_list = self.baremetal_compute_client.list_instance_types()
@@ -47,7 +47,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
                          " instance_type(s) in a fetched list: %s" %
                          ', '.join(str(t) for t in missing_types))
 
-    @test.idempotent_id('f6ad64af-abc9-456c-9109-bc27cd9af635')
+    @decorators.idempotent_id('f6ad64af-abc9-456c-9109-bc27cd9af635')
     def test_type_create_show_delete(self):
         # Create an instance type
         body = {"name": 'mogan_type_create',
