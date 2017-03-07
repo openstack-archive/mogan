@@ -334,4 +334,12 @@ class ReservationNotFound(NotFound):
     message = _("Reservation %(uuid)s could not be found.")
 
 
+class InvalidToken(Invalid):
+    msg_fmt = _("Invalid token: %(token)s")
+
+
+class ConsoleNotAvailable(MoganException):
+    _msg_fmt = _("Console not available.")
+
+
 ObjectActionError = obj_exc.ObjectActionError
