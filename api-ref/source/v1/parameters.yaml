@@ -248,6 +248,12 @@ power_state:
   in: body
   required: true
   type: string
+power_state_target:
+  description: |
+    This field represents the requested state either "on", "off", or "reboot".
+  in: body
+  required: true
+  type: string
 project_id_body:
   description: |
     The UUID of the project in a multi-tenancy cloud.

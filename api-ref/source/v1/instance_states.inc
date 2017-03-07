@@ -60,7 +60,7 @@ Request
 .. rest_parameters:: parameters.yaml
 
     - instance_uuid: instance_ident
-    - target: power_state
+    - target: power_state_target
 
 **Example request to power off a Instance:**
 
