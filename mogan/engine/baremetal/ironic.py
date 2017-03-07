@@ -188,3 +188,11 @@ def get_portgroup_list(ironicclient, **kwargs):
 
 def set_power_state(ironicclient, node_uuid, state):
     ironicclient.call("node.set_power_state", node_uuid, state)
+
+
+def get_console(ironicclient, node_uuid):
+    return ironicclient.call('node.get_console', node_uuid)
+
+
+def set_console_mode(ironicclient, node_uuid, mode):
+    ironicclient.call('node.set_console_mode', node_uuid, mode)
