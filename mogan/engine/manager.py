@@ -439,3 +439,8 @@ class EngineManager(base_manager.BaseEngineManager):
                 azs.add(az)
 
         return {'availability_zones': list(azs)}
+
+    def get_console(self, context, instance_uuid=None, console_type=None):
+        node = self.driver.get_node_by_instance(instance_uuid)
+        node_uuid = node.uuid
+        return self.driver.get_console_by_node(node_uuid)
