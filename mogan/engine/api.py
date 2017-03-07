@@ -41,6 +41,15 @@ def check_instance_lock(function):
     return inner
 
 
+def check_instance_maintenance(function):
+    @six.wraps(function)
+    def inner(self, context, instance, *args, **kwargs):
+        if instance.status == states.MAINTENANCE:
+            raise exception.InstanceInMaintenance(instance_uuid=instance.uuid)
+        return function(self, context, instance, *args, **kwargs)
+    return inner
+
+
 class API(object):
     """API for interacting with the engine manager."""
 
@@ -264,6 +273,7 @@ class API(object):
         self._delete_instance(context, instance)
 
     @check_instance_lock
+    @check_instance_maintenance
     def power(self, context, instance, target):
         """Set power state of an instance."""
         LOG.debug("Going to try to set instance power state to %s",
@@ -282,6 +292,7 @@ class API(object):
         self.engine_rpcapi.set_power_state(context, instance, target)
 
     @check_instance_lock
+    @check_instance_maintenance
     def rebuild(self, context, instance):
         """Rebuild an instance."""
         fsm = states.machine.copy()

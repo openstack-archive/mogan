@@ -295,6 +295,10 @@ class InstanceIsLocked(Invalid):
     msg_fmt = _("Instance %(instance_uuid)s is locked")
 
 
+class InstanceInMaintenance(Invalid):
+    msg_fmt = _("Instance %(instance_uuid)s is in maintenance mode")
+
+
 class InvalidReservationExpiration(Invalid):
     message = _("Invalid reservation expiration %(expire)s.")
 

@@ -197,6 +197,64 @@ class EngineManager(base_manager.BaseEngineManager):
             db_instance.power_state = node_power_state
             db_instance.save()
 
+    @periodic_task.periodic_task(spacing=CONF.engine.sync_maintenance_interval,
+                                 run_immediately=True)
+    def _sync_maintenance_states(self, context):
+        """Align maintenance states between the database and the hypervisor."""
+
+        # Only fetching the necessary fields
+        node_fields = ('instance_uuid', 'maintenance')
+
+        try:
+            nodes = ironic.get_node_list(self.ironicclient,
+                                         associated=True,
+                                         fields=node_fields,
+                                         limit=0)
+        except Exception as e:
+            LOG.warning(
+                _LW("Failed to retrieve node list when synchronizing "
+                    "maintenance states: %(msg)s") % {"msg": e})
+            # Just retrun if we fail to get nodes maintenance state.
+            return
+
+        node_dict = {node.instance_uuid: node for node in nodes}
+
+        if not node_dict:
+            LOG.warning(_LW("While synchronizing instance maintenance states, "
+                            "found none node with instance associated on the "
+                            "hypervisor."))
+            return
+
+        db_instances = objects.Instance.list(context)
+        for instance in db_instances:
+            uuid = instance.uuid
+
+            # If instance in unstable states and the node goes to maintenance,
+            # just skip the syncing process as the pending task should be goes
+            # to error state instead.
+            if instance.status in states.UNSTABLE_STATES:
+                LOG.info(_LI("During sync_maintenance_state the instance "
+                             "has a pending task (%(task)s). Skip."),
+                         {'task': instance.status},
+                         instance=instance)
+                continue
+
+            if uuid not in node_dict:
+                continue
+
+            node_maintenance = node_dict[uuid].maintenance
+
+            if instance.status == states.MAINTENANCE and not node_maintenance:
+                # TODO(zhenguo): need to check whether we need states machine
+                # transition here, and currently we just move to ACTIVE state
+                # regardless of it's real power state which may need sync power
+                # state periodic task to correct it.
+                instance.status = states.ACTIVE
+                instance.save()
+            elif node_maintenance and instance.status != states.MAINTENANCE:
+                instance.status = states.MAINTENANCE
+                instance.save()
+
     def destroy_networks(self, context, instance):
         LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(instance_nics)s",
                   {'uuid': instance.uuid,
