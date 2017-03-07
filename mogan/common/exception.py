@@ -282,11 +282,6 @@ class FloatingIpMultipleFoundForAddress(MoganException):
     msg_fmt = _("Multiple floating IPs are found for address %(address)s.")
 
 
-# TODO(zhenguo) Change to inherit from QuotaError.
-class PortLimitExceeded(MoganException):
-    msg_fmt = _("Maximum number of ports exceeded")
-
-
 class NetworkNotFound(NotFound):
     msg_fmt = _("Network %(network_id)s could not be found.")
 
@@ -318,6 +313,10 @@ class QuotaResourceUnknown(QuotaNotFound):
 
 class OverQuota(MoganException):
     message = _("Quota exceeded for resources: %(overs)s")
+
+
+class PortLimitExceeded(OverQuota):
+    msg_fmt = _("Maximum number of ports exceeded")
 
 
 class QuotaAlreadyExists(MoganException):
