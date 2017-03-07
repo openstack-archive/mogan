@@ -254,6 +254,12 @@ project_id_body:
   in: body
   required: true
   type: string
+provision_state:
+  description: |
+    One of the provisioning verbs, currently only support rebuild.
+  in: body
+  required: true
+  type: string
 type_description:
   description: |
     The description of the type.

@@ -96,3 +96,30 @@ Request
 **Example request to unlock an Instance:**
 
 .. literalinclude:: samples/instance_states/unlock-instance.json
+
+
+Change Instance Provision State
+===============================
+
+.. rest_method:: PUT /v1/instances/{instance_uuid}/states/provision
+
+Request a change to the Instance's provision state.
+
+Normal response code: 202
+
+Error codes:
+    - 409 (ClientError)
+    - 400 (BadRequest)
+    - 403 (Forbidden)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+    - instance_uuid: instance_ident
+    - target: provision_state
+
+**Example request to rebuild an Instance:**
+
+.. literalinclude:: samples/instance_states/rebuild-instance.json
