@@ -113,6 +113,13 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
+    def get_serial_console_by_instance(self, context, instance):
+        """Get console info by instance.
+
+        :param instance: instance to get its console info.
+        """
+        raise NotImplementedError()
+
 
 def load_engine_driver(engine_driver):
     """Load a engine driver module.

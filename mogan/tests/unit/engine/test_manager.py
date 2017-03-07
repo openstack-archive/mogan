@@ -19,6 +19,7 @@ import mock
 from oslo_config import cfg
 from oslo_utils import uuidutils
 
+from mogan.common import ironic
 from mogan.common import states
 from mogan.engine.baremetal.ironic.driver import ironic_states
 from mogan.engine.baremetal.ironic import IronicDriver
@@ -138,3 +139,26 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         self._stop_service()
 
         self.assertItemsEqual(['az1', 'az2'], azs['availability_zones'])
+
+    @mock.patch.object(ironic.IronicClientWrapper, 'call')
+    def test_get_serial_console(self, mock_ironic_call):
+        fake_node = mock.MagicMock()
+        fake_node.uuid = uuidutils.generate_uuid()
+        fake_console_url = {
+            "url": "http://localhost:4321", "type": "shellinabox"}
+        mock_ironic_call.side_effect = [
+            fake_node,
+            {"console_enabled": True, "console_info": fake_console_url},
+            mock.MagicMock(),
+            {"console_enabled": False, "console_info": fake_console_url},
+            mock.MagicMock(),
+            {"console_enabled": True, "console_info": fake_console_url}]
+        self._start_service()
+        console = self.service.get_serial_console(
+            self.context, 'fake-instance-uuid')
+        self._stop_service()
+        self.assertEqual(4321, console['port'])
+        self.assertTrue(
+            console['access_url'].startswith('http://127.0.0.1:8866/?token='))
+        self.assertEqual('localhost', console['host'])
+        self.assertIn('token', console)
