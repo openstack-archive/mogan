@@ -250,7 +250,8 @@ power_state:
   type: string
 power_state_target:
   description: |
-    This field represents the requested state either "on", "off", or "reboot".
+    This field represents the requested state either "on", "off", "soft_off",
+    "reboot", or "soft_reboot".
   in: body
   required: true
   type: string

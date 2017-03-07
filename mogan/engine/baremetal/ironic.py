@@ -187,4 +187,11 @@ def get_portgroup_list(ironicclient, **kwargs):
 
 
 def set_power_state(ironicclient, node_uuid, state):
-    ironicclient.call("node.set_power_state", node_uuid, state)
+    if state == "soft_off":
+        ironicclient.call("node.set_power_state",
+                          node_uuid, "off", soft=True)
+    elif state == "soft_reboot":
+        ironicclient.call("node.set_power_state",
+                          node_uuid, "reboot", soft=True)
+    else:
+        ironicclient.call("node.set_power_state", node_uuid, state)

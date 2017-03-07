@@ -110,7 +110,7 @@ class InstanceStatesController(InstanceControllerBase):
                  state is not valid or if the instance is in CLEANING state.
 
         """
-        if target not in ["on", "off", "reboot"]:
+        if target not in ["on", "off", "reboot", "soft_off", "soft_reboot"]:
             # ironic will throw InvalidStateRequested
             raise exception.InvalidActionParameterValue(
                 value=target, action="power",
