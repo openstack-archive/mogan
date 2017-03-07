@@ -43,7 +43,9 @@ NOSTATE = None
 POWER_ACTION_MAP = {
     'on': 'start',
     'off': 'stop',
+    'soft_off': 'soft_stop',
     'reboot': 'reboot',
+    'soft_reboot': 'soft_reboot',
 }
 
 
@@ -80,8 +82,14 @@ POWERING_ON = 'powering-on'
 POWERING_OFF = 'powering-off'
 """ The server is in powering off """
 
+SOFT_POWERING_OFF = 'soft-powering-off'
+""" The server is in soft powering off """
+
 REBOOTING = 'rebooting'
 """ The server is in rebooting """
+
+SOFT_REBOOTING = 'soft-rebooting'
+""" The server is in soft rebooting """
 
 STOPPED = 'stopped'
 """ The server is powered off """
@@ -92,7 +100,8 @@ REBUILDING = 'rebuilding'
 STABLE_STATES = (ACTIVE, ERROR, DELETED, STOPPED)
 """States that will not transition unless receiving a request."""
 
-UNSTABLE_STATES = (BUILDING, DELETING, POWERING_ON, POWERING_OFF, REBOOTING,
+UNSTABLE_STATES = (BUILDING, DELETING, POWERING_ON, POWERING_OFF,
+                   SOFT_POWERING_OFF, REBOOTING, SOFT_REBOOTING,
                    REBUILDING)
 """States that can be changed without external request."""
 
@@ -136,15 +145,19 @@ machine.add_state(POWERING_ON, target=ACTIVE, **watchers)
 
 # Add power off* states
 machine.add_state(POWERING_OFF, target=STOPPED, **watchers)
+machine.add_state(SOFT_POWERING_OFF, target=STOPPED, **watchers)
 
 # Add reboot* states
 machine.add_state(REBOOTING, target=ACTIVE, **watchers)
+machine.add_state(SOFT_REBOOTING, target=ACTIVE, **watchers)
 
 
 # from active* states
 machine.add_transition(ACTIVE, REBUILDING, 'rebuild')
 machine.add_transition(ACTIVE, POWERING_OFF, 'stop')
+machine.add_transition(ACTIVE, SOFT_POWERING_OFF, 'soft_stop')
 machine.add_transition(ACTIVE, REBOOTING, 'reboot')
+machine.add_transition(ACTIVE, SOFT_REBOOTING, 'soft_reboot')
 machine.add_transition(ACTIVE, DELETING, 'delete')
 
 # from stopped* states
@@ -161,7 +174,9 @@ machine.add_transition(DELETING, DELETED, 'done')
 machine.add_transition(REBUILDING, ACTIVE, 'done')
 machine.add_transition(POWERING_ON, ACTIVE, 'done')
 machine.add_transition(POWERING_OFF, STOPPED, 'done')
+machine.add_transition(SOFT_POWERING_OFF, STOPPED, 'done')
 machine.add_transition(REBOOTING, ACTIVE, 'done')
+machine.add_transition(SOFT_REBOOTING, ACTIVE, 'done')
 
 # All unstable states are allowed to transition to ERROR and DELETING
 for state in UNSTABLE_STATES:
