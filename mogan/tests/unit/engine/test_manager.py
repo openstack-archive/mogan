@@ -17,6 +17,7 @@
 
 import mock
 from oslo_config import cfg
+from oslo_utils import uuidutils
 
 from mogan.common import states
 from mogan.engine.baremetal.ironic.driver import ironic_states
@@ -161,3 +162,30 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         self._stop_service()
 
         self.assertItemsEqual(['az1', 'az2'], azs['availability_zones'])
+
+    @mock.patch.object(IronicDriver, 'set_console_mode')
+    @mock.patch.object(IronicDriver, 'get_console')
+    @mock.patch.object(IronicDriver, 'get_node_by_instance')
+    def test_get_console(self, get_node_mock, get_console_mock,
+                         set_console_mock, refresh_cache_mock):
+        fake_node = mock.MagicMock()
+        fake_node.uuid = uuidutils.generate_uuid()
+        get_node_mock.return_value = fake_node
+        fake_console_url = {
+            "url": "http://localhost:4321", "type": "shellinabox"}
+        get_console_mock.side_effect = [
+            {"console_enabled": True, "console_info": fake_console_url},
+            {"console_enabled": False, "console_info": fake_console_url},
+            {"console_enabled": True, "console_info": fake_console_url}]
+        refresh_cache_mock.side_effect = None
+        self._start_service()
+        console = self.service.get_console(self.context, 'fake-instance-uuid')
+        self._stop_service()
+        set_console_calls = [mock.call(mock.ANY, fake_node.uuid, False),
+                             mock.call(mock.ANY, fake_node.uuid, True)]
+        self.assertEqual(set_console_calls, set_console_mock.call_args_list)
+        self.assertEqual(4321, console['port'])
+        self.assertTrue(
+            console['access_url'].startswith('http://127.0.0.1:8866/?token='))
+        self.assertEqual('localhost', console['host'])
+        self.assertIn('token', console)

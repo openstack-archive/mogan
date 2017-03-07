@@ -25,6 +25,7 @@ from mogan.conf import keystone
 from mogan.conf import neutron
 from mogan.conf import quota
 from mogan.conf import scheduler
+from mogan.conf import shellinabox
 
 CONF = cfg.CONF
 
@@ -38,3 +39,4 @@ keystone.register_opts(CONF)
 neutron.register_opts(CONF)
 quota.register_opts(CONF)
 scheduler.register_opts(CONF)
+shellinabox.register_opts(CONF)
