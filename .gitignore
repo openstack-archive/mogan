@@ -23,6 +23,7 @@ pip-log.txt
 
 # Unit test / coverage reports
 cover/
+cover-master
 .coverage*
 !.coveragerc
 .tox
