@@ -83,7 +83,6 @@ class TestInstances(v1_test.APITestV1):
         self.network_api = mock.Mock()
         self.useFixture(mockpatch.Patch('mogan.network.api.API',
                                         return_value=self.network_api))
-        self.rpc_api.get_ironic_node.return_value = _get_fake_node()
         self.rpc_api.list_availability_zones.return_value = {
             'availability_zones': ['test_zone']}
         self.image_api.get.return_value = _get_fake_image()

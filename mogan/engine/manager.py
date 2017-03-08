@@ -558,26 +558,6 @@ class EngineManager(base_manager.BaseEngineManager):
         instance.save()
         LOG.info(_LI('Instance was successfully rebuilt'), instance=instance)
 
-    @messaging.expected_exceptions(exception.NodeNotFound)
-    def get_ironic_node(self, context, instance_uuid, fields):
-        """Get a ironic node."""
-        try:
-            node = ironic.get_node_by_instance(self.ironicclient,
-                                               instance_uuid, fields)
-        except ironic_exc.NotFound:
-            msg = (_("Error retrieving the node by instance %(instance)s.")
-                   % {'instance': instance_uuid})
-            LOG.debug(msg)
-            raise exception.NodeNotFound(msg)
-
-        return node.to_dict()
-
-    def get_ironic_node_list(self, context, fields):
-        """Get an ironic node list."""
-        nodes = ironic.get_node_list(self.ironicclient, associated=True,
-                                     limit=0, fields=fields)
-        return {'nodes': [node.to_dict() for node in nodes]}
-
     def list_availability_zones(self, context):
         """Get availability zone list."""
         with self._lock:

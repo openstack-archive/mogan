@@ -175,31 +175,6 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         get_node_mock.assert_called_once_with(mock.ANY, instance.uuid)
         get_power_mock.assert_called_once_with(mock.ANY, instance.uuid)
 
-    @mock.patch.object(ironic, 'get_node_by_instance')
-    def test_get_ironic_node(self, get_node_mock, refresh_cache_mock):
-        instance = obj_utils.create_test_instance(self.context)
-        get_node_mock.return_value = mock.MagicMock()
-        refresh_cache_mock.side_effect = None
-        self._start_service()
-
-        self.service.get_ironic_node(self.context, instance.uuid, [])
-        self._stop_service()
-
-        get_node_mock.assert_called_once_with(mock.ANY, instance.uuid, [])
-
-    @mock.patch.object(ironic, 'get_node_list')
-    def test_get_ironic_node_list(self, get_node_list_mock,
-                                  refresh_cache_mock):
-        get_node_list_mock.return_value = mock.MagicMock()
-        refresh_cache_mock.side_effect = None
-        self._start_service()
-
-        self.service.get_ironic_node_list(self.context, [])
-        self._stop_service()
-
-        get_node_list_mock.assert_called_once_with(mock.ANY, associated=True,
-                                                   limit=0, fields=[])
-
     def test_list_availability_zone(self, refresh_cache_mock):
         refresh_cache_mock.side_effect = None
         node1 = mock.MagicMock()
