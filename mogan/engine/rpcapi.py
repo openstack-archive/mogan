@@ -81,12 +81,6 @@ class EngineAPI(object):
                           instance_uuid=instance_uuid,
                           fields=fields)
 
-    def get_ironic_node_list(self, context, fields):
-        """Signal to engine service to get ironic node list."""
-        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.call(context, 'get_ironic_node_list',
-                          fields=fields)
-
     def list_availability_zones(self, context):
         """Signal to engine service to get availability zone list."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
