@@ -106,9 +106,8 @@ class Quota(base.MoganObject, object_base.VersionedObjectDictCompat):
 
     def reserve(self, context, expire=None, project_id=None, **deltas):
         """reserve the Quota."""
-        return self.quota_driver.reserver(context, self.resources, deltas,
-                                          expire=expire,
-                                          project_id=project_id)
+        return self.quota_driver.reserve(context, self.resources, deltas,
+                                         expire=expire, project_id=project_id)
 
     def commit(self, context, reservations, project_id=None):
         self.quota_driver.commit(context, reservations, project_id=project_id)

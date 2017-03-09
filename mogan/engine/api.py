@@ -28,6 +28,7 @@ from mogan.engine import rpcapi
 from mogan import image
 from mogan import network
 from mogan import objects
+from mogan.objects import quota
 
 LOG = log.getLogger(__name__)
 
@@ -58,6 +59,8 @@ class API(object):
         self.image_api = image_api or image.API()
         self.engine_rpcapi = rpcapi.EngineAPI()
         self.network_api = network.API()
+        self.quota = quota.Quota()
+        self.quota.register_resource(objects.quota.InstanceResource())
 
     def _get_image(self, context, image_uuid):
         return self.image_api.get(context, image_uuid)
@@ -204,8 +207,14 @@ class API(object):
                       'max_net_count': max_net_count})
             max_count = max_net_count
 
+        reserve_opts = {'instances': 1}
+        reservations = self.quota.reserve(context, **reserve_opts)
+
         instances = self._provision_instances(context, base_options,
                                               min_count, max_count)
+
+        if reservations:
+            self.quota.commit(context, reservations)
 
         if not availability_zone:
             availability_zone = CONF.engine.default_schedule_zone
@@ -264,6 +273,10 @@ class API(object):
             LOG.debug("Instance is not found while deleting",
                       instance=instance)
             return
+        reserve_opts = {'instances': -1}
+        reservations = self.quota.reserve(context, **reserve_opts)
+        if reservations:
+            self.quota.commit(context, reservations)
         self.engine_rpcapi.delete_instance(context, instance)
 
     @check_instance_lock
