@@ -88,12 +88,11 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_inst_create.assert_has_calls(calls)
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'create_instance')
-    @mock.patch('mogan.engine.api.API._provision_instances')
     @mock.patch('mogan.engine.api.API._get_image')
     @mock.patch('mogan.engine.api.API._validate_and_build_base_options')
     @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
     def test_create(self, mock_list_az, mock_validate, mock_get_image,
-                    mock_provision, mock_create):
+                    mock_create):
         instance_type = self._create_instance_type()
 
         base_options = {'image_uuid': 'fake-uuid',
@@ -109,11 +108,14 @@ class ComputeAPIUnitTest(base.DbTestCase):
         max_count = 2
         mock_validate.return_value = (base_options, max_count)
         mock_get_image.side_effect = None
-        mock_provision.return_value = [mock.MagicMock()
-                                       for i in range(max_count)]
         mock_create.return_value = mock.MagicMock()
         mock_list_az.return_value = {'availability_zones': ['test_az']}
         requested_networks = [{'uuid': 'fake'}]
+
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        before_in_use = 0
+        if res.get('instances') is not None:
+            before_in_use = res.get('instances').in_use
 
         self.engine_api.create(
             self.context,
@@ -132,10 +134,11 @@ class ComputeAPIUnitTest(base.DbTestCase):
             self.context, instance_type, 'fake-uuid', 'fake-name',
             'fake-descritpion', 'test_az', {'k1', 'v1'}, requested_networks,
             max_count)
-        mock_provision.assert_called_once_with(self.context, base_options,
-                                               min_count, max_count)
         self.assertTrue(mock_create.called)
         self.assertTrue(mock_get_image.called)
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        after_in_use = res.get('instances').in_use
+        self.assertEqual(before_in_use + 1, after_in_use)
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
     def test_create_with_invalid_az(self, mock_list_az):
@@ -155,6 +158,41 @@ class ComputeAPIUnitTest(base.DbTestCase):
             [{'uuid': 'fake'}])
 
         mock_list_az.assert_called_once_with(self.context)
+
+    @mock.patch('mogan.engine.api.API._get_image')
+    @mock.patch('mogan.engine.api.API._validate_and_build_base_options')
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
+    def test_create_over_quota_limit(self, mock_list_az, mock_validate,
+                                     mock_get_image):
+        instance_type = self._create_instance_type()
+
+        base_options = {'image_uuid': 'fake-uuid',
+                        'status': states.BUILDING,
+                        'user_id': 'fake-user',
+                        'project_id': 'fake-project',
+                        'instance_type_uuid': 'fake-type-uuid',
+                        'name': 'fake-name',
+                        'description': 'fake-description',
+                        'extra': {'k1', 'v1'},
+                        'availability_zone': 'test_az'}
+        min_count = 11
+        max_count = 20
+        mock_validate.return_value = (base_options, max_count)
+        mock_get_image.side_effect = None
+        mock_list_az.return_value = {'availability_zones': ['test_az']}
+        requested_networks = [{'uuid': 'fake'}]
+
+        self.assertRaises(
+            exception.OverQuota,
+            self.engine_api.create,
+            instance_type,
+            'fake-uuid',
+            'test_az',
+            {'k1', 'v1'},
+            requested_networks,
+            min_count,
+            max_count
+            )
 
     def _create_fake_instance_obj(self, fake_instance):
         fake_instance_obj = objects.Instance(self.context, **fake_instance)
