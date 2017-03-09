@@ -130,49 +130,6 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         return False
 
 
-class SetInstanceInfoTask(flow_utils.MoganTask):
-    """Set instance info to baremetal node and validate it."""
-
-    def __init__(self, driver):
-        requires = ['instance', 'context']
-        super(SetInstanceInfoTask, self).__init__(addons=[ACTION],
-                                                  requires=requires)
-        self.driver = driver
-        # These exception types will trigger the instance info to be cleaned.
-        self.instance_info_cleaned_exc_types = [
-            exception.ValidationError,
-            exception.InterfacePlugException,
-            exception.NetworkError,
-        ]
-
-    def execute(self, context, instance):
-        node = self.driver.get_node(instance.node_uuid)
-        self.driver.set_instance_info(instance, node)
-        # validate we are ready to do the deploy
-        validate_chk = self.driver.validate_node(instance.node_uuid)
-
-        if (not validate_chk.deploy.get('result')
-                or not validate_chk.power.get('result')):
-            raise exception.ValidationError(_(
-                "Ironic node: %(id)s failed to validate."
-                " (deploy: %(deploy)s, power: %(power)s)")
-                % {'id': instance.node_uuid,
-                   'deploy': validate_chk.deploy,
-                   'power': validate_chk.power})
-
-    def revert(self, context, result, flow_failures, instance, **kwargs):
-        # Check if we have a cause which need to clean up baremetal node
-        # instance info.
-        for failure in flow_failures.values():
-            if failure.check(*self.instance_info_cleaned_exc_types):
-                LOG.debug("Instance %s: cleaning up node instance info",
-                          instance.uuid)
-                self.driver.unset_instance_info(instance)
-                return True
-
-        return False
-
-
 class BuildNetworkTask(flow_utils.MoganTask):
     """Build network for the instance."""
 
@@ -186,6 +143,8 @@ class BuildNetworkTask(flow_utils.MoganTask):
             exception.NetworkError,
             # include instance create task failure here
             exception.InstanceDeployFailure,
+            exception.ValidationError,
+            exception.InstanceNotFound,
             loopingcall.LoopingCallTimeOut,
         ]
 
@@ -262,31 +221,28 @@ class BuildNetworkTask(flow_utils.MoganTask):
 class CreateInstanceTask(flow_utils.MoganTask):
     """Build and deploy the instance."""
 
-    def __init__(self, manager):
+    def __init__(self, driver):
         requires = ['instance', 'context']
         super(CreateInstanceTask, self).__init__(addons=[ACTION],
                                                  requires=requires)
-        self.manager = manager
+        self.driver = driver
         # These exception types will trigger the instance to be cleaned.
         self.instance_cleaned_exc_types = [
             exception.InstanceDeployFailure,
             loopingcall.LoopingCallTimeOut,
         ]
 
-    def _build_instance(self, context, instance):
-        self.manager.driver.do_node_deploy(instance)
+    def execute(self, context, instance):
+        self.driver.spawn(context, instance)
         LOG.info(_LI('Successfully provisioned Ironic node %s'),
                  instance.node_uuid)
-
-    def execute(self, context, instance):
-        self._build_instance(context, instance)
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Check if we have a cause which need to clean up instance.
         for failure in flow_failures.values():
             if failure.check(*self.instance_cleaned_exc_types):
                 LOG.debug("Instance %s: destroy ironic node", instance.uuid)
-                self.manager.driver.destroy(instance)
+                self.driver.destroy(instance)
                 return True
 
         return False
@@ -300,7 +256,6 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
     This flow will do the following:
 
     1. Schedule a node to create instance
-    2. Set instance info to baremetal node and validate it's ready to deploy
     3. Build networks for the instance and set port id back to baremetal port
     4. Do node deploy and handle errors.
     """
@@ -321,9 +276,8 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
 
     instance_flow.add(ScheduleCreateInstanceTask(manager),
                       OnFailureRescheduleTask(manager.engine_rpcapi),
-                      SetInstanceInfoTask(manager.driver),
                       BuildNetworkTask(manager),
-                      CreateInstanceTask(manager))
+                      CreateInstanceTask(manager.driver))
 
     # Now load (but do not run) the flow using the provided initial data.
     return taskflow.engines.load(instance_flow, store=create_what)

@@ -57,23 +57,6 @@ class CreateInstanceFlowTestCase(base.TestCase):
                                               fake_filter_props)
         self.assertEqual(fake_uuid, instance_obj.node_uuid)
 
-    @mock.patch.object(IronicDriver, 'validate_node')
-    @mock.patch.object(IronicDriver, 'set_instance_info')
-    @mock.patch.object(IronicDriver, 'get_node')
-    def test_set_instance_info_task_execute(self, mock_get_node, mock_set_inst,
-                                            mock_validate):
-        flow_manager = manager.EngineManager('test-host', 'test-topic')
-        task = create_instance.SetInstanceInfoTask(flow_manager.driver)
-        instance_obj = obj_utils.get_test_instance(self.ctxt)
-        mock_get_node.side_effect = None
-        mock_set_inst.side_effect = None
-        mock_validate.side_effect = None
-
-        task.execute(self.ctxt, instance_obj)
-        mock_get_node.assert_called_once_with(instance_obj.node_uuid)
-        mock_set_inst.assert_called_once_with(instance_obj, mock.ANY)
-        mock_validate.assert_called_once_with(instance_obj.node_uuid)
-
     @mock.patch.object(objects.instance.Instance, 'save')
     @mock.patch.object(create_instance.BuildNetworkTask, '_build_networks')
     def test_create_network_task_execute(self, mock_build_networks, mock_save):
@@ -89,13 +72,13 @@ class CreateInstanceFlowTestCase(base.TestCase):
                                                     instance_obj,
                                                     fake_requested_networks)
 
-    @mock.patch.object(create_instance.CreateInstanceTask, '_build_instance')
-    def test_create_instance_task_execute(self, mock_build_inst):
-        fake_ironicclient = mock.MagicMock()
+    @mock.patch.object(IronicDriver, 'spawn')
+    def test_create_instance_task_execute(self, mock_spawn):
+        flow_manager = manager.EngineManager('test-host', 'test-topic')
         task = create_instance.CreateInstanceTask(
-            fake_ironicclient)
+            flow_manager.driver)
         instance_obj = obj_utils.get_test_instance(self.ctxt)
-        mock_build_inst.side_effect = None
+        mock_spawn.side_effect = None
 
         task.execute(self.ctxt, instance_obj)
-        mock_build_inst.assert_called_once_with(self.ctxt, instance_obj)
+        mock_spawn.assert_called_once_with(self.ctxt, instance_obj)
