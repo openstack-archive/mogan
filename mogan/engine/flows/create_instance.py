@@ -286,7 +286,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
         for failure in flow_failures.values():
             if failure.check(*self.instance_cleaned_exc_types):
                 LOG.debug("Instance %s: destroy ironic node", instance.uuid)
-                self.manger.driver.destroy(instance)
+                self.manager.driver.destroy(instance)
                 return True
 
         return False
