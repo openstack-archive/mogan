@@ -114,14 +114,6 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def set_instance_info(self, instance, node):
-        """Associate the node with an instance.
-
-        :param instance: mogan instance object.
-        :param node: node object.
-        """
-        raise NotImplementedError()
-
     def unset_instance_info(self, instance):
         """Disassociate the node with an instance.
 
@@ -129,10 +121,11 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def do_node_deploy(self, instance):
-        """Trigger node deploy process.
+    def spawn(self, context, instance):
+        """Create a new instance on the provision platform.
 
-        :param instance: instance to deploy.
+        :param context: security context
+        :param instance: mogan instance object.
         """
         raise NotImplementedError()
 
