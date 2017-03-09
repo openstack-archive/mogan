@@ -28,6 +28,7 @@ from mogan.engine import rpcapi
 from mogan import image
 from mogan import network
 from mogan import objects
+from mogan.objects import quota
 
 LOG = log.getLogger(__name__)
 
@@ -58,6 +59,8 @@ class API(object):
         self.image_api = image_api or image.API()
         self.engine_rpcapi = rpcapi.EngineAPI()
         self.network_api = network.API()
+        self.quota = quota.Quota()
+        self.quota.register_resource(objects.quota.InstanceResource())
 
     def _get_image(self, context, image_uuid):
         return self.image_api.get(context, image_uuid)
@@ -133,14 +136,31 @@ class API(object):
         return instance
 
     def _check_num_instances_quota(self, context, min_count, max_count):
-        # TODO(little): check quotas and return reserved quotas
-        return max_count, None
+        ins_resource = self.quota.resources['instances']
+        quotas = self.quota.get_quota_limit_and_usage(context,
+                                                      {'instances':
+                                                       ins_resource},
+                                                      context.tenant)
+        limit = quotas['instances']['limit']
+        in_use = quotas['instances']['in_use']
+        reserved = quotas['instances']['reserved']
+        available_quota = limit - in_use - reserved
+        if max_count <= available_quota:
+            return max_count
+        elif min_count <= available_quota and max_count > available_quota:
+            return available_quota
+        else:
+            raise exception.OverQuota(overs='instances')
 
     def _provision_instances(self, context, base_options,
                              min_count, max_count):
-        # TODO(little): finish to return num_instances according quota
-        num_instances, quotas = self._check_num_instances_quota(
+        # Return num_instances according quota
+        num_instances = self._check_num_instances_quota(
             context, min_count, max_count)
+
+        # Create the instances reservations
+        reserve_opts = {'instances': num_instances}
+        reservations = self.quota.reserve(context, **reserve_opts)
 
         LOG.debug("Going to run %s instances...", num_instances)
 
@@ -164,8 +184,11 @@ class API(object):
                         except exception.ObjectActionError:
                             pass
                 finally:
-                    # TODO(little): quota release
-                    pass
+                    self.quota.rollback(context, reservations)
+
+        # Commit instances reservations
+        if reservations:
+            self.quota.commit(context, reservations)
 
         return instances
 
@@ -261,6 +284,10 @@ class API(object):
             LOG.debug("Instance is not found while deleting",
                       instance=instance)
             return
+        reserve_opts = {'instances': -1}
+        reservations = self.quota.reserve(context, **reserve_opts)
+        if reservations:
+            self.quota.commit(context, reservations)
         self.engine_rpcapi.delete_instance(context, instance)
 
     @check_instance_lock

@@ -23,6 +23,7 @@ from oslo_utils import importutils
 from oslo_utils import timeutils
 from oslo_versionedobjects import base as object_base
 import six
+from stevedore import driver
 
 from mogan.common import exception
 from mogan.db import api as dbapi
@@ -50,7 +51,8 @@ class Quota(base.MoganObject, object_base.VersionedObjectDictCompat):
 
     def __init__(self, *args, **kwargs):
         super(Quota, self).__init__(*args, **kwargs)
-        self.quota_driver = importutils.import_object(CONF.quota.quota_driver)
+        self.quota_driver = driver.DriverManager(
+            'mogan.quota.backend_driver', CONF.quota.quota_driver).driver
         self._resources = {}
 
     @property
@@ -106,9 +108,8 @@ class Quota(base.MoganObject, object_base.VersionedObjectDictCompat):
 
     def reserve(self, context, expire=None, project_id=None, **deltas):
         """reserve the Quota."""
-        return self.quota_driver.reserver(context, self.resources, deltas,
-                                          expire=expire,
-                                          project_id=project_id)
+        return self.quota_driver.reserve(context, self.resources, deltas,
+                                         expire=expire, project_id=project_id)
 
     def commit(self, context, reservations, project_id=None):
         self.quota_driver.commit(context, reservations, project_id=project_id)
@@ -150,6 +151,10 @@ class Quota(base.MoganObject, object_base.VersionedObjectDictCompat):
         for resource in resources:
             self.register_resource(resource)
 
+    def get_quota_limit_and_usage(self, context, resources, project_id):
+        return self.quota_driver.get_project_quotas(context, resources,
+                                                    project_id, usages=True)
+
 
 class DbQuotaDriver(object):
 
@@ -159,9 +164,9 @@ class DbQuotaDriver(object):
     The default driver utilizes the local database.
     """
 
-    def get_project_quotas(self, context, resources, project_id,
-                           quota_class=None, defaults=True,
-                           usages=True):
+    dbapi = dbapi.get_instance()
+
+    def get_project_quotas(self, context, resources, project_id, usages=True):
         """Retrieve quotas for a project.
 
         Given a list of resources, retrieve the quotas for the given
@@ -170,32 +175,31 @@ class DbQuotaDriver(object):
         :param context: The request context, for access checks.
         :param resources: A dictionary of the registered resources.
         :param project_id: The ID of the project to return quotas for.
-        :param quota_class: If project_id != context.tenant, the
-                            quota class cannot be determined.  This
-                            parameter allows it to be specified.  It
-                            will be ignored if project_id ==
-                            context.tenant.
-        :param defaults: If True, the quota class value (or the
-                         default value, if there is no value from the
-                         quota class) will be reported if there is no
-                         specific value for the resource.
         :param usages: If True, the current in_use, reserved and allocated
                        counts will also be returned.
         """
 
         quotas = {}
-        project_quotas = dbapi.quota_get_all_by_project(context, project_id)
+        project_quotas = {}
+        res = self.dbapi.quota_get_all_by_project(context, project_id)
+        for p_quota in res:
+            project_quotas[p_quota.resource_name] = p_quota.hard_limit
+        if project_quotas == {}:
+            self.dbapi.quota_create(context, {'resource_name': 'instances',
+                                              'project_id': project_id,
+                                              'hard_limit': 10,
+                                              'allocated': 0})
+            project_quotas['instances'] = 10
         allocated_quotas = None
         if usages:
-            project_usages = dbapi.quota_usage_get_all_by_project(context,
-                                                                  project_id)
-            allocated_quotas = dbapi.quota_allocated_get_all_by_project(
+            project_usages = self.dbapi.quota_usage_get_all_by_project(
+                context, project_id)
+            allocated_quotas = self.dbapi.quota_allocated_get_all_by_project(
                 context, project_id)
             allocated_quotas.pop('project_id')
 
         for resource in resources.values():
-            # Omit default/quota class values
-            if not defaults and resource.name not in project_quotas:
+            if resource.name not in project_quotas:
                 continue
 
             quota_val = project_quotas.get(resource.name)
@@ -250,8 +254,7 @@ class DbQuotaDriver(object):
 
         # Grab and return the quotas (without usages)
         quotas = self.get_project_quotas(context, sub_resources,
-                                         project_id,
-                                         context.quota_class, usages=False)
+                                         project_id, usages=False)
 
         return {k: v['limit'] for k, v in quotas.items()}
 
@@ -313,10 +316,11 @@ class DbQuotaDriver(object):
                              project_id)
 
     def _reserve(self, context, resources, quotas, deltas, expire, project_id):
-        return dbapi.quota_reserve(context, resources, quotas, deltas, expire,
-                                   CONF.quota.until_refresh,
-                                   CONF.quota.max_age,
-                                   project_id=project_id)
+        return self.dbapi.quota_reserve(context, resources, quotas, deltas,
+                                        expire,
+                                        CONF.quota.until_refresh,
+                                        CONF.quota.max_age,
+                                        project_id)
 
     def commit(self, context, reservations, project_id=None):
         """Commit reservations.
@@ -332,7 +336,8 @@ class DbQuotaDriver(object):
         if project_id is None:
             project_id = context.tenant
 
-        dbapi.reservation_commit(context, reservations, project_id=project_id)
+        self.dbapi.reservation_commit(context, reservations,
+                                      project_id=project_id)
 
     def rollback(self, context, reservations, project_id=None):
         """Roll back reservations.
@@ -348,8 +353,8 @@ class DbQuotaDriver(object):
         if project_id is None:
             project_id = context.tenant
 
-        dbapi.reservation_rollback(context, reservations,
-                                   project_id=project_id)
+        self.dbapi.reservation_rollback(context, reservations,
+                                        project_id=project_id)
 
     def expire(self, context):
         """Expire reservations.
@@ -360,7 +365,7 @@ class DbQuotaDriver(object):
         :param context: The request context, for access checks.
         """
 
-        dbapi.reservation_expire(context)
+        self.dbapi.reservation_expire(context)
 
 
 class BaseResource(object):
