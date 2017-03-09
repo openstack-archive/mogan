@@ -30,6 +30,7 @@ from mogan.engine.flows import create_instance
 from mogan.notifications import base as notifications
 from mogan import objects
 from mogan.objects import fields
+from mogan.objects import quota
 
 LOG = log.getLogger(__name__)
 
@@ -40,6 +41,11 @@ class EngineManager(base_manager.BaseEngineManager):
     RPC_API_VERSION = '1.0'
 
     target = messaging.Target(version=RPC_API_VERSION)
+
+    def __init__(self, *args, **kwargs):
+        super(EngineManager, self).__init__(*args, **kwargs)
+        self.quota = quota.Quota()
+        self.quota.register_resource(objects.quota.InstanceResource())
 
     def _get_compute_port(self, context, port_uuid):
         """Gets compute port by the uuid."""
@@ -298,6 +304,12 @@ class EngineManager(base_manager.BaseEngineManager):
         for port in ports:
             self.network_api.delete_port(context, port, instance.uuid)
 
+    def _rollback_instances_quota(self, context, number):
+        reserve_opts = {'instances': number}
+        reservations = self.quota.reserve(context, **reserve_opts)
+        if reservations:
+            self.quota.commit(context, reservations)
+
     def create_instance(self, context, instance, requested_networks,
                         request_spec=None, filter_properties=None):
         """Perform a deployment."""
@@ -337,6 +349,7 @@ class EngineManager(base_manager.BaseEngineManager):
             )
         except Exception:
             utils.process_event(fsm, instance, event='error')
+            self._rollback_instances_quota(context, -1)
             msg = _("Create manager instance flow failed.")
             LOG.exception(msg)
             raise exception.MoganException(msg)
@@ -354,6 +367,7 @@ class EngineManager(base_manager.BaseEngineManager):
         except Exception as e:
             instance.power_state = states.NOSTATE
             utils.process_event(fsm, instance, event='error')
+            self._rollback_instances_quota(context, -1)
             LOG.error("Created instance %(uuid)s failed."
                       "Exception: %(exception)s",
                       {"uuid": instance.uuid,
@@ -410,6 +424,7 @@ class EngineManager(base_manager.BaseEngineManager):
                                   instance=instance)
                     instance.power_state = states.NOSTATE
                     utils.process_event(fsm, instance, event='error')
+                    self._rollback_instances_quota(context, 1)
 
         # Issue delete request to driver only if instance is associated with
         # a underlying node.
