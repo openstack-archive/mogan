@@ -16,6 +16,7 @@
 """SQLAlchemy storage backend."""
 
 import threading
+import uuid
 
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade

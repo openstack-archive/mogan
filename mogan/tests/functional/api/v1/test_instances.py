@@ -71,7 +71,8 @@ class TestInstances(v1_test.APITestV1):
     INSTANCE_UUIDS = ['59f1b681-6ca4-4a17-b784-297a7285004e',
                       '2b32fc87-576c-481b-880e-bef8c7351746',
                       '482decff-7561-41ad-9bfb-447265b26972',
-                      '427693e1-a820-4d7d-8a92-9f5fe2849399']
+                      '427693e1-a820-4d7d-8a92-9f5fe2849399',
+                      '253b2878-ec60-4793-ad19-e65496ec7aab']
 
     def setUp(self):
         self.rpc_api = mock.Mock()
@@ -113,7 +114,10 @@ class TestInstances(v1_test.APITestV1):
 
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
     def _prepare_instance(self, amount, mocked):
-        mocked.side_effect = self.INSTANCE_UUIDS[:amount]
+        # NOTE(wanghao): Since we added quota reserve in creation option,
+        # there is one more generate_uuid out of provision_instances, so
+        # amount should +1 here.
+        mocked.side_effect = self.INSTANCE_UUIDS[:(amount + 1)]
         responses = []
         for i in six.moves.xrange(amount):
             test_body = {
