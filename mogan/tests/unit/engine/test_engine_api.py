@@ -114,6 +114,11 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_create.return_value = mock.MagicMock()
         mock_list_az.return_value = {'availability_zones': ['test_az']}
         requested_networks = [{'uuid': 'fake'}]
+        before_quotas = {}
+        res = self.dbapi.quota_get_all_by_project(self.context,
+                                                  self.project_id)
+        for p_quota in res:
+            before_quotas[p_quota.resource_name] = p_quota.allocated
 
         self.engine_api.create(
             self.context,
@@ -136,6 +141,13 @@ class ComputeAPIUnitTest(base.DbTestCase):
                                                min_count, max_count)
         self.assertTrue(mock_create.called)
         self.assertTrue(mock_get_image.called)
+        res = self.dbapi.quota_get_all_by_project(self.context,
+                                                  self.project_id)
+        after_quotas = {}
+        for p_quota in res:
+            after_quotas[p_quota.resource_name] = p_quota.allocated
+        self.assertEqual(before_quotas.get('instances', 0) + 1,
+                         after_quotas.get('instances'))
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
     def test_create_with_invalid_az(self, mock_list_az):
