@@ -67,6 +67,11 @@ Request
 
 .. literalinclude:: samples/instance_networks/instance-associate-fip-req.json
 
+Response
+--------
+
+If successful, this method does not return content in the response body.
+
 
 Remove (Disassociate) Floating IP
 =================================
@@ -87,3 +92,8 @@ Request
 
     - instance_uuid: instance_ident
     - fip_address: address_path
+
+Response
+--------
+
+If successful, this method does not return content in the response body.
