@@ -240,8 +240,8 @@ class Quota(Base):
     )
     id = Column(Integer, primary_key=True)
     resource_name = Column(String(255), nullable=False)
-    project_id = Column(String(36), nullable=False)
-    hard_limit = Column(Integer, nullable=False)
+    project_id = Column(String(36), nullable=True)
+    hard_limit = Column(Integer, default=0)
     allocated = Column(Integer, default=0)
 
 

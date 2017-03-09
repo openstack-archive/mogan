@@ -16,6 +16,7 @@
 """SQLAlchemy storage backend."""
 
 import threading
+import uuid
 
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
@@ -695,7 +696,7 @@ class Connection(api.Connection):
                         allocated_id = quota.id
                         usage = None
                     reservation = self._reservation_create(
-                        elevated, uuidutils.generate_uuid(), usage, project_id,
+                        elevated, str(uuid.uuid4()), usage, project_id,
                         resource, delta, expire, session=session,
                         allocated_id=allocated_id)
 
