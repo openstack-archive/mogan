@@ -20,6 +20,7 @@ from mogan.common.i18n import _
 
 quota_opts = [
     cfg.StrOpt('quota_driver',
+               default="database",
                help=_("Specify the quota driver which is used in Mogan "
                       "service.")),
     cfg.IntOpt('reservation_expire',
