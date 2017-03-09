@@ -71,7 +71,11 @@ class TestInstances(v1_test.APITestV1):
     INSTANCE_UUIDS = ['59f1b681-6ca4-4a17-b784-297a7285004e',
                       '2b32fc87-576c-481b-880e-bef8c7351746',
                       '482decff-7561-41ad-9bfb-447265b26972',
-                      '427693e1-a820-4d7d-8a92-9f5fe2849399']
+                      '427693e1-a820-4d7d-8a92-9f5fe2849399',
+                      '253b2878-ec60-4793-ad19-e65496ec7aab',
+                      'f26f181d-7891-4720-b022-b074ec1733ef',
+                      '02f53bd8-3514-485b-ba60-2722ef09c016',
+                      '8f7495fe-5e44-4f33-81af-4b28e9b2952f']
 
     def setUp(self):
         self.rpc_api = mock.Mock()
@@ -113,7 +117,10 @@ class TestInstances(v1_test.APITestV1):
 
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
     def _prepare_instance(self, amount, mocked):
-        mocked.side_effect = self.INSTANCE_UUIDS[:amount]
+        # NOTE(wanghao): Since we added quota reserve in creation option,
+        # there is one more generate_uuid out of provision_instances, so
+        # amount should *2 here.
+        mocked.side_effect = self.INSTANCE_UUIDS[:(amount * 2)]
         responses = []
         for i in six.moves.xrange(amount):
             test_body = {
@@ -134,7 +141,7 @@ class TestInstances(v1_test.APITestV1):
         resp = self._prepare_instance(1)[0].json
         self.assertEqual('test_instance_0', resp['name'])
         self.assertEqual('building', resp['status'])
-        self.assertEqual(self.INSTANCE_UUIDS[0], resp['uuid'])
+        self.assertEqual(self.INSTANCE_UUIDS[1], resp['uuid'])
         self.assertEqual('just test instance 0', resp['description'])
         self.assertEqual(self.INSTANCE_TYPE_UUID, resp['instance_type_uuid'])
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
@@ -151,10 +158,10 @@ class TestInstances(v1_test.APITestV1):
 
     def test_instance_show(self):
         self._prepare_instance(1)
-        resp = self.get_json('/instances/%s' % self.INSTANCE_UUIDS[0])
+        resp = self.get_json('/instances/%s' % self.INSTANCE_UUIDS[1])
         self.assertEqual('test_instance_0', resp['name'])
         self.assertEqual('building', resp['status'])
-        self.assertEqual(self.INSTANCE_UUIDS[0], resp['uuid'])
+        self.assertEqual(self.INSTANCE_UUIDS[1], resp['uuid'])
         self.assertEqual('just test instance 0', resp['description'])
         self.assertEqual(self.INSTANCE_TYPE_UUID, resp['instance_type_uuid'])
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
@@ -192,6 +199,6 @@ class TestInstances(v1_test.APITestV1):
 
     def test_instance_delete(self):
         self._prepare_instance(4)
-        self.delete('/instances/' + self.INSTANCE_UUIDS[0], status=204)
-        resp = self.get_json('/instances/%s' % self.INSTANCE_UUIDS[0])
+        self.delete('/instances/' + self.INSTANCE_UUIDS[1], status=204)
+        resp = self.get_json('/instances/%s' % self.INSTANCE_UUIDS[1])
         self.assertEqual('deleting', resp['status'])
