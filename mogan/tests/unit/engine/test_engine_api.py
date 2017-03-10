@@ -239,7 +239,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.engine_api.power(admin_context, fake_instance_obj, 'reboot')
         self.assertTrue(mock_powered.called)
 
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild')
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_instance')
     def test_rebuild_locked_instance_with_non_admin(self, mock_rebuild):
         fake_instance = db_utils.get_test_instance(
             user_id=self.user_id, project_id=self.project_id,
@@ -250,7 +250,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
                           self.context, fake_instance_obj)
         self.assertFalse(mock_rebuild.called)
 
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild')
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_instance')
     def test_rebuild_locked_instance_with_admin(self, mock_rebuild):
         fake_instance = db_utils.get_test_instance(
             user_id=self.user_id, project_id=self.project_id,
@@ -260,7 +260,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.engine_api.rebuild(admin_context, fake_instance_obj)
         self.assertTrue(mock_rebuild.called)
 
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild')
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_instance')
     def test_rebuild_instance(self, mock_rebuild):
         fake_instance = db_utils.get_test_instance(
             user_id=self.user_id, project_id=self.project_id)

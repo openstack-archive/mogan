@@ -69,10 +69,10 @@ class EngineAPI(object):
         return cctxt.cast(context, 'set_power_state',
                           instance=instance, state=state)
 
-    def rebuild(self, context, instance):
+    def rebuild_instance(self, context, instance):
         """Signal to engine service to rebuild an instance."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.cast(context, 'rebuild', instance=instance)
+        return cctxt.cast(context, 'rebuild_instance', instance=instance)
 
     def list_availability_zones(self, context):
         """Signal to engine service to get availability zone list."""

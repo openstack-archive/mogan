@@ -306,7 +306,7 @@ class API(object):
                       instance=instance)
             return
 
-        self.engine_rpcapi.rebuild(context, instance)
+        self.engine_rpcapi.rebuild_instance(context, instance)
 
     def list_availability_zones(self, context):
         """Get a list of availability zones."""

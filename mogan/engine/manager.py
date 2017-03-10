@@ -20,8 +20,6 @@ import oslo_messaging as messaging
 from oslo_service import periodic_task
 from oslo_utils import excutils
 from oslo_utils import timeutils
-import six
-import sys
 
 from mogan.common import exception
 from mogan.common import flow_utils
@@ -300,7 +298,8 @@ class EngineManager(base_manager.BaseEngineManager):
             # doesn't alter the instance in any way. This may raise
             # InvalidState, if this event is not allowed in the current state.
             fsm.process_event('done')
-            instance.power_state = self.driver.get_power_state(instance.uuid)
+            instance.power_state = self.driver.get_power_state(context,
+                                                               instance.uuid)
             instance.status = fsm.current_state
             instance.launched_at = timeutils.utcnow()
             instance.save()
@@ -312,7 +311,7 @@ class EngineManager(base_manager.BaseEngineManager):
         """Delete an instance
 
         :param context: mogan request context
-        :param instance: mogan.objects.instance.Instance object
+        :param instance: instance object
         """
         # TODO(zhenguo): Add delete notification
 
@@ -367,34 +366,38 @@ class EngineManager(base_manager.BaseEngineManager):
             LOG.debug('Power %(state)s called for instance %(instance)s',
                       {'state': state,
                        'instance': instance})
-            self.driver.set_power_state(instance, state)
+            self.driver.set_power_state(context, instance, state)
 
         do_set_power_state()
         fsm.process_event('done')
-        instance.power_state = self.driver.get_power_state(instance.uuid)
+        instance.power_state = self.driver.get_power_state(context,
+                                                           instance.uuid)
         instance.status = fsm.current_state
         instance.save()
         LOG.info(_LI('Successfully set node power state: %s'),
                  state, instance=instance)
 
-    def _rebuild(self, context, instance):
+    def _rebuild_instance(self, context, instance):
         """Perform rebuild action on the specified instance."""
 
-        try:
-            self.driver.do_node_rebuild(instance)
-        except exception.InstanceDeployFailure as e:
-            six.reraise(type(e), e, sys.exc_info()[2])
+        # TODO(zhenguo): Add delete notification
 
-    def rebuild(self, context, instance):
-        """Perform rebuild action on the specified instance."""
+        self.driver.rebuild(context, instance)
 
-        LOG.debug('Rebuild called for instance', instance=instance)
+    def rebuild_instance(self, context, instance):
+        """Destroy and re-make this instance.
+
+        :param context: mogan request context
+        :param instance: instance object
+        """
+
+        LOG.debug('Rebuilding instance', instance=instance)
         # Initialize state machine
         fsm = states.machine.copy()
         fsm.initialize(start_state=instance.status)
 
         try:
-            self._rebuild(context, instance)
+            self._rebuild_instance(context, instance)
         except Exception as e:
             fsm.process_event('error')
             instance.status = fsm.current_state

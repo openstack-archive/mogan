@@ -182,15 +182,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         _log_ironic_polling(message, node, instance)
 
-    def get_power_state(self, instance_uuid):
-        try:
-            node = self.ironicclient.call('node.get_by_instance_uuid',
-                                          instance_uuid,
-                                          fields=('power_state',))
-            return map_power_state(node.power_state)
-        except client_e.NotFound:
-            return map_power_state(ironic_states.NOSTATE)
-
     def get_ports_from_node(self, node_uuid, detail=True):
         """List the MAC addresses and the port types from a node."""
         ports = self.ironicclient.call("node.list_ports",
@@ -462,21 +453,43 @@ class IronicDriver(base_driver.BaseEngineDriver):
             portgroup_list = []
         return portgroup_list
 
-    def set_power_state(self, instance, state):
+    def get_power_state(self, context, instance_uuid):
+        try:
+            node = self.ironicclient.call('node.get_by_instance_uuid',
+                                          instance_uuid,
+                                          fields=('power_state',))
+            return map_power_state(node.power_state)
+        except client_e.NotFound:
+            return map_power_state(ironic_states.NOSTATE)
+
+    def set_power_state(self, context, instance, state):
+        """Set power state on the specified instance.
+
+        :param context: The security context.
+        :param instance: The instance object.
+        """
+        node = self._validate_instance_and_node(instance)
         if state == "soft_off":
             self.ironicclient.call("node.set_power_state",
-                                   instance.node_uuid, "off", soft=True)
+                                   node.uuid, "off", soft=True)
         elif state == "soft_reboot":
             self.ironicclient.call("node.set_power_state",
-                                   instance.node_uuid, "reboot", soft=True)
+                                   node.uuid, "reboot", soft=True)
         else:
             self.ironicclient.call("node.set_power_state",
-                                   instance.node_uuid, state)
+                                   node.uuid, state)
         timer = loopingcall.FixedIntervalLoopingCall(
             self._wait_for_power_state, instance, state)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
 
-    def do_node_rebuild(self, instance):
+    def rebuild(self, context, instance):
+        """Rebuild/redeploy an instance.
+
+        :param context: The security context.
+        :param instance: The instance object.
+        """
+        LOG.debug('Rebuild called for instance', instance=instance)
+
         # trigger the node rebuild
         try:
             self.ironicclient.call("node.set_provision_state",
@@ -494,3 +507,4 @@ class IronicDriver(base_driver.BaseEngineDriver):
         timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
                                                      instance)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
+        LOG.info(_LI('Instance was successfully rebuilt'), instance=instance)

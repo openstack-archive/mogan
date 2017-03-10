@@ -35,11 +35,6 @@ class BaseEngineDriver(object):
         """Add init staff here.
         """
 
-    def init_host(self, host):
-        """Initialize anything that is necessary for the engine driver to
-           function.
-        """
-
     def get_available_node_list(self):
         """Return all available nodes.
 
@@ -68,14 +63,14 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def get_power_state(self, instance_uuid):
+    def get_power_state(self, context, instance_uuid):
         """Return a node's power state by passing instance uuid.
 
         :param instance_uuid: mogan instance uuid to get power state.
         """
         raise NotImplementedError()
 
-    def set_power_state(self, node_uuid, state):
+    def set_power_state(self, context, node_uuid, state):
         """Set a node's power state.
 
         :param node_uuid: node id to change power state.
@@ -115,14 +110,14 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def destroy(self, instance):
+    def destroy(self, context, instance):
         """Trigger node destroy process.
 
         :param instance: the instance to destory.
         """
         raise NotImplementedError()
 
-    def do_node_rebuild(self, instance):
+    def rebuild(self, context, instance):
         """Trigger node deploy process.
 
         :param instance: instance to rebuild.

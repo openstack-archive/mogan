@@ -111,9 +111,10 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
                                      ironic_states.POWER_ON)
         self._stop_service()
 
-        set_power_mock.assert_called_once_with(instance,
+        set_power_mock.assert_called_once_with(self.context,
+                                               instance,
                                                ironic_states.POWER_ON)
-        get_power_mock.assert_called_once_with(instance.uuid)
+        get_power_mock.assert_called_once_with(self.context, instance.uuid)
 
     def test_list_availability_zone(self, refresh_cache_mock):
         refresh_cache_mock.side_effect = None
