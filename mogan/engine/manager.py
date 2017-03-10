@@ -18,6 +18,7 @@ import threading
 from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import periodic_task
+from oslo_utils import excutils
 from oslo_utils import timeutils
 import six
 import sys
@@ -231,45 +232,19 @@ class EngineManager(base_manager.BaseEngineManager):
                 instance.save()
 
     def destroy_networks(self, context, instance):
-        LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(instance_nics)s",
-                  {'uuid': instance.uuid,
-                   'instance_nics': str(instance.nics)})
-
         ports = instance.nics.get_port_ids()
         for port in ports:
             self.network_api.delete_port(context, port, instance.uuid)
+
+    def _unplug_vifs(self, context, instance):
+        LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(instance_nics)s",
+                  {'uuid': instance.uuid,
+                   'instance_nics': str(instance.nics)})
 
         bm_interface = self.driver.get_ports_from_node(instance.node_uuid)
 
         for pif in bm_interface:
             self.driver.unplug_vif(pif)
-
-    def _destroy_instance(self, context, instance):
-        try:
-            self.driver.destroy(instance)
-        except exception.MoganException as e:
-            six.reraise(type(e), e, sys.exc_info()[2])
-        except Exception as e:
-            # if the node is already in a deprovisioned state, continue
-            # This should be fixed in Ironic.
-            # TODO(deva): This exception should be added to
-            #             python-ironicclient and matched directly,
-            #             rather than via __name__.
-            if getattr(e, '__name__', None) != 'InstanceDeployFailure':
-                raise
-
-        LOG.info(_LI('Successfully destroyed Ironic node %s'),
-                 instance.node_uuid)
-
-    def _remove_instance_info_from_node(self, instance):
-        try:
-            self.driver.unset_instance_info(instance)
-        except exception.Invalid as e:
-            LOG.warning(_LW("Failed to remove deploy parameters from node "
-                            "%(node)s when unprovisioning the instance "
-                            "%(instance)s: %(reason)s"),
-                        {'node': instance.node_uuid, 'instance': instance.uuid,
-                         'reason': six.text_type(e)})
 
     def create_instance(self, context, instance, requested_networks,
                         request_spec=None, filter_properties=None):
@@ -333,6 +308,16 @@ class EngineManager(base_manager.BaseEngineManager):
         finally:
             return instance
 
+    def _delete_instance(self, context, instance):
+        """Delete an instance
+
+        :param context: mogan request context
+        :param instance: mogan.objects.instance.Instance object
+        """
+        # TODO(zhenguo): Add delete notification
+
+        self.driver.destroy(context, instance)
+
     def delete_instance(self, context, instance):
         """Delete an instance."""
         LOG.debug("Deleting instance...")
@@ -342,27 +327,26 @@ class EngineManager(base_manager.BaseEngineManager):
         fsm.initialize(start_state=instance.status,
                        target_state=states.DELETED)
 
-        try:
-            node = self.driver.get_node_by_instance(instance.uuid)
-        except exception.NotFound:
-            node = None
-
-        if node:
+        @utils.synchronized(instance.uuid)
+        def do_delete_instance(instance):
             try:
-                if self.driver.is_node_unprovision(node):
-                    self.destroy_networks(context, instance)
-                    self._destroy_instance(context, instance)
-                else:
-                    self._remove_instance_info_from_node(instance)
+                self._delete_instance(context, instance)
+                self._unplug_vifs(context, instance)
+            except exception.InstanceNotFound:
+                LOG.info(_LI("Instance disappeared during terminate"),
+                         instance=instance)
             except Exception:
-                LOG.exception(_LE("Error while trying to clean up "
-                                  "instance resources."),
-                              instance=instance)
-                fsm.process_event('error')
-                instance.power_state = states.NOSTATE
-                instance.status = fsm.current_state
-                instance.save()
-                return
+                # As we're trying to delete always go to Error if something
+                # goes wrong that _delete_instance can't handle.
+                with excutils.save_and_reraise_exception():
+                    LOG.exception(_LE('Setting instance status to ERROR'),
+                                  instance=instance)
+                    fsm.process_event('error')
+                    instance.power_state = states.NOSTATE
+                    instance.status = fsm.current_state
+                    instance.save()
+
+        do_delete_instance(instance)
 
         fsm.process_event('done')
         instance.power_state = states.NOSTATE

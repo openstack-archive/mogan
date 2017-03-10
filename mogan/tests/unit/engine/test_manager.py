@@ -34,11 +34,8 @@ CONF = cfg.CONF
 class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
                              tests_db_base.DbTestCase):
 
-    @mock.patch.object(IronicDriver, 'unplug_vif')
-    @mock.patch.object(IronicDriver, 'get_ports_from_node')
     @mock.patch.object(network_api.API, 'delete_port')
     def test_destroy_networks(self, delete_port_mock,
-                              get_ports_mock, unplug_vif_mock,
                               refresh_cache_mock):
         instance = obj_utils.create_test_instance(self.context)
         inst_port_id = instance.nics[0].port_id
@@ -46,8 +43,6 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         port = mock.MagicMock()
         port.extra = {'vif_port_id': 'fake-vif'}
         port.uuid = 'fake-uuid'
-        get_ports_mock.return_value = [port]
-        unplug_vif_mock.side_effect = None
         refresh_cache_mock.side_effect = None
         self._start_service()
 
@@ -56,12 +51,10 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
 
         delete_port_mock.assert_called_once_with(
             self.context, inst_port_id, instance.uuid)
-        get_ports_mock.assert_called_once_with(instance.node_uuid)
-        unplug_vif_mock.assert_called_once_with(port)
 
     @mock.patch.object(IronicDriver, 'destroy')
-    def _test__destroy_instance(self, destroy_node_mock,
-                                refresh_cache_mock, state=None):
+    def _test__delete_instance(self, destroy_node_mock,
+                               refresh_cache_mock, state=None):
         fake_node = mock.MagicMock()
         fake_node.provision_state = state
         instance = obj_utils.create_test_instance(self.context)
@@ -69,59 +62,37 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         refresh_cache_mock.side_effect = None
         self._start_service()
 
-        self.service._destroy_instance(self.context, instance)
+        self.service._delete_instance(self.context, instance)
         self._stop_service()
 
-        destroy_node_mock.assert_called_once_with(instance)
+        destroy_node_mock.assert_called_once_with(self.context, instance)
 
-    def test__destroy_instance_cleaning(self, refresh_cache_mock):
-        self._test__destroy_instance(state=ironic_states.CLEANING,
-                                     refresh_cache_mock=refresh_cache_mock)
+    def test__delete_instance_cleaning(self, refresh_cache_mock):
+        self._test__delete_instance(state=ironic_states.CLEANING,
+                                    refresh_cache_mock=refresh_cache_mock)
 
-    def test__destroy_instance_cleanwait(self, refresh_cache_mock):
-        self._test__destroy_instance(state=ironic_states.CLEANWAIT,
-                                     refresh_cache_mock=refresh_cache_mock)
+    def test__delete_instance_cleanwait(self, refresh_cache_mock):
+        self._test__delete_instance(state=ironic_states.CLEANWAIT,
+                                    refresh_cache_mock=refresh_cache_mock)
 
-    @mock.patch.object(IronicDriver, 'get_node_by_instance')
-    @mock.patch.object(manager.EngineManager, '_destroy_instance')
-    @mock.patch.object(manager.EngineManager, 'destroy_networks')
-    def test_delete_instance(self, destroy_net_mock,
-                             destroy_inst_mock, get_node_mock,
-                             refresh_cache_mock):
+    @mock.patch.object(manager.EngineManager, '_delete_instance')
+    @mock.patch.object(manager.EngineManager, '_unplug_vifs')
+    def test_delete_instance(self, unplug_mock,
+                             delete_inst_mock, refresh_cache_mock):
         fake_node = mock.MagicMock()
         fake_node.provision_state = ironic_states.ACTIVE
         instance = obj_utils.create_test_instance(
             self.context, status=states.DELETING)
-        destroy_net_mock.side_effect = None
-        destroy_inst_mock.side_effect = None
+        unplug_mock.side_effect = None
+        delete_inst_mock.side_effect = None
         refresh_cache_mock.side_effect = None
-        get_node_mock.return_value = fake_node
         self._start_service()
 
         self.service.delete_instance(self.context, instance)
         self._stop_service()
 
-        destroy_net_mock.assert_called_once_with(mock.ANY, instance)
-        destroy_inst_mock.assert_called_once_with(mock.ANY, instance)
-        get_node_mock.assert_called_once_with(instance.uuid)
-
-    @mock.patch.object(IronicDriver, 'get_node_by_instance')
-    @mock.patch.object(manager.EngineManager, '_destroy_instance')
-    def test_delete_instance_without_node_destroy(
-            self, destroy_inst_mock, get_node_mock, refresh_cache_mock):
-        fake_node = mock.MagicMock()
-        fake_node.provision_state = 'foo'
-        instance = obj_utils.create_test_instance(
-            self.context, status=states.DELETING)
-        destroy_inst_mock.side_effect = None
-        refresh_cache_mock.side_effect = None
-        get_node_mock.return_value = fake_node
-        self._start_service()
-
-        self.service.delete_instance(self.context, instance)
-        self._stop_service()
-
-        self.assertFalse(destroy_inst_mock.called)
+        unplug_mock.assert_called_once_with(mock.ANY, instance)
+        delete_inst_mock.assert_called_once_with(mock.ANY, instance)
 
     @mock.patch.object(IronicDriver, 'get_power_state')
     @mock.patch.object(IronicDriver, 'set_power_state')

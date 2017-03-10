@@ -99,7 +99,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         try:
             return self.ironicclient.call('node.get_by_instance_uuid',
                                           instance.uuid, fields=_NODE_FIELDS)
-        except ironic.exc.NotFound:
+        except ironic_exc.NotFound:
             raise exception.InstanceNotFound(instance_id=instance.uuid)
 
     def _add_instance_info_to_node(self, node, instance):
@@ -122,12 +122,24 @@ class IronicDriver(base_driver.BaseEngineDriver):
             # instance due bug #1341420.
             self.ironicclient.call('node.update', node.uuid, patch,
                                    retry_on_conflict=False)
-        except ironic.exc.BadRequest:
+        except ironic_exc.BadRequest:
             msg = (_("Failed to add deploy parameters on node %(node)s "
                      "when provisioning the instance %(instance)s")
                    % {'node': node.uuid, 'instance': instance.uuid})
             LOG.error(msg)
             raise exception.InstanceDeployFailure(msg)
+
+    def _remove_instance_info_from_node(self, node, instance):
+        patch = [{'path': '/instance_info', 'op': 'remove'},
+                 {'path': '/instance_uuid', 'op': 'remove'}]
+        try:
+            self.ironicclient.call('node.update', node.uuid, patch)
+        except ironic_exc.BadRequest as e:
+            LOG.warning(_LW("Failed to remove deploy parameters from node "
+                            "%(node)s when unprovisioning the instance "
+                            "%(instance)s: %(reason)s"),
+                        {'node': node.uuid, 'instance': instance.uuid,
+                         'reason': six.text_type(e)})
 
     def _wait_for_active(self, instance):
         """Wait for the node to be marked as ACTIVE in Ironic."""
@@ -203,15 +215,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
         except client_e.BadRequest:
             pass
 
-    def unset_instance_info(self, instance):
-
-        patch = [{'path': '/instance_info', 'op': 'remove'},
-                 {'path': '/instance_uuid', 'op': 'remove'}]
-        try:
-            self.ironicclient.call("node.update", instance.node_uuid, patch)
-        except ironic_exc.BadRequest as e:
-            raise exception.Invalid(msg=six.text_type(e))
-
     def spawn(self, context, instance):
         """Deploy an instance.
 
@@ -270,26 +273,13 @@ class IronicDriver(base_driver.BaseEngineDriver):
                           {'instance': instance.uuid,
                            'node': node_uuid})
 
-    def get_node_by_instance(self, instance_uuid):
-        fields = _NODE_FIELDS
+    def _unprovision(self, instance, node):
+        """This method is called from destroy() to unprovision
+        already provisioned node after required checks.
+        """
         try:
-            return self.ironicclient.call('node.get_by_instance_uuid',
-                                          instance_uuid, fields=fields)
-        except ironic_exc.NotFound:
-            raise exception.NotFound
-
-    def get_node(self, node_uuid, fields=None):
-        if fields is None:
-            fields = _NODE_FIELDS
-        """Get a node by its UUID."""
-        return self.ironicclient.call('node.get', node_uuid, fields=fields)
-
-    def destroy(self, instance):
-        node_uuid = instance.node_uuid
-        # trigger the node destroy
-        try:
-            self.ironicclient.call("node.set_provision_state", node_uuid,
-                                   ironic_states.DELETED)
+            self.ironicclient.call("node.set_provision_state", node.uuid,
+                                   "deleted")
         except Exception as e:
             # if the node is already in a deprovisioned state, continue
             # This should be fixed in Ironic.
@@ -303,14 +293,12 @@ class IronicDriver(base_driver.BaseEngineDriver):
         data = {'tries': 0}
 
         def _wait_for_provision_state():
-
             try:
-                node = self.get_node_by_instance(instance.uuid)
-            except exception.NotFound:
+                node = self._validate_instance_and_node(instance)
+            except exception.InstanceNotFound:
                 LOG.debug("Instance already removed from Ironic",
                           instance=instance)
                 raise loopingcall.LoopingCallDone()
-            LOG.debug('Current ironic node state is %s', node.provision_state)
             if node.provision_state in (ironic_states.NOSTATE,
                                         ironic_states.CLEANING,
                                         ironic_states.CLEANWAIT,
@@ -331,18 +319,40 @@ class IronicDriver(base_driver.BaseEngineDriver):
                        % {'state': node.provision_state,
                           'node': node.uuid})
                 LOG.error(msg)
-                raise exception.MoganException(msg)
+                raise exception.NovaException(msg)
             else:
                 data['tries'] += 1
+
+            _log_ironic_polling('unprovision', node, instance)
 
         # wait for the state transition to finish
         timer = loopingcall.FixedIntervalLoopingCall(_wait_for_provision_state)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
 
-        LOG.info(_LI('Successfully destroyed Ironic node %s'), node_uuid)
+    def destroy(self, context, instance):
+        """Destroy the specified instance, if it can be found.
 
-    def validate_node(self, node_uuid):
-        return self.ironicclient.call("node.validate", node_uuid)
+        :param context: The security context.
+        :param instance: The instance object.
+        """
+        LOG.debug('Destroy called for instance', instance=instance)
+        try:
+            node = self._validate_instance_and_node(instance)
+        except exception.InstanceNotFound:
+            LOG.warning(_LW("Destroy called on non-existing instance %s."),
+                        instance.uuid)
+            return
+
+        if node.provision_state in _UNPROVISION_STATES:
+            self._unprovision(instance, node)
+        else:
+            # NOTE(hshiina): if spawn() fails before ironic starts
+            #                provisioning, instance information should be
+            #                removed from ironic node.
+            self._remove_instance_info_from_node(node, instance)
+
+        LOG.info(_LI('Successfully unprovisioned Ironic node %s'),
+                 node.uuid, instance=instance)
 
     def get_available_node_list(self):
         """Helper function to return the list of nodes.
@@ -465,9 +475,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
         timer = loopingcall.FixedIntervalLoopingCall(
             self._wait_for_power_state, instance, state)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
-
-    def is_node_unprovision(self, node):
-        return node.provision_state in _UNPROVISION_STATES
 
     def do_node_rebuild(self, instance):
         # trigger the node rebuild
