@@ -66,6 +66,11 @@ Request
 
 .. literalinclude:: samples/instance_states/instance-set-power-off.json
 
+Response
+--------
+
+If successful, this method does not return content in the response body.
+
 
 Change Instance Lock State
 ===========================
@@ -97,6 +102,11 @@ Request
 
 .. literalinclude:: samples/instance_states/unlock-instance.json
 
+Response
+--------
+
+If successful, this method does not return content in the response body.
+
 
 Change Instance Provision State
 ===============================
@@ -123,3 +133,8 @@ Request
 **Example request to rebuild an Instance:**
 
 .. literalinclude:: samples/instance_states/rebuild-instance.json
+
+Response
+--------
+
+If successful, this method does not return content in the response body.
