@@ -68,13 +68,6 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def get_node_by_instance(self, instance_uuid):
-        """Return node info associated with certain instance.
-
-        :param instance_uuid: uuid of mogan instance to get node.
-        """
-        raise NotImplementedError()
-
     def get_power_state(self, instance_uuid):
         """Return a node's power state by passing instance uuid.
 
@@ -114,13 +107,6 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def unset_instance_info(self, instance):
-        """Disassociate the node with an instance.
-
-        :param instance: mogan instance object.
-        """
-        raise NotImplementedError()
-
     def spawn(self, context, instance):
         """Create a new instance on the provision platform.
 
@@ -129,32 +115,10 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def get_node(self, node_uuid):
-        """Get node info by node id.
-
-        :param node_uuid: node id to get info.
-        """
-        raise NotImplementedError()
-
     def destroy(self, instance):
         """Trigger node destroy process.
 
         :param instance: the instance to destory.
-        """
-        raise NotImplementedError()
-
-    def validate_node(self, node_uuid):
-        """Validate whether the node's driver has enough information to
-            manage the Node.
-
-        :param node_uuid: node id to validate.
-        """
-        raise NotImplementedError()
-
-    def is_node_unprovision(self, node):
-        """Validate whether the node is in unprovision state.
-
-        :param node: node object to get state.
         """
         raise NotImplementedError()
 
