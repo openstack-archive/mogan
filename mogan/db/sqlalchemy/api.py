@@ -295,6 +295,57 @@ class Connection(api.Connection):
             ref.update(values)
         return ref
 
+    def compute_port_create(self, context, values):
+        compute_port = models.ComputePort()
+        compute_port.update(values)
+        with _session_for_write() as session:
+            try:
+                session.add(compute_port)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.ComputePortAlreadyExists(
+                    port=values['port_uuid'])
+            return compute_port
+
+    def compute_port_get(self, context, port_uuid):
+        query = model_query(
+            context,
+            models.ComputePort).filter_by(port_uuid=port_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ComputePortNotFound(port=port_uuid)
+
+    def compute_port_get_all(self, context):
+        return model_query(context, models.ComputePort)
+
+    def compute_port_get_by_node_uuid(self, context, node_uuid):
+        return model_query(context, models.ComputePort).filter_by(
+            node_uuid=node_uuid).all()
+
+    def compute_port_destroy(self, context, port_uuid):
+        with _session_for_write():
+            query = model_query(
+                context,
+                models.ComputePort).filter_by(port_uuid=port_uuid)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.ComputePortNotFound(port=port_uuid)
+
+    def compute_port_update(self, context, port_uuid, values):
+        with _session_for_write():
+            query = model_query(
+                context,
+                models.ComputePort).filter_by(port_uuid=port_uuid)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ComputePortNotFound(port=port_uuid)
+
+            ref.update(values)
+        return ref
+
     def extra_specs_update_or_create(self, context,
                                      instance_type_uuid, specs,
                                      max_retries=10):

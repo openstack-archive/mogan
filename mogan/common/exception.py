@@ -173,6 +173,14 @@ class ComputeNodeNotFound(NotFound):
     msg_fmt = _("ComputeNode %(node)s could not be found.")
 
 
+class ComputePortAlreadyExists(MoganException):
+    _msg_fmt = _("ComputePort with port_uuid %(port)s already exists.")
+
+
+class ComputePortNotFound(NotFound):
+    msg_fmt = _("ComputePort %(port)s could not be found.")
+
+
 class NodeNotFound(NotFound):
     msg_fmt = _("Node associated with instance %(instance)s "
                 "could not be found.")
