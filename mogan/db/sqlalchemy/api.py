@@ -248,6 +248,53 @@ class Connection(api.Connection):
             ref.update(values)
         return ref
 
+    def compute_node_create(self, context, values):
+        compute_node = models.ComputeNode()
+        compute_node.update(values)
+        with _session_for_write() as session:
+            try:
+                session.add(compute_node)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.ComputeNodeAlreadyExists(
+                    node=values['node_uuid'])
+            return compute_node
+
+    def compute_node_get(self, context, node_uuid):
+        query = model_query(
+            context,
+            models.ComputeNode).filter_by(node_uuid=node_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ComputeNodeNotFound(node=node_uuid)
+
+    def compute_node_get_all(self, context):
+        return model_query(context, models.ComputeNode)
+
+    def compute_node_destroy(self, context, node_uuid):
+        with _session_for_write():
+            query = model_query(
+                context,
+                models.ComputeNode).filter_by(node_uuid=node_uuid)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.ComputeNodeNotFound(node=node_uuid)
+
+    def compute_node_update(self, context, node_uuid, values):
+        with _session_for_write():
+            query = model_query(
+                context,
+                models.ComputeNode).filter_by(node_uuid=node_uuid)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ComputeNodeNotFound(node=node_uuid)
+
+            ref.update(values)
+        return ref
+
     def extra_specs_update_or_create(self, context,
                                      instance_type_uuid, specs,
                                      max_retries=10):

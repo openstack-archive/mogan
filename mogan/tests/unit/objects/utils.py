@@ -67,3 +67,32 @@ def create_test_instance(ctxt, **kw):
     instance = get_test_instance(ctxt, **kw)
     instance.create()
     return instance
+
+
+def get_test_compute_node(ctxt, **kw):
+    """Return a ComputeNode object with appropriate attributes.
+
+    NOTE: The object leaves the attributes marked as changed, such
+    that a create() could be used to commit it to the DB.
+    """
+    kw['object_type'] = 'compute_node'
+    get_db_compute_node_checked = check_keyword_arguments(
+        db_utils.get_test_compute_node)
+    db_node = get_db_compute_node_checked(**kw)
+
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del db_node['id']
+    node = objects.ComputeNode(ctxt, **db_node)
+    return node
+
+
+def create_test_compute_node(ctxt, **kw):
+    """Create and return a test compute node object.
+
+    Create a compute node in the DB and return a ComputeNode object with
+    appropriate attributes.
+    """
+    node = get_test_compute_node(ctxt, **kw)
+    node.create()
+    return node

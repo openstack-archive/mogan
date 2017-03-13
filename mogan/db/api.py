@@ -82,6 +82,28 @@ class Connection(object):
     def instance_update(self, context, instance_id, values):
         """Update an instance."""
 
+    # Compute nodes
+    @abc.abstractmethod
+    def compute_node_create(self, context, values):
+        """Create a new compute node."""
+
+    @abc.abstractmethod
+    def compute_node_get(self, context, node_uuid):
+        """Get compute node by node uuid."""
+
+    @abc.abstractmethod
+    def compute_node_get_all(self, context):
+        """Get all compute nodes."""
+
+    @abc.abstractmethod
+    def compute_node_destroy(self, context, node_uuid):
+        """Delete a compute node."""
+
+    @abc.abstractmethod
+    def compute_node_update(self, context, node_uuid, values):
+        """Update a compute node."""
+
+    # Instance Type extra specs
     @abc.abstractmethod
     def extra_specs_update_or_create(self, context,
                                      instance_type_uuid, extra_specs):

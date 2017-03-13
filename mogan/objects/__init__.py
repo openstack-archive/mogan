@@ -29,3 +29,4 @@ def register_all():
     __import__('mogan.objects.instance')
     __import__('mogan.objects.instance_nics')
     __import__('mogan.objects.instance_fault')
+    __import__('mogan.objects.compute_node')

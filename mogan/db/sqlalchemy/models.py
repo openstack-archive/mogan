@@ -92,6 +92,25 @@ class Instance(Base):
     locked_by = Column(Enum('owner', 'admin'))
 
 
+class ComputeNode(Base):
+    """Represents possible types for compute_nodes."""
+
+    __tablename__ = 'compute_nodes'
+    __table_args__ = (
+        schema.UniqueConstraint('node_uuid',
+                                name='uniq_compute_nodes0node_uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    cpus = Column(Integer, nullable=False)
+    memory_mb = Column(Integer, nullable=False)
+    hypervisor_type = Column(String(255), nullable=False)
+    availability_zone = Column(String(255), nullable=True)
+    node_uuid = Column(String(36), nullable=False)
+    capabilities = Column(db_types.JsonEncodedDict)
+    extra = Column(db_types.JsonEncodedDict)
+
+
 class InstanceNic(Base):
     """Represents the NIC info for instances."""
 

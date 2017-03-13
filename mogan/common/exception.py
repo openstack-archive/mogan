@@ -165,6 +165,14 @@ class InstanceNotFound(NotFound):
     msg_fmt = _("Instance %(instance)s could not be found.")
 
 
+class ComputeNodeAlreadyExists(MoganException):
+    _msg_fmt = _("ComputeNode with node_uuid %(node)s already exists.")
+
+
+class ComputeNodeNotFound(NotFound):
+    msg_fmt = _("ComputeNode %(node)s could not be found.")
+
+
 class NodeNotFound(NotFound):
     msg_fmt = _("Node associated with instance %(instance)s "
                 "could not be found.")

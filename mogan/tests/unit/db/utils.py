@@ -68,19 +68,6 @@ def get_test_instance(**kw):
     }
 
 
-def get_test_quota(**kw):
-    return {
-        'id': kw.get('id', 123),
-        'resource_name': kw.get('resource_name', 'instances'),
-        'project_id': kw.get('project_id',
-                             'c18e8a1a870d4c08a0b51ced6e0b6459'),
-        'hard_limit': kw.get('hard_limit', 10),
-        'allocated': kw.get('allocated', 0),
-        'created_at': kw.get('created_at'),
-        'updated_at': kw.get('updated_at'),
-    }
-
-
 def create_test_instance(context={}, **kw):
     """Create test instance entry in DB and return Instance DB object.
 
@@ -98,6 +85,41 @@ def create_test_instance(context={}, **kw):
     dbapi = db_api.get_instance()
 
     return dbapi.instance_create(context, instance)
+
+
+def get_test_compute_node(**kw):
+    return {
+        'id': kw.get('id', 123),
+        'cpus': kw.get('cpus', 16),
+        'memory_mb': kw.get('memory_mb', 10240),
+        'hypervisor_type': kw.get('hypervisor_type', 'ironic'),
+        'availability_zone': kw.get('availability_zone', 'test_az'),
+        'node_uuid': kw.get('node_uuid',
+                            'f978ef48-d4af-4dad-beec-e6174309bc71'),
+        'capabilities': kw.get('capabilities', {}),
+        'extra': kw.get('extra', {}),
+        'updated_at': kw.get('updated_at'),
+        'created_at': kw.get('created_at'),
+    }
+
+
+def create_test_compute_node(context={}, **kw):
+    """Create test compute node entry in DB and return ComputeNode DB object.
+
+    Function to be used to create test ComputeNode objects in the database.
+
+    :param context: The request context, for access checks.
+    :param kw: kwargs with overriding values for instance's attributes.
+    :returns: Test ComputeNode DB object.
+
+    """
+    node = get_test_compute_node(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del node['id']
+    dbapi = db_api.get_instance()
+
+    return dbapi.compute_node_create(context, node)
 
 
 def get_test_instance_type(**kw):
@@ -125,6 +147,19 @@ def create_test_instance_type(context={}, **kw):
     dbapi = db_api.get_instance()
 
     return dbapi.instance_type_create(context, instance_type)
+
+
+def get_test_quota(**kw):
+    return {
+        'id': kw.get('id', 123),
+        'resource_name': kw.get('resource_name', 'instances'),
+        'project_id': kw.get('project_id',
+                             'c18e8a1a870d4c08a0b51ced6e0b6459'),
+        'hard_limit': kw.get('hard_limit', 10),
+        'allocated': kw.get('allocated', 0),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
+    }
 
 
 def create_test_quota(context={}, **kw):
