@@ -93,7 +93,7 @@ class Instance(Base):
 
 
 class ComputeNode(Base):
-    """Represents possible types for compute_nodes."""
+    """Represents the compute nodes."""
 
     __tablename__ = 'compute_nodes'
     __table_args__ = (
@@ -108,6 +108,22 @@ class ComputeNode(Base):
     availability_zone = Column(String(255), nullable=True)
     node_uuid = Column(String(36), nullable=False)
     capabilities = Column(db_types.JsonEncodedDict)
+    extra = Column(db_types.JsonEncodedDict)
+
+
+class ComputePort(Base):
+    """Represents the compute ports."""
+
+    __tablename__ = 'compute_ports'
+    __table_args__ = (
+        schema.UniqueConstraint('port_uuid',
+                                name='uniq_compute_ports0port_uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    port_type = Column(String(255), nullable=False)
+    port_uuid = Column(String(36), nullable=False)
+    node_uuid = Column(String(36), nullable=False)
     extra = Column(db_types.JsonEncodedDict)
 
 

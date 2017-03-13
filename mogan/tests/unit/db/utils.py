@@ -109,7 +109,7 @@ def create_test_compute_node(context={}, **kw):
     Function to be used to create test ComputeNode objects in the database.
 
     :param context: The request context, for access checks.
-    :param kw: kwargs with overriding values for instance's attributes.
+    :param kw: kwargs with overriding values for node's attributes.
     :returns: Test ComputeNode DB object.
 
     """
@@ -120,6 +120,39 @@ def create_test_compute_node(context={}, **kw):
     dbapi = db_api.get_instance()
 
     return dbapi.compute_node_create(context, node)
+
+
+def get_test_compute_port(**kw):
+    return {
+        'id': kw.get('id', 123),
+        'port_type': kw.get('port_type', '1GE'),
+        'port_uuid': kw.get('port_uuid',
+                            'f978ef48-d4af-4dad-beec-e6174309bc72'),
+        'node_uuid': kw.get('node_uuid',
+                            'f978ef48-d4af-4dad-beec-e6174309bc71'),
+        'extra': kw.get('extra', {}),
+        'updated_at': kw.get('updated_at'),
+        'created_at': kw.get('created_at'),
+    }
+
+
+def create_test_compute_port(context={}, **kw):
+    """Create test compute port entry in DB and return ComputePort DB object.
+
+    Function to be used to create test ComputePort objects in the database.
+
+    :param context: The request context, for access checks.
+    :param kw: kwargs with overriding values for port's attributes.
+    :returns: Test ComputePort DB object.
+
+    """
+    port = get_test_compute_port(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del port['id']
+    dbapi = db_api.get_instance()
+
+    return dbapi.compute_port_create(context, port)
 
 
 def get_test_instance_type(**kw):
