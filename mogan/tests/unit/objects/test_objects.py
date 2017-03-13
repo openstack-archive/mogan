@@ -384,6 +384,7 @@ class _TestObject(object):
 expected_object_fingerprints = {
     'Instance': '1.0-18d0ffc894a0f6b52df73a29919c035b',
     'ComputeNode': '1.0-9dd029c83e37adc7e01ff759e76cdda1',
+    'ComputePort': '1.0-bdba0f3ece31260c4deea37d39618c1a',
     'InstanceFault': '1.0-6b5b01b2cc7b6b547837acb168ec6eb9',
     'InstanceFaultList': '1.0-43e8aad0258652921f929934e9e048fd',
     'InstanceType': '1.0-589b096651fcdb30898ff50f748dd948',
