@@ -344,6 +344,7 @@ class EngineManager(base_manager.BaseEngineManager):
                     instance.power_state = states.NOSTATE
                     instance.status = fsm.current_state
                     instance.save()
+                    return
 
         do_delete_instance(instance)
 
