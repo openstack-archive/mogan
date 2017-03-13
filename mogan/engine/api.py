@@ -23,6 +23,7 @@ import six
 from mogan.common import exception
 from mogan.common.i18n import _LI
 from mogan.common import states
+from mogan.common import utils
 from mogan.conf import CONF
 from mogan.engine import rpcapi
 from mogan import image
@@ -252,9 +253,8 @@ class API(object):
                                      max_count)
 
     def _delete_instance(self, context, instance):
-        # Initialize state machine
-        fsm = states.machine.copy()
-        fsm.initialize(start_state=instance.status)
+
+        fsm = utils.get_state_machine(start_state=instance.status)
 
         fsm.process_event('delete')
         try:

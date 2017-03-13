@@ -253,9 +253,8 @@ class EngineManager(base_manager.BaseEngineManager):
             action=fields.NotificationAction.CREATE,
             phase=fields.NotificationPhase.START)
 
-        # Initialize state machine
-        fsm = states.machine.copy()
-        fsm.initialize(start_state=instance.status, target_state=states.ACTIVE)
+        fsm = utils.get_state_machine(start_state=instance.status,
+                                      target_state=states.ACTIVE)
 
         if filter_properties is None:
             filter_properties = {}
@@ -321,10 +320,8 @@ class EngineManager(base_manager.BaseEngineManager):
         """Delete an instance."""
         LOG.debug("Deleting instance...")
 
-        # Initialize state machine
-        fsm = states.machine.copy()
-        fsm.initialize(start_state=instance.status,
-                       target_state=states.DELETED)
+        fsm = utils.get_state_machine(start_state=instance.status,
+                                      target_state=states.DELETED)
 
         @utils.synchronized(instance.uuid)
         def do_delete_instance(instance):
@@ -392,9 +389,8 @@ class EngineManager(base_manager.BaseEngineManager):
         """
 
         LOG.debug('Rebuilding instance', instance=instance)
-        # Initialize state machine
-        fsm = states.machine.copy()
-        fsm.initialize(start_state=instance.status)
+
+        fsm = utils.get_state_machine(start_state=instance.status)
 
         try:
             self._rebuild_instance(context, instance)
