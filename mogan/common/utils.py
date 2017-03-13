@@ -94,3 +94,11 @@ def check_isinstance(obj, cls):
     if isinstance(obj, cls):
         return obj
     raise Exception(_('Expected object of type: %s') % (str(cls)))
+
+
+def set_status_for_instance(fsm, instance, process_event=None,
+                            power_state=None):
+    fsm.process_event(process_event)
+    if power_state is not None:
+        instance.power_state = power_state
+    instance.status = fsm.current_state

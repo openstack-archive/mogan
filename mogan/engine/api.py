@@ -23,6 +23,7 @@ import six
 from mogan.common import exception
 from mogan.common.i18n import _LI
 from mogan.common import states
+from mogan.common import utils
 from mogan.conf import CONF
 from mogan.engine import rpcapi
 from mogan import image
@@ -256,9 +257,9 @@ class API(object):
         fsm = states.machine.copy()
         fsm.initialize(start_state=instance.status)
 
-        fsm.process_event('delete')
         try:
-            instance.status = fsm.current_state
+            utils.set_status_for_instance(fsm, instance,
+                                          process_event='delete')
             instance.save()
         except exception.InstanceNotFound:
             LOG.debug("Instance is not found while deleting",
@@ -280,9 +281,10 @@ class API(object):
                   target, instance=instance)
         fsm = states.machine.copy()
         fsm.initialize(start_state=instance.status)
-        fsm.process_event(states.POWER_ACTION_MAP[target])
         try:
-            instance.status = fsm.current_state
+            process_event = states.POWER_ACTION_MAP[target]
+            utils.set_status_for_instance(fsm, instance,
+                                          process_event=process_event)
             instance.save()
         except exception.InstanceNotFound:
             LOG.debug("Instance is not found while setting power state",
@@ -297,9 +299,9 @@ class API(object):
         """Rebuild an instance."""
         fsm = states.machine.copy()
         fsm.initialize(start_state=instance.status)
-        fsm.process_event('rebuild')
         try:
-            instance.status = fsm.current_state
+            utils.set_status_for_instance(fsm, instance,
+                                          process_event='rebuild')
             instance.save()
         except exception.InstanceNotFound:
             LOG.debug("Instance is not found while rebuilding",
