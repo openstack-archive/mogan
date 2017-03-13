@@ -102,3 +102,9 @@ def get_state_machine(start_state=None, target_state=None):
     fsm = states.machine.copy()
     fsm.initialize(start_state=start_state, target_state=target_state)
     return fsm
+
+
+def process_event(fsm, instance, event=None):
+    fsm.process_event(event)
+    instance.status = fsm.current_state
+    instance.save()

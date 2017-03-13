@@ -275,10 +275,8 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             _run_flow()
         except Exception as e:
-            fsm.process_event('error')
             instance.power_state = states.NOSTATE
-            instance.status = fsm.current_state
-            instance.save()
+            utils.process_event(fsm, instance, event='error')
             LOG.error(_LE("Created instance %(uuid)s failed."
                           "Exception: %(exception)s"),
                       {"uuid": instance.uuid,
@@ -287,12 +285,10 @@ class EngineManager(base_manager.BaseEngineManager):
             # Advance the state model for the given event. Note that this
             # doesn't alter the instance in any way. This may raise
             # InvalidState, if this event is not allowed in the current state.
-            fsm.process_event('done')
             instance.power_state = self.driver.get_power_state(context,
                                                                instance.uuid)
-            instance.status = fsm.current_state
             instance.launched_at = timeutils.utcnow()
-            instance.save()
+            utils.process_event(fsm, instance, event='done')
             LOG.info(_LI("Created instance %s successfully."), instance.uuid)
         finally:
             return instance
@@ -328,18 +324,14 @@ class EngineManager(base_manager.BaseEngineManager):
                 with excutils.save_and_reraise_exception():
                     LOG.exception(_LE('Setting instance status to ERROR'),
                                   instance=instance)
-                    fsm.process_event('error')
                     instance.power_state = states.NOSTATE
-                    instance.status = fsm.current_state
-                    instance.save()
+                    utils.process_event(fsm, instance, event='error')
 
         do_delete_instance(instance)
 
-        fsm.process_event('done')
         instance.power_state = states.NOSTATE
-        instance.status = fsm.current_state
         instance.deleted_at = timeutils.utcnow()
-        instance.save()
+        utils.process_event(fsm, instance, event='done')
         instance.destroy()
 
     def set_power_state(self, context, instance, state):
@@ -357,11 +349,9 @@ class EngineManager(base_manager.BaseEngineManager):
             self.driver.set_power_state(context, instance, state)
 
         do_set_power_state()
-        fsm.process_event('done')
         instance.power_state = self.driver.get_power_state(context,
                                                            instance.uuid)
-        instance.status = fsm.current_state
-        instance.save()
+        utils.process_event(fsm, instance, event='done')
         LOG.info(_LI('Successfully set node power state: %s'),
                  state, instance=instance)
 
@@ -386,18 +376,14 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             self._rebuild_instance(context, instance)
         except Exception as e:
-            fsm.process_event('error')
-            instance.status = fsm.current_state
-            instance.save()
+            utils.process_event(fsm, instance, event='error')
             LOG.error(_LE("Rebuild instance %(uuid)s failed."
                           "Exception: %(exception)s"),
                       {"uuid": instance.uuid,
                        "exception": e})
             return
 
-        fsm.process_event('done')
-        instance.status = fsm.current_state
-        instance.save()
+        utils.process_event(fsm, instance, event='done')
         LOG.info(_LI('Instance was successfully rebuilt'), instance=instance)
 
     def list_availability_zones(self, context):
