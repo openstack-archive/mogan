@@ -96,3 +96,32 @@ def create_test_compute_node(ctxt, **kw):
     node = get_test_compute_node(ctxt, **kw)
     node.create()
     return node
+
+
+def get_test_compute_port(ctxt, **kw):
+    """Return a ComputePort object with appropriate attributes.
+
+    NOTE: The object leaves the attributes marked as changed, such
+    that a create() could be used to commit it to the DB.
+    """
+    kw['object_type'] = 'compute_port'
+    get_db_compute_port_checked = check_keyword_arguments(
+        db_utils.get_test_compute_port)
+    db_port = get_db_compute_port_checked(**kw)
+
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del db_port['id']
+    port = objects.ComputePort(ctxt, **db_port)
+    return port
+
+
+def create_test_compute_port(ctxt, **kw):
+    """Create and return a test compute port object.
+
+    Create a compute port in the DB and return a ComputePort object with
+    appropriate attributes.
+    """
+    port = get_test_compute_port(ctxt, **kw)
+    port.create()
+    return port

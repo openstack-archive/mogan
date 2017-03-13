@@ -103,6 +103,31 @@ class Connection(object):
     def compute_node_update(self, context, node_uuid, values):
         """Update a compute node."""
 
+    # Compute ports
+    @abc.abstractmethod
+    def compute_port_create(self, context, values):
+        """Create a new compute port."""
+
+    @abc.abstractmethod
+    def compute_port_get(self, context, port_uuid):
+        """Get compute port by port uuid."""
+
+    @abc.abstractmethod
+    def compute_port_get_all(self, context):
+        """Get all compute ports."""
+
+    @abc.abstractmethod
+    def compute_port_get_by_node_uuid(self, context, node_uuid):
+        """Get compute ports by node_uuid."""
+
+    @abc.abstractmethod
+    def compute_port_destroy(self, context, port_uuid):
+        """Delete a compute port."""
+
+    @abc.abstractmethod
+    def compute_port_update(self, context, port_uuid, values):
+        """Update a compute port."""
+
     # Instance Type extra specs
     @abc.abstractmethod
     def extra_specs_update_or_create(self, context,

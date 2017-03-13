@@ -159,6 +159,17 @@ class IronicDriver(base_driver.BaseEngineDriver):
         }
         return dic
 
+    def _port_resource(self, port):
+        """Helper method to create resource dict from port stats."""
+        port_type = port.extra.get('port_type')
+
+        dic = {
+            'port_type': str(port_type),
+            'node_uuid': str(port.node_uuid),
+            'port_uuid': str(port.uuid),
+        }
+        return dic
+
     def _add_instance_info_to_node(self, node, instance):
 
         patch = list()
@@ -447,7 +458,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         node_resources = {}
         for node in node_list:
             # Add ports to the associated node
-            node.ports = [port for port in port_list
+            node.ports = [self._port_resource(port) for port in port_list
                           if node.uuid == port.node_uuid]
             node_resources[node.uuid] = self._node_resource(node)
         return node_resources
