@@ -94,3 +94,9 @@ def check_isinstance(obj, cls):
     if isinstance(obj, cls):
         return obj
     raise Exception(_('Expected object of type: %s') % (str(cls)))
+
+
+def process_event(fsm, instance, event=None):
+    fsm.process_event(event)
+    instance.status = fsm.current_state
+    instance.save()
