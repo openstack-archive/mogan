@@ -256,10 +256,8 @@ class API(object):
 
         fsm = utils.get_state_machine(start_state=instance.status)
 
-        fsm.process_event('delete')
         try:
-            instance.status = fsm.current_state
-            instance.save()
+            utils.process_event(fsm, instance, event='delete')
         except exception.InstanceNotFound:
             LOG.debug("Instance is not found while deleting",
                       instance=instance)
@@ -280,10 +278,9 @@ class API(object):
                   target, instance=instance)
         fsm = states.machine.copy()
         fsm.initialize(start_state=instance.status)
-        fsm.process_event(states.POWER_ACTION_MAP[target])
         try:
-            instance.status = fsm.current_state
-            instance.save()
+            utils.process_event(fsm, instance,
+                                event=states.POWER_ACTION_MAP[target])
         except exception.InstanceNotFound:
             LOG.debug("Instance is not found while setting power state",
                       instance=instance)
@@ -297,10 +294,8 @@ class API(object):
         """Rebuild an instance."""
         fsm = states.machine.copy()
         fsm.initialize(start_state=instance.status)
-        fsm.process_event('rebuild')
         try:
-            instance.status = fsm.current_state
-            instance.save()
+            utils.process_event(fsm, instance, event='rebuild')
         except exception.InstanceNotFound:
             LOG.debug("Instance is not found while rebuilding",
                       instance=instance)
