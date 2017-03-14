@@ -328,6 +328,14 @@ Create devstack/local.conf with minimal settings required to enable Mogan
     END
 
 .. note::
+    If you want to enable shellinabox console functionality, please disable
+    VM console log and set the ironic deployment driver as *agent_ssh* in
+    the devstack config file::
+
+    IRONIC_VM_LOG_CONSOLE=False
+    IRONIC_DEPLOY_DRIVER=agent_ssh
+
+.. note::
     Git protocol requires access to port 9418, which is not a standard port that
     corporate firewalls always allow. If you are behind a firewall or on a proxy that
     blocks Git protocol, modify the ``enable_plugin`` line to use ``https://`` instead
