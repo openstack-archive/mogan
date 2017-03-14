@@ -470,6 +470,29 @@ class InstanceCollection(base.APIBase):
         return collection
 
 
+class InstanceConsole(base.APIBase):
+    """API representation of the console of an instance."""
+
+    console = {wtypes.text: types.jsontype}
+    """The console information of the instance"""
+
+
+class InstanceSerialConsoleController(InstanceControllerBase):
+    """REST controller for Instance."""
+
+    @policy.authorize_wsgi("mogan:instance", "get_serial_console")
+    @expose.expose(InstanceConsole, types.uuid)
+    def get(self, instance_uuid):
+        """Get the serial console info of the instance.
+
+        :param instance_uuid: the UUID of a instance.
+        """
+        instance_obj = self._resource or self._get_resource(instance_uuid)
+        console = pecan.request.engine_api.get_serial_console(
+            pecan.request.context, instance_obj)
+        return InstanceConsole(console=console)
+
+
 class InstanceController(InstanceControllerBase):
     """REST controller for Instance."""
 
@@ -478,6 +501,9 @@ class InstanceController(InstanceControllerBase):
 
     networks = InstanceNetworksController()
     """Expose the network controller action as a sub-element of instances"""
+
+    serial_console = InstanceSerialConsoleController()
+    """Expose the console controller of instances"""
 
     _custom_actions = {
         'detail': ['GET']

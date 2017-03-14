@@ -82,4 +82,4 @@ class EngineAPI(object):
     def get_serial_console(self, context, instance):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'get_serial_console',
-                          instance_uuid=instance)
+                          instance=instance)
