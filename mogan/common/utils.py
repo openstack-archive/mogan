@@ -23,6 +23,7 @@ import six
 
 from mogan.common import exception
 from mogan.common.i18n import _LW
+from mogan.common import states
 
 LOG = logging.getLogger(__name__)
 
@@ -94,3 +95,10 @@ def check_isinstance(obj, cls):
     if isinstance(obj, cls):
         return obj
     raise Exception(_('Expected object of type: %s') % (str(cls)))
+
+
+def get_state_machine(start_state=None, target_state=None):
+    # Initialize state machine
+    fsm = states.machine.copy()
+    fsm.initialize(start_state=start_state, target_state=target_state)
+    return fsm
