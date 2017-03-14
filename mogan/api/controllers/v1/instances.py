@@ -470,6 +470,29 @@ class InstanceCollection(base.APIBase):
         return collection
 
 
+class InstanceConsole(base.APIBase):
+    """API representation of the networks of an instance."""
+
+    console = {wtypes.text: types.jsontype}
+    """The network information of the instance"""
+
+
+class InstanceConsoleController(InstanceControllerBase):
+    """REST controller for Instance."""
+
+    @policy.authorize_wsgi("mogan:instance", "get_console")
+    @expose.expose(InstanceConsole, types.uuid)
+    def get(self, instance_uuid):
+        """Get the console info of the instance.
+
+        :param instance_uuid: the UUID of a instance.
+        """
+        # TODO(liusheng) for now, we only support 'shellinabox'
+        console = pecan.request.engine_api.get_console(
+            pecan.request.context, instance_uuid, 'shellinabox')
+        return InstanceConsole(console=console)
+
+
 class InstanceController(InstanceControllerBase):
     """REST controller for Instance."""
 
@@ -478,6 +501,9 @@ class InstanceController(InstanceControllerBase):
 
     networks = InstanceNetworksController()
     """Expose the network controller action as a sub-element of instances"""
+
+    console = InstanceConsoleController()
+    """Expose the console controller of instances"""
 
     _custom_actions = {
         'detail': ['GET']
