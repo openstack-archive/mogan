@@ -15,3 +15,4 @@
 
 
 MANAGER_TOPIC = 'mogan.engine_manager'
+MANAGER_CONSOLEAUTH_TOPIC = 'mogan.console_auth'
