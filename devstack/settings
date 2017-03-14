@@ -2,8 +2,8 @@
 
 # We have to add Mogan to enabled services for run_process to work
 # Now we just support to run services in separate processes and screens:
-# enable_service mogan mogan-api mogan-engine mogan-scheduler
-enable_service mogan mogan-api mogan-engine mogan-scheduler
+# enable_service mogan mogan-api mogan-engine mogan-scheduler mogan-consoleauth mogan-shellinaboxproxy
+enable_service mogan mogan-api mogan-engine mogan-scheduler mogan-consoleauth mogan-shellinaboxproxy
 
 # Set up default repos
 MOGAN_REPO=${MOGAN_REPO:-${GIT_BASE}/openstack/mogan.git}
