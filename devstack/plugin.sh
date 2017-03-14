@@ -152,13 +152,16 @@ function start_mogan {
         fi
         run_process mogan-engine "${MOGAN_BIN_DIR}/mogan-engine --config-file ${MOGAN_CONF_DIR}/mogan.conf"
     fi
+
+    run_process mogan-consoleauth "${MOGAN_BIN_DIR}/mogan-consoleauth --config-file ${MOGAN_CONF_DIR}/mogan.conf"
+    run_process mogan-shellinaboxproxy "${MOGAN_BIN_DIR}/mogan-shellinaboxproxy --config-file ${MOGAN_CONF_DIR}/mogan.conf"
 }
 
 
 # stop_mogan - Stop running processes
 function stop_mogan {
     # Kill the Mogan screen windows
-    for serv in mogan-api mogan-engine; do
+    for serv in mogan-api mogan-engine mogan-consoleauth mogan-shellinaboxproxy; do
         stop_process $serv
     done
 }
