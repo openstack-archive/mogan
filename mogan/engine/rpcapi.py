@@ -78,3 +78,9 @@ class EngineAPI(object):
         """Signal to engine service to get availability zone list."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'list_availability_zones')
+
+    def get_console(self, context, instance_uuid, console_type):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        return cctxt.call(context, 'get_console',
+                          instance_uuid=instance_uuid,
+                          console_type=console_type)
