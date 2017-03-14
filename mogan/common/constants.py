@@ -16,3 +16,4 @@
 
 ENGINE_TOPIC = 'mogan-engine'
 SCHEDULER_TOPIC = 'mogan-scheduler'
+MANAGER_CONSOLEAUTH_TOPIC = 'mogan-consoleauth'
