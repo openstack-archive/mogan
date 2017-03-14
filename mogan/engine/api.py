@@ -24,6 +24,7 @@ from mogan.common import exception
 from mogan.common.i18n import _LI
 from mogan.common import states
 from mogan.conf import CONF
+from mogan.consoleauth import rpcapi as consoleauth_rpcapi
 from mogan.engine import rpcapi
 from mogan import image
 from mogan import network
@@ -58,6 +59,7 @@ class API(object):
         self.image_api = image_api or image.API()
         self.engine_rpcapi = rpcapi.EngineAPI()
         self.network_api = network.API()
+        self.consoleauth_rpcapi = consoleauth_rpcapi.ConsoleAuthAPI()
 
     def _get_image(self, context, image_uuid):
         return self.image_api.get(context, image_uuid)
@@ -339,3 +341,16 @@ class API(object):
         if locked_by and locked_by != expect_locked_by:
             return False
         return True
+
+    def get_console(self, context, instance_uuid, console_type):
+        """Get a url to an instance Console."""
+        connect_info = self.engine_rpcapi.get_console(
+            context, instance_uuid=instance_uuid, console_type=console_type)
+        self.consoleauth_rpcapi.authorize_console(
+            context,
+            connect_info['token'], console_type,
+            connect_info['host'], connect_info['port'],
+            connect_info['internal_access_path'], instance_uuid,
+            access_url=connect_info['access_url'])
+
+        return {'url': connect_info['access_url']}
