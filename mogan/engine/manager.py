@@ -48,19 +48,10 @@ class EngineManager(base_manager.BaseEngineManager):
     _lock = threading.Lock()
 
     def _refresh_cache(self):
-        node_cache = {}
-        nodes = self.driver.get_available_node_list()
-        ports = self.driver.get_port_list()
-        portgroups = self.driver.get_portgroup_list()
-        ports += portgroups
-        for node in nodes:
-            # Add ports to the associated node
-            node.ports = [port for port in ports
-                          if node.uuid == port.node_uuid]
-            node_cache[node.uuid] = node
+        nodes = self.driver.get_available_resources()
 
         with self._lock:
-            self.node_cache = node_cache
+            self.node_cache = nodes
 
     @periodic_task.periodic_task(
         spacing=CONF.engine.sync_node_resource_interval,

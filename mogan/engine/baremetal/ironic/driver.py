@@ -345,14 +345,16 @@ class IronicDriver(base_driver.BaseEngineDriver):
         LOG.info(_LI('Successfully unprovisioned Ironic node %s'),
                  node.uuid, instance=instance)
 
-    def get_available_node_list(self):
-        """Helper function to return the list of nodes.
+    def get_available_resources(self):
+        """Helper function to return the list of resources.
 
         If unable to connect ironic server, an empty list is returned.
 
         :returns: a list of raw node from ironic
 
         """
+
+        # Retrieve nodes
         params = {
             'maintenance': False,
             'detail': True,
@@ -366,7 +368,28 @@ class IronicDriver(base_driver.BaseEngineDriver):
             LOG.exception(_LE("Could not get nodes from ironic. Reason: "
                               "%(detail)s"), {'detail': e.message})
             node_list = []
-        return node_list
+
+        # Retrive ports
+        params = {
+            'limit': 0,
+            'fields': ('uuid', 'node_uuid', 'extra', 'address')
+        }
+
+        try:
+            port_list = self.ironicclient.call("port.list", **params)
+        except client_e.ClientException as e:
+            LOG.exception(_LE("Could not get ports from ironic. Reason: "
+                              "%(detail)s"), {'detail': e.message})
+            port_list = []
+
+        # TODO(zhenguo): Add portgroups resources
+        node_resources = {}
+        for node in node_list:
+            # Add ports to the associated node
+            node.ports = [port for port in port_list
+                          if node.uuid == port.node_uuid]
+            node_resources[node.uuid] = node
+        return node_resources
 
     def get_maintenance_node_list(self):
         """Helper function to return the list of maintenance nodes.
@@ -410,48 +433,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
                               "%(detail)s"), {'detail': e.message})
             node_list = []
         return node_list
-
-    def get_port_list(self):
-        """Helper function to return the list of ports.
-
-        If unable to connect ironic server, an empty list is returned.
-
-        :returns: a list of raw port from ironic
-
-        """
-        params = {
-            'limit': 0,
-            'fields': ('uuid', 'node_uuid', 'extra', 'address')
-        }
-
-        try:
-            port_list = self.ironicclient.call("port.list", **params)
-        except client_e.ClientException as e:
-            LOG.exception(_LE("Could not get ports from ironic. Reason: "
-                              "%(detail)s"), {'detail': e.message})
-            port_list = []
-        return port_list
-
-    def get_portgroup_list(self, **kwargs):
-        """Helper function to return the list of portgroups.
-
-        If unable to connect ironic server, an empty list is returned.
-
-        :returns: a list of raw port from ironic
-
-        """
-        params = {
-            'limit': 0,
-            'fields': ('uuid', 'node_uuid', 'extra', 'address')
-        }
-
-        try:
-            portgroup_list = self.ironicclient.call("portgroup.list", **params)
-        except client_e.ClientException as e:
-            LOG.exception(_LE("Could not get portgroups from ironic. Reason: "
-                              "%(detail)s"), {'detail': e.message})
-            portgroup_list = []
-        return portgroup_list
 
     def get_power_state(self, context, instance_uuid):
         try:
