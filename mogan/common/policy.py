@@ -120,6 +120,9 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:set_provision_state:rebuild',
                        'rule:default',
                        description='Rebuild an instance'),
+    policy.RuleDefault('mogan:instance:get_console',
+                       'rule:default',
+                       description='Get vnc console for an instance'),
 ]
 
 FUNC_PARAMS_INTERESTED = {
