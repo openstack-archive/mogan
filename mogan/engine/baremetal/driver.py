@@ -35,9 +35,10 @@ class BaseEngineDriver(object):
         """Add init staff here.
         """
 
-    def get_available_node_list(self):
-        """Return all available nodes.
+    def get_available_resources(self):
+        """Retrieve resource information.
 
+        :returns: Dictionary describing resources
         """
         raise NotImplementedError()
 
@@ -50,16 +51,6 @@ class BaseEngineDriver(object):
     def get_nodes_power_state(self):
         """Return nodes power state.
 
-        """
-        raise NotImplementedError()
-
-    def get_port_list(self):
-        """Return all ports.
-        """
-        raise NotImplementedError()
-
-    def get_portgroup_list(self):
-        """Return all portgroups.
         """
         raise NotImplementedError()
 
