@@ -36,26 +36,31 @@ class FakeFilterScheduler(filter_scheduler.FilterScheduler):
 class FakeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
     fields = {
         'id': object_fields.IntegerField(),
-        'uuid': object_fields.UUIDField(nullable=True),
-        'properties': object_fields.FlexibleDictField(nullable=True),
+        'node_uuid': object_fields.UUIDField(),
+        'node_type': object_fields.StringField(nullable=True),
+        'availability_zone': object_fields.StringField(nullable=True),
+        'extra_specs': object_fields.FlexibleDictField(nullable=True),
         'ports': fields.ListOfDictOfNullableStringsField(nullable=True),
     }
 
 
-fakenode1 = FakeNode(id=1, uuid='1a617131-cdbc-45dc-afff-f21f17ae054e',
-                     properties={'capabilities': '',
-                                 'availability_zone': 'az1',
-                                 'instance_type': 'type1'},
+fakenode1 = FakeNode(id=1,
+                     node_uuid='1a617131-cdbc-45dc-afff-f21f17ae054e',
+                     extra_specs={},
+                     availability_zone='az1',
+                     node_type='type1',
                      ports=[])
-fakenode2 = FakeNode(id=2, uuid='2a617131-cdbc-45dc-afff-f21f17ae054e',
-                     properties={'capabilities': '',
-                                 'availability_zone': 'az2',
-                                 'instance_type': 'type2'},
+fakenode2 = FakeNode(id=2,
+                     node_uuid='2a617131-cdbc-45dc-afff-f21f17ae054e',
+                     extra_specs={},
+                     availability_zone='az1',
+                     node_type='type1',
                      ports=[])
-fakenode3 = FakeNode(id=3, uuid='3a617131-cdbc-45dc-afff-f21f17ae054e',
-                     properties={'capabilities': '',
-                                 'availability_zone': 'az3',
-                                 'instance_type': 'type3'},
+fakenode3 = FakeNode(id=3,
+                     node_uuid='3a617131-cdbc-45dc-afff-f21f17ae054e',
+                     extra_specs={},
+                     availability_zone='az1',
+                     node_type='type1',
                      ports=[])
 
 

@@ -33,10 +33,10 @@ class ComputeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
         'cpus': object_fields.IntegerField(),
         'memory_mb': object_fields.IntegerField(),
         'hypervisor_type': object_fields.StringField(),
+        'node_type': object_fields.StringField(),
         'availability_zone': object_fields.StringField(nullable=True),
         'node_uuid': object_fields.UUIDField(read_only=True),
-        'capabilities': object_fields.FlexibleDictField(nullable=True),
-        'extra': object_fields.FlexibleDictField(nullable=True),
+        'extra_specs': object_fields.FlexibleDictField(nullable=True),
     }
 
     @classmethod
@@ -73,3 +73,10 @@ class ComputeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
         """Refresh the object by re-fetching from the DB."""
         current = self.__class__.get(context, self.node_uuid)
         self.obj_refresh(current)
+
+    def update_from_driver(self, node):
+        keys = ["cpus", "memory_mb", "hypervisor_type", "node_type",
+                "availability_zone", "node_uuid", "extra_specs"]
+        for key in keys:
+            if key in node:
+                setattr(self, key, node[key])

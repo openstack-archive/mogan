@@ -102,6 +102,60 @@ class IronicDriver(base_driver.BaseEngineDriver):
         except ironic_exc.NotFound:
             raise exception.InstanceNotFound(instance_id=instance.uuid)
 
+    def _parse_node_properties(self, node):
+        """Helper method to parse the node's properties."""
+        properties = {}
+
+        for prop in ('cpus', 'memory_mb', 'local_gb'):
+            try:
+                properties[prop] = int(node.properties.get(prop, 0))
+            except (TypeError, ValueError):
+                LOG.warning(_LW('Node %(uuid)s has a malformed "%(prop)s". '
+                                'It should be an integer.'),
+                            {'uuid': node.uuid, 'prop': prop})
+                properties[prop] = 0
+
+        properties['capabilities'] = node.properties.get('capabilities')
+        return properties
+
+    def _node_resource(self, node):
+        """Helper method to create resource dict from node stats."""
+        properties = self._parse_node_properties(node)
+
+        cpus = properties['cpus']
+        memory_mb = properties['memory_mb']
+        availability_zone = properties.get('availability_zone')
+        node_type = properties.get('node_type')
+
+        nodes_extra_specs = {}
+
+        # NOTE(gilliard): To assist with more precise scheduling, if the
+        # node.properties contains a key 'capabilities', we expect the value
+        # to be of the form "k1:v1,k2:v2,etc.." which we add directly as
+        # key/value pairs into the node_extra_specs to be used by the
+        # ComputeCapabilitiesFilter
+        capabilities = properties['capabilities']
+        if capabilities:
+            for capability in str(capabilities).split(','):
+                parts = capability.split(':')
+                if len(parts) == 2 and parts[0] and parts[1]:
+                    nodes_extra_specs[parts[0].strip()] = parts[1]
+                else:
+                    LOG.warning(_LW("Ignoring malformed capability '%s'. "
+                                    "Format should be 'key:val'."), capability)
+
+        dic = {
+            'cpus': cpus,
+            'memory_mb': memory_mb,
+            'hypervisor_type': self._get_hypervisor_type(),
+            'availability_zone': str(availability_zone),
+            'node_type': str(node_type),
+            'extra_specs': nodes_extra_specs,
+            'node_uuid': str(node.uuid),
+            'ports': node.ports,
+        }
+        return dic
+
     def _add_instance_info_to_node(self, node, instance):
 
         patch = list()
@@ -181,6 +235,10 @@ class IronicDriver(base_driver.BaseEngineDriver):
             raise loopingcall.LoopingCallDone()
 
         _log_ironic_polling(message, node, instance)
+
+    def _get_hypervisor_type(self):
+        """Get hypervisor type."""
+        return 'ironic'
 
     def get_ports_from_node(self, node_uuid, detail=True):
         """List the MAC addresses and the port types from a node."""
@@ -388,7 +446,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             # Add ports to the associated node
             node.ports = [port for port in port_list
                           if node.uuid == port.node_uuid]
-            node_resources[node.uuid] = node
+            node_resources[node.uuid] = self._node_resource(node)
         return node_resources
 
     def get_maintenance_node_list(self):

@@ -47,17 +47,70 @@ class EngineManager(base_manager.BaseEngineManager):
     target = messaging.Target(version=RPC_API_VERSION)
     _lock = threading.Lock()
 
-    def _refresh_cache(self):
-        nodes = self.driver.get_available_resources()
-
+    def _refresh_cache(self, nodes):
         with self._lock:
             self.node_cache = nodes
 
+    def _get_compute_node(self, context, node_uuid):
+        """Gets compute node by the uuid."""
+        try:
+            return objects.ComputeNode.get(context, node_uuid)
+        except exception.NotFound:
+            LOG.warning(_LW("No compute node record for %(node)s"),
+                        {'node': node_uuid})
+
+    def _init_compute_node(self, context, node):
+        """Initialize the compute node if it does not already exist.
+
+        :param context: security context
+        :param node: initial values
+        """
+
+        # now try to get the compute node record from the
+        # database. If we get one we use resources to initialize
+        cn = self._get_compute_node(context, node.uuid)
+        if cn:
+            cn.update_from_driver(cn, node)
+            cn.save()
+            return
+
+        # there was no compute node in the database so we need to create
+        # a new compute node. This needs to be initialized with node values.
+        cn = objects.ComputeNode(context)
+        cn.update_from_driver(cn, node)
+        cn.create()
+
     @periodic_task.periodic_task(
-        spacing=CONF.engine.sync_node_resource_interval,
+        spacing=CONF.engine.update_resources_interval,
         run_immediately=True)
-    def _sync_node_resources(self, context):
-        self._refresh_cache()
+    def _update_available_resources(self, context):
+        """See driver.get_available_resource()
+
+        Periodic process that keeps that the engine's understanding of
+        resource availability in sync with the underlying hypervisor.
+
+        :param context: security context
+        """
+        nodes = self.driver.get_available_resources()
+
+        # TODO(zhenguo): Keep using cache until we finished the refactor to
+        # save resources to db.
+        self._refresh_cache(nodes)
+
+        compute_nodes_in_db = objects.ComputeNode.list(context)
+
+        # Record compute nodes to db
+        for uuid, node in nodes.items():
+            # initialize the compute node object, creating it
+            # if it does not already exist.
+            self._init_compute_node(context, node)
+
+        # Delete orphan compute node not reported by driver but still in db
+        for cn in compute_nodes_in_db:
+            if cn.node_uuid not in nodes:
+                LOG.info(_LI("Deleting orphan compute node %(id)s)"),
+                         {'id': cn.node_uuid})
+                cn.destroy()
 
     @periodic_task.periodic_task(spacing=CONF.engine.sync_power_state_interval,
                                  run_immediately=True)

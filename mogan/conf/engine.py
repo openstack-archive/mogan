@@ -30,10 +30,10 @@ opts = [
                help=_('Maximum number of worker threads that can be started '
                       'simultaneously by a periodic task. Should be less '
                       'than RPC thread pool size.')),
-    cfg.IntOpt('sync_node_resource_interval',
+    cfg.IntOpt('update_resources_interval',
                default=60,
-               help=_('Interval between syncing the node resources from '
-                      'ironic, in seconds.')),
+               help=_('Interval between syncing the resources from underlying '
+                      'hypervisor, in seconds.')),
     cfg.StrOpt('scheduler_driver',
                default='mogan.engine.scheduler.filter_scheduler.'
                        'FilterScheduler',
