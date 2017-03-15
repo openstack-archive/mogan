@@ -33,12 +33,12 @@ class NodeState(object):
     """Mutable and immutable information tracked for a Ironic node."""
 
     def __init__(self, node):
-        self.node = node.uuid
-        self.capabilities = node.properties.get('capabilities')
-        self.availability_zone = node.properties.get('availability_zone') \
+        self.node = node['node_uuid']
+        self.capabilities = node['extra_specs']
+        self.availability_zone = node['availability_zone'] \
             or CONF.engine.default_availability_zone
-        self.instance_type = node.properties.get('instance_type')
-        self.ports = node.ports
+        self.instance_type = node['node_type']
+        self.ports = node['ports']
 
 
 class NodeManager(object):
