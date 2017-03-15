@@ -184,7 +184,7 @@ function create_instance_type {
 function update_ironic_node_type {
     ironic_nodes=$(openstack baremetal node list -c UUID -f value)
     for node in ${ironic_nodes};do
-        openstack baremetal node set --property instance_type=${MOGAN_DEFAULT_INSTANCE_TYPE} ${node}
+        openstack baremetal node set --property node_type=${MOGAN_DEFAULT_INSTANCE_TYPE} ${node}
     done
 }
 

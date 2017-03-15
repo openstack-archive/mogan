@@ -105,10 +105,10 @@ class ComputeNode(Base):
     cpus = Column(Integer, nullable=False)
     memory_mb = Column(Integer, nullable=False)
     hypervisor_type = Column(String(255), nullable=False)
+    node_type = Column(String(255), nullable=False)
     availability_zone = Column(String(255), nullable=True)
     node_uuid = Column(String(36), nullable=False)
-    capabilities = Column(db_types.JsonEncodedDict)
-    extra = Column(db_types.JsonEncodedDict)
+    extra_specs = Column(db_types.JsonEncodedDict)
 
 
 class InstanceNic(Base):
