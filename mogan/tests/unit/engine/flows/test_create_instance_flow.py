@@ -53,7 +53,6 @@ class CreateInstanceFlowTestCase(base.TestCase):
                      fake_filter_props)
         mock_schedule.assert_called_once_with(self.ctxt,
                                               fake_request_spec,
-                                              fake_engine_manager.node_cache,
                                               fake_filter_props)
         self.assertEqual(fake_uuid, instance_obj.node_uuid)
 

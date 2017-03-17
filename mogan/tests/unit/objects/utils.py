@@ -83,7 +83,10 @@ def get_test_compute_node(ctxt, **kw):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
         del db_node['id']
-    node = objects.ComputeNode(ctxt, **db_node)
+    node = objects.ComputeNode(ctxt)
+    for key in db_node:
+        if key != 'ports':
+            setattr(node, key, db_node[key])
     return node
 
 

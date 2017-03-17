@@ -126,10 +126,10 @@ class ComputePort(Base):
     node_uuid = Column(String(36), nullable=False)
     extra_specs = Column(db_types.JsonEncodedDict)
     _node = orm.relationship(
-        ComputeNode,
-        backref=orm.backref('compute_ports', uselist=False),
+        "ComputeNode",
+        backref='ports',
         foreign_keys=node_uuid,
-        primaryjoin='ComputeNode.node_uuid == ComputePort.node_uuid')
+        primaryjoin='and_(ComputeNode.node_uuid == ComputePort.node_uuid)')
 
 
 class InstanceNic(Base):

@@ -120,7 +120,7 @@ class FilterScheduler(driver.Scheduler):
                 {'max_attempts': max_attempts,
                  'instance_id': instance_id})
 
-    def _get_weighted_candidates(self, context, request_spec, node_cache,
+    def _get_weighted_candidates(self, context, request_spec,
                                  filter_properties=None):
         """Return a list of nodes that meet required specs.
 
@@ -153,7 +153,7 @@ class FilterScheduler(driver.Scheduler):
 
         # Note: remember, we are using an iterator here. So only
         # traverse this list once.
-        nodes = self.node_manager.get_all_node_states(node_cache)
+        nodes = self.node_manager.get_all_node_states(context)
 
         # Filter local nodes based on requirements ...
         nodes = self.node_manager.get_filtered_nodes(nodes,
@@ -168,10 +168,8 @@ class FilterScheduler(driver.Scheduler):
                                                             filter_properties)
         return weighed_nodes
 
-    def schedule(self, context, request_spec, node_cache,
-                 filter_properties=None):
+    def schedule(self, context, request_spec, filter_properties=None):
         weighed_nodes = self._get_weighted_candidates(context, request_spec,
-                                                      node_cache,
                                                       filter_properties)
         if not weighed_nodes:
             LOG.warning(_LW('No weighed nodes found for instance '

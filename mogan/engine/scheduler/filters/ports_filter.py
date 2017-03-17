@@ -27,7 +27,7 @@ class PortsFilter(filters.BaseNodeFilter):
         """Check if ports has the specified port type."""
 
         for port in ports:
-            if port_type == port['port_type']:
+            if port_type == port.port_type:
                 return True
 
         return False

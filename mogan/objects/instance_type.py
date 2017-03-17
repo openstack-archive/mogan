@@ -58,7 +58,7 @@ class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [InstanceType._from_db_object(cls(context), obj)
+        return [InstanceType._from_db_object(context, cls(context), obj)
                 for obj in db_objects]
 
     @classmethod
@@ -73,7 +73,7 @@ class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
         """Find a Instance Type and return a Instance Type object."""
         db_instance_type = cls.dbapi.instance_type_get(context,
                                                        instance_type_uuid)
-        instance_type = InstanceType._from_db_object(cls(context),
+        instance_type = InstanceType._from_db_object(context, cls(context),
                                                      db_instance_type)
         return instance_type
 
@@ -81,7 +81,7 @@ class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
         """Create a Instance Type record in the DB."""
         values = self.obj_get_changes()
         db_instance_type = self.dbapi.instance_type_create(context, values)
-        self._from_db_object(self, db_instance_type)
+        self._from_db_object(context, self, db_instance_type)
 
     def destroy(self, context=None):
         """Delete the Instance Type from the DB."""

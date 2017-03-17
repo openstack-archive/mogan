@@ -29,7 +29,8 @@ class TestComputeNodeObject(base.DbTestCase):
     def setUp(self):
         super(TestComputeNodeObject, self).setUp()
         self.ctxt = context.get_admin_context()
-        self.fake_node = utils.get_test_compute_node(context=self.ctxt)
+        self.fake_node = utils.get_test_compute_node(
+            context=self.ctxt, ports=[utils.get_test_compute_port()])
         self.node = obj_utils.get_test_compute_node(
             self.ctxt, **self.fake_node)
 
@@ -44,23 +45,12 @@ class TestComputeNodeObject(base.DbTestCase):
             mock_node_get.assert_called_once_with(self.context, node_uuid)
             self.assertEqual(self.context, node._context)
 
-    def test_list(self):
-        with mock.patch.object(self.dbapi, 'compute_node_get_all',
-                               autospec=True) as mock_node_get_all:
-            mock_node_get_all.return_value = [self.fake_node]
-
-            nodes = objects.ComputeNode.list(self.context)
-
-            mock_node_get_all.assert_called_once_with(self.context)
-            self.assertIsInstance(nodes[0], objects.ComputeNode)
-            self.assertEqual(self.context, nodes[0]._context)
-
     def test_create(self):
         with mock.patch.object(self.dbapi, 'compute_node_create',
                                autospec=True) as mock_node_create:
+            self.fake_node.pop('ports')
             mock_node_create.return_value = self.fake_node
             node = objects.ComputeNode(self.context, **self.fake_node)
-            node.obj_get_changes()
             node.create(self.context)
             expected_called = copy.deepcopy(self.fake_node)
             mock_node_create.assert_called_once_with(self.context,
@@ -71,6 +61,7 @@ class TestComputeNodeObject(base.DbTestCase):
         uuid = self.fake_node['node_uuid']
         with mock.patch.object(self.dbapi, 'compute_node_destroy',
                                autospec=True) as mock_node_destroy:
+            self.fake_node.pop('ports')
             node = objects.ComputeNode(self.context, **self.fake_node)
             node.destroy(self.context)
             mock_node_destroy.assert_called_once_with(self.context, uuid)
@@ -79,16 +70,10 @@ class TestComputeNodeObject(base.DbTestCase):
         uuid = self.fake_node['node_uuid']
         with mock.patch.object(self.dbapi, 'compute_node_update',
                                autospec=True) as mock_node_update:
+            self.fake_node.pop('ports')
             mock_node_update.return_value = self.fake_node
             node = objects.ComputeNode(self.context, **self.fake_node)
             updates = node.obj_get_changes()
             node.save(self.context)
             mock_node_update.assert_called_once_with(
                 self.context, uuid, updates)
-
-    def test_save_after_refresh(self):
-        db_node = utils.create_test_compute_node(context=self.ctxt)
-        node = objects.ComputeNode.get(self.context, db_node.node_uuid)
-        node.refresh(self.context)
-        node.hypervisor_type = 'refresh'
-        node.save(self.context)

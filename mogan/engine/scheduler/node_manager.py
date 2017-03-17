@@ -23,6 +23,7 @@ from oslo_utils import importutils
 
 from mogan.common import exception
 from mogan.engine.scheduler import filters
+from mogan import objects
 
 
 CONF = cfg.CONF
@@ -33,12 +34,12 @@ class NodeState(object):
     """Mutable and immutable information tracked for a Ironic node."""
 
     def __init__(self, node):
-        self.node = node['node_uuid']
-        self.capabilities = node['extra_specs']
-        self.availability_zone = node['availability_zone'] \
+        self.node = node.node_uuid
+        self.capabilities = node.extra_specs
+        self.availability_zone = node.availability_zone \
             or CONF.engine.default_availability_zone
-        self.instance_type = node['node_type']
-        self.ports = node['ports']
+        self.instance_type = node.node_type
+        self.ports = node.ports.objects
 
 
 class NodeManager(object):
@@ -126,11 +127,12 @@ class NodeManager(object):
                                                        nodes,
                                                        weight_properties)
 
-    def get_all_node_states(self, node_cache):
+    def get_all_node_states(self, context):
         """Returns a list of all the nodes the NodeManager knows about."""
 
+        nodes = objects.ComputeNodeList.get_all(context).objects
         node_states = []
-        for node_uuid, node in node_cache.items():
+        for node in nodes:
             node_state = self.node_state_cls(node)
             node_states.append(node_state)
 

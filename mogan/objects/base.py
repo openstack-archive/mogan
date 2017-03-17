@@ -97,9 +97,10 @@ class MoganObject(object_base.VersionedObject):
                 self[field] = loaded_object[field]
 
     @staticmethod
-    def _from_db_object(obj, db_object):
+    def _from_db_object(context, obj, db_object):
         """Converts a database entity to a formal object.
 
+        :param context: security context
         :param obj: An object of the class.
         :param db_object: A DB model of the object
         :return: The object of the class with the database entity added
@@ -122,7 +123,7 @@ class MoganObject(object_base.VersionedObject):
         :param db_objects: A  list of DB models of the object
         :returns: A list of objects corresponding to the database entities
         """
-        return [cls._from_db_object(cls(context), db_obj)
+        return [cls._from_db_object(context, cls(context), db_obj)
                 for db_obj in db_objects]
 
 
