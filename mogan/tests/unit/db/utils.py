@@ -149,6 +149,33 @@ def create_test_instance_type(context={}, **kw):
     return dbapi.instance_type_create(context, instance_type)
 
 
+def get_test_instance_fault(**kw):
+    return {
+        'instance_uuid': kw.get('instance_uuid'),
+        'code': kw.get('code', 404),
+        'message': kw.get('message', 'message'),
+        'detail': kw.get('detail', 'detail'),
+        'created_at': kw.get('create_at', None),
+        'updated_at': kw.get('update_at', None)
+    }
+
+
+def create_test_instance_fault(context={}, **kw):
+    """Create test instance fault entry in DB and return the DB object.
+
+    Function to be used to create test Instance Fault objects in the database.
+
+    :param context: The request context, for access checks.
+    :param kw: kwargs with overriding values for instance fault's attributes.
+    :returns: Test Instance Fault DB object.
+
+    """
+    instance_fault = get_test_instance_fault(**kw)
+    dbapi = db_api.get_instance()
+
+    return dbapi.instance_fault_create(context, instance_fault)
+
+
 def get_test_quota(**kw):
     return {
         'id': kw.get('id', 123),
