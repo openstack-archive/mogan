@@ -51,9 +51,7 @@ class ScheduleCreateInstanceTask(flow_utils.MoganTask):
             top_node = self.manager.scheduler.schedule(
                 context,
                 request_spec,
-                self.manager.node_cache,
                 filter_properties)
-            self.manager.node_cache.pop(top_node, None)
         instance.node_uuid = top_node
         instance.save()
 

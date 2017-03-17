@@ -45,11 +45,8 @@ class EngineManager(base_manager.BaseEngineManager):
     RPC_API_VERSION = '1.0'
 
     target = messaging.Target(version=RPC_API_VERSION)
+    # TODO(zhenguo): Move lock to scheduler
     _lock = threading.Lock()
-
-    def _refresh_cache(self, nodes):
-        with self._lock:
-            self.node_cache = nodes
 
     def _get_compute_port(self, context, port_uuid):
         """Gets compute port by the uuid."""
@@ -127,12 +124,7 @@ class EngineManager(base_manager.BaseEngineManager):
         :param context: security context
         """
         nodes = self.driver.get_available_resources()
-
-        # TODO(zhenguo): Keep using cache until we finished the refactor to
-        # save resources to db.
-        self._refresh_cache(nodes)
-
-        compute_nodes_in_db = objects.ComputeNode.list(context)
+        compute_nodes_in_db = objects.ComputeNodeList.get_all(context)
 
         # Record compute nodes to db
         for uuid, node in nodes.items():
@@ -476,12 +468,11 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def list_availability_zones(self, context):
         """Get availability zone list."""
-        with self._lock:
-            node_cache = self.node_cache.values()
+        compute_nodes = objects.ComputeNodeList.get_all_available(context)
 
         azs = set()
-        for node in node_cache:
-            az = node.properties.get('availability_zone') \
+        for node in compute_nodes:
+            az = node.availability_zone \
                 or CONF.engine.default_availability_zone
             if az is not None:
                 azs.add(az)

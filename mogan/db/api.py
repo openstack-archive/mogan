@@ -96,6 +96,10 @@ class Connection(object):
         """Get all compute nodes."""
 
     @abc.abstractmethod
+    def compute_node_get_all_available(self, context):
+        """Get all available compute nodes."""
+
+    @abc.abstractmethod
     def compute_node_destroy(self, context, node_uuid):
         """Delete a compute node."""
 

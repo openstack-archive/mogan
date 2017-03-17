@@ -120,7 +120,7 @@ class FilterScheduler(driver.Scheduler):
                 {'max_attempts': max_attempts,
                  'instance_id': instance_id})
 
-    def _get_weighted_candidates(self, context, request_spec, node_cache,
+    def _get_weighted_candidates(self, context, request_spec,
                                  filter_properties=None):
         """Return a list of nodes that meet required specs.
 
@@ -153,7 +153,7 @@ class FilterScheduler(driver.Scheduler):
 
         # Note: remember, we are using an iterator here. So only
         # traverse this list once.
-        nodes = self.node_manager.get_all_node_states(node_cache)
+        nodes = self.node_manager.get_all_node_states(context)
 
         # Filter local nodes based on requirements ...
         nodes = self.node_manager.get_filtered_nodes(nodes,
@@ -161,17 +161,16 @@ class FilterScheduler(driver.Scheduler):
         if not nodes:
             return []
 
-        LOG.debug("Filtered %s", nodes)
+        LOG.debug("Filtered %(nodes)s", {'nodes': nodes})
         # weighted_node = WeightedNode() ... the best
         # node for the job.
         weighed_nodes = self.node_manager.get_weighed_nodes(nodes,
                                                             filter_properties)
+        LOG.debug("Weighed %(nodes)s", {'nodes': weighed_nodes})
         return weighed_nodes
 
-    def schedule(self, context, request_spec, node_cache,
-                 filter_properties=None):
+    def schedule(self, context, request_spec, filter_properties=None):
         weighed_nodes = self._get_weighted_candidates(context, request_spec,
-                                                      node_cache,
                                                       filter_properties)
         if not weighed_nodes:
             LOG.warning(_LW('No weighed nodes found for instance '
@@ -180,11 +179,9 @@ class FilterScheduler(driver.Scheduler):
             raise exception.NoValidNode(_("No weighed nodes available"))
 
         top_node = self._choose_top_node(weighed_nodes, request_spec)
-        self._add_retry_node(filter_properties, top_node)
-        return top_node
+        top_node.obj.consume_from_request(context)
+        self._add_retry_node(filter_properties, top_node.obj.node)
+        return top_node.obj.node
 
     def _choose_top_node(self, weighed_nodes, request_spec):
-        top_node = weighed_nodes[0]
-        node_state = top_node.obj
-        LOG.debug("Choosing %s", node_state.node)
-        return node_state.node
+        return weighed_nodes[0]

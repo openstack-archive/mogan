@@ -35,7 +35,6 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
             host = CONF.host
         self.host = host
         self.topic = topic
-        self.node_cache = {}
         self.network_api = network.API()
         scheduler_driver = CONF.scheduler.scheduler_driver
         self.scheduler = importutils.import_object(scheduler_driver)

@@ -17,13 +17,16 @@ Tests For NodeManager
 """
 
 import mock
+from oslo_context import context
+from oslo_versionedobjects import base as object_base
 
 from mogan.common import exception
 from mogan.engine.scheduler import filters
 from mogan.engine.scheduler import node_manager
 from mogan.engine.scheduler.node_manager import NodeState
+from mogan.objects import compute_port
 from mogan.tests import base as test
-from mogan.tests.unit.engine.scheduler import fakes
+from mogan.tests.unit.objects import utils as obj_utils
 
 
 class FakeFilterClass1(filters.BaseNodeFilter):
@@ -41,11 +44,15 @@ class NodeManagerTestCase(test.TestCase):
 
     def setUp(self):
         super(NodeManagerTestCase, self).setUp()
+        self.ctxt = context.get_admin_context()
         self.node_manager = node_manager.NodeManager()
 
-        self.fake_nodes = [NodeState(fakes.fakenode1),
-                           NodeState(fakes.fakenode2),
-                           NodeState(fakes.fakenode3)]
+        fake_node = obj_utils.get_test_compute_node(self.ctxt)
+        fake_ports = object_base.obj_make_list(
+            self.ctxt, compute_port.ComputePortList(self.ctxt),
+            compute_port.ComputePort, [])
+        fake_node.ports = fake_ports
+        self.fake_nodes = [NodeState(fake_node)]
 
     def test_choose_node_filters_not_found(self):
         self.override_config('scheduler_default_filters', 'FakeFilterClass3',

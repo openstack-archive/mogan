@@ -18,6 +18,7 @@ from oslo_versionedobjects import base as object_base
 
 from mogan.db import api as dbapi
 from mogan.objects import base
+from mogan.objects import compute_port
 from mogan.objects import fields as object_fields
 
 
@@ -36,27 +37,37 @@ class ComputeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
         'node_type': object_fields.StringField(),
         'availability_zone': object_fields.StringField(nullable=True),
         'node_uuid': object_fields.UUIDField(read_only=True),
+        'ports': object_fields.ObjectField('ComputePortList', nullable=True),
         'extra_specs': object_fields.FlexibleDictField(nullable=True),
+        'used': object_fields.BooleanField(default=False),
     }
 
-    @classmethod
-    def list(cls, context):
-        """Return a list of ComputeNode objects."""
-        db_compute_nodes = cls.dbapi.compute_node_get_all(context)
-        return cls._from_db_object_list(context, db_compute_nodes)
+    @staticmethod
+    def _from_db_object(context, node, db_node):
+        """Converts a database entity to a formal object."""
+        for field in node.fields:
+            if field == 'ports':
+                node.ports = object_base.obj_make_list(
+                    context, compute_port.ComputePortList(context),
+                    compute_port.ComputePort, db_node['ports']
+                )
+            else:
+                node[field] = db_node[field]
+        node.obj_reset_changes()
+        return node
 
     @classmethod
     def get(cls, context, node_uuid):
         """Find a compute node and return a ComputeNode object."""
         db_compute_node = cls.dbapi.compute_node_get(context, node_uuid)
-        compute_node = cls._from_db_object(cls(context), db_compute_node)
+        compute_node = cls._from_db_object(
+            context, cls(context), db_compute_node)
         return compute_node
 
     def create(self, context=None):
         """Create a ComputeNode record in the DB."""
         values = self.obj_get_changes()
-        db_compute_node = self.dbapi.compute_node_create(context, values)
-        self._from_db_object(self, db_compute_node)
+        self.dbapi.compute_node_create(context, values)
 
     def destroy(self, context=None):
         """Delete the ComputeNode from the DB."""
@@ -69,14 +80,40 @@ class ComputeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
         self.dbapi.compute_node_update(context, self.node_uuid, updates)
         self.obj_reset_changes()
 
-    def refresh(self, context=None):
-        """Refresh the object by re-fetching from the DB."""
-        current = self.__class__.get(context, self.node_uuid)
-        self.obj_refresh(current)
-
     def update_from_driver(self, node):
         keys = ["cpus", "memory_mb", "hypervisor_type", "node_type",
                 "availability_zone", "node_uuid", "extra_specs"]
         for key in keys:
             if key in node:
                 setattr(self, key, node[key])
+
+    @classmethod
+    def consume_node(cls, context, node_uuid):
+        updates = {'used': True}
+        cls.dbapi.compute_node_update(context, node_uuid, updates)
+
+
+@base.MoganObjectRegistry.register
+class ComputeNodeList(object_base.ObjectListBase, base.MoganObject,
+                      object_base.VersionedObjectDictCompat):
+    # Version 1.0: Initial version
+
+    VERSION = '1.0'
+
+    dbapi = dbapi.get_instance()
+
+    fields = {
+        'objects': object_fields.ListOfObjectsField('ComputeNode')
+    }
+
+    @classmethod
+    def get_all(cls, context):
+        db_compute_nodes = cls.dbapi.compute_node_get_all(context)
+        return object_base.obj_make_list(context, cls(context),
+                                         ComputeNode, db_compute_nodes)
+
+    @classmethod
+    def get_all_available(cls, context):
+        db_compute_nodes = cls.dbapi.compute_node_get_all_available(context)
+        return object_base.obj_make_list(context, cls(context),
+                                         ComputeNode, db_compute_nodes)

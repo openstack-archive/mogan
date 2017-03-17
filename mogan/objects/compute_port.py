@@ -46,14 +46,15 @@ class ComputePort(base.MoganObject, object_base.VersionedObjectDictCompat):
     def get(cls, context, port_uuid):
         """Find a compute port and return a ComputePort object."""
         db_compute_port = cls.dbapi.compute_port_get(context, port_uuid)
-        compute_port = cls._from_db_object(cls(context), db_compute_port)
+        compute_port = cls._from_db_object(context, cls(context),
+                                           db_compute_port)
         return compute_port
 
     def create(self, context=None):
         """Create a ComputePort record in the DB."""
         values = self.obj_get_changes()
         db_compute_port = self.dbapi.compute_port_create(context, values)
-        self._from_db_object(self, db_compute_port)
+        self._from_db_object(context, self, db_compute_port)
 
     def destroy(self, context=None):
         """Delete the ComputePort from the DB."""

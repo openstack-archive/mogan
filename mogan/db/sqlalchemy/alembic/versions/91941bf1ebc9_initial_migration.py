@@ -106,6 +106,7 @@ def upgrade():
         sa.Column('availability_zone', sa.String(length=255), nullable=True),
         sa.Column('node_uuid', sa.String(length=36), nullable=False),
         sa.Column('extra_specs', sa.Text(), nullable=True),
+        sa.Column('used', sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('node_uuid', name='uniq_compute_nodes0node_uuid'),
         mysql_ENGINE='InnoDB',

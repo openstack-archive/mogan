@@ -48,7 +48,7 @@ class RPCAPITestCase(base.DbTestCase):
         self.fake_type = dbutils.get_test_instance_type()
         self.fake_type['extra_specs'] = {}
         self.fake_type_obj = objects.InstanceType._from_db_object(
-            objects.InstanceType(self.context), self.fake_type)
+            self.context, objects.InstanceType(self.context), self.fake_type)
 
     def test_serialized_instance_has_uuid(self):
         self.assertIn('uuid', self.fake_instance)

@@ -263,14 +263,23 @@ class Connection(api.Connection):
     def compute_node_get(self, context, node_uuid):
         query = model_query(
             context,
-            models.ComputeNode).filter_by(node_uuid=node_uuid)
+            models.ComputeNode).filter_by(node_uuid=node_uuid). \
+            options(joinedload('ports'))
         try:
             return query.one()
         except NoResultFound:
             raise exception.ComputeNodeNotFound(node=node_uuid)
 
     def compute_node_get_all(self, context):
-        return model_query(context, models.ComputeNode)
+        return model_query(
+            context,
+            models.ComputeNode).options(joinedload('ports'))
+
+    def compute_node_get_all_available(self, context):
+        return model_query(
+            context,
+            models.ComputeNode).filter_by(used=False). \
+            options(joinedload('ports'))
 
     def compute_node_destroy(self, context, node_uuid):
         with _session_for_write():

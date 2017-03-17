@@ -17,51 +17,14 @@
 Fakes For Scheduler tests.
 """
 
-from oslo_versionedobjects import base as object_base
-from oslo_versionedobjects import fields
-
 from mogan.engine.scheduler import filter_scheduler
 from mogan.engine.scheduler import node_manager
-from mogan.objects import base
-from mogan.objects import fields as object_fields
 
 
 class FakeFilterScheduler(filter_scheduler.FilterScheduler):
     def __init__(self, *args, **kwargs):
         super(FakeFilterScheduler, self).__init__(*args, **kwargs)
         self.node_manager = node_manager.NodeManager()
-
-
-@base.MoganObjectRegistry.register
-class FakeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
-    fields = {
-        'id': object_fields.IntegerField(),
-        'node_uuid': object_fields.UUIDField(),
-        'node_type': object_fields.StringField(nullable=True),
-        'availability_zone': object_fields.StringField(nullable=True),
-        'extra_specs': object_fields.FlexibleDictField(nullable=True),
-        'ports': fields.ListOfDictOfNullableStringsField(nullable=True),
-    }
-
-
-fakenode1 = FakeNode(id=1,
-                     node_uuid='1a617131-cdbc-45dc-afff-f21f17ae054e',
-                     extra_specs={},
-                     availability_zone='az1',
-                     node_type='type1',
-                     ports=[])
-fakenode2 = FakeNode(id=2,
-                     node_uuid='2a617131-cdbc-45dc-afff-f21f17ae054e',
-                     extra_specs={},
-                     availability_zone='az1',
-                     node_type='type1',
-                     ports=[])
-fakenode3 = FakeNode(id=3,
-                     node_uuid='3a617131-cdbc-45dc-afff-f21f17ae054e',
-                     extra_specs={},
-                     availability_zone='az1',
-                     node_type='type1',
-                     ports=[])
 
 
 class FakeNodeState(node_manager.NodeState):
