@@ -65,7 +65,6 @@ class InstanceFault(base.MoganObject, object_base.VersionedObjectDictCompat):
             'code': self.code,
             'message': self.message,
             'detail': self.detail,
-            'created_at': self.created_at,
         }
         db_fault = self.dbapi.instance_fault_create(self._context, values)
         self._from_db_object(self._context, self, db_fault)
