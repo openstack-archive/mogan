@@ -14,4 +14,5 @@
 #    under the License.
 
 
-MANAGER_TOPIC = 'mogan.engine_manager'
+ENGINE_TOPIC = 'mogan-engine'
+SCHEDULER_TOPIC = 'mogan-scheduler'

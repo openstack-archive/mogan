@@ -22,7 +22,7 @@ to a positive number and the weighing has the opposite effect of the default.
 
 from oslo_config import cfg
 
-from mogan.engine.scheduler import weights
+from mogan.scheduler import weights
 
 CONF = cfg.CONF
 

@@ -25,6 +25,7 @@ from mogan.db import api as dbapi
 from mogan.engine.baremetal import driver
 from mogan.engine import rpcapi
 from mogan import network
+from mogan.scheduler import rpcapi as scheduler_rpcapi
 
 
 class BaseEngineManager(periodic_task.PeriodicTasks):
@@ -36,8 +37,7 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self.host = host
         self.topic = topic
         self.network_api = network.API()
-        scheduler_driver = CONF.scheduler.scheduler_driver
-        self.scheduler = importutils.import_object(scheduler_driver)
+        self.scheduler_rpcapi = scheduler_rpcapi.SchedulerAPI()
         self.driver = driver.load_engine_driver(CONF.engine.engine_driver)
         self.engine_rpcapi = rpcapi.EngineAPI()
         self._sync_power_pool = greenpool.GreenPool(

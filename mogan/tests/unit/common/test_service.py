@@ -36,7 +36,7 @@ class TestRPCService(base.TestCase):
         mgr_module = "mogan.engine.manager"
         mgr_class = "EngineManager"
         self.rpc_svc = service.RPCService(host, mgr_module, mgr_class,
-                                          constants.MANAGER_TOPIC)
+                                          constants.ENGINE_TOPIC)
 
     @mock.patch.object(oslo_messaging, 'Target', autospec=True)
     @mock.patch.object(objects_base, 'MoganObjectSerializer', autospec=True)

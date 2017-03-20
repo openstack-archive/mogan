@@ -15,8 +15,8 @@
 
 from oslo_log import log as logging
 
-from mogan.engine.scheduler import filters
-from mogan.engine.scheduler.filters import extra_specs_ops
+from mogan.scheduler import filters
+from mogan.scheduler.filters import extra_specs_ops
 
 LOG = logging.getLogger(__name__)
 

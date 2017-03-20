@@ -17,7 +17,7 @@
 Scheduler node filters
 """
 
-from mogan.engine.scheduler import base_filter
+from mogan.scheduler import base_filter
 
 
 class BaseNodeFilter(base_filter.BaseFilter):

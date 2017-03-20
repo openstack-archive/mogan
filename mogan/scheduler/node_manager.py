@@ -22,7 +22,7 @@ from oslo_log import log as logging
 from oslo_utils import importutils
 
 from mogan.common import exception
-from mogan.engine.scheduler import filters
+from mogan.scheduler import filters
 from mogan import objects
 
 
@@ -52,12 +52,12 @@ class NodeManager(object):
     node_state_cls = NodeState
 
     def __init__(self):
-        self.filter_handler = filters.NodeFilterHandler('mogan.engine.'
-                                                        'scheduler.filters')
+        self.filter_handler = filters.NodeFilterHandler(
+            'mogan.scheduler.filters')
         self.filter_classes = self.filter_handler.get_all_classes()
         self.weight_handler = importutils.import_object(
             CONF.scheduler.scheduler_weight_handler,
-            'mogan.engine.scheduler.weights')
+            'mogan.scheduler.weights')
         self.weight_classes = self.weight_handler.get_all_classes()
 
     def _choose_node_filters(self, filter_cls_names):

@@ -21,9 +21,9 @@ from oslo_context import context
 from oslo_versionedobjects import base as object_base
 
 from mogan.common import exception
-from mogan.engine.scheduler import filters
-from mogan.engine.scheduler import node_manager
-from mogan.engine.scheduler.node_manager import NodeState
+from mogan.scheduler import filters
+from mogan.scheduler import node_manager
+from mogan.scheduler.node_manager import NodeState
 from mogan.objects import compute_port
 from mogan.tests import base as test
 from mogan.tests.unit.objects import utils as obj_utils

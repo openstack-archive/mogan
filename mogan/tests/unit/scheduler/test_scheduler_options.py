@@ -21,7 +21,7 @@ import datetime
 from oslo_serialization import jsonutils
 import six
 
-from mogan.engine.scheduler import scheduler_options
+from mogan.scheduler import scheduler_options
 from mogan.tests import base as test
 
 
