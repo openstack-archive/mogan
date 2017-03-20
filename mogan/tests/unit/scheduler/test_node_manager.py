@@ -21,10 +21,10 @@ from oslo_context import context
 from oslo_versionedobjects import base as object_base
 
 from mogan.common import exception
-from mogan.engine.scheduler import filters
-from mogan.engine.scheduler import node_manager
-from mogan.engine.scheduler.node_manager import NodeState
 from mogan.objects import compute_port
+from mogan.scheduler import filters
+from mogan.scheduler import node_manager
+from mogan.scheduler.node_manager import NodeState
 from mogan.tests import base as test
 from mogan.tests.unit.objects import utils as obj_utils
 
@@ -73,7 +73,7 @@ class NodeManagerTestCase(test.TestCase):
         self.assertEqual(1, len(filter_classes))
         self.assertEqual('FakeFilterClass2', filter_classes[0].__name__)
 
-    @mock.patch('mogan.engine.scheduler.node_manager.NodeManager.'
+    @mock.patch('mogan.scheduler.node_manager.NodeManager.'
                 '_choose_node_filters')
     def test_get_filtered_nodes(self, _mock_choose_node_filters):
         filter_class = FakeFilterClass1

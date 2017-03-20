@@ -21,7 +21,7 @@ import abc
 
 import six
 
-from mogan.engine.scheduler import base_handler
+from mogan.scheduler import base_handler
 
 
 def normalize(weight_list, minval=None, maxval=None):

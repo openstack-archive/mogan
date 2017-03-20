@@ -20,7 +20,7 @@ from oslo_log import log as logging
 import six
 
 from mogan.common.i18n import _LI
-from mogan.engine.scheduler import base_handler
+from mogan.scheduler import base_handler
 
 LOG = logging.getLogger(__name__)
 

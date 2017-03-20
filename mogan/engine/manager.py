@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import threading
-
 from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import periodic_task
@@ -45,8 +43,6 @@ class EngineManager(base_manager.BaseEngineManager):
     RPC_API_VERSION = '1.0'
 
     target = messaging.Target(version=RPC_API_VERSION)
-    # TODO(zhenguo): Move lock to scheduler
-    _lock = threading.Lock()
 
     def _get_compute_port(self, context, port_uuid):
         """Gets compute port by the uuid."""

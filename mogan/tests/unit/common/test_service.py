@@ -32,11 +32,10 @@ class TestRPCService(base.TestCase):
 
     def setUp(self):
         super(TestRPCService, self).setUp()
-        host = "fake_host"
         mgr_module = "mogan.engine.manager"
         mgr_class = "EngineManager"
-        self.rpc_svc = service.RPCService(host, mgr_module, mgr_class,
-                                          constants.MANAGER_TOPIC)
+        self.rpc_svc = service.RPCService(mgr_module, mgr_class,
+                                          constants.ENGINE_TOPIC)
 
     @mock.patch.object(oslo_messaging, 'Target', autospec=True)
     @mock.patch.object(objects_base, 'MoganObjectSerializer', autospec=True)
@@ -47,7 +46,7 @@ class TestRPCService(base.TestCase):
         self.rpc_svc.handle_signal = mock.MagicMock()
         self.rpc_svc.start()
         mock_target.assert_called_once_with(topic=self.rpc_svc.topic,
-                                            server="fake_host")
+                                            server="fake-mini")
         mock_ios.assert_called_once_with()
         mock_init_method.assert_called_once_with(self.rpc_svc.manager)
 

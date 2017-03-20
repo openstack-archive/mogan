@@ -19,11 +19,10 @@ from mogan.common.i18n import _
 
 opts = [
     cfg.StrOpt('scheduler_driver',
-               default='mogan.engine.scheduler.filter_scheduler.'
-                       'FilterScheduler',
+               default='mogan.scheduler.filter_scheduler.FilterScheduler',
                help=_('Default scheduler driver to use')),
     cfg.StrOpt('scheduler_node_manager',
-               default='mogan.engine.scheduler.node_manager.NodeManager',
+               default='mogan.scheduler.node_manager.NodeManager',
                help=_('The scheduler node manager class to use')),
     cfg.IntOpt('scheduler_max_attempts',
                default=3,
@@ -47,7 +46,7 @@ opts = [
                 help=_('Which weigher class names to use for weighing '
                        'nodes.')),
     cfg.StrOpt('scheduler_weight_handler',
-               default='mogan.engine.scheduler.weights.'
+               default='mogan.scheduler.weights.'
                        'OrderedNodeWeightHandler',
                help=_('Which handler to use for selecting the node after '
                       'weighing')),

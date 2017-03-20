@@ -144,13 +144,14 @@ function install_mogan_pythonclient {
 
 # start_mogan - Start running processes, including screen
 function start_mogan {
-    if is_service_enabled mogan-api && is_service_enabled mogan-engine ; then
+    if is_service_enabled mogan-api && is_service_enabled mogan-engine && is_service_enabled mogan-scheduler; then
         echo_summary "Installing all mogan services in separate processes"
         run_process mogan-api "${MOGAN_BIN_DIR}/mogan-api --config-file ${MOGAN_CONF_DIR}/mogan.conf"
         if ! wait_for_service ${SERVICE_TIMEOUT} ${MOGAN_SERVICE_PROTOCOL}://${MOGAN_SERVICE_HOST}:${MOGAN_SERVICE_PORT}; then
             die $LINENO "mogan-api did not start"
         fi
         run_process mogan-engine "${MOGAN_BIN_DIR}/mogan-engine --config-file ${MOGAN_CONF_DIR}/mogan.conf"
+        run_process mogan-scheduler "${MOGAN_BIN_DIR}/mogan-scheduler --config-file ${MOGAN_CONF_DIR}/mogan.conf"
     fi
 }
 
@@ -158,7 +159,7 @@ function start_mogan {
 # stop_mogan - Stop running processes
 function stop_mogan {
     # Kill the Mogan screen windows
-    for serv in mogan-api mogan-engine; do
+    for serv in mogan-api mogan-engine mogan-scheduler; do
         stop_process $serv
     done
 }

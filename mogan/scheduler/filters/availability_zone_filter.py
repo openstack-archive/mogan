@@ -1,4 +1,4 @@
-# Copyright 2016 Huawei Technologies Co.,LTD.
+# Copyright (c) 2011-2012 OpenStack Foundation.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,20 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from mogan.engine.scheduler import filters
+from mogan.scheduler import filters
 
 
-class InstanceTypeFilter(filters.BaseNodeFilter):
-    """Filters Nodes by instance type."""
+class AvailabilityZoneFilter(filters.BaseNodeFilter):
+    """Filters Nodes by availability zone."""
 
-    # Instance types do not change within a request
+    # Availability zones do not change within a request
     run_filter_once_per_request = True
 
     def node_passes(self, node_state, filter_properties):
         spec = filter_properties.get('request_spec', {})
-        instance_type = spec.get('instance_type', {})
-        type_name = instance_type.get('name')
+        availability_zone = spec.get('availability_zone')
 
-        if type_name:
-            return type_name == node_state.instance_type
+        if availability_zone:
+            return availability_zone == node_state.availability_zone
         return True

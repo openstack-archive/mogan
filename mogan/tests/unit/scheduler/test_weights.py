@@ -17,7 +17,7 @@
 Tests For Scheduler weights.
 """
 
-from mogan.engine.scheduler import base_weight
+from mogan.scheduler import base_weight
 from mogan.tests import base as test
 
 
