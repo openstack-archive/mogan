@@ -36,9 +36,9 @@ LOG = log.getLogger(__name__)
 
 class RPCService(service.Service):
 
-    def __init__(self, host, manager_module, manager_class, topic):
+    def __init__(self, manager_module, manager_class, topic, host=None):
         super(RPCService, self).__init__()
-        self.host = host
+        self.host = host or CONF.host
         manager_module = importutils.try_import(manager_module)
         manager_class = getattr(manager_module, manager_class)
         self.manager = manager_class(host, topic)

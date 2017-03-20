@@ -18,7 +18,7 @@ import operator
 from oslo_serialization import jsonutils
 import six
 
-from mogan.engine.scheduler import filters
+from mogan.scheduler import filters
 
 
 class JsonFilter(filters.BaseNodeFilter):

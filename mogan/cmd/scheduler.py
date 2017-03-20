@@ -1,4 +1,4 @@
-# Copyright 2016 Huawei Technologies Co.,LTD.
+# Copyright 2017 Huawei Technologies Co.,LTD.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,7 +14,7 @@
 #    under the License.
 
 """
-The Mogan Management Service
+The Mogan Scheduler Service
 """
 
 import sys
@@ -32,9 +32,9 @@ def main():
     # Parse config file and command line options, then start logging
     mogan_service.prepare_service(sys.argv)
 
-    mgr = mogan_service.RPCService('mogan.engine.manager',
-                                   'EngineManager',
-                                   constants.ENGINE_TOPIC)
+    mgr = mogan_service.RPCService('mogan.scheduler.manager',
+                                   'SchedulerManager',
+                                   constants.SCHEDULER_TOPIC)
 
     launcher = service.launch(CONF, mgr)
     launcher.wait()

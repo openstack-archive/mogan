@@ -47,11 +47,10 @@ class ScheduleCreateInstanceTask(flow_utils.MoganTask):
         self.manager = manager
 
     def execute(self, context, instance, request_spec, filter_properties):
-        with self.manager._lock:
-            top_node = self.manager.scheduler.schedule(
-                context,
-                request_spec,
-                filter_properties)
+        top_node = self.manager.scheduler_rpcapi.select_destinations(
+            context,
+            request_spec,
+            filter_properties)
         instance.node_uuid = top_node
         instance.save()
 

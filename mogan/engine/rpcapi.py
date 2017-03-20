@@ -40,7 +40,7 @@ class EngineAPI(object):
         super(EngineAPI, self).__init__()
         self.topic = topic
         if self.topic is None:
-            self.topic = constants.MANAGER_TOPIC
+            self.topic = constants.ENGINE_TOPIC
 
         target = messaging.Target(topic=self.topic,
                                   version='1.0')

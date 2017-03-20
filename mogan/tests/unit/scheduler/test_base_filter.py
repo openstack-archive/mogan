@@ -15,7 +15,7 @@
 
 import mock
 
-from mogan.engine.scheduler import base_filter
+from mogan.scheduler import base_filter
 from mogan.tests import base as test
 
 

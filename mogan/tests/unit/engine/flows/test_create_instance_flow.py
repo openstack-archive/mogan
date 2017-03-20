@@ -21,8 +21,8 @@ from oslo_utils import uuidutils
 from mogan.engine.baremetal.ironic import IronicDriver
 from mogan.engine.flows import create_instance
 from mogan.engine import manager
-from mogan.engine.scheduler import filter_scheduler as scheduler
 from mogan import objects
+from mogan.scheduler import rpcapi as scheduler_rpcapi
 from mogan.tests import base
 from mogan.tests.unit.objects import utils as obj_utils
 
@@ -34,13 +34,14 @@ class CreateInstanceFlowTestCase(base.TestCase):
         self.ctxt = context.get_admin_context()
 
     @mock.patch.object(objects.instance.Instance, 'save')
-    @mock.patch.object(scheduler.FilterScheduler, 'schedule')
+    @mock.patch.object(scheduler_rpcapi.SchedulerAPI, 'select_destinations')
     def test_schedule_task_execute(self, mock_schedule, mock_save):
         fake_uuid = uuidutils.generate_uuid()
         fake_engine_manager = mock.MagicMock()
+        sche_rpcapi = scheduler_rpcapi.SchedulerAPI()
+        fake_engine_manager.scheduler_rpcapi = sche_rpcapi
         fake_request_spec = mock.MagicMock()
         fake_filter_props = mock.MagicMock()
-        fake_engine_manager.scheduler = scheduler.FilterScheduler()
         task = create_instance.ScheduleCreateInstanceTask(
             fake_engine_manager)
         instance_obj = obj_utils.get_test_instance(self.ctxt)

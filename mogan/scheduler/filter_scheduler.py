@@ -24,8 +24,8 @@ from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LW
-from mogan.engine.scheduler import driver
-from mogan.engine.scheduler import scheduler_options
+from mogan.scheduler import driver
+from mogan.scheduler import scheduler_options
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
