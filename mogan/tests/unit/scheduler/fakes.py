@@ -17,8 +17,8 @@
 Fakes For Scheduler tests.
 """
 
-from mogan.engine.scheduler import filter_scheduler
-from mogan.engine.scheduler import node_manager
+from mogan.scheduler import filter_scheduler
+from mogan.scheduler import node_manager
 
 
 class FakeFilterScheduler(filter_scheduler.FilterScheduler):

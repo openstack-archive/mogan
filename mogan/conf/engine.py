@@ -34,10 +34,6 @@ opts = [
                default=60,
                help=_('Interval between syncing the resources from underlying '
                       'hypervisor, in seconds.')),
-    cfg.StrOpt('scheduler_driver',
-               default='mogan.engine.scheduler.filter_scheduler.'
-                       'FilterScheduler',
-               help=_('Default scheduler driver to use')),
     cfg.StrOpt('default_schedule_zone',
                help=_("Availability zone to use for scheduling when user "
                       "doesn't specify one.")),

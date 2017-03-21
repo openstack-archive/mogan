@@ -17,7 +17,7 @@
 Scheduler node weights
 """
 
-from mogan.engine.scheduler import base_weight
+from mogan.scheduler import base_weight
 
 
 class WeighedNode(base_weight.WeighedObject):

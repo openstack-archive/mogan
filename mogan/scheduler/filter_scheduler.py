@@ -24,8 +24,9 @@ from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common.i18n import _LE
 from mogan.common.i18n import _LW
-from mogan.engine.scheduler import driver
-from mogan.engine.scheduler import scheduler_options
+from mogan.common import utils
+from mogan.scheduler import driver
+from mogan.scheduler import scheduler_options
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -170,18 +171,28 @@ class FilterScheduler(driver.Scheduler):
         return weighed_nodes
 
     def schedule(self, context, request_spec, filter_properties=None):
-        weighed_nodes = self._get_weighted_candidates(context, request_spec,
-                                                      filter_properties)
-        if not weighed_nodes:
-            LOG.warning(_LW('No weighed nodes found for instance '
-                            'with properties: %s'),
-                        request_spec.get('instance_type'))
-            raise exception.NoValidNode(_("No weighed nodes available"))
 
-        top_node = self._choose_top_node(weighed_nodes, request_spec)
-        top_node.obj.consume_from_request(context)
-        self._add_retry_node(filter_properties, top_node.obj.node)
-        return top_node.obj.node
+        # TODO(zhenguo): Scheduler API is inherently multi-threaded as every
+        # incoming RPC message will be dispatched in it's own green thread.
+        # So we add a syncronized here to make sure the shared node states
+        # consistent, but lock the whole schedule process is not a good choice,
+        # we need to improve this.
+        @utils.synchronized('schedule')
+        def _schedule(self, context, request_spec, filter_properties):
+            weighed_nodes = self._get_weighted_candidates(
+                context, request_spec, filter_properties)
+            if not weighed_nodes:
+                LOG.warning(_LW('No weighed nodes found for instance '
+                                'with properties: %s'),
+                            request_spec.get('instance_type'))
+                raise exception.NoValidNode(_("No weighed nodes available"))
+
+            top_node = self._choose_top_node(weighed_nodes, request_spec)
+            top_node.obj.consume_from_request(context)
+            self._add_retry_node(filter_properties, top_node.obj.node)
+            return top_node.obj.node
+
+        return _schedule(self, context, request_spec, filter_properties)
 
     def _choose_top_node(self, weighed_nodes, request_spec):
         return weighed_nodes[0]
