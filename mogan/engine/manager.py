@@ -24,9 +24,6 @@ from oslo_utils import timeutils
 from mogan.common import exception
 from mogan.common import flow_utils
 from mogan.common.i18n import _
-from mogan.common.i18n import _LE
-from mogan.common.i18n import _LI
-from mogan.common.i18n import _LW
 from mogan.common import states
 from mogan.common import utils
 from mogan.conf import CONF
@@ -53,7 +50,7 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             return objects.ComputePort.get(context, port_uuid)
         except exception.NotFound:
-            LOG.warning(_LW("No compute port record for %(port)s"),
+            LOG.warning("No compute port record for %(port)s",
                         {'port': port_uuid})
 
     def _get_compute_node(self, context, node_uuid):
@@ -61,7 +58,7 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             return objects.ComputeNode.get(context, node_uuid)
         except exception.NotFound:
-            LOG.warning(_LW("No compute node record for %(node)s"),
+            LOG.warning("No compute node record for %(node)s",
                         {'node': node_uuid})
 
     def _init_compute_port(self, context, port):
@@ -135,7 +132,7 @@ class EngineManager(base_manager.BaseEngineManager):
         # Delete orphan compute node not reported by driver but still in db
         for cn in compute_nodes_in_db:
             if cn.node_uuid not in nodes:
-                LOG.info(_LI("Deleting orphan compute node %(id)s)"),
+                LOG.info("Deleting orphan compute node %(id)s)",
                          {'id': cn.node_uuid})
                 cn.destroy()
 
@@ -151,8 +148,8 @@ class EngineManager(base_manager.BaseEngineManager):
             nodes = self.driver.get_nodes_power_state()
         except Exception as e:
             LOG.warning(
-                _LW("Failed to retrieve node list when synchronizing power "
-                    "states: %(msg)s") % {"msg": e})
+                ("Failed to retrieve node list when synchronizing power "
+                 "states: %(msg)s") % {"msg": e})
             # Just retrun if we fail to get nodes real power state.
             return
 
@@ -160,9 +157,9 @@ class EngineManager(base_manager.BaseEngineManager):
                      if node.target_power_state is None}
 
         if not node_dict:
-            LOG.warning(_LW("While synchronizing instance power states, "
-                            "found none instance with stable power state "
-                            "on the hypervisor."))
+            LOG.warning("While synchronizing instance power states, "
+                        "found none instance with stable power state "
+                        "on the hypervisor.")
             return
 
         def _sync(db_instance, node_power_state):
@@ -194,8 +191,8 @@ class EngineManager(base_manager.BaseEngineManager):
 
             if db_instance.status not in (states.ACTIVE, states.STOPPED):
                 if db_instance.status in states.UNSTABLE_STATES:
-                    LOG.info(_LI("During sync_power_state the instance has a "
-                                 "pending task (%(task)s). Skip."),
+                    LOG.info("During sync_power_state the instance has a "
+                             "pending task (%(task)s). Skip.",
                              {'task': db_instance.status},
                              instance=db_instance)
                 continue
@@ -229,18 +226,18 @@ class EngineManager(base_manager.BaseEngineManager):
             # but the actual BM has not showed up on the hypervisor
             # yet. In this case, let's allow the loop to continue
             # and run the state sync in a later round
-            LOG.info(_LI("During sync_power_state the instance has a "
-                         "pending task (%(task)s). Skip."),
+            LOG.info("During sync_power_state the instance has a "
+                     "pending task (%(task)s). Skip.",
                      {'task': db_instance.task_state},
                      instance=db_instance)
             return
 
         if node_power_state != db_power_state:
-            LOG.info(_LI('During _sync_instance_power_state the DB '
-                         'power_state (%(db_power_state)s) does not match '
-                         'the node_power_state from the hypervisor '
-                         '(%(node_power_state)s). Updating power_state in the '
-                         'DB to match the hypervisor.'),
+            LOG.info('During _sync_instance_power_state the DB '
+                     'power_state (%(db_power_state)s) does not match '
+                     'the node_power_state from the hypervisor '
+                     '(%(node_power_state)s). Updating power_state in the '
+                     'DB to match the hypervisor.',
                      {'db_power_state': db_power_state,
                       'node_power_state': node_power_state},
                      instance=db_instance)
@@ -257,17 +254,17 @@ class EngineManager(base_manager.BaseEngineManager):
             nodes = self.driver.get_maintenance_node_list()
         except Exception as e:
             LOG.warning(
-                _LW("Failed to retrieve node list when synchronizing "
-                    "maintenance states: %(msg)s") % {"msg": e})
+                "Failed to retrieve node list when synchronizing "
+                "maintenance states: %(msg)s" % {"msg": e})
             # Just retrun if we fail to get nodes maintenance state.
             return
 
         node_dict = {node.instance_uuid: node for node in nodes}
 
         if not node_dict:
-            LOG.warning(_LW("While synchronizing instance maintenance states, "
-                            "found none node with instance associated on the "
-                            "hypervisor."))
+            LOG.warning("While synchronizing instance maintenance states, "
+                        "found none node with instance associated on the "
+                        "hypervisor.")
             return
 
         db_instances = objects.Instance.list(context)
@@ -278,8 +275,8 @@ class EngineManager(base_manager.BaseEngineManager):
             # just skip the syncing process as the pending task should be goes
             # to error state instead.
             if instance.status in states.UNSTABLE_STATES:
-                LOG.info(_LI("During sync_maintenance_state the instance "
-                             "has a pending task (%(task)s). Skip."),
+                LOG.info("During sync_maintenance_state the instance "
+                         "has a pending task (%(task)s). Skip.",
                          {'task': instance.status},
                          instance=instance)
                 continue
@@ -357,8 +354,8 @@ class EngineManager(base_manager.BaseEngineManager):
         except Exception as e:
             instance.power_state = states.NOSTATE
             utils.process_event(fsm, instance, event='error')
-            LOG.error(_LE("Created instance %(uuid)s failed."
-                          "Exception: %(exception)s"),
+            LOG.error("Created instance %(uuid)s failed."
+                      "Exception: %(exception)s",
                       {"uuid": instance.uuid,
                        "exception": e})
         else:
@@ -369,7 +366,7 @@ class EngineManager(base_manager.BaseEngineManager):
                                                                instance.uuid)
             instance.launched_at = timeutils.utcnow()
             utils.process_event(fsm, instance, event='done')
-            LOG.info(_LI("Created instance %s successfully."), instance.uuid)
+            LOG.info("Created instance %s successfully.", instance.uuid)
         finally:
             return instance
 
@@ -396,13 +393,13 @@ class EngineManager(base_manager.BaseEngineManager):
                 self._delete_instance(context, instance)
                 self._unplug_vifs(context, instance)
             except exception.InstanceNotFound:
-                LOG.info(_LI("Instance disappeared during terminate"),
+                LOG.info("Instance disappeared during terminate",
                          instance=instance)
             except Exception:
                 # As we're trying to delete always go to Error if something
                 # goes wrong that _delete_instance can't handle.
                 with excutils.save_and_reraise_exception():
-                    LOG.exception(_LE('Setting instance status to ERROR'),
+                    LOG.exception('Setting instance status to ERROR',
                                   instance=instance)
                     instance.power_state = states.NOSTATE
                     utils.process_event(fsm, instance, event='error')
@@ -432,7 +429,7 @@ class EngineManager(base_manager.BaseEngineManager):
         instance.power_state = self.driver.get_power_state(context,
                                                            instance.uuid)
         utils.process_event(fsm, instance, event='done')
-        LOG.info(_LI('Successfully set node power state: %s'),
+        LOG.info('Successfully set node power state: %s',
                  state, instance=instance)
 
     def _rebuild_instance(self, context, instance):
@@ -457,14 +454,14 @@ class EngineManager(base_manager.BaseEngineManager):
             self._rebuild_instance(context, instance)
         except Exception as e:
             utils.process_event(fsm, instance, event='error')
-            LOG.error(_LE("Rebuild instance %(uuid)s failed."
-                          "Exception: %(exception)s"),
+            LOG.error("Rebuild instance %(uuid)s failed."
+                      "Exception: %(exception)s",
                       {"uuid": instance.uuid,
                        "exception": e})
             return
 
         utils.process_event(fsm, instance, event='done')
-        LOG.info(_LI('Instance was successfully rebuilt'), instance=instance)
+        LOG.info('Instance was successfully rebuilt', instance=instance)
 
     def list_availability_zones(self, context):
         """Get availability zone list."""
