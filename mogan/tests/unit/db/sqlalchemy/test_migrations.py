@@ -47,7 +47,6 @@ from oslo_log import log as logging
 import sqlalchemy
 import sqlalchemy.exc
 
-from mogan.common.i18n import _LE
 from mogan.db.sqlalchemy import migration
 from mogan.db.sqlalchemy import models
 from mogan.tests import base
@@ -140,8 +139,8 @@ class WalkVersionsMixin(object):
                 if check:
                     check(engine, data)
         except Exception:
-            LOG.error(_LE("Failed to migrate to version %(version)s on engine "
-                          "%(engine)s"),
+            LOG.error("Failed to migrate to version %(version)s on engine "
+                          "%(engine)s",
                       {'version': version, 'engine': engine})
             raise
 

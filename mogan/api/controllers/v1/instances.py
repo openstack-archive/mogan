@@ -33,7 +33,6 @@ from mogan.api import expose
 from mogan.api import validation
 from mogan.common import exception
 from mogan.common.i18n import _
-from mogan.common.i18n import _LW
 from mogan.common import policy
 from mogan.common import states
 from mogan import network
@@ -252,8 +251,8 @@ class FloatingIPController(InstanceControllerBase):
                 raise wsme.exc.ClientSideError(
                     msg, status_code=http_client.BAD_REQUEST)
             if len(instance_nics) > 1:
-                LOG.warning(_LW('multiple ports exist, using the first '
-                                'IPv4 fixed_ip: %s'), fixed_address)
+                LOG.warning('multiple ports exist, using the first '
+                            'IPv4 fixed_ip: %s', fixed_address)
 
         try:
             self.network_api.associate_floating_ip(
