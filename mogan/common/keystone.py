@@ -22,7 +22,6 @@ from six.moves.urllib import parse  # for legacy options loading only
 
 from mogan.common import exception
 from mogan.common.i18n import _
-from mogan.common.i18n import _LE
 from mogan.conf import auth as mogan_auth
 from mogan.conf import CONF
 
@@ -64,7 +63,7 @@ def ks_exceptions(f):
                 kaexception.MissingRequiredOptions) as e:
             raise exception.ConfigInvalid(six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE('Keystone request failed: %(msg)s'),
+            LOG.exception('Keystone request failed: %(msg)s',
                           {'msg': six.text_type(e)})
             raise exception.KeystoneFailure(six.text_type(e))
     return wrapper

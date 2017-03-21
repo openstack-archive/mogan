@@ -20,8 +20,6 @@ import sys
 from oslo_log import log as logging
 from oslo_utils import importutils
 
-from mogan.common.i18n import _LE
-from mogan.common.i18n import _LI
 from mogan.common import utils
 
 LOG = logging.getLogger(__name__)
@@ -128,14 +126,14 @@ def load_engine_driver(engine_driver):
     """
 
     if not engine_driver:
-        LOG.error(_LE("Engine driver option required, but not specified"))
+        LOG.error("Engine driver option required, but not specified")
         sys.exit(1)
 
-    LOG.info(_LI("Loading engine driver '%s'"), engine_driver)
+    LOG.info("Loading engine driver '%s'", engine_driver)
     try:
         driver = importutils.import_object(
             'mogan.engine.baremetal.%s' % engine_driver)
         return utils.check_isinstance(driver, BaseEngineDriver)
     except ImportError:
-        LOG.exception(_LE("Unable to load the baremetal driver"))
+        LOG.exception("Unable to load the baremetal driver")
         sys.exit(1)
