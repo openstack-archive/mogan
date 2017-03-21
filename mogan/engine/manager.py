@@ -24,9 +24,6 @@ from oslo_utils import timeutils
 from mogan.common import exception
 from mogan.common import flow_utils
 from mogan.common.i18n import _
-from mogan.common.i18n import _LE
-from mogan.common.i18n import _LI
-from mogan.common.i18n import _LW
 from mogan.common import states
 from mogan.common import utils
 from mogan.conf import CONF
@@ -53,7 +50,7 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             return objects.ComputePort.get(context, port_uuid)
         except exception.NotFound:
-            LOG.warning(_LW("No compute port record for %(port)s"),
+            LOG.warning("No compute port record for %(port)s",
                         {'port': port_uuid})
 
     def _get_compute_node(self, context, node_uuid):
@@ -61,7 +58,7 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             return objects.ComputeNode.get(context, node_uuid)
         except exception.NotFound:
-            LOG.warning(_LW("No compute node record for %(node)s"),
+            LOG.warning("No compute node record for %(node)s",
                         {'node': node_uuid})
 
     def _init_compute_port(self, context, port):
@@ -151,8 +148,8 @@ class EngineManager(base_manager.BaseEngineManager):
             nodes = self.driver.get_nodes_power_state()
         except Exception as e:
             LOG.warning(
-                _LW("Failed to retrieve node list when synchronizing power "
-                    "states: %(msg)s") % {"msg": e})
+                "Failed to retrieve node list when synchronizing power "
+                    "states: %(msg)s" % {"msg": e})
             # Just retrun if we fail to get nodes real power state.
             return
 
@@ -160,9 +157,9 @@ class EngineManager(base_manager.BaseEngineManager):
                      if node.target_power_state is None}
 
         if not node_dict:
-            LOG.warning(_LW("While synchronizing instance power states, "
+            LOG.warning("While synchronizing instance power states, "
                             "found none instance with stable power state "
-                            "on the hypervisor."))
+                            "on the hypervisor.")
             return
 
         def _sync(db_instance, node_power_state):
@@ -257,17 +254,17 @@ class EngineManager(base_manager.BaseEngineManager):
             nodes = self.driver.get_maintenance_node_list()
         except Exception as e:
             LOG.warning(
-                _LW("Failed to retrieve node list when synchronizing "
-                    "maintenance states: %(msg)s") % {"msg": e})
+                "Failed to retrieve node list when synchronizing "
+                    "maintenance states: %(msg)s" % {"msg": e})
             # Just retrun if we fail to get nodes maintenance state.
             return
 
         node_dict = {node.instance_uuid: node for node in nodes}
 
         if not node_dict:
-            LOG.warning(_LW("While synchronizing instance maintenance states, "
+            LOG.warning("While synchronizing instance maintenance states, "
                             "found none node with instance associated on the "
-                            "hypervisor."))
+                            "hypervisor.")
             return
 
         db_instances = objects.Instance.list(context)

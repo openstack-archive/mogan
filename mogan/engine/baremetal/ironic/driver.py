@@ -22,9 +22,6 @@ import six
 
 from mogan.common import exception
 from mogan.common.i18n import _
-from mogan.common.i18n import _LE
-from mogan.common.i18n import _LI
-from mogan.common.i18n import _LW
 from mogan.common import ironic
 from mogan.common import states
 from mogan.conf import CONF
@@ -52,7 +49,7 @@ def map_power_state(state):
     try:
         return _POWER_STATE_MAP[state]
     except KeyError:
-        LOG.warning(_LW("Power state %s not found."), state)
+        LOG.warning("Power state %s not found.", state)
         return states.NOSTATE
 
 
@@ -110,8 +107,8 @@ class IronicDriver(base_driver.BaseEngineDriver):
             try:
                 properties[prop] = int(node.properties.get(prop, 0))
             except (TypeError, ValueError):
-                LOG.warning(_LW('Node %(uuid)s has a malformed "%(prop)s". '
-                                'It should be an integer.'),
+                LOG.warning('Node %(uuid)s has a malformed "%(prop)s". '
+                                'It should be an integer.',
                             {'uuid': node.uuid, 'prop': prop})
                 properties[prop] = 0
 
@@ -144,8 +141,8 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 if len(parts) == 2 and parts[0] and parts[1]:
                     nodes_extra_specs[parts[0].strip()] = parts[1]
                 else:
-                    LOG.warning(_LW("Ignoring malformed capability '%s'. "
-                                    "Format should be 'key:val'."), capability)
+                    LOG.warning("Ignoring malformed capability '%s'. "
+                                    "Format should be 'key:val'.", capability)
 
         dic = {
             'cpus': cpus,
@@ -203,9 +200,9 @@ class IronicDriver(base_driver.BaseEngineDriver):
         try:
             self.ironicclient.call('node.update', node.uuid, patch)
         except ironic_exc.BadRequest as e:
-            LOG.warning(_LW("Failed to remove deploy parameters from node "
+            LOG.warning("Failed to remove deploy parameters from node "
                             "%(node)s when unprovisioning the instance "
-                            "%(instance)s: %(reason)s"),
+                            "%(instance)s: %(reason)s",
                         {'node': node.uuid, 'instance': instance.uuid,
                          'reason': six.text_type(e)})
 
@@ -402,7 +399,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         try:
             node = self._validate_instance_and_node(instance)
         except exception.InstanceNotFound:
-            LOG.warning(_LW("Destroy called on non-existing instance %s."),
+            LOG.warning("Destroy called on non-existing instance %s.",
                         instance.uuid)
             return
 

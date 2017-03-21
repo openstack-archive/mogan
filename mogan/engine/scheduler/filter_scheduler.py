@@ -22,8 +22,6 @@ from oslo_serialization import jsonutils
 
 from mogan.common import exception
 from mogan.common.i18n import _
-from mogan.common.i18n import _LE
-from mogan.common.i18n import _LW
 from mogan.engine.scheduler import driver
 from mogan.engine.scheduler import scheduler_options
 
@@ -173,8 +171,8 @@ class FilterScheduler(driver.Scheduler):
         weighed_nodes = self._get_weighted_candidates(context, request_spec,
                                                       filter_properties)
         if not weighed_nodes:
-            LOG.warning(_LW('No weighed nodes found for instance '
-                            'with properties: %s'),
+            LOG.warning('No weighed nodes found for instance '
+                            'with properties: %s',
                         request_spec.get('instance_type'))
             raise exception.NoValidNode(_("No weighed nodes available"))
 
