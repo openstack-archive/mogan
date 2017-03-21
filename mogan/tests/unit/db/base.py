@@ -74,3 +74,52 @@ class DbTestCase(base.TestCase):
             _DB_CACHE = Database(engine, migration,
                                  sql_connection=CONF.database.connection)
         self.useFixture(_DB_CACHE)
+
+    def _dict_from_object(self, obj, ignored_keys):
+        if ignored_keys is None:
+            ignored_keys = []
+
+        return {k: v for k, v in obj.items()
+                if k not in ignored_keys}
+
+    def _assertDickeysEqual(self, obj1_dic, obj2_dic, msg=None):
+        obj1_keys = set(obj1_dic.keys())
+        obj2_keys = set(obj2_dic.keys())
+
+        difference1 = obj1_keys.difference(obj2_keys)
+        difference2 = obj2_keys.difference(obj1_keys)
+
+        if not (difference1 or difference2):
+            return
+
+        lines = []
+        if difference1:
+            lines.append('Keys in the first obj but not the second:')
+            for item in difference1:
+                lines.append(repr(item))
+        if difference2:
+            lines.append('Keys in the second obj but not the first:')
+            for item in difference2:
+                lines.append(repr(item))
+        standardMsg = '\n'.join(lines)
+        self.fail(self._formatMessage(msg, standardMsg))
+
+    def _assertEqualObjects(self, obj1, obj2, ignored_keys=None):
+        obj1 = self._dict_from_object(obj1, ignored_keys)
+        obj2 = self._dict_from_object(obj2, ignored_keys)
+
+        self._assertDickeysEqual(obj1, obj2)
+        self.assertDictEqual(obj1, obj2)
+
+    def _assertEqualListsOfObjects(self, objs1, objs2, ignored_keys=None):
+        obj_to_dict = lambda o: self._dict_from_object(o, ignored_keys)
+        sort_key = lambda d: [d[k] for k in sorted(d)]
+        conv_and_sort = lambda obj: sorted(map(obj_to_dict, obj), key=sort_key)
+        self.assertListEqual(conv_and_sort(objs1), conv_and_sort(objs2))
+
+    def _assertEqualOrderedListOfObjects(self, objs1, objs2,
+                                         ignored_keys=None):
+        conv = lambda objs:\
+            [self._dict_from_object(obj, ignored_keys) for obj in objs]
+
+        self.assertListEqual(conv(objs1), conv(objs2))

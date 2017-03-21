@@ -69,6 +69,31 @@ def create_test_instance(ctxt, **kw):
     return instance
 
 
+def get_test_instance_fault(**kw):
+    return {
+        'id': kw.get('id', 123456),
+        'instance_uuid': kw.get('instance_uuid'),
+        'code': kw.get('code', 404),
+        'message': kw.get('message', 'message'),
+        'detail': kw.get('detail', 'detail'),
+        'created_at': kw.get('create_at', None),
+        'updated_at': kw.get('update_at', None)
+    }
+
+
+def get_test_instance_faults(**kw):
+    return {
+        'fake-uuid': [
+            {'id': 1, 'instance_uuid': kw.get('instance_uuid'), 'code': 123,
+             'message': 'msg1', 'detail': 'detail', 'created_at': None,
+             'updated_at': None},
+            {'id': 2, 'instance_uuid': kw.get('instance_uuid'), 'code': 456,
+             'message': 'msg2', 'detail': 'detail', 'created_at': None,
+             'updated_at': None},
+        ]
+    }
+
+
 def get_test_compute_node(ctxt, **kw):
     """Return a ComputeNode object with appropriate attributes.
 
