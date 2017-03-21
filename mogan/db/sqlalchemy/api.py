@@ -29,7 +29,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 
 from mogan.common import exception
-from mogan.common.i18n import _, _LW
+from mogan.common.i18n import _
 from mogan.db import api
 from mogan.db.sqlalchemy import models
 
@@ -702,8 +702,8 @@ class Connection(api.Connection):
                         usages[resource].reserved += delta
 
         if unders:
-            LOG.warning(_LW("Change will make usage less than 0 for the "
-                            "following resources: %s"), unders)
+            LOG.warning("Change will make usage less than 0 for the "
+                        "following resources: %s", unders)
         if overs:
             usages = {k: dict(in_use=v.in_use, reserved=v.reserved,
                               allocated=allocated.get(k, 0))

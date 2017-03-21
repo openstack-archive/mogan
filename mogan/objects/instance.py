@@ -18,7 +18,6 @@ from oslo_db import exception as db_exc
 from oslo_log import log as logging
 from oslo_versionedobjects import base as object_base
 
-from mogan.common.i18n import _LE
 from mogan.db import api as dbapi
 from mogan import objects
 from mogan.objects import base
@@ -170,7 +169,7 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
                 try:
                     getattr(self, '_save_%s' % field)(context)
                 except AttributeError:
-                    LOG.exception(_LE('No save handler for %s'), field,
+                    LOG.exception('No save handler for %s', field,
                                   instance=self)
                 except db_exc.DBReferenceError as exp:
                     if exp.key != 'instance_uuid':

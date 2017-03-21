@@ -22,8 +22,6 @@ from oslo_serialization import jsonutils
 
 from mogan.common import exception
 from mogan.common.i18n import _
-from mogan.common.i18n import _LE
-from mogan.common.i18n import _LW
 from mogan.common import utils
 from mogan.scheduler import driver
 from mogan.scheduler import scheduler_options
@@ -83,8 +81,8 @@ class FilterScheduler(driver.Scheduler):
             return  # no previously attempted nodes, skip
 
         last_node = nodes[-1]
-        LOG.error(_LE("Error scheduling %(instance_id)s from last node: "
-                      "%(last_node)s : %(exc)s"),
+        LOG.error("Error scheduling %(instance_id)s from last node: "
+                  "%(last_node)s : %(exc)s",
                   {'instance_id': instance_id,
                    'last_node': last_node,
                    'exc': exc})
@@ -182,8 +180,8 @@ class FilterScheduler(driver.Scheduler):
             weighed_nodes = self._get_weighted_candidates(
                 context, request_spec, filter_properties)
             if not weighed_nodes:
-                LOG.warning(_LW('No weighed nodes found for instance '
-                                'with properties: %s'),
+                LOG.warning('No weighed nodes found for instance '
+                            'with properties: %s',
                             request_spec.get('instance_type'))
                 raise exception.NoValidNode(_("No weighed nodes available"))
 
