@@ -25,7 +25,6 @@ import six
 from six.moves import http_client
 
 from mogan.common.i18n import _
-from mogan.common.i18n import _LE
 from mogan.conf import CONF
 
 LOG = logging.getLogger(__name__)
@@ -63,7 +62,7 @@ class MoganException(Exception):
             except Exception:
                 # kwargs doesn't match a variable in self._msg_fmt
                 # log the issue and the kwargs
-                LOG.exception(_LE('Exception in string format operation'))
+                LOG.exception('Exception in string format operation')
                 for name, value in kwargs.items():
                     LOG.error("%s: %s" % (name, value))
 
