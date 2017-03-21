@@ -122,3 +122,14 @@ class RPCAPITestCase(base.DbTestCase):
                           version='1.0',
                           instance=self.fake_instance_obj,
                           state='power on')
+
+    def test_rebuild_instance(self):
+        self._test_rpcapi('rebuild_instance',
+                          'cast',
+                          version='1.0',
+                          instance=self.fake_instance_obj)
+
+    def test_list_availability_zones(self):
+        self._test_rpcapi('list_availability_zones',
+                          'call',
+                          version='1.0')
