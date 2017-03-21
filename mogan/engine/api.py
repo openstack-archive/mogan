@@ -21,7 +21,6 @@ from oslo_utils import uuidutils
 import six
 
 from mogan.common import exception
-from mogan.common.i18n import _LI
 from mogan.common import states
 from mogan.common import utils
 from mogan.conf import CONF
@@ -199,8 +198,8 @@ class API(object):
         if max_net_count < min_count:
             raise exception.PortLimitExceeded()
         elif max_net_count < max_count:
-            LOG.info(_LI("max count reduced from %(max_count)d to "
-                         "%(max_net_count)d due to network port quota"),
+            LOG.info("max count reduced from %(max_count)d to "
+                     "%(max_net_count)d due to network port quota",
                      {'max_count': max_count,
                       'max_net_count': max_net_count})
             max_count = max_net_count

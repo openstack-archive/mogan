@@ -24,8 +24,6 @@ from mogan.api import app
 from mogan.common import config
 from mogan.common import exception
 from mogan.common.i18n import _
-from mogan.common.i18n import _LE
-from mogan.common.i18n import _LI
 from mogan.common import rpc
 from mogan.conf import CONF
 from mogan import objects
@@ -61,8 +59,8 @@ class RPCService(service.Service):
             periodic_interval_max=CONF.periodic_interval,
             context=admin_context)
 
-        LOG.info(_LI('Created RPC server for service %(service)s on host '
-                     '%(host)s.'),
+        LOG.info('Created RPC server for service %(service)s on host '
+                 '%(host)s.',
                  {'service': self.topic, 'host': self.host})
 
     def stop(self):
@@ -70,17 +68,17 @@ class RPCService(service.Service):
             self.rpcserver.stop()
             self.rpcserver.wait()
         except Exception as e:
-            LOG.exception(_LE('Service error occurred when stopping the '
-                              'RPC server. Error: %s'), e)
+            LOG.exception('Service error occurred when stopping the '
+                          'RPC server. Error: %s', e)
         try:
             self.manager.del_host()
         except Exception as e:
-            LOG.exception(_LE('Service error occurred when cleaning up '
-                              'the RPC manager. Error: %s'), e)
+            LOG.exception('Service error occurred when cleaning up '
+                          'the RPC manager. Error: %s', e)
 
         super(RPCService, self).stop(graceful=True)
-        LOG.info(_LI('Stopped RPC server for service %(service)s on host '
-                     '%(host)s.'),
+        LOG.info('Stopped RPC server for service %(service)s on host '
+                 '%(host)s.',
                  {'service': self.topic, 'host': self.host})
 
 

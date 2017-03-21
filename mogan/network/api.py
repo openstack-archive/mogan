@@ -16,7 +16,7 @@ from oslo_log import log as logging
 from oslo_utils import excutils
 
 from mogan.common import exception
-from mogan.common.i18n import _, _LE
+from mogan.common.i18n import _
 from mogan.common import keystone
 from mogan.conf import CONF
 
@@ -126,7 +126,7 @@ class API(object):
             if e.status_code == 404:
                 return []
             with excutils.save_and_reraise_exception():
-                LOG.exception(_LE('Unable to access floating IP for %s'),
+                LOG.exception('Unable to access floating IP for %s',
                               ', '.join(['%s %s' % (k, v)
                                          for k, v in kwargs.items()]))
 

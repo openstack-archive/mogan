@@ -32,7 +32,6 @@ import six
 from six.moves import range
 
 from mogan.common import exception
-from mogan.common.i18n import _LE
 from mogan import conf
 
 LOG = logging.getLogger(__name__)
@@ -130,9 +129,9 @@ class GlanceClientWrapper(object):
                 else:
                     extra = 'done trying'
 
-                LOG.exception(_LE("Error contacting glance server "
-                                  "'%(server)s' for '%(method)s', "
-                                  "%(extra)s."),
+                LOG.exception("Error contacting glance server "
+                              "'%(server)s' for '%(method)s', "
+                              "%(extra)s.",
                               {'server': self.api_server,
                                'method': method, 'extra': extra})
                 if attempt == num_attempts:
