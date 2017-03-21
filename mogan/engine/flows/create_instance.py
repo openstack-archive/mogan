@@ -24,8 +24,6 @@ from taskflow.patterns import linear_flow
 from mogan.common import exception
 from mogan.common import flow_utils
 from mogan.common.i18n import _
-from mogan.common.i18n import _LE
-from mogan.common.i18n import _LI
 from mogan.common import utils
 from mogan import objects
 
@@ -112,7 +110,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         # set the instance's status to error.
         for failure in flow_failures.values():
             if failure.check(*self.no_reschedule_exc_types):
-                LOG.error(_LE("Instance %s: create failed and no reschedule."),
+                LOG.error("Instance %s: create failed and no reschedule.",
                           instance.uuid)
                 return False
 
@@ -121,7 +119,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             self._reschedule(context, cause, instance=instance, **kwargs)
             return True
         except exception.MoganException:
-            LOG.exception(_LE("Instance %s: rescheduling failed"),
+            LOG.exception("Instance %s: rescheduling failed",
                           instance.uuid)
 
         return False
@@ -185,7 +183,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                         # Set nics here, so we can clean up the
                         # created networks during reverting.
                         instance.nics = nics_obj
-                        LOG.error(_LE("Instance %s: create network failed"),
+                        LOG.error("Instance %s: create network failed",
                                   instance.uuid)
                         raise exception.NetworkError(_(
                             "Build network for instance failed."))
@@ -231,7 +229,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
 
     def execute(self, context, instance):
         self.driver.spawn(context, instance)
-        LOG.info(_LI('Successfully provisioned Ironic node %s'),
+        LOG.info('Successfully provisioned Ironic node %s',
                  instance.node_uuid)
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
