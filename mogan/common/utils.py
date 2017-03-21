@@ -22,7 +22,6 @@ from oslo_log import log as logging
 import six
 
 from mogan.common import exception
-from mogan.common.i18n import _LW
 from mogan.common import states
 
 LOG = logging.getLogger(__name__)
@@ -39,9 +38,9 @@ def safe_rstrip(value, chars=None):
 
     """
     if not isinstance(value, six.string_types):
-        LOG.warning(_LW("Failed to remove trailing character. Returning "
-                        "original object. Supplied object is not a string: "
-                        "%s,"), value)
+        LOG.warning("Failed to remove trailing character. Returning "
+                    "original object. Supplied object is not a string: "
+                    "%s,", value)
         return value
 
     return value.rstrip(chars) or value
