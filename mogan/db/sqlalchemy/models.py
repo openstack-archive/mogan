@@ -84,10 +84,7 @@ class Instance(Base):
     image_uuid = Column(String(36), nullable=True)
     node_uuid = Column(String(36), nullable=True)
     launched_at = Column(DateTime, nullable=True)
-    deleted_at = Column(DateTime, nullable=True)
     extra = Column(db_types.JsonEncodedDict)
-    deleted = Column(Boolean, default=False)
-
     locked = Column(Boolean)
     locked_by = Column(Enum('owner', 'admin'))
 
