@@ -70,11 +70,6 @@ def model_query(context, model, *args, **kwargs):
     if kwargs.pop("project_only", False):
         kwargs["project_id"] = context.tenant
 
-    if kwargs.pop("instance", False):
-        kwargs["deleted"] = False
-        if kwargs.pop("read_deleted", False):
-            kwargs["deleted"] = True
-
     with _session_for_read() as session:
         query = sqlalchemyutils.model_query(
             model, session, args, **kwargs)
@@ -216,9 +211,9 @@ class Connection(api.Connection):
 
     def instance_destroy(self, context, instance_id):
         with _session_for_write():
-            query = model_query(context, models.Instance, instance=True)
+            query = model_query(context, models.Instance)
             query = add_identity_filter(query, instance_id)
-            count = query.soft_delete()
+            count = query.delete()
             if count != 1:
                 raise exception.InstanceNotFound(instance=instance_id)
             instance_nics = model_query(context, models.InstanceNic).filter_by(

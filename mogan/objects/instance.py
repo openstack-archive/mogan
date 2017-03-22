@@ -53,8 +53,6 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'node_uuid': object_fields.UUIDField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),
-        'deleted': object_fields.BooleanField(default=False),
-        'deleted_at': object_fields.DateTimeField(nullable=True),
         'locked': object_fields.BooleanField(default=False),
         'locked_by': object_fields.StringField(nullable=True),
     }
@@ -148,9 +146,6 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     def create(self, context=None):
         """Create a Instance record in the DB."""
         values = self.obj_get_changes()
-        # Since we need to avoid passing False down to the DB layer
-        # (which uses an integer), we can always default it to zero here.
-        values['deleted'] = 0
         instance_nics = values.pop('nics', None)
         if instance_nics:
             values['nics'] = instance_nics.as_list_of_dict()
