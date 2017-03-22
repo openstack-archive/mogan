@@ -108,6 +108,11 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                                filter_properties=filter_properties)
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
+        # Cleanup associated instance node uuid
+        if instance.node_uuid:
+            instance.node_uuid = None
+            instance.save()
+
         # Check if we have a cause which can tell us not to reschedule and
         # set the instance's status to error.
         for failure in flow_failures.values():
@@ -135,15 +140,6 @@ class BuildNetworkTask(flow_utils.MoganTask):
         super(BuildNetworkTask, self).__init__(addons=[ACTION],
                                                requires=requires)
         self.manager = manager
-        # These exception types will trigger the network to be cleaned.
-        self.network_cleaned_exc_types = [
-            exception.NetworkError,
-            # include instance create task failure here
-            exception.InstanceDeployFailure,
-            exception.ValidationError,
-            exception.InstanceNotFound,
-            loopingcall.LoopingCallTimeOut,
-        ]
 
     def _build_networks(self, context, instance, requested_networks):
         node_uuid = instance.node_uuid
@@ -192,25 +188,23 @@ class BuildNetworkTask(flow_utils.MoganTask):
         return nics_obj
 
     def execute(self, context, instance, requested_networks):
-        isntance_nics = self._build_networks(
+        instance_nics = self._build_networks(
             context,
             instance,
             requested_networks)
 
-        instance.nics = isntance_nics
+        instance.nics = instance_nics
         instance.save()
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
-        # Check if we have a cause which need to clean up networks.
-        for failure in flow_failures.values():
-            if failure.check(*self.network_cleaned_exc_types):
-                LOG.debug("Instance %s: cleaning up node networks",
-                          instance.uuid)
-                if instance.nics:
-                    self.manager.destroy_networks(context, instance)
-                    # Unset nics here as we have destroyed it.
-                    instance.nics = None
-                return True
+        # Check if we need to clean up networks.
+        if instance.nics:
+            LOG.debug("Instance %s: cleaning up node networks",
+                      instance.uuid)
+            self.manager.destroy_networks(context, instance)
+            # Unset nics here as we have destroyed it.
+            instance.nics = None
+            return True
 
         return False
 
