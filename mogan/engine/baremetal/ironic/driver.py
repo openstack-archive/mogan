@@ -213,7 +213,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         """Wait for the node to be marked as ACTIVE in Ironic."""
         instance.refresh()
         if instance.status in (states.DELETING, states.ERROR, states.DELETED):
-            raise exception.InstanceDeployFailure(
+            raise exception.InstanceDeployAborted(
                 _("Instance %s provisioning was aborted") % instance.uuid)
 
         node = self._validate_instance_and_node(instance)
