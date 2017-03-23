@@ -327,6 +327,19 @@ class EngineManager(base_manager.BaseEngineManager):
             filter_properties = {}
 
         try:
+            node = self.scheduler_rpcapi.select_destinations(
+                context, request_spec, filter_properties)
+            instance.node_uuid = node['node_uuid']
+            instance.save()
+        except Exception as e:
+            utils.process_event(fsm, instance, event='error')
+            LOG.error(_LE("Created instance %(uuid)s failed."
+                          "Exception: %(exception)s"),
+                      {"uuid": instance.uuid,
+                       "exception": e})
+            return
+
+        try:
             flow_engine = create_instance.get_flow(
                 context,
                 self,
@@ -336,6 +349,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 filter_properties,
             )
         except Exception:
+            utils.process_event(fsm, instance, event='error')
             msg = _("Create manager instance flow failed.")
             LOG.exception(msg)
             raise exception.MoganException(msg)
