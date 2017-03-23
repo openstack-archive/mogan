@@ -412,9 +412,7 @@ class EngineManager(base_manager.BaseEngineManager):
     def set_power_state(self, context, instance, state):
         """Set power state for the specified instance."""
 
-        # Initialize state machine
-        fsm = states.machine.copy()
-        fsm.initialize(start_state=instance.status)
+        fsm = utils.get_state_machine(start_state=instance.status)
 
         @utils.synchronized(instance.uuid)
         def do_set_power_state():
