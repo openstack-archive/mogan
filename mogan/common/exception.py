@@ -195,6 +195,10 @@ class InstanceDeployFailure(Invalid):
     msg_fmt = _("Failed to deploy instance: %(reason)s")
 
 
+class InstanceDeployAborted(Invalid):
+    msg_fmt = _("Instance deployment is aborted: %(reason)s")
+
+
 class NoFreeEngineWorker(TemporaryFailure):
     _msg_fmt = _('Requested action cannot be performed due to lack of free '
                  'engine workers.')

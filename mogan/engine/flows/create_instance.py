@@ -73,6 +73,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             # The instance has been removed from the database, that can not
             # be fixed by rescheduling.
             exception.InstanceNotFound,
+            exception.InstanceDeployAborted,
             exception.NetworkError,
         ]
 
