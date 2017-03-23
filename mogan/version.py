@@ -16,3 +16,4 @@
 import pbr.version
 
 version_info = pbr.version.VersionInfo('mogan')
+version_string = version_info.version_string
