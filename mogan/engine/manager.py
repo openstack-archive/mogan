@@ -406,7 +406,6 @@ class EngineManager(base_manager.BaseEngineManager):
         do_delete_instance(instance)
 
         instance.power_state = states.NOSTATE
-        instance.deleted_at = timeutils.utcnow()
         utils.process_event(fsm, instance, event='done')
         instance.destroy()
 
