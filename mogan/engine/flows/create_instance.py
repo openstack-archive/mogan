@@ -36,25 +36,6 @@ ACTION = 'instance:create'
 CONF = cfg.CONF
 
 
-class ScheduleCreateInstanceTask(flow_utils.MoganTask):
-    """Activates a scheduler driver and handles any subsequent failure."""
-
-    def __init__(self, manager):
-        requires = ['filter_properties', 'request_spec', 'instance',
-                    'context']
-        super(ScheduleCreateInstanceTask, self).__init__(addons=[ACTION],
-                                                         requires=requires)
-        self.manager = manager
-
-    def execute(self, context, instance, request_spec, filter_properties):
-        top_node = self.manager.scheduler_rpcapi.select_destinations(
-            context,
-            request_spec,
-            filter_properties)
-        instance.node_uuid = top_node
-        instance.save()
-
-
 class OnFailureRescheduleTask(flow_utils.MoganTask):
     """Triggers a rescheduling request to be sent when reverting occurs.
 
@@ -239,16 +220,15 @@ class CreateInstanceTask(flow_utils.MoganTask):
         return False
 
 
-def get_flow(context, manager, instance, requested_networks, request_spec,
-             filter_properties):
+def get_flow(context, manager, instance, requested_networks, node):
 
     """Constructs and returns the manager entrypoint flow
 
     This flow will do the following:
 
-    1. Schedule a node to create instance
-    3. Build networks for the instance and set port id back to baremetal port
-    4. Do node deploy and handle errors.
+    1. Build networks for the instance and set port id back to baremetal port
+    2. Do node deploy and handle errors.
+    3. Reschedule if the tasks are on failure.
     """
 
     flow_name = ACTION.replace(":", "_") + "_manager"
@@ -259,14 +239,12 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
     # determined.
     create_what = {
         'context': context,
-        'filter_properties': filter_properties,
-        'request_spec': request_spec,
         'instance': instance,
-        'requested_networks': requested_networks
+        'requested_networks': requested_networks,
+        'node': node,
     }
 
-    instance_flow.add(ScheduleCreateInstanceTask(manager),
-                      OnFailureRescheduleTask(manager.engine_rpcapi),
+    instance_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
                       BuildNetworkTask(manager),
                       CreateInstanceTask(manager.driver))
 

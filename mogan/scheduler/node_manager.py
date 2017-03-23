@@ -34,7 +34,7 @@ class NodeState(object):
     """Mutable and immutable information tracked for a Ironic node."""
 
     def __init__(self, node):
-        self.node = node.node_uuid
+        self.node_uuid = node.node_uuid
         self.capabilities = node.extra_specs
         self.availability_zone = node.availability_zone \
             or CONF.engine.default_availability_zone
@@ -43,7 +43,7 @@ class NodeState(object):
 
     def consume_from_request(self, context):
         """Consume the compute node."""
-        objects.ComputeNode.consume_node(context, self.node)
+        objects.ComputeNode.consume_node(context, self.node_uuid)
 
 
 class NodeManager(object):

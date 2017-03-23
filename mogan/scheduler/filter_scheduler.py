@@ -189,8 +189,9 @@ class FilterScheduler(driver.Scheduler):
 
             top_node = self._choose_top_node(weighed_nodes, request_spec)
             top_node.obj.consume_from_request(context)
-            self._add_retry_node(filter_properties, top_node.obj.node)
-            return top_node.obj.node
+            self._add_retry_node(filter_properties, top_node.obj.node_uuid)
+            dest = dict(node_uuid=top_node.obj.node_uuid)
+            return dest
 
         return _schedule(self, context, request_spec, filter_properties)
 
