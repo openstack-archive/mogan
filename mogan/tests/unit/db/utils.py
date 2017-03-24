@@ -129,6 +129,7 @@ def create_test_compute_node(context={}, **kw):
 def get_test_compute_port(**kw):
     return {
         'id': kw.get('id', 123),
+        'address': kw.get('address', '52:54:00:cf:2d:31'),
         'port_type': kw.get('port_type', '1GE'),
         'port_uuid': kw.get('port_uuid',
                             'f978ef48-d4af-4dad-beec-e6174309bc72'),

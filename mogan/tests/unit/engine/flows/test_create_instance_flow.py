@@ -36,15 +36,18 @@ class CreateInstanceFlowTestCase(base.TestCase):
     def test_create_network_task_execute(self, mock_build_networks, mock_save):
         fake_engine_manager = mock.MagicMock()
         fake_requested_networks = mock.MagicMock()
+        fake_ports = mock.MagicMock()
         task = create_instance.BuildNetworkTask(fake_engine_manager)
         instance_obj = obj_utils.get_test_instance(self.ctxt)
         mock_build_networks.return_value = None
         mock_save.return_value = None
 
-        task.execute(self.ctxt, instance_obj, fake_requested_networks)
+        task.execute(
+            self.ctxt, instance_obj, fake_requested_networks, fake_ports)
         mock_build_networks.assert_called_once_with(self.ctxt,
                                                     instance_obj,
-                                                    fake_requested_networks)
+                                                    fake_requested_networks,
+                                                    fake_ports)
 
     @mock.patch.object(IronicDriver, 'spawn')
     def test_create_instance_task_execute(self, mock_spawn):

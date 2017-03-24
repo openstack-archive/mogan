@@ -185,10 +185,10 @@ class FilterScheduler(driver.Scheduler):
                             request_spec.get('instance_type'))
                 raise exception.NoValidNode(_("No weighed nodes available"))
 
-            top_node = self._choose_top_node(weighed_nodes, request_spec)
-            top_node.obj.consume_from_request(context)
-            self._add_retry_node(filter_properties, top_node.obj.node_uuid)
-            dest = dict(node_uuid=top_node.obj.node_uuid)
+            node = self._choose_top_node(weighed_nodes, request_spec)
+            node.obj.consume_from_request(context)
+            self._add_retry_node(filter_properties, node.obj.node_uuid)
+            dest = dict(node_uuid=node.obj.node_uuid, ports=node.obj.ports)
             return dest
 
         return _schedule(self, context, request_spec, filter_properties)

@@ -115,6 +115,7 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('address', sa.String(length=18), nullable=False),
         sa.Column('port_type', sa.String(length=255), nullable=False),
         sa.Column('port_uuid', sa.String(length=36), nullable=False),
         sa.Column('node_uuid', sa.String(length=36), nullable=False),

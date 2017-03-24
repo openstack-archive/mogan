@@ -119,6 +119,7 @@ class ComputePort(Base):
         table_args()
     )
     id = Column(Integer, primary_key=True)
+    address = Column(String(18), nullable=False)
     port_type = Column(String(255), nullable=False)
     port_uuid = Column(String(36), nullable=False)
     node_uuid = Column(String(36), nullable=False)
