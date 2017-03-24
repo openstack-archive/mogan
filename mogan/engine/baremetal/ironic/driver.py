@@ -265,15 +265,22 @@ class IronicDriver(base_driver.BaseEngineDriver):
                   'value': port_id}]
         self.ironicclient.call("port.update", ironic_port_id, patch)
 
-    def unplug_vif(self, node_interface):
+    def unplug_vifs(self, context, instance):
+        LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(instance_nics)s",
+                  {'uuid': instance.uuid,
+                   'instance_nics': str(instance.nics)})
         patch = [{'op': 'remove',
                   'path': '/extra/vif_port_id'}]
-        try:
-            if 'vif_port_id' in node_interface.extra:
-                self.ironicclient.call("port.update",
-                                       node_interface.uuid, patch)
-        except client_e.BadRequest:
-            pass
+
+        ports = self.get_ports_from_node(instance.node_uuid)
+
+        for port in ports:
+            try:
+                if 'vif_port_id' in port.extra:
+                    self.ironicclient.call("port.update",
+                                           port.uuid, patch)
+            except client_e.BadRequest:
+                pass
 
     def spawn(self, context, instance):
         """Deploy an instance.

@@ -84,10 +84,10 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def unplug_vif(self, node_interface):
-        """Unplug a neutron port from a baremetal port.
+    def unplug_vifs(self, context, instance):
+        """Unplug network interfaces.
 
-        :param node_interface: bare metal interface id to unplug port.
+        :param instance: the instance object.
         """
         raise NotImplementedError()
 
