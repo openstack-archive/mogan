@@ -301,16 +301,6 @@ class EngineManager(base_manager.BaseEngineManager):
         for port in ports:
             self.network_api.delete_port(context, port, instance.uuid)
 
-    def _unplug_vifs(self, context, instance):
-        LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(instance_nics)s",
-                  {'uuid': instance.uuid,
-                   'instance_nics': str(instance.nics)})
-
-        bm_interface = self.driver.get_ports_from_node(instance.node_uuid)
-
-        for pif in bm_interface:
-            self.driver.unplug_vif(pif)
-
     def create_instance(self, context, instance, requested_networks,
                         request_spec=None, filter_properties=None):
         """Perform a deployment."""
@@ -391,6 +381,15 @@ class EngineManager(base_manager.BaseEngineManager):
         """
         # TODO(zhenguo): Add delete notification
 
+        try:
+            self.destroy_networks(context, instance)
+        except Exception as e:
+            LOG.error(_LE("Destroy networks for instance %(uuid)s failed. "
+                          "Exception: %(exception)s"),
+                      {"uuid": instance.uuid,
+                       "exception": e})
+
+        self.driver.unplug_vifs(context, instance)
         self.driver.destroy(context, instance)
 
     def delete_instance(self, context, instance):
@@ -404,7 +403,6 @@ class EngineManager(base_manager.BaseEngineManager):
         def do_delete_instance(instance):
             try:
                 self._delete_instance(context, instance)
-                self._unplug_vifs(context, instance)
             except exception.InstanceNotFound:
                 LOG.info(_LI("Instance disappeared during terminate"),
                          instance=instance)
@@ -417,7 +415,10 @@ class EngineManager(base_manager.BaseEngineManager):
                     instance.power_state = states.NOSTATE
                     utils.process_event(fsm, instance, event='error')
 
-        do_delete_instance(instance)
+        # Issue delete request to driver only if instance is associated with
+        # a underlying node.
+        if instance.node_uuid:
+            do_delete_instance(instance)
 
         instance.power_state = states.NOSTATE
         utils.process_event(fsm, instance, event='done')
