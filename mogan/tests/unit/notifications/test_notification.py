@@ -190,7 +190,7 @@ class TestNotificationBase(test_base.TestCase):
 
         mock_context = mock.Mock()
         self.assertRaises(AssertionError, noti.emit, mock_context)
-        self.assertFalse(mock_notifier.called)
+        mock_notifier.assert_not_called()
 
     @mock.patch('mogan.common.rpc.NOTIFIER')
     def test_empty_schema(self, mock_notifier):

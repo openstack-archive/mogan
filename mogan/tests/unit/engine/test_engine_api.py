@@ -206,7 +206,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertRaises(exception.InstanceIsLocked,
                           self.engine_api.delete,
                           self.context, fake_instance_obj)
-        self.assertFalse(mock_deleted.called)
+        mock_deleted.assert_not_called()
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'set_power_state')
     def test_power_locked_instance_with_non_admin(self, mock_powered):
@@ -217,7 +217,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertRaises(exception.InstanceIsLocked,
                           self.engine_api.power,
                           self.context, fake_instance_obj, 'reboot')
-        self.assertFalse(mock_powered.called)
+        mock_powered.assert_not_called()
 
     @mock.patch('mogan.engine.api.API._delete_instance')
     def test_delete_locked_instance_with_admin(self, mock_deleted):
@@ -248,7 +248,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertRaises(exception.InstanceIsLocked,
                           self.engine_api.rebuild,
                           self.context, fake_instance_obj)
-        self.assertFalse(mock_rebuild.called)
+        mock_rebuild.assert_not_called()
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_instance')
     def test_rebuild_locked_instance_with_admin(self, mock_rebuild):

@@ -82,7 +82,7 @@ class TestWSGIService(base.TestCase):
         self.assertRaises(exception.ConfigInvalid,
                           service.WSGIService,
                           'mogan_api')
-        self.assertFalse(wsgi_server.called)
+        wsgi_server.assert_not_called()
 
     @mock.patch.object(service.wsgi, 'Server')
     def test_wsgi_service_with_ssl_enabled(self, wsgi_server):

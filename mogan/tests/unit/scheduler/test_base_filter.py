@@ -146,7 +146,7 @@ class TestBaseFilterHandler(test.TestCase):
         filter_classes = [FakeFilter1, FakeFilter2, FakeFilter3, FakeFilter4]
         result = self._get_filtered_objects(filter_classes)
         self.assertIsNone(result)
-        self.assertFalse(fake4_filter_all.called)
+        fake4_filter_all.assert_not_called()
 
     def test_get_filtered_objects(self):
         filter_objs_expected = [1, 2, 3, 4]
