@@ -116,38 +116,37 @@ class BuildNetworkTask(flow_utils.MoganTask):
     """Build network for the instance."""
 
     def __init__(self, manager):
-        requires = ['instance', 'requested_networks', 'context']
+        requires = ['instance', 'requested_networks', 'ports', 'context']
         super(BuildNetworkTask, self).__init__(addons=[ACTION],
                                                requires=requires)
         self.manager = manager
 
-    def _build_networks(self, context, instance, requested_networks):
+    def _build_networks(self, context, instance, requested_networks, ports):
         node_uuid = instance.node_uuid
-        bm_ports = self.manager.driver.get_ports_from_node(node_uuid,
-                                                           detail=True)
 
         LOG.debug(_('Find ports %(ports)s for node %(node)s') %
-                  {'ports': bm_ports, 'node': node_uuid})
-        if len(requested_networks) > len(bm_ports):
+                  {'ports': ports, 'node': node_uuid})
+        if len(requested_networks) > len(ports):
             raise exception.InterfacePlugException(_(
                 "Ironic node: %(id)s virtual to physical interface count"
                 "  mismatch"
                 " (Vif count: %(vif_count)d, Pif count: %(pif_count)d)")
                 % {'id': instance.node_uuid,
                    'vif_count': len(requested_networks),
-                   'pif_count': len(bm_ports)})
+                   'pif_count': len(ports)})
 
         nics_obj = objects.InstanceNics(context)
         for vif in requested_networks:
-            for pif in bm_ports:
+            for pif in ports:
                 # Match the specified port type with physical interface type
-                if vif.get('port_type') == pif.extra.get('port_type'):
+                if vif.get('port_type') == pif.port_type:
                     try:
                         port = self.manager.network_api.create_port(
                             context, vif['net_id'], pif.address, instance.uuid)
                         port_dict = port['port']
 
-                        self.manager.driver.plug_vif(pif.uuid, port_dict['id'])
+                        self.manager.driver.plug_vif(pif.port_uuid,
+                                                     port_dict['id'])
                         nic_dict = {'port_id': port_dict['id'],
                                     'network_id': port_dict['network_id'],
                                     'mac_address': port_dict['mac_address'],
@@ -167,11 +166,12 @@ class BuildNetworkTask(flow_utils.MoganTask):
                             "Build network for instance failed."))
         return nics_obj
 
-    def execute(self, context, instance, requested_networks):
+    def execute(self, context, instance, requested_networks, ports):
         instance_nics = self._build_networks(
             context,
             instance,
-            requested_networks)
+            requested_networks,
+            ports)
 
         instance.nics = instance_nics
         instance.save()
@@ -219,8 +219,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
         return False
 
 
-def get_flow(context, manager, instance, requested_networks, request_spec,
-             filter_properties):
+def get_flow(context, manager, instance, requested_networks, ports,
+             request_spec, filter_properties):
 
     """Constructs and returns the manager entrypoint flow
 
@@ -242,7 +242,8 @@ def get_flow(context, manager, instance, requested_networks, request_spec,
         'filter_properties': filter_properties,
         'request_spec': request_spec,
         'instance': instance,
-        'requested_networks': requested_networks
+        'requested_networks': requested_networks,
+        'ports': ports
     }
 
     instance_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
