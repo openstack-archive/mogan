@@ -16,13 +16,11 @@
 
 import mock
 from oslo_context import context
-from oslo_utils import uuidutils
 
 from mogan.engine.baremetal.ironic import IronicDriver
 from mogan.engine.flows import create_instance
 from mogan.engine import manager
 from mogan import objects
-from mogan.scheduler import rpcapi as scheduler_rpcapi
 from mogan.tests import base
 from mogan.tests.unit.objects import utils as obj_utils
 
@@ -32,30 +30,6 @@ class CreateInstanceFlowTestCase(base.TestCase):
     def setUp(self):
         super(CreateInstanceFlowTestCase, self).setUp()
         self.ctxt = context.get_admin_context()
-
-    @mock.patch.object(objects.instance.Instance, 'save')
-    @mock.patch.object(scheduler_rpcapi.SchedulerAPI, 'select_destinations')
-    def test_schedule_task_execute(self, mock_schedule, mock_save):
-        fake_uuid = uuidutils.generate_uuid()
-        fake_engine_manager = mock.MagicMock()
-        sche_rpcapi = scheduler_rpcapi.SchedulerAPI()
-        fake_engine_manager.scheduler_rpcapi = sche_rpcapi
-        fake_request_spec = mock.MagicMock()
-        fake_filter_props = mock.MagicMock()
-        task = create_instance.ScheduleCreateInstanceTask(
-            fake_engine_manager)
-        instance_obj = obj_utils.get_test_instance(self.ctxt)
-        mock_schedule.return_value = fake_uuid
-        mock_save.side_effect = None
-
-        task.execute(self.ctxt,
-                     instance_obj,
-                     fake_request_spec,
-                     fake_filter_props)
-        mock_schedule.assert_called_once_with(self.ctxt,
-                                              fake_request_spec,
-                                              fake_filter_props)
-        self.assertEqual(fake_uuid, instance_obj.node_uuid)
 
     @mock.patch.object(objects.instance.Instance, 'save')
     @mock.patch.object(create_instance.BuildNetworkTask, '_build_networks')

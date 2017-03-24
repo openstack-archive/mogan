@@ -24,12 +24,12 @@ class WeighedNode(base_weight.WeighedObject):
     def to_dict(self):
         return {
             'weight': self.weight,
-            'node': self.obj.node,
+            'node': self.obj.node_uuid,
         }
 
     def __repr__(self):
         return ("WeighedNode [node: %s, weight: %s]" %
-                (self.obj.node, self.weight))
+                (self.obj.node_uuid, self.weight))
 
 
 class BaseNodeWeigher(base_weight.BaseWeigher):
