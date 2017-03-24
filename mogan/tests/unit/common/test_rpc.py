@@ -87,7 +87,7 @@ class TestRequestContextSerializer(base.TestCase):
         self.mock_serializer.configure_mock(**bool_args)
 
         entity = self.serializer.serialize_entity(self.context, self.entity)
-        self.assertFalse(self.mock_serializer.serialize_entity.called)
+        self.mock_serializer.serialize_entity.assert_not_called()
         # If self.serializer._base is empty, return entity directly
         self.assertEqual(self.entity, entity)
 
@@ -103,7 +103,7 @@ class TestRequestContextSerializer(base.TestCase):
         self.mock_serializer.configure_mock(**bool_args)
 
         entity = self.serializer.deserialize_entity(self.context, self.entity)
-        self.assertFalse(self.mock_serializer.serialize_entity.called)
+        self.mock_serializer.serialize_entity.assert_not_called()
         self.assertEqual(self.entity, entity)
 
     def test_serialize_context(self):
