@@ -102,9 +102,9 @@ class InstanceStatesController(InstanceControllerBase):
         :param instance_uuid: the UUID of a instance.
         :param target: the desired target to change power state,
                        on, off or reboot.
-        :raises: Conflict (HTTP 409) if a power operation is
+        :raises Conflict (HTTP 409): if a power operation is
                  already in progress.
-        :raises: BadRequest (HTTP 400) if the requested target
+        :raises BadRequest (HTTP 400): if the requested target
                  state is not valid or if the instance is in CLEANING state.
 
         """
