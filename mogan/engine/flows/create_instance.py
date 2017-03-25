@@ -92,6 +92,13 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         if instance.node_uuid:
             instance.node_uuid = None
             instance.save()
+            # If the compute node is still in DB, release it.
+            try:
+                cn = objects.ComputeNode.get(context, instance.node_uuid)
+            except exception.ComputeNodeNotFound:
+                pass
+            else:
+                cn.destroy()
 
         # Check if we have a cause which can tell us not to reschedule and
         # set the instance's status to error.
