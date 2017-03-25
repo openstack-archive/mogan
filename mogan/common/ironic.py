@@ -93,7 +93,7 @@ class IronicClientWrapper(object):
         :param attr: Path of final attribute to get. E.g., "a.b.c.d"
 
         :returns: The value of the final named attribute.
-        :raises: AttributeError will be raised if the path is invalid.
+        :raises AttributeError: will be raised if the path is invalid.
         """
         for attribute in attr.split("."):
             obj = getattr(obj, attribute)

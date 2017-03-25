@@ -29,7 +29,7 @@ def check_schema(body, schema):
     include the required information.
 
     :param body: create body
-    :raises: InvalidParameterValue if validation of create body fails.
+    :raises InvalidParameterValue: if validation of create body fails.
     """
     validator = jsonschema.Draft4Validator(
         schema, format_checker=jsonschema.FormatChecker())
