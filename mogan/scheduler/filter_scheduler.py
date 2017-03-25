@@ -50,18 +50,6 @@ class FilterScheduler(driver.Scheduler):
         filter_properties['availability_zone'] = \
             instance.get('availability_zone')
 
-    def _add_retry_node(self, filter_properties, node):
-        """Add a retry entry for the selected Ironic node.
-
-        In the event that the request gets re-scheduled, this entry will signal
-        that the given node has already been tried.
-        """
-        retry = filter_properties.get('retry', None)
-        if not retry:
-            return
-        nodes = retry['nodes']
-        nodes.append(node)
-
     def _max_attempts(self):
         max_attempts = CONF.scheduler.scheduler_max_attempts
         if max_attempts < 1:
@@ -98,16 +86,6 @@ class FilterScheduler(driver.Scheduler):
         if max_attempts == 1:
             # re-scheduling is disabled.
             return
-
-        # retry is enabled, update attempt count:
-        if retry:
-            retry['num_attempts'] += 1
-        else:
-            retry = {
-                'num_attempts': 1,
-                'nodes': []  # list of Ironic nodes tried
-            }
-        filter_properties['retry'] = retry
 
         instance_id = request_spec.get('instance_id')
         self._log_instance_error(instance_id, retry)
@@ -187,7 +165,6 @@ class FilterScheduler(driver.Scheduler):
 
             node = self._choose_top_node(weighed_nodes, request_spec)
             node.obj.consume_from_request(context)
-            self._add_retry_node(filter_properties, node.obj.node_uuid)
             dest = dict(node_uuid=node.obj.node_uuid, ports=node.obj.ports)
             return dest
 
