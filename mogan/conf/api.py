@@ -18,9 +18,9 @@ from oslo_config import cfg
 from mogan.common.i18n import _
 
 opts = [
-    cfg.StrOpt('host_ip',
-               default='0.0.0.0',
-               help=_('The IP address on which mogan-api listens.')),
+    cfg.HostAddressOpt('host_ip',
+                       default='0.0.0.0',
+                       help=_('The IP address on which mogan-api listens.')),
     cfg.PortOpt('port',
                 default=6688,
                 help=_('The TCP port on which mogan-api listens.')),
