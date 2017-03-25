@@ -161,6 +161,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         port_type = port.extra.get('port_type')
 
         dic = {
+            'address': str(port.address),
             'port_type': str(port_type),
             'node_uuid': str(port.node_uuid),
             'port_uuid': str(port.uuid),

@@ -320,7 +320,7 @@ class EngineManager(base_manager.BaseEngineManager):
             instance.save()
         except Exception as e:
             utils.process_event(fsm, instance, event='error')
-            LOG.error("Created instance %(uuid)s failed."
+            LOG.error("Created instance %(uuid)s failed. "
                       "Exception: %(exception)s",
                       {"uuid": instance.uuid,
                        "exception": e})
@@ -332,6 +332,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 self,
                 instance,
                 requested_networks,
+                node['ports'],
                 request_spec,
                 filter_properties,
             )
