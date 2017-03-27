@@ -496,6 +496,14 @@ class InstanceController(InstanceControllerBase):
         return InstanceCollection.convert_with_links(instances_data,
                                                      fields=fields)
 
+    def _get_instance_admin_password(self, instance):
+        """Determine the admin password for an instance on creation."""
+        if 'adminPass' in instance:
+            password = instance['adminPass']
+        else:
+            password = api_utils.generate_password()
+        return password
+
     @expose.expose(InstanceCollection, types.listtype, types.boolean)
     def get_all(self, fields=None, all_tenants=None):
         """Retrieve a list of instance.
@@ -556,6 +564,7 @@ class InstanceController(InstanceControllerBase):
         requested_networks = instance.pop('networks', None)
         instance_type_uuid = instance.get('instance_type_uuid')
         image_uuid = instance.get('image_uuid')
+        password = self._get_instance_admin_password(instance)
 
         try:
             instance_type = objects.InstanceType.get(pecan.request.context,
@@ -571,7 +580,8 @@ class InstanceController(InstanceControllerBase):
                 extra=instance.get('extra'),
                 requested_networks=requested_networks,
                 min_count=min_count,
-                max_count=max_count)
+                max_count=max_count,
+                admin_password=password)
         except exception.InstanceTypeNotFound:
             msg = (_("InstanceType %s could not be found") %
                    instance_type_uuid)
