@@ -299,7 +299,8 @@ class EngineManager(base_manager.BaseEngineManager):
             self.network_api.delete_port(context, port, instance.uuid)
 
     def create_instance(self, context, instance, requested_networks,
-                        request_spec=None, filter_properties=None):
+                        admin_password, request_spec=None,
+                        filter_properties=None):
         """Perform a deployment."""
         LOG.debug("Starting instance...", instance=instance)
         notifications.notify_about_instance_action(
@@ -348,6 +349,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 instance,
                 requested_networks,
                 node['ports'],
+                admin_password,
                 request_spec,
                 filter_properties,
             )

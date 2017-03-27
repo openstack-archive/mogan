@@ -15,28 +15,20 @@
 
 from oslo_config import cfg
 
-from mogan.conf import api
-from mogan.conf import configdrive
-from mogan.conf import database
-from mogan.conf import default
-from mogan.conf import engine
-from mogan.conf import glance
-from mogan.conf import ironic
-from mogan.conf import keystone
-from mogan.conf import neutron
-from mogan.conf import quota
-from mogan.conf import scheduler
+from mogan.common.i18n import _
 
-CONF = cfg.CONF
+opts = [
+    cfg.StrOpt('config_drive_format',
+               default='iso9660',
+               choices=('iso9660', 'vfat'),
+               help=_('Configuration drive format that will contain '
+                      'metadata attached to the instance when it boots.')),
+    cfg.StrOpt('mkisofs_cmd',
+               default='genisoimage',
+               help=_('Name or path of the tool used for ISO image '
+                      'creation')),
+]
 
-api.register_opts(CONF)
-configdrive.register_opts(CONF)
-database.register_opts(CONF)
-default.register_opts(CONF)
-engine.register_opts(CONF)
-glance.register_opts(CONF)
-ironic.register_opts(CONF)
-keystone.register_opts(CONF)
-neutron.register_opts(CONF)
-quota.register_opts(CONF)
-scheduler.register_opts(CONF)
+
+def register_opts(conf):
+    conf.register_opts(opts, group='configdrive')
