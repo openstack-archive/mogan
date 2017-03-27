@@ -376,4 +376,22 @@ class ConsoleTypeUnavailable(Invalid):
     msg_fmt = _("Unavailable console type %(console_type)s.")
 
 
+class ConfigDriveInvalidValue(Invalid):
+    msg_fmt = _("Invalid value for Config Drive option: %(option)s")
+
+
+class ConfigDriveUnsupportedFormat(Invalid):
+    msg_fmt = _("Config drive format '%(format)s' is not supported.")
+
+
+class ConfigDriveMountFailed(MoganException):
+    msg_fmt = _("Could not mount vfat config drive. %(operation)s failed. "
+                "Error: %(error)s")
+
+
+class ConfigDriveUnknownFormat(MoganException):
+    msg_fmt = _("Unknown config drive format %(format)s. Select one of "
+                "iso9660 or vfat.")
+
+
 ObjectActionError = obj_exc.ObjectActionError

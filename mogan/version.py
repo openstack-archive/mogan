@@ -15,4 +15,15 @@
 
 import pbr.version
 
+MOGAN_PRODUCT = "OpenStack Mogan"
+
 version_info = pbr.version.VersionInfo('mogan')
+version_string = version_info.version_string
+
+
+def product_string():
+    return MOGAN_PRODUCT
+
+
+def version_string_with_package():
+    return version_info.version_string()
