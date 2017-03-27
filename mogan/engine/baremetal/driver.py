@@ -91,11 +91,13 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def spawn(self, context, instance):
+    def spawn(self, context, instance, admin_password):
         """Create a new instance on the provision platform.
 
         :param context: security context
         :param instance: mogan instance object.
+        :param admin_password: Administrator password to set in
+            instance.
         """
         raise NotImplementedError()
 

@@ -57,6 +57,10 @@ opts = [
                     'behavior of every instance having the same name, set '
                     'this option to "%(name)s".  Valid keys for the '
                     'template are: name, uuid, count.'),
+    cfg.IntOpt('password_length',
+               default=12,
+               min=0,
+               help='Length of generated instance admin passwords.'),
 ]
 
 opt_group = cfg.OptGroup(name='api',

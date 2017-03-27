@@ -42,7 +42,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
     def __init__(self, engine_rpcapi):
         requires = ['filter_properties', 'request_spec', 'instance',
-                    'requested_networks', 'context']
+                    'requested_networks', 'admin_password', 'context']
         super(OnFailureRescheduleTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
         self.engine_rpcapi = engine_rpcapi
@@ -60,7 +60,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         pass
 
     def _reschedule(self, context, cause, request_spec, filter_properties,
-                    instance, requested_networks):
+                    instance, requested_networks, admin_password):
         """Actions that happen during the rescheduling attempt occur here."""
 
         create_instance = self.engine_rpcapi.create_instance
@@ -84,6 +84,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             retry_info['exc'] = traceback.format_exception(*cause.exc_info)
 
         return create_instance(context, instance, requested_networks,
+                               admin_password=admin_password,
                                request_spec=request_spec,
                                filter_properties=filter_properties)
 
@@ -199,7 +200,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
     """Build and deploy the instance."""
 
     def __init__(self, driver):
-        requires = ['instance', 'context']
+        requires = ['instance', 'context', 'admin_password']
         super(CreateInstanceTask, self).__init__(addons=[ACTION],
                                                  requires=requires)
         self.driver = driver
@@ -209,8 +210,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
             loopingcall.LoopingCallTimeOut,
         ]
 
-    def execute(self, context, instance):
-        self.driver.spawn(context, instance)
+    def execute(self, context, instance, admin_password):
+        self.driver.spawn(context, instance, admin_password)
         LOG.info('Successfully provisioned Ironic node %s',
                  instance.node_uuid)
 
@@ -226,7 +227,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, instance, requested_networks, ports,
-             request_spec, filter_properties):
+             admin_password, request_spec, filter_properties):
 
     """Constructs and returns the manager entrypoint flow
 
@@ -249,7 +250,8 @@ def get_flow(context, manager, instance, requested_networks, ports,
         'request_spec': request_spec,
         'instance': instance,
         'requested_networks': requested_networks,
-        'ports': ports
+        'ports': ports,
+        'admin_password': admin_password
     }
 
     instance_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
