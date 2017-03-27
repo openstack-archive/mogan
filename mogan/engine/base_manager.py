@@ -48,7 +48,7 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         """Initialize the engine host.
 
         :param admin_context: the admin context to pass to periodic tasks.
-        :raises: RuntimeError when engine is already running.
+        :raises RuntimeError: when engine is already running.
         """
         if self._started:
             raise RuntimeError(_('Attempt to start an already running '

@@ -69,7 +69,7 @@ def validate_and_normalize_mac(address):
 
     :param address: MAC address to be validated and normalized.
     :returns: Normalized and validated MAC address.
-    :raises: InvalidMAC If the MAC address is not valid.
+    :raises InvalidMAC: If the MAC address is not valid.
 
     """
     if not is_valid_mac(address):
