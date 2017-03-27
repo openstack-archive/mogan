@@ -13,6 +13,7 @@
 import itertools
 
 import mogan.conf.api
+import mogan.conf.configdrive
 import mogan.conf.database
 import mogan.conf.default
 import mogan.conf.engine
@@ -28,11 +29,13 @@ _default_opt_lists = [
     mogan.conf.default.exc_log_opts,
     mogan.conf.default.path_opts,
     mogan.conf.default.service_opts,
+    mogan.conf.default.utils_opts,
 ]
 
 _opts = [
     ('DEFAULT', itertools.chain(*_default_opt_lists)),
     ('api', mogan.conf.api.opts),
+    ('configdrive', mogan.conf.configdrive.opts),
     ('database', mogan.conf.database.opts),
     ('engine', mogan.conf.engine.opts),
     ('glance', mogan.conf.glance.opts),

@@ -82,3 +82,13 @@ ip_address = {
         {'format': 'ipv6'}
     ]
 }
+
+
+admin_password = {
+    # NOTE: admin_password is the admin password of a server
+    # instance, and it is not stored into mogan's data base.
+    # In addition, users set sometimes long/strange string
+    # as password. It is unnecessary to limit string length
+    # and string pattern.
+    'type': 'string',
+}
