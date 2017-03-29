@@ -33,7 +33,7 @@ from mogan.conf import CONF
 _DEFAULT_SQL_CONNECTION = 'sqlite:///' + paths.state_path_def('mogan.sqlite')
 
 
-db_options.set_defaults(CONF, _DEFAULT_SQL_CONNECTION, 'mogan.sqlite')
+db_options.set_defaults(CONF, _DEFAULT_SQL_CONNECTION)
 
 
 def MediumText():
