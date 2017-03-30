@@ -387,6 +387,8 @@ expected_object_fingerprints = {
     'ComputeNodeList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'ComputePort': '1.0-ca4c1817ad7324286813f2cfcdcf802e',
     'ComputePortList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
+    'ComputeDisk': '1.0-4db463b2d9954dab8e4ac655f7be0f00',
+    'ComputeDiskList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'InstanceFault': '1.0-6b5b01b2cc7b6b547837acb168ec6eb9',
     'InstanceFaultList': '1.0-43e8aad0258652921f929934e9e048fd',
     'InstanceType': '1.0-589b096651fcdb30898ff50f748dd948',

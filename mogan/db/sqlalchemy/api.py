@@ -287,6 +287,10 @@ class Connection(api.Connection):
                 node_uuid=node_uuid)
             port_query.delete()
 
+            disk_query = model_query(context, models.ComputeDisk).filter_by(
+                node_uuid=node_uuid)
+            disk_query.delete()
+
             count = query.delete()
             if count != 1:
                 raise exception.ComputeNodeNotFound(node=node_uuid)
@@ -351,6 +355,57 @@ class Connection(api.Connection):
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
                 raise exception.ComputePortNotFound(port=port_uuid)
+
+            ref.update(values)
+        return ref
+
+    def compute_disk_create(self, context, values):
+        compute_disk = models.ComputeDisk()
+        compute_disk.update(values)
+        with _session_for_write() as session:
+            try:
+                session.add(compute_disk)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.ComputeDiskAlreadyExists(
+                    disk=values['disk_uuid'])
+            return compute_disk
+
+    def compute_disk_get(self, context, disk_uuid):
+        query = model_query(
+            context,
+            models.ComputeDisk).filter_by(disk_uuid=disk_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ComputeDiskNotFound(disk=disk_uuid)
+
+    def compute_disk_get_all(self, context):
+        return model_query(context, models.ComputeDisk)
+
+    def compute_disk_get_by_node_uuid(self, context, node_uuid):
+        return model_query(context, models.ComputeDisk).filter_by(
+            node_uuid=node_uuid).all()
+
+    def compute_disk_destroy(self, context, disk_uuid):
+        with _session_for_write():
+            query = model_query(
+                context,
+                models.ComputeDisk).filter_by(disk_uuid=disk_uuid)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.ComputeDiskNotFound(disk=disk_uuid)
+
+    def compute_disk_update(self, context, disk_uuid, values):
+        with _session_for_write():
+            query = model_query(
+                context,
+                models.ComputeDisk).filter_by(disk_uuid=disk_uuid)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ComputeDiskNotFound(disk=disk_uuid)
 
             ref.update(values)
         return ref
