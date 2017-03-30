@@ -132,6 +132,31 @@ class Connection(object):
     def compute_port_update(self, context, port_uuid, values):
         """Update a compute port."""
 
+    # Compute disks
+    @abc.abstractmethod
+    def compute_disk_create(self, context, values):
+        """Create a new compute disk."""
+
+    @abc.abstractmethod
+    def compute_disk_get(self, context, disk_uuid):
+        """Get compute disk by disk uuid."""
+
+    @abc.abstractmethod
+    def compute_disk_get_all(self, context):
+        """Get all compute disks."""
+
+    @abc.abstractmethod
+    def compute_disk_get_by_node_uuid(self, context, node_uuid):
+        """Get compute disks by node_uuid."""
+
+    @abc.abstractmethod
+    def compute_disk_destroy(self, context, disk_uuid):
+        """Delete a compute disk."""
+
+    @abc.abstractmethod
+    def compute_disk_update(self, context, disk_uuid, values):
+        """Update a compute disk."""
+
     # Instance Type extra specs
     @abc.abstractmethod
     def extra_specs_update_or_create(self, context,

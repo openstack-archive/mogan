@@ -153,3 +153,32 @@ def create_test_compute_port(ctxt, **kw):
     port = get_test_compute_port(ctxt, **kw)
     port.create()
     return port
+
+
+def get_test_compute_disk(ctxt, **kw):
+    """Return a ComputeDisk object with appropriate attributes.
+
+    NOTE: The object leaves the attributes marked as changed, such
+    that a create() could be used to commit it to the DB.
+    """
+    kw['object_type'] = 'compute_disk'
+    get_db_compute_disk_checked = check_keyword_arguments(
+        db_utils.get_test_compute_disk)
+    db_disk = get_db_compute_disk_checked(**kw)
+
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del db_disk['id']
+    disk = objects.ComputeDisk(ctxt, **db_disk)
+    return disk
+
+
+def create_test_compute_disk(ctxt, **kw):
+    """Create and return a test compute disk object.
+
+    Create a compute disk in the DB and return a ComputeDisk object with
+    appropriate attributes.
+    """
+    disk = get_test_compute_disk(ctxt, **kw)
+    disk.create()
+    return disk
