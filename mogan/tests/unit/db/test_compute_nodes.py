@@ -54,7 +54,8 @@ class DbComputeNodeTestCase(base.DbTestCase):
 
         res = self.dbapi.compute_node_get_all(self.context)
         res_uuids = [r.node_uuid for r in res]
-        self.assertItemsEqual(node_uuids, res_uuids)
+        for node_uuid in node_uuids:
+            self.assertIn(node_uuid, res_uuids)
 
     def test_compute_node_destroy(self):
         node = utils.create_test_compute_node()
