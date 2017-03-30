@@ -16,6 +16,7 @@
 from oslo_config import cfg
 
 from mogan.conf import api
+from mogan.conf import cache
 from mogan.conf import database
 from mogan.conf import default
 from mogan.conf import engine
@@ -40,3 +41,4 @@ neutron.register_opts(CONF)
 quota.register_opts(CONF)
 scheduler.register_opts(CONF)
 shellinabox.register_opts(CONF)
+cache.register_opts(CONF)
