@@ -18,6 +18,8 @@ import oslo_messaging as messaging
 from oslo_service import periodic_task
 from oslo_utils import excutils
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
+import six.moves.urllib.parse as urlparse
 
 from mogan.common import exception
 from mogan.common import flow_utils
@@ -513,3 +515,17 @@ class EngineManager(base_manager.BaseEngineManager):
                 azs.add(az)
 
         return {'availability_zones': list(azs)}
+
+    def get_serial_console(self, context, instance):
+        node_console_info = self.driver.get_serial_console_by_instance(
+            context, instance)
+        token = uuidutils.generate_uuid()
+        access_url = '%s?token=%s' % (
+            CONF.shellinabox_console.shellinabox_base_url, token)
+        console_url = node_console_info['console_info']['url']
+        parsed_url = urlparse.urlparse(console_url)
+        return {'access_url': access_url,
+                'token': token,
+                'host': parsed_url.hostname,
+                'port': parsed_url.port,
+                'internal_access_path': None}

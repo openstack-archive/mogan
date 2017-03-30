@@ -566,3 +566,88 @@ class IronicDriver(base_driver.BaseEngineDriver):
                                                      instance)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
         LOG.info('Instance was successfully rebuilt', instance=instance)
+
+    def get_serial_console_by_instance(self, context, instance):
+        node = self._validate_instance_and_node(instance)
+        node_uuid = node.uuid
+
+        def _get_console():
+            """Request ironicclient to acquire node console."""
+            try:
+                return self.ironicclient.call('node.get_console', node_uuid)
+            except (ironic_exc.InternalServerError,
+                    ironic_exc.BadRequest) as e:
+                LOG.error('Failed to acquire console information for '
+                          'node %(inst)s: %(reason)s',
+                          {'inst': node_uuid,
+                           'reason': e})
+                raise exception.ConsoleNotAvailable()
+
+        def _wait_state(state):
+            """Wait for the expected console mode to be set on node."""
+            console = _get_console()
+            if console['console_enabled'] == state:
+                raise loopingcall.LoopingCallDone(retvalue=console)
+
+            _log_ironic_polling('set console mode', node, instance)
+
+            # Return False to start backing off
+            return False
+
+        def _enable_console(mode):
+            """Request ironicclient to enable/disable node console."""
+            try:
+                self.ironicclient.call(
+                    'node.set_console_mode', node_uuid, mode)
+            except (ironic_exc.InternalServerError,  # Validations
+                    ironic_exc.BadRequest) as e:  # Maintenance
+                LOG.error('Failed to set console mode to "%(mode)s" '
+                          'for node %(node)s: %(reason)s',
+                          {'mode': mode,
+                           'node': node_uuid,
+                           'reason': e})
+                raise exception.ConsoleNotAvailable()
+
+            # Waiting for the console state to change (disabled/enabled)
+            try:
+                timer = loopingcall.BackOffLoopingCall(_wait_state, state=mode)
+                return timer.start(
+                    starting_interval=1, timeout=10, jitter=0.5).wait()
+            except loopingcall.LoopingCallTimeOut:
+                LOG.error('Timeout while waiting for console mode to be '
+                          'set to "%(mode)s" on node %(node)s',
+                          {'mode': mode,
+                           'node': node_uuid})
+                raise exception.ConsoleNotAvailable()
+
+        # Acquire the console
+        console = _get_console()
+
+        # NOTE: Resetting console is a workaround to force acquiring
+        # console when it has already been acquired by another user/operator.
+        # IPMI serial console does not support multi session, so
+        # resetting console will deactivate any active one without
+        # warning the operator.
+        if console['console_enabled']:
+            try:
+                # Disable console
+                _enable_console(False)
+                # Then re-enable it
+                console = _enable_console(True)
+            except exception.ConsoleNotAvailable:
+                # NOTE: We try to do recover on failure.
+                # But if recover fails, the console may remain in
+                # "disabled" state and cause any new connection
+                # will be refused.
+                console = _enable_console(True)
+
+        if console['console_enabled']:
+            if console['console_info']['type'] != 'shellinabox':
+                raise exception.ConsoleTypeUnavailable(
+                    console_type=console['console_info']['type'])
+
+            return {'node': node,
+                    'console_info': console['console_info']}
+        else:
+            LOG.debug('Console is disabled for node %s', node_uuid)
+            raise exception.ConsoleNotAvailable()
