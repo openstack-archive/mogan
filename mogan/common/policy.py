@@ -90,21 +90,9 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:update',
                        'rule:default',
                        description='Update Instance records'),
-    policy.RuleDefault('mogan:instance:set_power_state:on',
+    policy.RuleDefault('mogan:instance:set_power_state',
                        'rule:default',
-                       description='Start an instance'),
-    policy.RuleDefault('mogan:instance:set_power_state:off',
-                       'rule:default',
-                       description='Stop an instance'),
-    policy.RuleDefault('mogan:instance:set_power_state:soft_off',
-                       'rule:default',
-                       description='Soft stop an instance'),
-    policy.RuleDefault('mogan:instance:set_power_state:reboot',
-                       'rule:default',
-                       description='Reboot an instance'),
-    policy.RuleDefault('mogan:instance:set_power_state:soft_reboot',
-                       'rule:default',
-                       description='Soft reboot an instance'),
+                       description='Perform the power action on an instance'),
     policy.RuleDefault('mogan:instance:get_networks',
                        'rule:default',
                        description='Get Instance network information'),
@@ -117,15 +105,10 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:set_lock_state',
                        'rule:default',
                        description='Lock/UnLock an instance'),
-    policy.RuleDefault('mogan:instance:set_provision_state:rebuild',
+    policy.RuleDefault('mogan:instance:set_provision_state',
                        'rule:default',
-                       description='Rebuild an instance'),
+                       description='Set the provision state of an instance'),
 ]
-
-FUNC_PARAMS_INTERESTED = {
-    'power': ['target'],
-    'provision': ['target']
-}
 
 
 def list_policies():
@@ -196,21 +179,6 @@ def authorize(rule, target, creds, *args, **kwargs):
         raise exception.HTTPForbidden(resource=rule)
 
 
-def _add_action_extra(action, fn, *args, **kwargs):
-    func_name = fn.__name__
-    if func_name in FUNC_PARAMS_INTERESTED:
-        fn_args = fn.__dict__['_pecan']['argspec'][0][1:]
-        for param in FUNC_PARAMS_INTERESTED[func_name]:
-            if param in kwargs:
-                if kwargs[param]:
-                    action = '%s:%s' % (action, kwargs[param])
-            elif param in fn_args:
-                param_value = args[fn_args.index(param)]
-                if param_value:
-                    action = '%s:%s' % (action, param_value)
-    return action
-
-
 # NOTE(Shaohe Feng): This decorator MUST appear first (the outermost
 # decorator) on an API method for it to work correctly
 def authorize_wsgi(api_name, act=None, need_target=True):
@@ -221,7 +189,7 @@ def authorize_wsgi(api_name, act=None, need_target=True):
         :param need_target: Whether need target for authorization. Such as,
                when create some resource , maybe target is not needed.
        example:
-           from magnum.common import policy
+           from mogan.common import policy
            class InstancesController(rest.RestController):
                ....
                @policy.authorize_wsgi("mogan:instance", "delete")
@@ -276,12 +244,10 @@ def authorize_wsgi(api_name, act=None, need_target=True):
                 # the credentials with itself.
                 target = {'project_id': context.tenant,
                           'user_id': context.user}
-            action_with_extra = _add_action_extra(action, fn, *args, **kwargs)
             try:
-                authorize(action_with_extra, target, credentials)
+                authorize(action, target, credentials)
             except Exception:
                 return return_error(403)
-
             return fn(self, *args, **kwargs)
         return handle
 

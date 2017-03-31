@@ -31,15 +31,10 @@ class TestAuthorizeWsgi(base.TestCase):
         def power(self, instance_uuid, target):
             pass
 
-        power.__dict__['_pecan'] = {
-            'argspec': [['self', 'instance_uuid', 'target']]}
-        self.fake_power = power
-
         def lock(self, instance_uuid, target):
             pass
 
-        lock.__dict__['_pecan'] = {
-            'argspec': [['self', 'instance_uuid', 'target']]}
+        self.fake_power = power
         self.fake_lock = lock
 
     @mock.patch('pecan.request')
@@ -69,7 +64,7 @@ class TestAuthorizeWsgi(base.TestCase):
                              'reboot')
         self.assertEqual(403, mocked_pecan_response.status)
         self.assertEqual('Access was denied to the following resource: '
-                         'mogan:instance:set_power_state:reboot',
+                         'mogan:instance:set_power_state',
                          data['faultstring'])
 
     @mock.patch('pecan.request')
