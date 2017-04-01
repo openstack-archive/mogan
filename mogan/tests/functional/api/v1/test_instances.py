@@ -87,8 +87,6 @@ class TestInstances(v1_test.APITestV1):
         self.network_api = mock.Mock()
         self.useFixture(mockpatch.Patch('mogan.network.api.API',
                                         return_value=self.network_api))
-        self.rpc_api.list_availability_zones.return_value = {
-            'availability_zones': ['test_zone']}
         self.image_api.get.return_value = _get_fake_image()
         self.network_api.validate_networks.return_value = 100
         super(TestInstances, self).setUp()
@@ -129,7 +127,6 @@ class TestInstances(v1_test.APITestV1):
                 "description": "just test instance " + str(i),
                 'instance_type_uuid': 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b',
                 'image_uuid': 'b8f82429-3a13-4ffe-9398-4d1abdc256a8',
-                'availability_zone': 'test_zone',
                 'networks': [
                     {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31'}],
                 'extra': {'fake_key': 'fake_value'}
@@ -148,7 +145,7 @@ class TestInstances(v1_test.APITestV1):
         self.assertEqual(self.INSTANCE_TYPE_UUID, resp['instance_type_uuid'])
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
-        self.assertEqual('test_zone', resp['availability_zone'])
+        self.assertEqual(None, resp['availability_zone'])
         self.assertEqual({}, resp['network_info'])
         self.assertEqual({'fake_key': 'fake_value'}, resp['extra'])
         self.assertIn('links', resp)
@@ -170,7 +167,7 @@ class TestInstances(v1_test.APITestV1):
         self.assertEqual(self.INSTANCE_TYPE_UUID, resp['instance_type_uuid'])
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
-        self.assertEqual('test_zone', resp['availability_zone'])
+        self.assertEqual(None, resp['availability_zone'])
         self.assertEqual({}, resp['network_info'])
         self.assertEqual({'fake_key': 'fake_value'}, resp['extra'])
         self.assertIn('links', resp)

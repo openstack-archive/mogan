@@ -125,22 +125,6 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
                                                ironic_states.POWER_ON)
         get_power_mock.assert_called_once_with(self.context, instance.uuid)
 
-    def test_list_availability_zone(self):
-        uuid1 = uuidutils.generate_uuid()
-        uuid2 = uuidutils.generate_uuid()
-        obj_utils.create_test_compute_node(
-            self.context, availability_zone='az1')
-        obj_utils.create_test_compute_node(
-            self.context, node_uuid=uuid1, availability_zone='az2')
-        obj_utils.create_test_compute_node(
-            self.context, node_uuid=uuid2, availability_zone='az1')
-
-        self._start_service()
-        azs = self.service.list_availability_zones(self.context)
-        self._stop_service()
-
-        self.assertItemsEqual(['az1', 'az2'], azs['availability_zones'])
-
     @mock.patch.object(ironic.IronicClientWrapper, 'call')
     def test_get_serial_console(self, mock_ironic_call):
         fake_node = mock.MagicMock()

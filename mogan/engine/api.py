@@ -266,7 +266,7 @@ class API(object):
 
         # check availability zone
         if availability_zone:
-            azs = self.engine_rpcapi.list_availability_zones(context)
+            azs = self.list_availability_zones(context)
             if availability_zone not in azs['availability_zones']:
                 raise exception.AZNotFound
 
@@ -330,8 +330,17 @@ class API(object):
         self.engine_rpcapi.rebuild_instance(context, instance)
 
     def list_availability_zones(self, context):
-        """Get a list of availability zones."""
-        return self.engine_rpcapi.list_availability_zones(context)
+        """Get availability zone list."""
+        compute_nodes = objects.ComputeNodeList.get_all_available(context)
+
+        azs = set()
+        for node in compute_nodes:
+            az = node.availability_zone \
+                or CONF.engine.default_availability_zone
+            if az is not None:
+                azs.add(az)
+
+        return {'availability_zones': list(azs)}
 
     def lock(self, context, instance):
         """Lock the given instance."""
