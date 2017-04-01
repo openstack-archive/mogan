@@ -15,14 +15,20 @@
 
 """Utilities and helper functions."""
 
+import functools
+import inspect
 import re
+import traceback
 
 from oslo_concurrency import lockutils
 from oslo_log import log as logging
+from oslo_utils import encodeutils
 import six
 
 from mogan.common import exception
 from mogan.common import states
+from mogan import objects
+
 
 LOG = logging.getLogger(__name__)
 
@@ -107,3 +113,99 @@ def process_event(fsm, instance, event=None):
     fsm.process_event(event)
     instance.status = fsm.current_state
     instance.save()
+
+
+def get_wrapped_function(function):
+    """Get the method at the bottom of a stack of decorators."""
+    if not hasattr(function, '__closure__') or not function.__closure__:
+        return function
+
+    def _get_wrapped_function(function):
+        if not hasattr(function, '__closure__') or not function.__closure__:
+            return None
+
+        for closure in function.__closure__:
+            func = closure.cell_contents
+
+            deeper_func = _get_wrapped_function(func)
+            if deeper_func:
+                return deeper_func
+            elif hasattr(closure.cell_contents, '__call__'):
+                return closure.cell_contents
+
+    return _get_wrapped_function(function)
+
+
+def expects_func_args(*args):
+    def _decorator_checker(dec):
+        @functools.wraps(dec)
+        def _decorator(f):
+            base_f = get_wrapped_function(f)
+            arg_names, a, kw, _default = inspect.getargspec(base_f)
+            if a or kw or set(args) <= set(arg_names):
+                return dec(f)
+            else:
+                raise TypeError("Decorated function %(f_name)s does not "
+                                "have the arguments expected by the "
+                                "decorator %(d_name)s" %
+                                {'f_name': base_f.__name__,
+                                 'd_name': dec.__name__})
+        return _decorator
+    return _decorator_checker
+
+
+def _get_fault_detail(exc_info, error_code):
+    details = ''
+    if exc_info and error_code == 500:
+        tb = exc_info[2]
+        if tb:
+            details = ''.join(traceback.format_tb(tb))
+    return six.text_type(details)
+
+
+def safe_truncate(value, length):
+    """Safely truncates unicode strings such that their encoded length is
+    no greater than the length provided.
+    """
+    b_value = encodeutils.safe_encode(value)[:length]
+
+    decode_ok = False
+    # NOTE[ZhongLuyao] UTF-8 character byte size varies from 1 to 6. If
+    # truncating a long byte string to 255, the last character may be
+    # cut in the middle, so that UnicodeDecodeError will occur when
+    # converting it back to unicode.
+    while not decode_ok:
+        try:
+            u_value = encodeutils.safe_decode(b_value)
+            decode_ok = True
+        except UnicodeDecodeError:
+            b_value = b_value[:-1]
+    return u_value
+
+
+def add_instance_fault_from_exc(context, instance, fault, exc_info=None,
+                                fault_message=None):
+    """Adds the specified fault to the database."""
+    code = 500
+    if hasattr(fault, "kwargs"):
+        code = fault.kwargs.get('code', 500)
+    try:
+        if not fault_message:
+            fault_message = fault.format_message()
+    except Exception:
+        try:
+            fault_message = six.text_type(fault)
+        except Exception:
+            fault_message = None
+    if not fault_message:
+        fault_message = fault.__class__.__name__
+    message = safe_truncate(fault_message, 255)
+    fault_dict = dict(exception=fault)
+    fault_dict["message"] = message
+    fault_dict["code"] = code
+    fault_obj = objects.InstanceFault(context=context)
+    fault_obj.instance_uuid = instance.uuid
+    fault_obj.update(fault_dict)
+    code = fault_obj.code
+    fault_obj.detail = _get_fault_detail(exc_info, code)
+    fault_obj.create()

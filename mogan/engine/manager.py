@@ -13,6 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
+import sys
+
 from oslo_log import log
 import oslo_messaging as messaging
 from oslo_service import periodic_task
@@ -35,6 +38,31 @@ from mogan.objects import fields
 from mogan.objects import quota
 
 LOG = log.getLogger(__name__)
+
+
+@utils.expects_func_args('instance')
+def wrap_instance_fault(function):
+    """Wraps a method to catch exceptions related to instances.
+
+    This decorator wraps a method to catch any exceptions having to do with
+    an instance that may get thrown. It then logs an instance fault in the db.
+    """
+
+    @functools.wraps(function)
+    def decorated_function(self, context, *args, **kwargs):
+        try:
+            return function(self, context, *args, **kwargs)
+        except exception.InstanceNotFound:
+            raise
+        except Exception as e:
+            kwargs.update(dict(zip(function.__code__.co_varnames[2:], args)))
+
+            with excutils.save_and_reraise_exception():
+                utils.add_instance_fault_from_exc(context,
+                                                  kwargs['instance'],
+                                                  e, sys.exc_info())
+
+    return decorated_function
 
 
 class EngineManager(base_manager.BaseEngineManager):
@@ -312,6 +340,7 @@ class EngineManager(base_manager.BaseEngineManager):
         if reservations:
             self.quota.commit(context, reservations)
 
+    @wrap_instance_fault
     def create_instance(self, context, instance, requested_networks,
                         request_spec=None, filter_properties=None):
         """Perform a deployment."""
@@ -420,6 +449,7 @@ class EngineManager(base_manager.BaseEngineManager):
         self.driver.unplug_vifs(context, instance)
         self.driver.destroy(context, instance)
 
+    @wrap_instance_fault
     def delete_instance(self, context, instance):
         """Delete an instance."""
         LOG.debug("Deleting instance...")
@@ -479,6 +509,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
         self.driver.rebuild(context, instance)
 
+    @wrap_instance_fault
     def rebuild_instance(self, context, instance):
         """Destroy and re-make this instance.
 
