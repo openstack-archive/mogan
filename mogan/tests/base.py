@@ -14,6 +14,7 @@
 # under the License.
 
 import datetime
+import fixtures
 import mock
 import os
 
@@ -81,6 +82,18 @@ class TestCase(base.BaseTestCase):
         group = kw.pop('group', None)
         for k, v in kw.items():
             CONF.set_override(k, v, group, enforce_type=True)
+
+    def stub_out(self, old, new):
+        """Replace a function for the duration of the test.
+
+        Use the monkey patch fixture to replace a function for the
+        duration of a test. Useful when you want to provide fake
+        methods instead of mocks during testing.
+
+        This should be used instead of self.stubs.Set (which is based
+        on mox) going forward.
+        """
+        self.useFixture(fixtures.MonkeyPatch(old, new))
 
     def set_defaults(self, **kw):
         """Set default values of config options."""
