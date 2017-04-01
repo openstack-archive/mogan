@@ -217,6 +217,10 @@ class Connection(api.Connection):
             nics_query = model_query(context, models.InstanceNic).filter_by(
                 instance_uuid=instance_id)
             nics_query.delete()
+
+            faults_query = model_query(context, models.InstanceFault).filter_by(
+                instance_uuid=instance_id)
+            faults_query.delete()
             count = query.delete()
             if count != 1:
                 raise exception.InstanceNotFound(instance=instance_id)
