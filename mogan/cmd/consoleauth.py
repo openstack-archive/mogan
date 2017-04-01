@@ -32,8 +32,7 @@ def main():
     # Parse config file and command line options, then start logging
     mogan_service.prepare_service(sys.argv)
 
-    mgr = mogan_service.RPCService(CONF.host,
-                                   'mogan.consoleauth.manager',
+    mgr = mogan_service.RPCService('mogan.consoleauth.manager',
                                    'ConsoleAuthManager',
                                    constants.MANAGER_CONSOLEAUTH_TOPIC)
 
