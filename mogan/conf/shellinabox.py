@@ -22,6 +22,54 @@ The shellinabox console feature allows you to connect to a guest in case a
 graphical console like VNC, RDP or SPICE is not available. This is only
 currently supported for the Ironic driver.""")
 
+shellinaboxproxy_host_opt = cfg.IPOpt('shellinaboxproxy_host',
+                                      default='0.0.0.0',
+                                      help="""
+The IP address which is used by the ``mogan-shellinaboxproxy`` service to
+listen for incoming requests.
+
+The ``mogan-shellinaboxproxy`` service listens on this IP address for incoming
+connection requests to instances which expose shellinabox serial console.
+
+Possible values:
+
+* An IP address
+
+Services which consume this:
+
+* ``mogan-shellinaboxproxy``
+
+Interdependencies to other options:
+
+* Ensure that this is the same IP address which is defined in the option
+  ``shellinabox_base_url`` of this section or use ``0.0.0.0`` to listen on
+  all addresses.
+""")
+
+shellinaboxproxy_port_opt = cfg.PortOpt('shellinaboxproxy_port',
+                                        default=8866,
+                                        min=1,
+                                        max=65535,
+                                        help="""
+The port number which is used by the ``mogan-shellinaboxproxy`` service to
+listen for incoming requests.
+
+The ``mogan-shellinaboxproxy`` service listens on this port number for incoming
+connection requests to instances which expose shellinabox serial console.
+
+Possible values:
+
+* A port number
+
+Services which consume this:
+
+* ``mogan-shellinaboxproxy``
+
+Interdependencies to other options:
+
+* Ensure that this is the same port number which is defined in the option
+  ``shellinabox_base_url`` of this section.
+""")
 
 shellinabox_base_url_opt = cfg.URIOpt('shellinabox_base_url',
                                       default='http://127.0.0.1:8866/',
