@@ -75,3 +75,18 @@ class DbInstanceFaultTestCase(base.DbTestCase):
             self._assertEqualOrderedListOfObjects(expected[uuid],
                                                   faults[uuid],
                                                   ignored_keys)
+
+    def test_delete_instance_faults_on_instance_destroy(self):
+        instance = utils.create_test_instance(self.ctxt)
+        fault = utils.create_test_instance_fault(self.ctxt,
+                                                 instance_uuid=instance.uuid)
+        faults = self.dbapi.instance_fault_get_by_instance_uuids(
+            self.ctxt,
+            [instance.uuid])
+        self.assertEqual(1, len(faults[instance.uuid]))
+        self._assertEqualObjects(fault, faults[instance.uuid][0])
+        self.dbapi.instance_destroy(self.ctxt, instance.uuid)
+        faults = self.dbapi.instance_fault_get_by_instance_uuids(
+            self.ctxt,
+            [instance.uuid])
+        self.assertEqual(0, len(faults[instance.uuid]))
