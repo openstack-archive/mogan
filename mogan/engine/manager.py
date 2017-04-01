@@ -377,12 +377,12 @@ class EngineManager(base_manager.BaseEngineManager):
             nodes = retry['nodes']
             nodes.append(node['node_uuid'])
         except Exception as e:
-            utils.process_event(fsm, instance, event='error')
-            LOG.error("Created instance %(uuid)s failed. "
-                      "Exception: %(exception)s",
-                      {"uuid": instance.uuid,
-                       "exception": e})
-            return
+            with excutils.save_and_reraise_exception():
+                utils.process_event(fsm, instance, event='error')
+                LOG.error("Created instance %(uuid)s failed. "
+                          "Exception: %(exception)s",
+                          {"uuid": instance.uuid,
+                           "exception": e})
 
         try:
             flow_engine = create_instance.get_flow(
@@ -395,11 +395,11 @@ class EngineManager(base_manager.BaseEngineManager):
                 filter_properties,
             )
         except Exception:
-            utils.process_event(fsm, instance, event='error')
-            self._rollback_instances_quota(context, -1)
-            msg = _("Create manager instance flow failed.")
-            LOG.exception(msg)
-            raise exception.MoganException(msg)
+            with excutils.save_and_reraise_exception():
+                utils.process_event(fsm, instance, event='error')
+                self._rollback_instances_quota(context, -1)
+                msg = _("Create manager instance flow failed.")
+                LOG.exception(msg)
 
         def _run_flow():
             # This code executes create instance flow. If something goes wrong,
@@ -412,13 +412,14 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             _run_flow()
         except Exception as e:
-            instance.power_state = states.NOSTATE
-            utils.process_event(fsm, instance, event='error')
-            self._rollback_instances_quota(context, -1)
-            LOG.error("Created instance %(uuid)s failed."
-                      "Exception: %(exception)s",
-                      {"uuid": instance.uuid,
-                       "exception": e})
+            with excutils.save_and_reraise_exception():
+                instance.power_state = states.NOSTATE
+                utils.process_event(fsm, instance, event='error')
+                self._rollback_instances_quota(context, -1)
+                LOG.error("Created instance %(uuid)s failed."
+                          "Exception: %(exception)s",
+                          {"uuid": instance.uuid,
+                           "exception": e})
         else:
             # Advance the state model for the given event. Note that this
             # doesn't alter the instance in any way. This may raise
@@ -428,8 +429,6 @@ class EngineManager(base_manager.BaseEngineManager):
             instance.launched_at = timeutils.utcnow()
             utils.process_event(fsm, instance, event='done')
             LOG.info("Created instance %s successfully.", instance.uuid)
-        finally:
-            return instance
 
     def _delete_instance(self, context, instance):
         """Delete an instance
@@ -442,9 +441,10 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             self.destroy_networks(context, instance)
         except Exception as e:
-            LOG.error("Destroy networks for instance %(uuid)s failed. "
-                      "Exception: %(exception)s",
-                      {"uuid": instance.uuid, "exception": e})
+            with excutils.save_and_reraise_exception():
+                LOG.error("Destroy networks for instance %(uuid)s failed. "
+                          "Exception: %(exception)s",
+                          {"uuid": instance.uuid, "exception": e})
 
         self.driver.unplug_vifs(context, instance)
         self.driver.destroy(context, instance)
@@ -524,12 +524,12 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             self._rebuild_instance(context, instance)
         except Exception as e:
-            utils.process_event(fsm, instance, event='error')
-            LOG.error("Rebuild instance %(uuid)s failed."
-                      "Exception: %(exception)s",
-                      {"uuid": instance.uuid,
-                       "exception": e})
-            return
+            with excutils.save_and_reraise_exception():
+                utils.process_event(fsm, instance, event='error')
+                LOG.error("Rebuild instance %(uuid)s failed."
+                          "Exception: %(exception)s",
+                          {"uuid": instance.uuid,
+                           "exception": e})
 
         utils.process_event(fsm, instance, event='done')
         LOG.info('Instance was successfully rebuilt', instance=instance)
