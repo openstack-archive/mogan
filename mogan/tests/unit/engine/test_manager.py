@@ -19,6 +19,7 @@ import mock
 from oslo_config import cfg
 from oslo_utils import uuidutils
 
+from mogan.common import exception
 from mogan.common import ironic
 from mogan.common import states
 from mogan.engine.baremetal.ironic.driver import ironic_states
@@ -162,3 +163,43 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
             console['access_url'].startswith('http://127.0.0.1:8866/?token='))
         self.assertEqual('localhost', console['host'])
         self.assertIn('token', console)
+
+    def test_wrap_instance_fault(self):
+        inst = {"uuid": uuidutils.generate_uuid()}
+
+        called = {'fault_added': False}
+
+        def did_it_add_fault(*args):
+            called['fault_added'] = True
+
+        self.stub_out('mogan.common.utils.add_instance_fault_from_exc',
+                      did_it_add_fault)
+
+        @manager.wrap_instance_fault
+        def failer(engine_manager, context, instance):
+            raise NotImplementedError()
+
+        self.assertRaises(NotImplementedError, failer,
+                          manager.EngineManager, self.context, instance=inst)
+
+        self.assertTrue(called['fault_added'])
+
+    def test_wrap_instance_fault_no_instance(self):
+        inst = {"uuid": uuidutils.generate_uuid()}
+
+        called = {'fault_added': False}
+
+        def did_it_add_fault(*args):
+            called['fault_added'] = True
+
+        self.stub_out('mogan.common.utils.add_instance_fault_from_exc',
+                      did_it_add_fault)
+
+        @manager.wrap_instance_fault
+        def failer(engine_manager, context, instance):
+            raise exception.InstanceNotFound(instance_id=instance['uuid'])
+
+        self.assertRaises(exception.InstanceNotFound, failer,
+                          manager.EngineManager, self.context, instance=inst)
+
+        self.assertFalse(called['fault_added'])
