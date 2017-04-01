@@ -17,6 +17,7 @@
 
 import mock
 from oslo_context import context
+from oslo_utils import uuidutils
 
 from mogan.common import exception
 from mogan.common import states
@@ -25,6 +26,7 @@ from mogan.engine import rpcapi as engine_rpcapi
 from mogan import objects
 from mogan.tests.unit.db import base
 from mogan.tests.unit.db import utils as db_utils
+from mogan.tests.unit.objects import utils as obj_utils
 
 
 class ComputeAPIUnitTest(base.DbTestCase):
@@ -90,7 +92,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
     @mock.patch.object(engine_rpcapi.EngineAPI, 'create_instance')
     @mock.patch('mogan.engine.api.API._get_image')
     @mock.patch('mogan.engine.api.API._validate_and_build_base_options')
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
+    @mock.patch('mogan.engine.api.API.list_availability_zones')
     def test_create(self, mock_list_az, mock_validate, mock_get_image,
                     mock_create):
         instance_type = self._create_instance_type()
@@ -140,7 +142,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         after_in_use = res.get('instances').in_use
         self.assertEqual(before_in_use + 2, after_in_use)
 
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
+    @mock.patch('mogan.engine.api.API.list_availability_zones')
     def test_create_with_invalid_az(self, mock_list_az):
         instance_type = mock.MagicMock()
         mock_list_az.return_value = {'availability_zones': ['invalid_az']}
@@ -161,7 +163,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
 
     @mock.patch('mogan.engine.api.API._get_image')
     @mock.patch('mogan.engine.api.API._validate_and_build_base_options')
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'list_availability_zones')
+    @mock.patch('mogan.engine.api.API.list_availability_zones')
     def test_create_over_quota_limit(self, mock_list_az, mock_validate,
                                      mock_get_image):
         instance_type = self._create_instance_type()
@@ -307,3 +309,17 @@ class ComputeAPIUnitTest(base.DbTestCase):
         fake_instance_obj = self._create_fake_instance_obj(fake_instance)
         self.engine_api.rebuild(self.context, fake_instance_obj)
         self.assertTrue(mock_rebuild.called)
+
+    def test_list_availability_zone(self):
+        uuid1 = uuidutils.generate_uuid()
+        uuid2 = uuidutils.generate_uuid()
+        obj_utils.create_test_compute_node(
+            self.context, availability_zone='az1')
+        obj_utils.create_test_compute_node(
+            self.context, node_uuid=uuid1, availability_zone='az2')
+        obj_utils.create_test_compute_node(
+            self.context, node_uuid=uuid2, availability_zone='az1')
+
+        azs = self.engine_api.list_availability_zones(self.context)
+
+        self.assertItemsEqual(['az1', 'az2'], azs['availability_zones'])
