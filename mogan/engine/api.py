@@ -31,6 +31,7 @@ from mogan import image
 from mogan import network
 from mogan import objects
 from mogan.objects import quota
+from mogan.scheduler import rpcapi as scheduler_rpcapi
 
 LOG = log.getLogger(__name__)
 
@@ -66,6 +67,7 @@ class API(object):
         self.quota = quota.Quota()
         self.quota.register_resource(objects.quota.InstanceResource())
         self.consoleauth_rpcapi = consoleauth_rpcapi.ConsoleAuthAPI()
+        self.scheduler_rpcapi = scheduler_rpcapi.SchedulerAPI()
 
     def _get_image(self, context, image_uuid):
         return self.image_api.get(context, image_uuid)
@@ -258,14 +260,51 @@ class API(object):
             'availability_zone': availability_zone,
         }
 
+        self.schedule_and_create_instances(context, instances,
+                                           requested_networks,
+                                           user_data,
+                                           request_spec,
+                                           filter_properties=None)
+
+        return instances
+
+    def schedule_and_create_instances(self, context, instances,
+                                      requested_networks,
+                                      user_data,
+                                      request_spec=None,
+                                      filter_properties=None):
+        if filter_properties is None:
+            filter_properties = {}
+
+        retry = filter_properties.pop('retry', {})
+
+        # update attempt count:
+        if retry:
+            retry['num_attempts'] += 1
+        else:
+            retry = {
+                'num_attempts': 1,
+                'nodes': []  # list of tried nodes
+            }
+        filter_properties['retry'] = retry
+        request_spec['num_instances'] = len(instances)
+
+        nodes = self.scheduler_rpcapi.select_destinations(
+            context, request_spec, filter_properties)
+
+        for (instance, node) in six.moves.zip(instances, nodes):
+            instance.node_uuid = node['node_uuid']
+            instance.save()
+            # Add a retry entry for the selected node
+            retry_nodes = retry['nodes']
+            retry_nodes.append(node['node_uuid'])
+
         for instance in instances:
             self.engine_rpcapi.create_instance(context, instance,
                                                requested_networks,
                                                user_data,
                                                request_spec,
-                                               filter_properties=None)
-
-        return instances
+                                               filter_properties)
 
     def create(self, context, instance_type, image_uuid,
                name=None, description=None, availability_zone=None,

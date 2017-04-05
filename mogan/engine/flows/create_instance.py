@@ -40,12 +40,12 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
     If rescheduling doesn't occur this task errors out the instance.
     """
 
-    def __init__(self, engine_rpcapi):
+    def __init__(self, engine_api):
         requires = ['filter_properties', 'request_spec', 'instance',
                     'requested_networks', 'user_data', 'context']
         super(OnFailureRescheduleTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
-        self.engine_rpcapi = engine_rpcapi
+        self.engine_api = engine_api
         # These exception types will trigger the instance to be set into error
         # status rather than being rescheduled.
         self.no_reschedule_exc_types = [
@@ -63,7 +63,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                     instance, requested_networks, user_data):
         """Actions that happen during the rescheduling attempt occur here."""
 
-        create_instance = self.engine_rpcapi.create_instance
+        create_instance = self.engine_api.schedule_and_create_instances
         if not filter_properties:
             filter_properties = {}
         if 'retry' not in filter_properties:
@@ -84,8 +84,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             retry_info['exc'] = traceback.format_exception(*cause.exc_info)
 
         return create_instance(context, instance, requested_networks,
-                               user_data=user_data,
-                               request_spec=request_spec,
+                               user_data=user_data, request_spec=request_spec,
                                filter_properties=filter_properties)
 
     def revert(self, context, result, flow_failures, instance, **kwargs):
@@ -254,7 +253,7 @@ def get_flow(context, manager, instance, requested_networks, user_data,
         'ports': ports
     }
 
-    instance_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
+    instance_flow.add(OnFailureRescheduleTask(manager.engine_api),
                       BuildNetworkTask(manager),
                       CreateInstanceTask(manager.driver))
 
