@@ -354,38 +354,8 @@ class EngineManager(base_manager.BaseEngineManager):
         fsm = utils.get_state_machine(start_state=instance.status,
                                       target_state=states.ACTIVE)
 
-        if filter_properties is None:
-            filter_properties = {}
-
-        retry = filter_properties.pop('retry', {})
-
-        # update attempt count:
-        if retry:
-            retry['num_attempts'] += 1
-        else:
-            retry = {
-                'num_attempts': 1,
-                'nodes': []  # list of tried nodes
-            }
-        filter_properties['retry'] = retry
-
         try:
-            node = self.scheduler_rpcapi.select_destinations(
-                context, request_spec, filter_properties)
-            instance.node_uuid = node['node_uuid']
-            instance.save()
-            # Add a retry entry for the selected node
-            nodes = retry['nodes']
-            nodes.append(node['node_uuid'])
-        except Exception as e:
-            with excutils.save_and_reraise_exception():
-                utils.process_event(fsm, instance, event='error')
-                LOG.error("Created instance %(uuid)s failed. "
-                          "Exception: %(exception)s",
-                          {"uuid": instance.uuid,
-                           "exception": e})
-
-        try:
+            node = objects.ComputeNode.get(context, instance.node_uuid)
             flow_engine = create_instance.get_flow(
                 context,
                 self,
