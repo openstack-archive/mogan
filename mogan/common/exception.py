@@ -73,6 +73,7 @@ class MoganException(Exception):
                     # happened
                     message = self._msg_fmt
 
+        self.message = message
         super(MoganException, self).__init__(message)
 
     def __str__(self):
