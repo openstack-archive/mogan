@@ -163,12 +163,22 @@ class FilterScheduler(driver.Scheduler):
                             request_spec.get('instance_type'))
                 raise exception.NoValidNode(_("No weighed nodes available"))
 
-            node = self._choose_top_node(weighed_nodes, request_spec)
-            node.obj.consume_from_request(context)
-            dest = dict(node_uuid=node.obj.node_uuid, ports=node.obj.ports)
-            return dest
+            dest_nodes = []
+            nodes = self._choose_nodes(weighed_nodes, request_spec)
+            for node in nodes:
+                node.obj.consume_from_request(context)
+                dest_nodes.append(
+                    dict(node_uuid=node.obj.node_uuid, ports=node.obj.ports))
+            return dest_nodes
 
         return _schedule(self, context, request_spec, filter_properties)
 
-    def _choose_top_node(self, weighed_nodes, request_spec):
-        return weighed_nodes[0]
+    def _choose_nodes(self, weighed_nodes, request_spec):
+        num_instances = request_spec['num_instances']
+        if num_instances > len(weighed_nodes):
+            msg = 'Not enough nodes found for instances, request ' \
+                  'instances: %s, but only available nodes: %s' \
+                  % (str(num_instances), str(len(weighed_nodes)))
+            raise exception.NoValidNode(_("Choose Node: %s" % msg))
+
+        return weighed_nodes[:num_instances]
