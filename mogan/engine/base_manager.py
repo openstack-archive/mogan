@@ -21,8 +21,8 @@ from oslo_service import periodic_task
 from mogan.common.i18n import _
 from mogan.conf import CONF
 from mogan.db import api as dbapi
+from mogan.engine import api
 from mogan.engine.baremetal import driver
-from mogan.engine import rpcapi
 from mogan import network
 from mogan.scheduler import rpcapi as scheduler_rpcapi
 
@@ -38,7 +38,7 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
         self.network_api = network.API()
         self.scheduler_rpcapi = scheduler_rpcapi.SchedulerAPI()
         self.driver = driver.load_engine_driver(CONF.engine.engine_driver)
-        self.engine_rpcapi = rpcapi.EngineAPI()
+        self.engine_api = api.API()
         self._sync_power_pool = greenpool.GreenPool(
             size=CONF.engine.sync_power_state_pool_size)
         self._syncs_in_progress = {}
