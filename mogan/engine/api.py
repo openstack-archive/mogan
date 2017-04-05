@@ -36,6 +36,7 @@ from mogan import network
 from mogan import objects
 from mogan.objects import keypair as keypair_obj
 from mogan.objects import quota
+from mogan.scheduler import rpcapi as scheduler_rpcapi
 
 LOG = log.getLogger(__name__)
 
@@ -71,6 +72,7 @@ class API(object):
         self.quota = quota.Quota()
         self.quota.register_resource(objects.quota.ServerResource())
         self.consoleauth_rpcapi = consoleauth_rpcapi.ConsoleAuthAPI()
+        self.scheduler_rpcapi = scheduler_rpcapi.SchedulerAPI()
 
     def _get_image(self, context, image_uuid):
         return self.image_api.get(context, image_uuid)
@@ -274,10 +276,6 @@ class API(object):
                       'max_net_count': max_net_count})
             max_count = max_net_count
 
-        # TODO(zhenguo): Check injected file quota
-        # b64 decode the files to inject:
-        decoded_files = self._decode_files(injected_files)
-
         servers = self._provision_servers(context, base_options,
                                           min_count, max_count)
 
@@ -293,15 +291,17 @@ class API(object):
             'availability_zone': availability_zone,
         }
 
-        for server in servers:
-            self.engine_rpcapi.create_server(context, server,
-                                             requested_networks,
-                                             user_data,
-                                             decoded_files,
-                                             key_pair,
-                                             request_spec,
-                                             filter_properties=None)
+        # TODO(zhenguo): Check injected file quota
+        # b64 decode the files to inject:
+        decoded_files = self._decode_files(injected_files)
 
+        self.engine_rpcapi.schedule_and_create_servers(context, servers,
+                                                       requested_networks,
+                                                       user_data,
+                                                       decoded_files,
+                                                       key_pair,
+                                                       request_spec,
+                                                       filter_properties=None)
         return servers
 
     def create(self, context, flavor, image_uuid,

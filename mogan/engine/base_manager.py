@@ -21,8 +21,8 @@ from oslo_service import periodic_task
 from mogan.common.i18n import _
 from mogan.conf import CONF
 from mogan.db import api as dbapi
-from mogan.engine.baremetal import driver
 from mogan.engine import rpcapi
+from mogan.engine.baremetal import driver
 from mogan import network
 from mogan.scheduler import rpcapi as scheduler_rpcapi
 

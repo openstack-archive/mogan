@@ -18,6 +18,7 @@
 import base64
 import binascii
 import contextlib
+import eventlet
 import functools
 import inspect
 import os
@@ -32,8 +33,10 @@ from cryptography.hazmat.primitives import serialization
 from cryptography import x509
 from oslo_concurrency import lockutils
 from oslo_concurrency import processutils
+from oslo_context import context as common_context
 from oslo_log import log as logging
 from oslo_utils import encodeutils
+from oslo_utils import importutils
 import paramiko
 import six
 
@@ -46,6 +49,7 @@ from mogan import objects
 LOG = logging.getLogger(__name__)
 
 synchronized = lockutils.synchronized_with_prefix('mogan-')
+profiler = importutils.try_import('osprofiler.profiler')
 
 
 def safe_rstrip(value, chars=None):
@@ -409,3 +413,45 @@ def generate_key_pair(bits=2048):
         key.get_name(), key.get_base64())
     fingerprint = generate_fingerprint(public_key)
     return (private_key, public_key, fingerprint)
+
+
+def _serialize_profile_info():
+    if not profiler:
+        return None
+    prof = profiler.get()
+    trace_info = None
+    if prof:
+        # FIXME(DinaBelova): we'll add profiler.get_info() method
+        # to extract this info -> we'll need to update these lines
+        trace_info = {
+            "hmac_key": prof.hmac_key,
+            "base_id": prof.get_base_id(),
+            "parent_id": prof.get_id()
+        }
+    return trace_info
+
+
+def spawn_n(func, *args, **kwargs):
+    """Passthrough method for eventlet.spawn_n.
+
+    This utility exists so that it can be stubbed for testing without
+    interfering with the service spawns.
+
+    It will also grab the context from the threadlocal store and add it to
+    the store on the new thread.  This allows for continuity in logging the
+    context when using this method to spawn a new thread.
+    """
+    _context = common_context.get_current()
+    profiler_info = _serialize_profile_info()
+
+    @functools.wraps(func)
+    def context_wrapper(*args, **kwargs):
+        # NOTE: If update_store is not called after spawn_n it won't be
+        # available for the logger to pull from threadlocal storage.
+        if _context is not None:
+            _context.update_store()
+        if profiler_info and profiler:
+            profiler.init(**profiler_info)
+        func(*args, **kwargs)
+
+    eventlet.spawn_n(context_wrapper, *args, **kwargs)

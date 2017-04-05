@@ -116,12 +116,14 @@ class TestServers(v1_test.APITestV1):
                 "description": "type for server testing"}
         self.post_json('/flavors', body, headers=headers, status=201)
 
+    @mock.patch('mogan.scheduler.rpcapi.SchedulerAPI.select_destinations')
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
-    def _prepare_server(self, amount, mocked):
+    def _prepare_server(self, amount, mocked, mock_select_dest):
         # NOTE(wanghao): Since we added quota reserve in creation option,
         # there is one more generate_uuid out of provision_servers, so
         # amount should *2 here.
         mocked.side_effect = self.INSTANCE_UUIDS[:(amount * 2)]
+        mock_select_dest.return_value = mock.MagicMock()
         responses = []
         headers = self.gen_headers(self.context)
         for i in six.moves.xrange(amount):
