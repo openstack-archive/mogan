@@ -108,6 +108,7 @@ class RPCAPITestCase(base.DbTestCase):
                           server=self.fake_server_obj,
                           requested_networks=[],
                           user_data=None,
+                          decoded_files=None,
                           injected_files=None,
                           key_pair=None,
                           request_spec=None,
