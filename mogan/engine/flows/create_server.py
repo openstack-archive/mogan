@@ -48,14 +48,14 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
     If rescheduling doesn't occur this task errors out the server.
     """
 
-    def __init__(self, engine_rpcapi):
+    def __init__(self, engine_api):
         requires = ['filter_properties', 'request_spec', 'server',
                     'requested_networks', 'user_data', 'injected_files',
                     'key_pair', 'context']
         super(OnFailureRescheduleTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
-        self.engine_rpcapi = engine_rpcapi
-        # These exception types will trigger the server to be set into error
+        self.engine_api = engine_api
+        # These exception types will trigger the instance to be set into error
         # status rather than being rescheduled.
         self.no_reschedule_exc_types = [
             # The server has been removed from the database, that can not
@@ -73,7 +73,8 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                     key_pair):
         """Actions that happen during the rescheduling attempt occur here."""
 
-        create_server = self.engine_rpcapi.create_server
+        create_server = self.engine_api.schedule_and_create_servers
+
         if not filter_properties:
             filter_properties = {}
         if 'retry' not in filter_properties:
@@ -319,7 +320,7 @@ def get_flow(context, manager, server, requested_networks, user_data,
         'configdrive': {}
     }
 
-    server_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
+    server_flow.add(OnFailureRescheduleTask(manager.engine_api),
                     BuildNetworkTask(manager),
                     GenerateConfigDriveTask(),
                     CreateServerTask(manager.driver))
