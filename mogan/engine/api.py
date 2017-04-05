@@ -36,6 +36,7 @@ from mogan import network
 from mogan import objects
 from mogan.objects import keypair as keypair_obj
 from mogan.objects import quota
+from mogan.scheduler import rpcapi as scheduler_rpcapi
 
 LOG = log.getLogger(__name__)
 
@@ -71,6 +72,7 @@ class API(object):
         self.quota = quota.Quota()
         self.quota.register_resource(objects.quota.ServerResource())
         self.consoleauth_rpcapi = consoleauth_rpcapi.ConsoleAuthAPI()
+        self.scheduler_rpcapi = scheduler_rpcapi.SchedulerAPI()
 
     def _get_image(self, context, image_uuid):
         return self.image_api.get(context, image_uuid)
@@ -274,10 +276,6 @@ class API(object):
                       'max_net_count': max_net_count})
             max_count = max_net_count
 
-        # TODO(zhenguo): Check injected file quota
-        # b64 decode the files to inject:
-        decoded_files = self._decode_files(injected_files)
-
         servers = self._provision_servers(context, base_options,
                                           min_count, max_count)
 
@@ -293,6 +291,53 @@ class API(object):
             'availability_zone': availability_zone,
         }
 
+        self.schedule_and_create_instances(context, servers,
+                                           requested_networks,
+                                           user_data,
+                                           injected_files,
+                                           key_pair,
+                                           request_spec)
+        return servers
+
+    def schedule_and_create_instances(self, context, servers,
+                                      requested_networks,
+                                      user_data,
+                                      injected_files,
+                                      key_pair,
+                                      request_spec=None,
+                                      filter_properties=None):
+        if filter_properties is None:
+            filter_properties = {}
+
+        retry = filter_properties.pop('retry', {})
+
+        # update attempt count:
+        if retry:
+            retry['num_attempts'] += 1
+        else:
+            retry = {
+                'num_attempts': 1,
+                'nodes': []  # list of tried nodes
+            }
+        filter_properties['retry'] = retry
+        request_spec['num_instances'] = len(servers)
+
+        nodes = self.scheduler_rpcapi.select_destinations(
+            context, request_spec, filter_properties)
+
+        LOG.info("The selected nodes %(nodes)s for instances", {"nodes": nodes})
+
+        for (instance, node) in six.moves.zip(servers, nodes):
+            instance.node_uuid = node['node_uuid']
+            instance.save()
+            # Add a retry entry for the selected node
+            retry_nodes = retry['nodes']
+            retry_nodes.append(node['node_uuid'])
+
+        # TODO(zhenguo): Check injected file quota
+        # b64 decode the files to inject:
+        decoded_files = self._decode_files(injected_files)
+
         for server in servers:
             self.engine_rpcapi.create_server(context, server,
                                              requested_networks,
@@ -300,9 +345,7 @@ class API(object):
                                              decoded_files,
                                              key_pair,
                                              request_spec,
-                                             filter_properties=None)
-
-        return servers
+                                             filter_properties)
 
     def create(self, context, flavor, image_uuid,
                name=None, description=None, availability_zone=None,
