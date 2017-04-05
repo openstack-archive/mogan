@@ -101,11 +101,11 @@ class RPCAPITestCase(base.DbTestCase):
                                                  expected_args):
                         self.assertEqual(arg, expected_arg)
 
-    def test_create_server(self):
-        self._test_rpcapi('create_server',
+    def test_schedule_and_create_servers(self):
+        self._test_rpcapi('schedule_and_create_servers',
                           'cast',
                           version='1.0',
-                          server=self.fake_server_obj,
+                          servers=[self.fake_server_obj],
                           requested_networks=[],
                           user_data=None,
                           injected_files=None,
