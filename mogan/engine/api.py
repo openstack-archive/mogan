@@ -204,6 +204,7 @@ class API(object):
         return self.network_api.validate_networks(context, requested_networks,
                                                   max_count)
 
+
     def _create_instance(self, context, instance_type, image_uuid,
                          name, description, availability_zone, extra,
                          requested_networks, min_count, max_count):
@@ -244,13 +245,48 @@ class API(object):
             'availability_zone': availability_zone,
         }
 
+        self.schedule_and_create_instances(context, instances,
+                                           requested_networks,
+                                           request_spec,
+                                           filter_properties=None)
+
+        return instances
+
+    def schedule_and_create_instances(self, context, instances,
+                                      requested_networks,
+                                      request_spec,
+                                      filter_properties=None):
+        if filter_properties is None:
+            filter_properties = {}
+
+        retry = filter_properties.pop('retry', {})
+
+        # update attempt count:
+        if retry:
+            retry['num_attempts'] += 1
+        else:
+            retry = {
+                'num_attempts': 1,
+                'nodes': []  # list of tried nodes
+            }
+        filter_properties['retry'] = retry
+        request_spec['num_instances'] = len(instances)
+
+        nodes = self.scheduler_rpcapi.select_destinations(
+            context, request_spec, filter_properties)
+
+        for (instance, node) in six.moves.zip(instances, nodes):
+            instance.node_uuid = node['node_uuid']
+            instance.save()
+            # Add a retry entry for the selected node
+            retry_nodes = retry['nodes']
+            retry_nodes.append(node['node_uuid'])
+
         for instance in instances:
             self.engine_rpcapi.create_instance(context, instance,
                                                requested_networks,
                                                request_spec,
                                                filter_properties=None)
-
-        return instances
 
     def create(self, context, instance_type, image_uuid,
                name=None, description=None, availability_zone=None,
