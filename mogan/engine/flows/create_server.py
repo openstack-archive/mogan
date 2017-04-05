@@ -73,7 +73,8 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                     key_pair):
         """Actions that happen during the rescheduling attempt occur here."""
 
-        create_server = self.engine_rpcapi.create_server
+        create_server = self.engine_rpcapi.schedule_and_create_servers
+
         if not filter_properties:
             filter_properties = {}
         if 'retry' not in filter_properties:
@@ -93,7 +94,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             # Stringify to avoid circular ref problem in json serialization
             retry_info['exc'] = traceback.format_exception(*cause.exc_info)
 
-        return create_server(context, server, requested_networks,
+        return create_server(context, [server], requested_networks,
                              user_data=user_data,
                              injected_files=injected_files,
                              key_pair=key_pair,

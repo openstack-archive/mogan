@@ -49,12 +49,12 @@ class EngineAPI(object):
                                      version_cap=self.RPC_API_VERSION,
                                      serializer=serializer)
 
-    def create_server(self, context, server, requested_networks,
-                      user_data, injected_files, key_pair, request_spec,
-                      filter_properties):
+    def schedule_and_create_servers(self, context, servers, requested_networks,
+                                    user_data, injected_files, key_pair,
+                                    request_spec, filter_properties):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        cctxt.cast(context, 'create_server', server=server,
+        cctxt.cast(context, 'schedule_and_create_servers', servers=servers,
                    requested_networks=requested_networks,
                    user_data=user_data,
                    injected_files=injected_files,
