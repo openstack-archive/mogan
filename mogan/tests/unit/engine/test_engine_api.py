@@ -92,14 +92,14 @@ class ComputeAPIUnitTest(base.DbTestCase):
         calls = [mock.call() for i in range(max_count)]
         mock_server_create.assert_has_calls(calls)
 
+    @mock.patch('mogan.scheduler.rpcapi.SchedulerAPI.select_destinations')
     @mock.patch.object(engine_rpcapi.EngineAPI, 'create_server')
     @mock.patch('mogan.engine.api.API._get_image')
     @mock.patch('mogan.engine.api.API._validate_and_build_base_options')
     @mock.patch('mogan.engine.api.API.list_availability_zones')
     def test_create(self, mock_list_az, mock_validate, mock_get_image,
-                    mock_create):
+                    mock_create, mock_select_dest):
         flavor = self._create_flavor()
-
         base_options = {'image_uuid': 'fake-uuid',
                         'status': states.BUILDING,
                         'user_id': 'fake-user',
@@ -115,6 +115,8 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_get_image.side_effect = None
         mock_create.return_value = mock.MagicMock()
         mock_list_az.return_value = {'availability_zones': ['test_az']}
+        mock_select_dest.return_value = \
+            [mock.MagicMock() for i in range(max_count)]
         requested_networks = [{'uuid': 'fake'}]
 
         res = self.dbapi._get_quota_usages(self.context, self.project_id)
