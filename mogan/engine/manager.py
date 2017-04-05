@@ -22,6 +22,7 @@ from oslo_service import periodic_task
 from oslo_utils import excutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+import six
 import six.moves.urllib.parse as urlparse
 
 from mogan.common import exception
@@ -341,6 +342,64 @@ class EngineManager(base_manager.BaseEngineManager):
         if reservations:
             self.quota.commit(context, reservations)
 
+    def schedule_and_create_servers(self, context, servers,
+                                    requested_networks,
+                                    user_data,
+                                    injected_files,
+                                    key_pair,
+                                    request_spec=None,
+                                    filter_properties=None):
+
+            if filter_properties is None:
+                filter_properties = {}
+
+            retry = filter_properties.pop('retry', {})
+
+            # update attempt count:
+            if retry:
+                retry['num_attempts'] += 1
+            else:
+                retry = {
+                    'num_attempts': 1,
+                    'nodes': []  # list of tried nodes
+                }
+            filter_properties['retry'] = retry
+            request_spec['num_servers'] = len(servers)
+
+            try:
+                nodes = self.scheduler_rpcapi.select_destinations(
+                    context, request_spec, filter_properties)
+            except exception.NoValidNode:
+                # Here should reset the state of building servers to Error
+                # state. And rollback the quotas.
+                # TODO(litao) rollback the quotas
+                with excutils.save_and_reraise_exception():
+                    for server in servers:
+                        fsm = utils.get_state_machine(
+                            start_state=server.status,
+                            target_state=states.ACTIVE)
+                        utils.process_event(fsm, server, event='error')
+
+            LOG.info("The selected nodes %(nodes)s for instances",
+                     {"nodes": nodes})
+
+            for (server, node) in six.moves.zip(servers, nodes):
+                server.node_uuid = node['node_uuid']
+                server.save()
+                # Add a retry entry for the selected node
+                retry_nodes = retry['nodes']
+                retry_nodes.append(node['node_uuid'])
+
+            for server in servers:
+                utils.spawn_n(self.create_server,
+                              context, server,
+                              requested_networks,
+                              user_data,
+                              injected_files,
+                              key_pair,
+                              request_spec,
+                              filter_properties)
+
     @wrap_server_fault
     def create_server(self, context, server, requested_networks,
                       user_data, injected_files, key_pair, request_spec=None,
@@ -355,38 +414,8 @@ class EngineManager(base_manager.BaseEngineManager):
         fsm = utils.get_state_machine(start_state=server.status,
                                       target_state=states.ACTIVE)
 
-        if filter_properties is None:
-            filter_properties = {}
-
-        retry = filter_properties.pop('retry', {})
-
-        # update attempt count:
-        if retry:
-            retry['num_attempts'] += 1
-        else:
-            retry = {
-                'num_attempts': 1,
-                'nodes': []  # list of tried nodes
-            }
-        filter_properties['retry'] = retry
-
         try:
-            node = self.scheduler_rpcapi.select_destinations(
-                context, request_spec, filter_properties)
-            server.node_uuid = node['node_uuid']
-            server.save()
-            # Add a retry entry for the selected node
-            nodes = retry['nodes']
-            nodes.append(node['node_uuid'])
-        except Exception as e:
-            with excutils.save_and_reraise_exception():
-                utils.process_event(fsm, server, event='error')
-                LOG.error("Created server %(uuid)s failed. "
-                          "Exception: %(exception)s",
-                          {"uuid": server.uuid,
-                           "exception": e})
-
-        try:
+            node = objects.ComputeNode.get(context, server.node_uuid)
             flow_engine = create_server.get_flow(
                 context,
                 self,
