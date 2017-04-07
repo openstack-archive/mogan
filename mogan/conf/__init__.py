@@ -17,6 +17,7 @@ from oslo_config import cfg
 
 from mogan.conf import api
 from mogan.conf import cache
+from mogan.conf import configdrive
 from mogan.conf import database
 from mogan.conf import default
 from mogan.conf import engine
@@ -31,6 +32,7 @@ from mogan.conf import shellinabox
 CONF = cfg.CONF
 
 api.register_opts(CONF)
+configdrive.register_opts(CONF)
 database.register_opts(CONF)
 default.register_opts(CONF)
 engine.register_opts(CONF)
