@@ -15,18 +15,24 @@
 
 """Utilities and helper functions."""
 
+import contextlib
 import functools
 import inspect
+import os
 import re
+import shutil
+import tempfile
 import traceback
 
 from oslo_concurrency import lockutils
+from oslo_concurrency import processutils
 from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
 
 from mogan.common import exception
 from mogan.common import states
+from mogan.conf import CONF
 from mogan import objects
 
 
@@ -209,3 +215,71 @@ def add_instance_fault_from_exc(context, instance, fault, exc_info=None,
     code = fault_obj.code
     fault_obj.detail = _get_fault_detail(exc_info, code)
     fault_obj.create()
+
+
+def execute(*cmd, **kwargs):
+    """Convenience wrapper around oslo's execute() method.
+
+    :param cmd: Passed to processutils.execute.
+    :param use_standard_locale: True | False. Defaults to False. If set to
+                                True, execute command with standard locale
+                                added to environment variables.
+    :returns: (stdout, stderr) from process execution
+    :raises: UnknownArgumentError
+    :raises: ProcessExecutionError
+    """
+
+    use_standard_locale = kwargs.pop('use_standard_locale', False)
+    if use_standard_locale:
+        env = kwargs.pop('env_variables', os.environ.copy())
+        env['LC_ALL'] = 'C'
+        kwargs['env_variables'] = env
+    result = processutils.execute(*cmd, **kwargs)
+    LOG.debug('Execution completed, command line is "%s"',
+              ' '.join(map(str, cmd)))
+    LOG.debug('Command stdout is: "%s"', result[0])
+    LOG.debug('Command stderr is: "%s"', result[1])
+    return result
+
+
+@contextlib.contextmanager
+def tempdir(**kwargs):
+    tempfile.tempdir = CONF.tempdir
+    tmpdir = tempfile.mkdtemp(**kwargs)
+    try:
+        yield tmpdir
+    finally:
+        try:
+            shutil.rmtree(tmpdir)
+        except OSError as e:
+            LOG.error('Could not remove tmpdir: %s', e)
+
+
+def mkfs(fs, path, label=None, run_as_root=False):
+    """Format a file or block device
+
+    :param fs: Filesystem type (examples include 'swap', 'ext3', 'ext4'
+               'btrfs', etc.)
+    :param path: Path to file or block device to format
+    :param label: Volume label to use
+    """
+    if fs == 'swap':
+        args = ['mkswap']
+    else:
+        args = ['mkfs', '-t', fs]
+    # add -F to force no interactive execute on non-block device.
+    if fs in ('ext3', 'ext4', 'ntfs'):
+        args.extend(['-F'])
+    if label:
+        if fs in ('msdos', 'vfat'):
+            label_opt = '-n'
+        else:
+            label_opt = '-L'
+        args.extend([label_opt, label])
+    args.append(path)
+    execute(*args, run_as_root=run_as_root)
+
+
+def trycmd(*args, **kwargs):
+    """Convenience wrapper around oslo's trycmd() method."""
+    return processutils.trycmd(*args, **kwargs)

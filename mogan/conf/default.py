@@ -15,6 +15,7 @@
 
 import os
 import socket
+import tempfile
 
 from oslo_config import cfg
 
@@ -68,9 +69,18 @@ service_opts = [
                        ),
 ]
 
+utils_opts = [
+    cfg.StrOpt('tempdir',
+               default=tempfile.gettempdir(),
+               sample_default='/tmp',
+               help=_('Temporary working directory, default is Python temp '
+                      'dir.')),
+]
+
 
 def register_opts(conf):
     conf.register_opts(api_opts)
     conf.register_opts(exc_log_opts)
     conf.register_opts(service_opts)
     conf.register_opts(path_opts)
+    conf.register_opts(utils_opts)
