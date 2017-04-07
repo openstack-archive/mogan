@@ -387,7 +387,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
                        % {'state': node.provision_state,
                           'node': node.uuid})
                 LOG.error(msg)
-                raise exception.NovaException(msg)
+                raise exception.MoganException(msg)
             else:
                 data['tries'] += 1
 
