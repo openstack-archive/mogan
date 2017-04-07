@@ -97,7 +97,8 @@ Interdependencies to other options:
   section.
 """)
 
-ALL_OPTS = [shellinabox_base_url_opt]
+ALL_OPTS = [shellinaboxproxy_host_opt, shellinaboxproxy_port_opt,
+            shellinabox_base_url_opt]
 
 
 def register_opts(conf):
