@@ -19,6 +19,7 @@ from wsme import types as wtypes
 
 from mogan.api.controllers import base
 from mogan.api import expose
+from mogan.common import policy
 
 
 class AvailabilityZones(base.APIBase):
@@ -31,6 +32,8 @@ class AvailabilityZones(base.APIBase):
 class AvailabilityZoneController(rest.RestController):
     """REST controller for Availability Zone."""
 
+    @policy.authorize_wsgi("mogan:availability_zone", "get_all",
+                           need_target=False)
     @expose.expose(AvailabilityZones)
     def get_all(self):
         """Retrieve a list of availability zone."""

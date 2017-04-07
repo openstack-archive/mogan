@@ -24,6 +24,7 @@ class TestAvailabilityZone(v1_test.APITestV1):
 
     @mock.patch('mogan.engine.api.API.list_availability_zones')
     def test_availability_zone_get_all(self, list_azs):
+        headers = self.gen_headers(self.context)
         list_azs.return_value = {'availability_zones': ['az1', 'az2']}
-        resp = self.get_json('/availability_zones')
+        resp = self.get_json('/availability_zones', headers=headers)
         self.assertItemsEqual(['az1', 'az2'], resp['availability_zones'])

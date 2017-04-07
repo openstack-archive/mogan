@@ -111,6 +111,9 @@ instance_policies = [
     policy.RuleDefault('mogan:instance:get_serial_console',
                        'rule:default',
                        description='Get serial console for an instance'),
+    policy.RuleDefault('mogan:availability_zone:get_all',
+                       'rule:default',
+                       description='Get the availability zone list'),
 ]
 
 
