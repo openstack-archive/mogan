@@ -19,6 +19,7 @@
 import posixpath
 
 from oslo_log import log as logging
+from oslo_serialization import base64
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
 
@@ -31,6 +32,7 @@ OPENSTACK_VERSIONS = [
 
 VERSION = "version"
 MD_JSON_NAME = "meta_data.json"
+UD_NAME = "user_data"
 
 LOG = logging.getLogger(__name__)
 
@@ -46,7 +48,7 @@ class InvalidMetadataPath(Exception):
 class InstanceMetadata(object):
     """Instance metadata."""
 
-    def __init__(self, instance, extra_md=None):
+    def __init__(self, instance, user_data=None, extra_md=None):
         """Creation of this object should basically cover all time consuming
         collection.  Methods after that should not cause time delays due to
         network operations or lengthy cpu operations.
@@ -58,6 +60,12 @@ class InstanceMetadata(object):
         self.instance = instance
         self.extra_md = extra_md
         self.availability_zone = instance.availability_zone
+
+        if user_data is not None:
+            self.userdata_raw = base64.decode_as_bytes(user_data)
+        else:
+            self.userdata_raw = None
+
         # TODO(zhenguo): Add hostname to instance object
         self.hostname = instance.name
         self.uuid = instance.uuid
@@ -69,7 +77,8 @@ class InstanceMetadata(object):
         if self.route_configuration:
             return self.route_configuration
 
-        path_handlers = {MD_JSON_NAME: self._metadata_as_json}
+        path_handlers = {UD_NAME: self._user_data,
+                         MD_JSON_NAME: self._metadata_as_json}
 
         self.route_configuration = RouteConfiguration(path_handlers)
         return self.route_configuration
@@ -87,6 +96,11 @@ class InstanceMetadata(object):
         metadata['availability_zone'] = self.availability_zone
 
         return jsonutils.dump_as_bytes(metadata)
+
+    def _user_data(self, version, path):
+        if self.userdata_raw is None:
+            raise KeyError(path)
+        return self.userdata_raw
 
     def lookup(self, path):
         if path == "" or path[0] != "/":
@@ -134,6 +148,10 @@ class InstanceMetadata(object):
         for version in ALL_OPENSTACK_VERSIONS:
             path = 'openstack/%s/%s' % (version, MD_JSON_NAME)
             yield (path, self.lookup(path))
+
+            path = 'openstack/%s/%s' % (version, UD_NAME)
+            if self.userdata_raw is not None:
+                yield (path, self.lookup(path))
 
 
 class RouteConfiguration(object):

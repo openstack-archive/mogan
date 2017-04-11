@@ -342,7 +342,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
     @wrap_instance_fault
     def create_instance(self, context, instance, requested_networks,
-                        request_spec=None, filter_properties=None):
+                        user_data, request_spec=None, filter_properties=None):
         """Perform a deployment."""
         LOG.debug("Starting instance...", instance=instance)
         notifications.notify_about_instance_action(
@@ -390,6 +390,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 self,
                 instance,
                 requested_networks,
+                user_data,
                 node['ports'],
                 request_spec,
                 filter_properties,
