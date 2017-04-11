@@ -38,6 +38,7 @@ Request
   - networks: networks
   - networks.net_id: network_uuid
   - networks.port_type: network_port_type
+  - user_data: user_data
 
 **Example Create Instance: JSON request**
 

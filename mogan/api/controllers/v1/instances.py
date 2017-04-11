@@ -582,6 +582,7 @@ class InstanceController(InstanceControllerBase):
         requested_networks = instance.pop('networks', None)
         instance_type_uuid = instance.get('instance_type_uuid')
         image_uuid = instance.get('image_uuid')
+        user_data = instance.get('user_data')
 
         try:
             instance_type = objects.InstanceType.get(pecan.request.context,
@@ -596,6 +597,7 @@ class InstanceController(InstanceControllerBase):
                 availability_zone=instance.get('availability_zone'),
                 extra=instance.get('extra'),
                 requested_networks=requested_networks,
+                user_data=user_data,
                 min_count=min_count,
                 max_count=max_count)
         except exception.InstanceTypeNotFound:
@@ -615,6 +617,8 @@ class InstanceController(InstanceControllerBase):
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
         except (exception.GlanceConnectionFailed,
+                exception.InstanceUserDataMalformed,
+                exception.InstanceUserDataTooLarge,
                 exception.NetworkRequiresSubnet,
                 exception.NetworkNotFound) as e:
             raise wsme.exc.ClientSideError(
