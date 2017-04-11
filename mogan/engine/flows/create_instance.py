@@ -90,8 +90,6 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
     def revert(self, context, result, flow_failures, instance, **kwargs):
         # Cleanup associated instance node uuid
         if instance.node_uuid:
-            instance.node_uuid = None
-            instance.save()
             # If the compute node is still in DB, release it.
             try:
                 cn = objects.ComputeNode.get(context, instance.node_uuid)
@@ -99,6 +97,8 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                 pass
             else:
                 cn.destroy()
+            instance.node_uuid = None
+            instance.save()
 
         # Check if we have a cause which can tell us not to reschedule and
         # set the instance's status to error.
