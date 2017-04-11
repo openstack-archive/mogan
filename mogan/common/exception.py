@@ -386,4 +386,14 @@ class ConfigDriveUnknownFormat(MoganException):
                 "iso9660 or vfat.")
 
 
+class InstanceUserDataTooLarge(MoganException):
+    msg_fmt = _("User data too large. User data must be no larger than "
+                "%(maxsize)s bytes once base64 encoded. Your data is "
+                "%(length)d bytes")
+
+
+class InstanceUserDataMalformed(MoganException):
+    msg_fmt = _("User data needs to be valid base 64.")
+
+
 ObjectActionError = obj_exc.ObjectActionError

@@ -91,7 +91,7 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def spawn(self, context, instance):
+    def spawn(self, context, instance, user_data):
         """Create a new instance on the provision platform.
 
         :param context: security context

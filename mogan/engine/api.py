@@ -16,6 +16,7 @@
 """Handles all requests relating to compute resources"""
 
 from oslo_log import log
+from oslo_serialization import base64 as base64utils
 from oslo_utils import excutils
 from oslo_utils import uuidutils
 import six
@@ -32,6 +33,8 @@ from mogan import objects
 from mogan.objects import quota
 
 LOG = log.getLogger(__name__)
+
+MAX_USERDATA_SIZE = 65535
 
 
 def check_instance_lock(function):
@@ -70,9 +73,20 @@ class API(object):
     def _validate_and_build_base_options(self, context, instance_type,
                                          image_uuid, name, description,
                                          availability_zone, extra,
-                                         requested_networks,
+                                         requested_networks, user_data,
                                          max_count):
         """Verify all the input parameters"""
+
+        if user_data:
+            l = len(user_data)
+            if l > MAX_USERDATA_SIZE:
+                raise exception.InstanceUserDataTooLarge(
+                    length=l, maxsize=MAX_USERDATA_SIZE)
+
+            try:
+                base64utils.decode_as_bytes(user_data)
+            except TypeError:
+                raise exception.InstanceUserDataMalformed()
 
         # Note:  max_count is the number of instances requested by the user,
         # max_network_count is the maximum number of instances taking into
@@ -206,7 +220,7 @@ class API(object):
 
     def _create_instance(self, context, instance_type, image_uuid,
                          name, description, availability_zone, extra,
-                         requested_networks, min_count, max_count):
+                         requested_networks, user_data, min_count, max_count):
         """Verify all the input parameters"""
 
         # Verify the specified image exists
@@ -215,7 +229,7 @@ class API(object):
 
         base_options, max_net_count = self._validate_and_build_base_options(
             context, instance_type, image_uuid, name, description,
-            availability_zone, extra, requested_networks, max_count)
+            availability_zone, extra, requested_networks, user_data, max_count)
 
         # max_net_count is the maximum number of instances requested by the
         # user adjusted for any network quota constraints, including
@@ -247,6 +261,7 @@ class API(object):
         for instance in instances:
             self.engine_rpcapi.create_instance(context, instance,
                                                requested_networks,
+                                               user_data,
                                                request_spec,
                                                filter_properties=None)
 
@@ -254,8 +269,8 @@ class API(object):
 
     def create(self, context, instance_type, image_uuid,
                name=None, description=None, availability_zone=None,
-               extra=None, requested_networks=None, min_count=None,
-               max_count=None):
+               extra=None, requested_networks=None, user_data=None,
+               min_count=None, max_count=None):
         """Provision instances
 
         Sending instance information to the engine and will handle
@@ -273,8 +288,8 @@ class API(object):
         return self._create_instance(context, instance_type,
                                      image_uuid, name, description,
                                      availability_zone, extra,
-                                     requested_networks, min_count,
-                                     max_count)
+                                     requested_networks, user_data,
+                                     min_count, max_count)
 
     def _delete_instance(self, context, instance):
 

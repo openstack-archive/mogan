@@ -1,7 +1,6 @@
 # Copyright 2016 Huawei Technologies Co.,LTD.
 # All Rights Reserved.
 #
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -23,7 +22,7 @@ from mogan import objects
 from mogan.objects import base
 from mogan.objects import fields as object_fields
 
-OPTIONAL_ATTRS = ['nics', 'fault', ]
+OPTIONAL_ATTRS = ['nics', 'fault']
 
 
 LOG = logging.getLogger(__name__)

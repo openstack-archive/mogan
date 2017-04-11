@@ -338,6 +338,12 @@ updated_at:
   in: body
   required: true
   type: string
+user_data:
+  description: |
+    Configuration information or scripts to use upon launch. Must be Base64 encoded.
+  in: body
+  required: false
+  type: string
 user_id_body:
   description: |
     The user ID of the user who owns the instance.
