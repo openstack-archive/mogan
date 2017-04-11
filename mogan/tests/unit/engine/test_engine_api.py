@@ -60,6 +60,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
                 availability_zone='test_az',
                 extra={'k1', 'v1'},
                 requested_networks=None,
+                user_data=None,
                 max_count=2)
 
         self.assertEqual('fake-user', base_opts['user_id'])
@@ -135,7 +136,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_validate.assert_called_once_with(
             self.context, instance_type, 'fake-uuid', 'fake-name',
             'fake-descritpion', 'test_az', {'k1', 'v1'}, requested_networks,
-            max_count)
+            None, max_count)
         self.assertTrue(mock_create.called)
         self.assertTrue(mock_get_image.called)
         res = self.dbapi._get_quota_usages(self.context, self.project_id)
@@ -195,6 +196,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
             'test_az',
             {'k1', 'v1'},
             requested_networks,
+            None,
             min_count,
             max_count)
 
