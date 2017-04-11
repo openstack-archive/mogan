@@ -290,7 +290,8 @@ class IronicDriver(base_driver.BaseEngineDriver):
             except client_e.BadRequest:
                 pass
 
-    def _generate_configdrive(self, context, instance, node, extra_md=None):
+    def _generate_configdrive(self, context, instance, node, extra_md=None,
+                              user_data=None):
         """Generate a config drive.
 
         :param instance: The instance object.
@@ -302,7 +303,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         if not extra_md:
             extra_md = {}
 
-        i_meta = instance_metadata.InstanceMetadata(instance,
+        i_meta = instance_metadata.InstanceMetadata(instance, user_data,
                                                     extra_md=extra_md)
 
         with tempfile.NamedTemporaryFile() as uncompressed:
@@ -319,7 +320,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 compressed.seek(0)
                 return base64.b64encode(compressed.read())
 
-    def spawn(self, context, instance):
+    def spawn(self, context, instance, user_data):
         """Deploy an instance.
 
         :param context: The security context.
@@ -358,7 +359,8 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         try:
             configdrive_value = self._generate_configdrive(
-                context, instance, node, extra_md=extra_md)
+                context, instance, node, extra_md=extra_md,
+                user_data=user_data)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 msg = ("Failed to build configdrive: %s" %
