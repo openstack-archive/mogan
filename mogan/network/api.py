@@ -106,11 +106,13 @@ class API(object):
         try:
             client.delete_port(port_id)
         except neutron_exceptions.NeutronClientException as e:
-            msg = (_('Could not remove VIF %(vif)s of instance %(instance)s, '
-                     'possibly a network issue: %(exc)s') %
-                   {'vif': port_id, 'instance': instance_uuid, 'exc': e})
-            LOG.exception(msg)
-            raise exception.NetworkError(msg)
+            if e.status_code == 404:
+                LOG.warning("Port %s does not exist", port_id)
+            else:
+                LOG.warning(
+                    "Failed to delete port %s for instance.",
+                    port_id, exc_info=True)
+                raise e
 
     def _safe_get_floating_ips(self, client, **kwargs):
         """Get floating IP gracefully handling 404 from Neutron."""
