@@ -199,7 +199,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
     """Build and deploy the instance."""
 
     def __init__(self, driver):
-        requires = ['instance', 'context']
+        requires = ['instance', 'user_data', 'context']
         super(CreateInstanceTask, self).__init__(addons=[ACTION],
                                                  requires=requires)
         self.driver = driver
@@ -209,8 +209,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
             loopingcall.LoopingCallTimeOut,
         ]
 
-    def execute(self, context, instance):
-        self.driver.spawn(context, instance)
+    def execute(self, context, instance, user_data):
+        self.driver.spawn(context, instance, user_data)
         LOG.info('Successfully provisioned Ironic node %s',
                  instance.node_uuid)
 
@@ -225,8 +225,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
         return False
 
 
-def get_flow(context, manager, instance, requested_networks, ports,
-             request_spec, filter_properties):
+def get_flow(context, manager, instance, requested_networks, user_data,
+             ports, request_spec, filter_properties):
 
     """Constructs and returns the manager entrypoint flow
 
@@ -249,6 +249,7 @@ def get_flow(context, manager, instance, requested_networks, ports,
         'request_spec': request_spec,
         'instance': instance,
         'requested_networks': requested_networks,
+        'user_data': user_data,
         'ports': ports
     }
 
