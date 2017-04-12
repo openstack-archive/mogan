@@ -42,7 +42,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
     def __init__(self, engine_rpcapi):
         requires = ['filter_properties', 'request_spec', 'instance',
-                    'requested_networks', 'context']
+                    'requested_networks', 'user_data', 'context']
         super(OnFailureRescheduleTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
         self.engine_rpcapi = engine_rpcapi
@@ -60,7 +60,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         pass
 
     def _reschedule(self, context, cause, request_spec, filter_properties,
-                    instance, requested_networks):
+                    instance, requested_networks, user_data):
         """Actions that happen during the rescheduling attempt occur here."""
 
         create_instance = self.engine_rpcapi.create_instance
@@ -84,6 +84,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             retry_info['exc'] = traceback.format_exception(*cause.exc_info)
 
         return create_instance(context, instance, requested_networks,
+                               user_data=user_data,
                                request_spec=request_spec,
                                filter_properties=filter_properties)
 
