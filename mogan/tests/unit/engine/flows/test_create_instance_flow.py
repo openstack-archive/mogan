@@ -57,5 +57,6 @@ class CreateInstanceFlowTestCase(base.TestCase):
         instance_obj = obj_utils.get_test_instance(self.ctxt)
         mock_spawn.side_effect = None
 
-        task.execute(self.ctxt, instance_obj, None)
-        mock_spawn.assert_called_once_with(self.ctxt, instance_obj, None)
+        task.execute(self.ctxt, instance_obj, {'value': 'configdrive'})
+        mock_spawn.assert_called_once_with(
+            self.ctxt, instance_obj, 'configdrive')
