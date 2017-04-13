@@ -258,6 +258,56 @@ Response
    :language: javascript
 
 
+Show Server Details When Status Is Error
+==========================================
+
+.. rest_method:: GET /servers/{server_uuid}
+
+Shows details of an server when status is error.
+In this case, fault_info field will be included
+and will be returned to user.
+
+Normal response codes: 200
+
+Error response codes: badRequest(400), unauthorized(401),
+forbidden(403), itemNotFound(404)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - server_uuid: server_ident
+  - fields: fields
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: server_name
+  - description: server_description
+  - flavor_uuid: flavorRef
+  - image_uuid: imageRef
+  - availability_zone: availability_zone
+  - network_info: network_info
+  - uuid: server_uuid
+  - status: server_status
+  - power_state: server_power_state
+  - fault_info: server_fault
+  - project_id: project_id_body
+  - user_id: user_id_body
+  - updated_at: updated_at
+  - created_at: created_at
+  - launched_at: launched_at
+  - extra: extra
+
+**Example Server Details: JSON response**
+
+.. literalinclude:: samples/servers/server-detail-resp-when-error.json
+   :language: javascript
+
+
 Update Server
 ===============
 

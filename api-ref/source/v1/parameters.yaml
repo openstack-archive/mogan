@@ -401,6 +401,14 @@ server_description:
   in: body
   required: false
   type: string
+server_fault:
+  description: |
+    A fault object. Only displayed in the failed response.
+    Default keys are ``code``, ``message``, and ``detail``
+    (response code, message, and detail respectively).
+  in: body
+  required: false
+  type: object
 server_name:
   description: |
     The server name.
