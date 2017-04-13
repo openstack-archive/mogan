@@ -40,6 +40,11 @@ class InstanceFault(base.MoganObject, object_base.VersionedObjectDictCompat):
         'detail': object_fields.StringField(nullable=True),
     }
 
+    def return_dict(self):
+        return dict((k, getattr(self, k))
+                    for k in ['code', 'message', 'detail']
+                    if hasattr(self, k))
+
     @staticmethod
     def _from_db_object(context, fault, db_fault):
         for key in fault.fields:
