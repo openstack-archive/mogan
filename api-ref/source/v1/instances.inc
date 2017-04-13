@@ -241,6 +241,7 @@ Response
   - links: links
   - uuid: instance_uuid
   - status: instance_status
+  - fault_info: instance_fault
   - power_state: instance_power_state
   - project_id: project_id_body
   - user_id: user_id_body

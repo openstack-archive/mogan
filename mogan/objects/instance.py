@@ -49,6 +49,7 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'availability_zone': object_fields.StringField(nullable=True),
         'image_uuid': object_fields.UUIDField(nullable=True),
         'nics': object_fields.ObjectField('InstanceNics', nullable=True),
+        'fault': object_fields.ObjectField('InstanceFault', nullable=True),
         'node_uuid': object_fields.UUIDField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),
@@ -101,9 +102,7 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         """Converts a list of database entities to a list of formal objects."""
         instances = []
         for obj in db_objects:
-            expected_attrs = ['nics']
-            if obj["status"] == "error":
-                expected_attrs.append("fault")
+            expected_attrs = ['nics', 'fault']
             instances.append(Instance._from_db_object(cls(context),
                                                       obj,
                                                       expected_attrs))
@@ -133,10 +132,8 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get(cls, context, uuid):
         """Find a instance and return a Instance object."""
-        expected_attrs = ['nics']
+        expected_attrs = ['nics', 'fault']
         db_instance = cls.dbapi.instance_get(context, uuid)
-        if db_instance["status"] == "error":
-            expected_attrs.append("fault")
         instance = Instance._from_db_object(cls(context),
                                             db_instance,
                                             expected_attrs)

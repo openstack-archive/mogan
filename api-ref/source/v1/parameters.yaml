@@ -210,6 +210,14 @@ multi_instacne_name_body:
   in: body
   required: true
   type: string
+instance_fault:
+  description: |
+    A fault object. Only displayed in the failed response.
+    Default keys are ``code``, ``message``, and ``detail``
+    (response code, message, and detail respectively).
+  in: body
+  required: false
+  type: object
 network_info:
   description: |
     The port info in the requested network for the instance, with fixed_ip, mac_address, and
