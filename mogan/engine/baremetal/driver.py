@@ -91,11 +91,12 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def spawn(self, context, instance, user_data):
+    def spawn(self, context, instance, configdrive_value):
         """Create a new instance on the provision platform.
 
         :param context: security context
         :param instance: mogan instance object.
+        :param configdrive_value: The configdrive value to be injected.
         """
         raise NotImplementedError()
 

@@ -13,11 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import base64
-import gzip
-import shutil
-import tempfile
-
 from ironicclient import exc as ironic_exc
 from ironicclient import exceptions as client_e
 from oslo_log import log as logging
@@ -30,10 +25,8 @@ from mogan.common.i18n import _
 from mogan.common import ironic
 from mogan.common import states
 from mogan.conf import CONF
-from mogan.engine.baremetal import configdrive
 from mogan.engine.baremetal import driver as base_driver
 from mogan.engine.baremetal.ironic import ironic_states
-from mogan import metadata as instance_metadata
 
 LOG = logging.getLogger(__name__)
 
@@ -290,41 +283,12 @@ class IronicDriver(base_driver.BaseEngineDriver):
             except client_e.BadRequest:
                 pass
 
-    def _generate_configdrive(self, context, instance, node, extra_md=None,
-                              user_data=None):
-        """Generate a config drive.
-
-        :param instance: The instance object.
-        :param node: The node object.
-        :param extra_md: Optional, extra metadata to be added to the
-                         configdrive.
-
-        """
-        if not extra_md:
-            extra_md = {}
-
-        i_meta = instance_metadata.InstanceMetadata(instance, user_data,
-                                                    extra_md=extra_md)
-
-        with tempfile.NamedTemporaryFile() as uncompressed:
-            with configdrive.ConfigDriveBuilder(instance_md=i_meta) as cdb:
-                cdb.make_drive(uncompressed.name)
-
-            with tempfile.NamedTemporaryFile() as compressed:
-                # compress config drive
-                with gzip.GzipFile(fileobj=compressed, mode='wb') as gzipped:
-                    uncompressed.seek(0)
-                    shutil.copyfileobj(uncompressed, gzipped)
-
-                # base64 encode config drive
-                compressed.seek(0)
-                return base64.b64encode(compressed.read())
-
-    def spawn(self, context, instance, user_data):
+    def spawn(self, context, instance, configdrive_value):
         """Deploy an instance.
 
         :param context: The security context.
         :param instance: The instance object.
+        :param configdrive_value: The configdrive value to be injected.
         """
         LOG.debug('Spawn called for instance', instance=instance)
 
@@ -352,24 +316,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 % {'id': instance.node_uuid,
                    'deploy': validate_chk.deploy,
                    'power': validate_chk.power})
-
-        # Config drive
-        configdrive_value = None
-        extra_md = {}
-
-        try:
-            configdrive_value = self._generate_configdrive(
-                context, instance, node, extra_md=extra_md,
-                user_data=user_data)
-        except Exception as e:
-            with excutils.save_and_reraise_exception():
-                msg = ("Failed to build configdrive: %s" %
-                       six.text_type(e))
-                LOG.error(msg, instance=instance)
-
-        LOG.info("Config drive for instance %(instance)s on "
-                 "baremetal node %(node)s created.",
-                 {'instance': instance['uuid'], 'node': node_uuid})
 
         # trigger the node deploy
         try:
