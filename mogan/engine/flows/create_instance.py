@@ -13,6 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import base64
+import gzip
+import shutil
+import tempfile
 import traceback
 
 from oslo_config import cfg
@@ -25,6 +29,8 @@ from mogan.common import exception
 from mogan.common import flow_utils
 from mogan.common.i18n import _
 from mogan.common import utils
+from mogan.engine import configdrive
+from mogan.engine import metadata as instance_metadata
 from mogan import objects
 
 
@@ -196,8 +202,8 @@ class BuildNetworkTask(flow_utils.MoganTask):
         return False
 
 
-class CreateInstanceTask(flow_utils.MoganTask):
-    """Build and deploy the instance."""
+class GenerateConfigDriveTask(flow_utils.MoganTask):
+    """Generate ConfigDrive value the instance."""
 
     def __init__(self, driver):
         requires = ['instance', 'user_data', 'context']
@@ -210,8 +216,56 @@ class CreateInstanceTask(flow_utils.MoganTask):
             loopingcall.LoopingCallTimeOut,
         ]
 
-    def execute(self, context, instance, user_data):
-        self.driver.spawn(context, instance, user_data)
+    def _generate_configdrive(self, context, instance, user_data=None):
+        """Generate a config drive."""
+
+        i_meta = instance_metadata.InstanceMetadata(instance, user_data)
+
+        with tempfile.NamedTemporaryFile() as uncompressed:
+            with configdrive.ConfigDriveBuilder(instance_md=i_meta) as cdb:
+                cdb.make_drive(uncompressed.name)
+
+            with tempfile.NamedTemporaryFile() as compressed:
+                # compress config drive
+                with gzip.GzipFile(fileobj=compressed, mode='wb') as gzipped:
+                    uncompressed.seek(0)
+                    shutil.copyfileobj(uncompressed, gzipped)
+
+                # base64 encode config drive
+                compressed.seek(0)
+                return base64.b64encode(compressed.read())
+
+    def execute(self, context, instance, user_data, configdrive_value):
+
+        try:
+            configdrive_value = self._generate_configdrive(
+                context, instance, user_data=user_data)
+        except Exception as e:
+            with excutils.save_and_reraise_exception():
+                msg = ("Failed to build configdrive: %s" %
+                       six.text_type(e))
+                LOG.error(msg, instance=instance)
+
+        LOG.info("Config drive for instance %(instance)s created.",
+                 {'instance': instance.uuid})
+
+
+class CreateInstanceTask(flow_utils.MoganTask):
+    """Build and deploy the instance."""
+
+    def __init__(self, driver):
+        requires = ['instance', 'configdrive_value', 'context']
+        super(CreateInstanceTask, self).__init__(addons=[ACTION],
+                                                 requires=requires)
+        self.driver = driver
+        # These exception types will trigger the instance to be cleaned.
+        self.instance_cleaned_exc_types = [
+            exception.InstanceDeployFailure,
+            loopingcall.LoopingCallTimeOut,
+        ]
+
+    def execute(self, context, instance, configdrive_value):
+        self.driver.spawn(context, instance, configdrive_value)
         LOG.info('Successfully provisioned Ironic node %s',
                  instance.node_uuid)
 
@@ -234,8 +288,9 @@ def get_flow(context, manager, instance, requested_networks, user_data,
     This flow will do the following:
 
     1. Build networks for the instance and set port id back to baremetal port
-    2. Do node deploy and handle errors.
-    3. Reschedule if the tasks are on failure.
+    2. Generate configdrive value for instance.
+    3. Do node deploy and handle errors.
+    4. Reschedule if the tasks are on failure.
     """
 
     flow_name = ACTION.replace(":", "_") + "_manager"
@@ -251,11 +306,13 @@ def get_flow(context, manager, instance, requested_networks, user_data,
         'instance': instance,
         'requested_networks': requested_networks,
         'user_data': user_data,
+        'configdrive_value': None,
         'ports': ports
     }
 
     instance_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
                       BuildNetworkTask(manager),
+                      GenerateConfigDriveTask(manager),
                       CreateInstanceTask(manager.driver))
 
     # Now load (but do not run) the flow using the provided initial data.
