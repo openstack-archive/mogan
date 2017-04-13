@@ -48,6 +48,7 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
         'availability_zone': object_fields.StringField(nullable=True),
         'image_uuid': object_fields.UUIDField(nullable=True),
         'nics': object_fields.ObjectField('ServerNics', nullable=True),
+        'fault': object_fields.ObjectField('ServerFault', nullable=True),
         'node_uuid': object_fields.UUIDField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),
@@ -100,9 +101,7 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
         """Converts a list of database entities to a list of formal objects."""
         servers = []
         for obj in db_objects:
-            expected_attrs = ['nics']
-            if obj["status"] == "error":
-                expected_attrs.append("fault")
+            expected_attrs = ['nics', 'fault']
             servers.append(Server._from_db_object(cls(context), obj,
                                                   expected_attrs))
         return servers
@@ -131,10 +130,8 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get(cls, context, uuid):
         """Find a server and return a Server object."""
-        expected_attrs = ['nics']
+        expected_attrs = ['nics', 'fault']
         db_server = cls.dbapi.server_get(context, uuid)
-        if db_server["status"] == "error":
-            expected_attrs.append("fault")
         server = Server._from_db_object(cls(context), db_server,
                                         expected_attrs)
         return server
