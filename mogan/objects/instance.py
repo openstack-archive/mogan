@@ -49,6 +49,7 @@ class Instance(base.MoganObject, object_base.VersionedObjectDictCompat):
         'availability_zone': object_fields.StringField(nullable=True),
         'image_uuid': object_fields.UUIDField(nullable=True),
         'nics': object_fields.ObjectField('InstanceNics', nullable=True),
+        'fault': object_fields.ObjectField('InstanceFault', nullable=True),
         'node_uuid': object_fields.UUIDField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'extra': object_fields.FlexibleDictField(nullable=True),

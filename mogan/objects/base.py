@@ -79,10 +79,18 @@ class MoganObject(object_base.VersionedObject):
         'updated_at': object_fields.DateTimeField(nullable=True),
     }
 
+    def hasattr(self, attrname):
+        try:
+            getattr(self, attrname)
+        except (AttributeError, NotImplementedError):
+            return False
+        else:
+            return True
+
     def as_dict(self):
         return dict((k, getattr(self, k))
                     for k in self.fields
-                    if hasattr(self, k))
+                    if self.hasattr(k))
 
     def obj_refresh(self, loaded_object):
         """Applies updates for objects that inherit from base. MoganObject.
