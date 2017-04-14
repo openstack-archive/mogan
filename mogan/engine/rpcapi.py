@@ -50,12 +50,14 @@ class EngineAPI(object):
                                      serializer=serializer)
 
     def create_instance(self, context, instance, requested_networks,
-                        user_data, request_spec, filter_properties):
+                        user_data, injected_files, request_spec,
+                        filter_properties):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         cctxt.cast(context, 'create_instance', instance=instance,
                    requested_networks=requested_networks,
                    user_data=user_data,
+                   injected_files=injected_files,
                    request_spec=request_spec,
                    filter_properties=filter_properties)
 

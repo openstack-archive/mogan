@@ -31,6 +31,8 @@ OPENSTACK_VERSIONS = [
 ]
 
 VERSION = "version"
+CONTENT = "content"
+CONTENT_DIR = "content"
 MD_JSON_NAME = "meta_data.json"
 UD_NAME = "user_data"
 
@@ -48,7 +50,7 @@ class InvalidMetadataPath(Exception):
 class InstanceMetadata(object):
     """Instance metadata."""
 
-    def __init__(self, instance, user_data=None, extra_md=None):
+    def __init__(self, instance, content=None, user_data=None, extra_md=None):
         """Creation of this object should basically cover all time consuming
         collection.  Methods after that should not cause time delays due to
         network operations or lengthy cpu operations.
@@ -56,6 +58,8 @@ class InstanceMetadata(object):
         The user should then get a single instance and make multiple method
         calls on it.
         """
+        if not content:
+            content = []
 
         self.instance = instance
         self.extra_md = extra_md
@@ -69,7 +73,18 @@ class InstanceMetadata(object):
         # TODO(zhenguo): Add hostname to instance object
         self.hostname = instance.name
         self.uuid = instance.uuid
+        
+        self.content = {}
         self.files = []
+
+        # 'content' is passed in from the configdrive code in
+        # mogan/engine/flows/create_instance.py. That's how we get the
+        # injected files (personalities) in.
+        for (path, contents) in content:
+            key = "%04i" % len(self.content)
+            self.files.append({'path': path,
+                'content_path': "/%s/%s" % (CONTENT_DIR, key)})
+            self.content[key] = contents
 
         self.route_configuration = None
 
@@ -78,16 +93,21 @@ class InstanceMetadata(object):
             return self.route_configuration
 
         path_handlers = {UD_NAME: self._user_data,
-                         MD_JSON_NAME: self._metadata_as_json}
+                         MD_JSON_NAME: self._metadata_as_json,
+                         CONTENT: self._handle_content}
 
         self.route_configuration = RouteConfiguration(path_handlers)
         return self.route_configuration
 
     def get_openstack_item(self, path_tokens):
+        if path_tokens[0] == CONTENT_DIR:
+            return self._handle_content(path_tokens)
         return self._route_configuration().handle_path(path_tokens)
 
     def _metadata_as_json(self, version, path):
         metadata = {'uuid': self.uuid}
+        if self.files:
+            metadata['files'] = self.files
         if self.extra_md:
             metadata.update(self.extra_md)
 
@@ -96,6 +116,13 @@ class InstanceMetadata(object):
         metadata['availability_zone'] = self.availability_zone
 
         return jsonutils.dump_as_bytes(metadata)
+
+    def _handle_content(self, path_tokens):
+        if len(path_tokens) == 1:
+            raise KeyError("no listing for %s" % "/".join(path_tokens))
+        if len(path_tokens) != 2:
+            raise KeyError("Too many tokens for /%s" % CONTENT_DIR)
+        return self.content[path_tokens[1]]
 
     def _user_data(self, version, path):
         if self.userdata_raw is None:
@@ -152,6 +179,9 @@ class InstanceMetadata(object):
             path = 'openstack/%s/%s' % (version, UD_NAME)
             if self.userdata_raw is not None:
                 yield (path, self.lookup(path))
+
+        for (cid, content) in self.content.items():
+            yield ('%s/%s/%s' % ("openstack", CONTENT_DIR, cid), content)
 
 
 class RouteConfiguration(object):

@@ -583,6 +583,12 @@ class InstanceController(InstanceControllerBase):
         instance_type_uuid = instance.get('instance_type_uuid')
         image_uuid = instance.get('image_uuid')
         user_data = instance.get('user_data')
+        personality=instance.pop('personality', None)
+
+        injected_files = []
+        if personality:
+            for item in personality:
+                injected_files.append((item['path'], item['contents']))
 
         try:
             instance_type = objects.InstanceType.get(pecan.request.context,
@@ -598,6 +604,7 @@ class InstanceController(InstanceControllerBase):
                 extra=instance.get('extra'),
                 requested_networks=requested_networks,
                 user_data=user_data,
+                injected_files=injected_files,
                 min_count=min_count,
                 max_count=max_count)
         except exception.InstanceTypeNotFound:

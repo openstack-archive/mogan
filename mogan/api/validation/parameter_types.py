@@ -82,3 +82,18 @@ ip_address = {
         {'format': 'ipv6'}
     ]
 }
+
+personality = {
+    'type': 'array',
+    'items': {
+        'type': 'object',
+        'properties': {
+            'path': {'type': 'string'},
+            'contents': {
+                'type': 'string',
+                'format': 'base64'
+            }
+        },
+        'additionalProperties': False,
+    }
+}
