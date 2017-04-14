@@ -197,6 +197,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
             {'k1', 'v1'},
             requested_networks,
             None,
+            None,
             min_count,
             max_count)
 

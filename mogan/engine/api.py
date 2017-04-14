@@ -220,7 +220,8 @@ class API(object):
 
     def _create_instance(self, context, instance_type, image_uuid,
                          name, description, availability_zone, extra,
-                         requested_networks, user_data, min_count, max_count):
+                         requested_networks, user_data, injected_files,
+                         min_count, max_count):
         """Verify all the input parameters"""
 
         # Verify the specified image exists
@@ -243,6 +244,8 @@ class API(object):
                       'max_net_count': max_net_count})
             max_count = max_net_count
 
+        # TODO(zhenguo): Check injected file quota
+
         instances = self._provision_instances(context, base_options,
                                               min_count, max_count)
 
@@ -262,6 +265,7 @@ class API(object):
             self.engine_rpcapi.create_instance(context, instance,
                                                requested_networks,
                                                user_data,
+                                               injected_files,
                                                request_spec,
                                                filter_properties=None)
 
@@ -270,7 +274,7 @@ class API(object):
     def create(self, context, instance_type, image_uuid,
                name=None, description=None, availability_zone=None,
                extra=None, requested_networks=None, user_data=None,
-               min_count=None, max_count=None):
+               injected_files=None, min_count=None, max_count=None):
         """Provision instances
 
         Sending instance information to the engine and will handle
@@ -289,7 +293,7 @@ class API(object):
                                      image_uuid, name, description,
                                      availability_zone, extra,
                                      requested_networks, user_data,
-                                     min_count, max_count)
+                                     injected_files, min_count, max_count)
 
     def _delete_instance(self, context, instance):
 

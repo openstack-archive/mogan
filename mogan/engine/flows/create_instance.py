@@ -50,7 +50,8 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
     def __init__(self, engine_rpcapi):
         requires = ['filter_properties', 'request_spec', 'instance',
-                    'requested_networks', 'user_data', 'context']
+                    'requested_networks', 'user_data', 'injected_files',
+                    'context']
         super(OnFailureRescheduleTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
         self.engine_rpcapi = engine_rpcapi
@@ -68,7 +69,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         pass
 
     def _reschedule(self, context, cause, request_spec, filter_properties,
-                    instance, requested_networks, user_data):
+                    instance, requested_networks, user_data, injected_files):
         """Actions that happen during the rescheduling attempt occur here."""
 
         create_instance = self.engine_rpcapi.create_instance
@@ -93,6 +94,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
         return create_instance(context, instance, requested_networks,
                                user_data=user_data,
+                               injected_files=injected_files,
                                request_spec=request_spec,
                                filter_properties=filter_properties)
 
@@ -208,14 +210,17 @@ class GenerateConfigDriveTask(flow_utils.MoganTask):
     """Generate ConfigDrive value the instance."""
 
     def __init__(self):
-        requires = ['instance', 'user_data', 'configdrive', 'context']
+        requires = ['instance', 'user_data', 'injected_files', 'configdrive',
+                    'context']
         super(GenerateConfigDriveTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
 
-    def _generate_configdrive(self, context, instance, user_data=None):
+    def _generate_configdrive(self, context, instance, user_data=None,
+                              files=None):
         """Generate a config drive."""
 
-        i_meta = instance_metadata.InstanceMetadata(instance, user_data)
+        i_meta = instance_metadata.InstanceMetadata(
+            instance, content=files, user_data=user_data)
 
         with tempfile.NamedTemporaryFile() as uncompressed:
             with configdrive.ConfigDriveBuilder(instance_md=i_meta) as cdb:
@@ -231,11 +236,12 @@ class GenerateConfigDriveTask(flow_utils.MoganTask):
                 compressed.seek(0)
                 return base64.b64encode(compressed.read())
 
-    def execute(self, context, instance, user_data, configdrive):
+    def execute(self, context, instance, user_data, injected_files,
+                configdrive):
 
         try:
             configdrive['value'] = self._generate_configdrive(
-                context, instance, user_data=user_data)
+                context, instance, user_data=user_data, files=injected_files)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 msg = ("Failed to build configdrive: %s" %
@@ -278,7 +284,7 @@ class CreateInstanceTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, instance, requested_networks, user_data,
-             ports, request_spec, filter_properties):
+             injected_files, ports, request_spec, filter_properties):
 
     """Constructs and returns the manager entrypoint flow
 
@@ -303,6 +309,7 @@ def get_flow(context, manager, instance, requested_networks, user_data,
         'instance': instance,
         'requested_networks': requested_networks,
         'user_data': user_data,
+        'injected_files': injected_files,
         'ports': ports,
         'configdrive': {}
     }
