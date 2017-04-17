@@ -101,7 +101,7 @@ class TestInstances(v1_test.APITestV1):
                         expect_errors=True)
 
     def _clean_type(self):
-        self.delete('/types/' + self.INSTANCE_TYPE_UUID, status=204)
+        self.delete('/flavors/' + self.INSTANCE_TYPE_UUID, status=204)
 
     def _make_app(self):
         return super(TestInstances, self)._make_app()
@@ -111,7 +111,7 @@ class TestInstances(v1_test.APITestV1):
         mocked.side_effect = [self.INSTANCE_TYPE_UUID]
         body = {"name": "type_for_instance_testing",
                 "description": "type for instance testing"}
-        self.post_json('/types', body, status=201)
+        self.post_json('/flavors', body, status=201)
 
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
     def _prepare_instance(self, amount, mocked):

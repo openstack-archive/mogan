@@ -40,7 +40,7 @@ class V1(base.APIBase):
     instances = [link.Link]
     """Links to the instances resource"""
 
-    types = [link.Link]
+    flavors = [link.Link]
     """Links to the instance types resource"""
 
     availability_zones = [link.Link]
@@ -57,13 +57,13 @@ class V1(base.APIBase):
                                             'instances', '',
                                             bookmark=True)
                         ]
-        v1.types = [link.Link.make_link('self', pecan.request.public_url,
-                                        'types', ''),
-                    link.Link.make_link('bookmark',
-                                        pecan.request.public_url,
-                                        'types', '',
-                                        bookmark=True)
-                    ]
+        v1.flavors = [link.Link.make_link('self', pecan.request.public_url,
+                                          'flavors', ''),
+                      link.Link.make_link('bookmark',
+                                          pecan.request.public_url,
+                                          'flavors', '',
+                                          bookmark=True)
+                      ]
         v1.availability_zones = [link.Link.make_link('self',
                                                      pecan.request.public_url,
                                                      'availability_zones', ''),
@@ -78,7 +78,7 @@ class V1(base.APIBase):
 class Controller(rest.RestController):
     """Version 1 API controller root."""
 
-    types = instance_types.InstanceTypeController()
+    flavors = instance_types.InstanceTypeController()
     instances = instances.InstanceController()
     availability_zones = availability_zone.AvailabilityZoneController()
 
