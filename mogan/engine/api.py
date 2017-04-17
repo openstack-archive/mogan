@@ -15,6 +15,9 @@
 
 """Handles all requests relating to compute resources"""
 
+import base64
+import binascii
+
 from oslo_log import log
 from oslo_serialization import base64 as base64utils
 from oslo_utils import excutils
@@ -168,6 +171,22 @@ class API(object):
         else:
             raise exception.OverQuota(overs='instances')
 
+    def _decode_files(self, injected_files):
+        """Base64 decode the list of files to inject."""
+        if not injected_files:
+            return []
+
+        def _decode(f):
+            path, contents = f
+            # Py3 raises binascii.Error instead of TypeError as in Py27
+            try:
+                decoded = base64.b64decode(contents)
+                return path, decoded
+            except (TypeError, binascii.Error):
+                raise exception.Base64Exception(path=path)
+
+        return [_decode(f) for f in injected_files]
+
     def _provision_instances(self, context, base_options,
                              min_count, max_count):
         # Return num_instances according quota
@@ -245,6 +264,8 @@ class API(object):
             max_count = max_net_count
 
         # TODO(zhenguo): Check injected file quota
+        # b64 decode the files to inject:
+        decoded_files = self._decode_files(injected_files)
 
         instances = self._provision_instances(context, base_options,
                                               min_count, max_count)
@@ -265,7 +286,7 @@ class API(object):
             self.engine_rpcapi.create_instance(context, instance,
                                                requested_networks,
                                                user_data,
-                                               injected_files,
+                                               decoded_files,
                                                request_spec,
                                                filter_properties=None)
 

@@ -626,6 +626,7 @@ class InstanceController(InstanceControllerBase):
         except (exception.GlanceConnectionFailed,
                 exception.InstanceUserDataMalformed,
                 exception.InstanceUserDataTooLarge,
+                exception.Base64Exception,
                 exception.NetworkRequiresSubnet,
                 exception.NetworkNotFound) as e:
             raise wsme.exc.ClientSideError(

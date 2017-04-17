@@ -396,4 +396,8 @@ class InstanceUserDataMalformed(MoganException):
     msg_fmt = _("User data needs to be valid base 64.")
 
 
+class Base64Exception(MoganException):
+    _msg_fmt = _("Invalid Base 64 data for file %(path)s")
+
+
 ObjectActionError = obj_exc.ObjectActionError
