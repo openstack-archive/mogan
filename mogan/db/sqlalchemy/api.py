@@ -135,7 +135,7 @@ class Connection(api.Connection):
             return _dict_with_extra_specs(query.one())
         except NoResultFound:
             raise exception.InstanceTypeNotFound(
-                instance_type=instance_type_uuid)
+                type_id=instance_type_uuid)
 
     def instance_type_update(self, context, instance_type_id, values):
         with _session_for_write():
@@ -145,7 +145,7 @@ class Connection(api.Connection):
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
                 raise exception.InstanceTypeNotFound(
-                    instance_type=instance_type_id)
+                    type_id=instance_type_id)
 
             ref.update(values)
             return ref
@@ -171,7 +171,7 @@ class Connection(api.Connection):
             count = query.delete()
             if count != 1:
                 raise exception.InstanceTypeNotFound(
-                    instance_type=instance_type_uuid)
+                    type_id=instance_type_uuid)
 
     def instance_create(self, context, values):
         if not values.get('uuid'):

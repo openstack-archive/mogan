@@ -97,7 +97,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             return self.ironicclient.call('node.get_by_instance_uuid',
                                           instance.uuid, fields=_NODE_FIELDS)
         except ironic_exc.NotFound:
-            raise exception.InstanceNotFound(instance_id=instance.uuid)
+            raise exception.InstanceNotFound(instance=instance.uuid)
 
     def _parse_node_properties(self, node):
         """Helper method to parse the node's properties."""
@@ -224,12 +224,12 @@ class IronicDriver(base_driver.BaseEngineDriver):
         if node.target_provision_state in (ironic_states.DELETED,
                                            ironic_states.AVAILABLE):
             # ironic is trying to delete it now
-            raise exception.InstanceNotFound(instance_id=instance.uuid)
+            raise exception.InstanceNotFound(instance=instance.uuid)
 
         if node.provision_state in (ironic_states.NOSTATE,
                                     ironic_states.AVAILABLE):
             # ironic already deleted it
-            raise exception.InstanceNotFound(instance_id=instance.uuid)
+            raise exception.InstanceNotFound(instance=instance.uuid)
 
         if node.provision_state == ironic_states.DEPLOYFAIL:
             # ironic failed to deploy

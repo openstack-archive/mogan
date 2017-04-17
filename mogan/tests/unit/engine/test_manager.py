@@ -181,7 +181,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
 
         @manager.wrap_instance_fault
         def failer(engine_manager, context, instance):
-            raise exception.InstanceNotFound(instance_id=instance['uuid'])
+            raise exception.InstanceNotFound(instance=instance['uuid'])
 
         self.assertRaises(exception.InstanceNotFound, failer,
                           manager.EngineManager, self.context, instance=inst)
