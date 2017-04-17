@@ -1,0 +1,19 @@
+{
+    "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDI6x2CRAGgW4NOZbtkDJDhA3jgRYKIzQE3qJHSYZ658K3NzHhGgHBr9YFrpHma3mGWJyzxDy4i5NYJIktvIM2V0X3bZ69NeYDD4I/S7SmbawsyiuERpLFCGIYsrKovsrB7DPYyXscC2tqMNulgVN983X5TNT/ba0Va6dWZvF0UbN66K2Wq2+p5kUOXFKmnTwqMYXOHNllpqgc/W4KIy2meUTfRzITr0fbaZnbJSiq4B0HSPZDhZcppU0QbclnC3br3uIFucbUMuvl1ewz66bB+SvYWypCFpEXjbuvniL/56+zfhZ9h+mNUTEKRgBgCADtcuaOHZzeKUAftV7qYL029 Generated-by-Mogan",
+    "user_id": "15e4229548a64fa9b1ccb67423144252",
+    "name": "test2",
+    "links": [
+        {
+            "href": "http://10.229.40.107:6688/v1/keypairs/test2",
+            "rel": "self"
+        },
+        {
+            "href": "http://10.229.40.107:6688/keypairs/test2",
+            "rel": "bookmark"
+        }
+    ],
+    "created_at": "2017-04-18T08:39:09.144892+00:00",
+    "updated_at": null,
+    "fingerprint": "3d:50:07:d5:50:f0:d1:90:87:e1:fb:2c:69:bf:f3:30",
+    "type": "ssh"
+}

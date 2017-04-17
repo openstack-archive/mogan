@@ -15,6 +15,8 @@
 
 """Utilities and helper functions."""
 
+import base64
+import binascii
 import contextlib
 import functools
 import inspect
@@ -24,17 +26,24 @@ import shutil
 import tempfile
 import traceback
 
+from cryptography import exceptions
+from cryptography.hazmat import backends
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography import x509
 from oslo_concurrency import lockutils
 from oslo_concurrency import processutils
 from oslo_log import log as logging
 from oslo_utils import encodeutils
+import paramiko
 import six
 
 from mogan.common import exception
+from mogan.common.i18n import _
 from mogan.common import states
 from mogan.conf import CONF
 from mogan import objects
-
 
 LOG = logging.getLogger(__name__)
 
@@ -283,3 +292,122 @@ def mkfs(fs, path, label=None, run_as_root=False):
 def trycmd(*args, **kwargs):
     """Convenience wrapper around oslo's trycmd() method."""
     return processutils.trycmd(*args, **kwargs)
+
+
+def check_string_length(value, name=None, min_length=0, max_length=None):
+    """Check the length of specified string
+    :param value: the value of the string
+    :param name: the name of the string
+    :param min_length: the min_length of the string
+    :param max_length: the max_length of the string
+    """
+    if not isinstance(value, six.string_types):
+        if name is None:
+            msg = "The input is not a string or unicode"
+        else:
+            msg = "%s is not a string or unicode" % name
+        raise exception.Invalid(message=msg)
+
+    if name is None:
+        name = value
+
+    if len(value) < min_length:
+        msg = _("%(name)s has a minimum character requirement of "
+                "%(min_length)s.") % {'name': name, 'min_length': min_length}
+        raise exception.Invalid(message=msg)
+
+    if max_length and len(value) > max_length:
+        msg = _("%(name)s has more than %(max_length)s "
+                "characters.") % {'name': name, 'max_length': max_length}
+        raise exception.Invalid(message=msg)
+
+
+def _create_x509_openssl_config(conffile, upn):
+    content = ("distinguished_name  = req_distinguished_name\n"
+               "[req_distinguished_name]\n"
+               "[v3_req_client]\n"
+               "extendedKeyUsage = clientAuth\n"
+               "subjectAltName = otherName:""1.3.6.1.4.1.311.20.2.3;UTF8:%s\n")
+
+    with open(conffile, 'w') as file:
+        file.write(content % upn)
+
+
+def generate_winrm_x509_cert(user_id, bits=2048):
+    """Generate a cert for passwordless auth for user in project."""
+    subject = '/CN=%s' % user_id
+    upn = '%s@localhost' % user_id
+
+    with tempdir() as tmpdir:
+        keyfile = os.path.abspath(os.path.join(tmpdir, 'temp.key'))
+        conffile = os.path.abspath(os.path.join(tmpdir, 'temp.conf'))
+
+        _create_x509_openssl_config(conffile, upn)
+
+        (certificate, _err) = execute(
+            'openssl', 'req', '-x509', '-nodes', '-days', '3650',
+            '-config', conffile, '-newkey', 'rsa:%s' % bits,
+            '-outform', 'PEM', '-keyout', keyfile, '-subj', subject,
+            '-extensions', 'v3_req_client',
+            binary=True)
+
+        (out, _err) = execute('openssl', 'pkcs12', '-export',
+                              '-inkey', keyfile, '-password', 'pass:',
+                              process_input=certificate,
+                              binary=True)
+
+        private_key = base64.b64encode(out)
+        fingerprint = generate_x509_fingerprint(certificate)
+        if six.PY3:
+            private_key = private_key.decode('ascii')
+            certificate = certificate.decode('utf-8')
+
+    return (private_key, certificate, fingerprint)
+
+
+def generate_fingerprint(public_key):
+    try:
+        pub_bytes = public_key.encode('utf-8')
+        # Test that the given public_key string is a proper ssh key. The
+        # returned object is unused since pyca/cryptography does not have a
+        # fingerprint method.
+        serialization.load_ssh_public_key(
+            pub_bytes, backends.default_backend())
+        pub_data = base64.b64decode(public_key.split(' ')[1])
+        digest = hashes.Hash(hashes.MD5(), backends.default_backend())
+        digest.update(pub_data)
+        md5hash = digest.finalize()
+        raw_fp = binascii.hexlify(md5hash)
+        if six.PY3:
+            raw_fp = raw_fp.decode('ascii')
+        return ':'.join(a + b for a, b in zip(raw_fp[::2], raw_fp[1::2]))
+    except Exception:
+        raise exception.InvalidKeypair(
+            reason=_('failed to generate fingerprint'))
+
+
+def generate_x509_fingerprint(pem_key):
+    try:
+        if isinstance(pem_key, six.text_type):
+            pem_key = pem_key.encode('utf-8')
+        cert = x509.load_pem_x509_certificate(
+            pem_key, backends.default_backend())
+        raw_fp = binascii.hexlify(cert.fingerprint(hashes.SHA1()))
+        if six.PY3:
+            raw_fp = raw_fp.decode('ascii')
+        return ':'.join(a + b for a, b in zip(raw_fp[::2], raw_fp[1::2]))
+    except (ValueError, TypeError, binascii.Error) as ex:
+        raise exception.InvalidKeypair(
+            reason=_('failed to generate X509 fingerprint. '
+                     'Error message: %s') % ex)
+
+
+def generate_key_pair(bits=2048):
+    key = paramiko.RSAKey.generate(bits)
+    keyout = six.StringIO()
+    key.write_private_key(keyout)
+    private_key = keyout.getvalue()
+    public_key = '%s %s Generated-by-Mogan' % (
+        key.get_name(), key.get_base64())
+    fingerprint = generate_fingerprint(public_key)
+    return (private_key, public_key, fingerprint)

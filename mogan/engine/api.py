@@ -14,6 +14,7 @@
 #    under the License.
 
 """Handles all requests relating to compute resources"""
+import string
 
 from oslo_log import log
 from oslo_serialization import base64 as base64utils
@@ -30,6 +31,7 @@ from mogan.engine import rpcapi
 from mogan import image
 from mogan import network
 from mogan import objects
+from mogan.objects import keypair as keypair_obj
 from mogan.objects import quota
 
 LOG = log.getLogger(__name__)
@@ -401,3 +403,79 @@ class API(object):
             access_url=connect_info['access_url'])
 
         return {'url': connect_info['access_url']}
+
+    def _validate_new_key_pair(self, context, user_id, key_name, key_type):
+        safe_chars = "_- " + string.digits + string.ascii_letters
+        clean_value = "".join(x for x in key_name if x in safe_chars)
+        if clean_value != key_name:
+            raise exception.InvalidKeypair(
+                reason="Keypair name contains unsafe characters")
+
+        try:
+            utils.check_string_length(key_name, min_length=1, max_length=255)
+        except exception.Invalid:
+            raise exception.InvalidKeypair(
+                reason='Keypair name must be string and between '
+                       '1 and 255 characters long')
+
+            # TODO(liusheng) add quota check
+            # count = objects.Quotas.count(context, 'key_pairs', user_id)
+            #
+            # try:
+            #     objects.Quotas.limit_check(context, key_pairs=count + 1)
+            # except exception.OverQuota:
+            #     raise exception.KeypairLimitExceeded()
+
+    def import_key_pair(self, context, user_id, key_name, public_key,
+                        key_type=keypair_obj.KEYPAIR_TYPE_SSH):
+        """Import a key pair using an existing public key."""
+        self._validate_new_key_pair(context, user_id, key_name, key_type)
+        fingerprint = self._generate_fingerprint(public_key, key_type)
+
+        keypair = objects.KeyPair(context)
+        keypair.user_id = user_id
+        keypair.name = key_name
+        keypair.type = key_type
+        keypair.fingerprint = fingerprint
+        keypair.public_key = public_key
+        keypair.create()
+        return keypair
+
+    def create_key_pair(self, context, user_id, key_name,
+                        key_type=keypair_obj.KEYPAIR_TYPE_SSH):
+        """Create a new key pair."""
+        self._validate_new_key_pair(context, user_id, key_name, key_type)
+        private_key, public_key, fingerprint = self._generate_key_pair(
+            user_id, key_type)
+        keypair = objects.KeyPair(context)
+        keypair.user_id = user_id
+        keypair.name = key_name
+        keypair.type = key_type
+        keypair.fingerprint = fingerprint
+        keypair.public_key = public_key
+        keypair.create()
+        return keypair, private_key
+
+    def _generate_fingerprint(self, public_key, key_type):
+        if key_type == keypair_obj.KEYPAIR_TYPE_SSH:
+            return utils.generate_fingerprint(public_key)
+        elif key_type == keypair_obj.KEYPAIR_TYPE_X509:
+            return utils.generate_x509_fingerprint(public_key)
+
+    def _generate_key_pair(self, user_id, key_type):
+        if key_type == keypair_obj.KEYPAIR_TYPE_SSH:
+            return utils.generate_key_pair()
+        elif key_type == keypair_obj.KEYPAIR_TYPE_X509:
+            return utils.generate_winrm_x509_cert(user_id)
+
+    def delete_key_pair(self, context, user_id, key_name):
+        """Delete a keypair by name."""
+        objects.KeyPair.destroy_by_name(context, user_id, key_name)
+
+    def get_key_pairs(self, context, user_id):
+        """List key pairs."""
+        return objects.KeyPairList.get_by_user(context, user_id)
+
+    def get_key_pair(self, context, user_id, key_name):
+        """Get a keypair by name."""
+        return objects.KeyPair.get_by_name(context, user_id, key_name)
