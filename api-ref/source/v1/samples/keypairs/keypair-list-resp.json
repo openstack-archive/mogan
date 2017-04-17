@@ -1,0 +1,10 @@
+{
+    "keypairs": [
+        {
+            "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCm9uBAtuUfZPI4j7VIkGdh7HNzSJjFIGcPy6dfEGvqIgCUlcvx/Kc3BA4JW7X2gtHTqMutN9EXGLGJ9uXoq92vBmAtRiV0/yuLjSTEFLf+yQ98L4VVgeRnvnJ2V1NBvI7x4mWl071xAwbgBN+1RFhXUI8k2CPAMQHearGAxNzDkEchj/HBQGCiZ0KfD3V8DOM0o/q7tKFdgAOACTb7tTgqIbwyBTyoGFstvRQVk2e3rZYOFUL+36fU5T1MqQZVyh8/6rqP9G4L5yDfEiMiexWFhAgg80zIopYP5MKcxWMf9I3PcCTv4qdwAWpZapk0lnX6izNzse5fTHOV49LXnVDt Generated-by-Nova",
+            "type": "ssh",
+            "name": "test_key",
+            "fingerprint": "f1:83:34:02:f9:63:79:d4:bd:2a:1d:50:16:61:1b:cc"
+        }
+    ]
+}

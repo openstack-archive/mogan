@@ -248,3 +248,28 @@ class Connection(object):
     @abc.abstractmethod
     def reservation_expire(self, context):
         """expire all reservations which has been expired"""
+
+    @abc.abstractmethod
+    def key_pair_create(self, context, values):
+        """Create a key_pair from the values dictionary."""
+        return IMPL.key_pair_create(context, values)
+
+    @abc.abstractmethod
+    def key_pair_destroy(self, context, user_id, name):
+        """Destroy the key_pair or raise if it does not exist."""
+        return IMPL.key_pair_destroy(context, user_id, name)
+
+    @abc.abstractmethod
+    def key_pair_get(self, context, user_id, name):
+        """Get a key_pair or raise if it does not exist."""
+        return IMPL.key_pair_get(context, user_id, name)
+
+    @abc.abstractmethod
+    def key_pair_get_all_by_user(self, context, user_id):
+        """Get all key_pairs by user."""
+        return IMPL.key_pair_get_all_by_user(context, user_id)
+
+    @abc.abstractmethod
+    def key_pair_count_by_user(self, context, user_id):
+        """Count number of key pairs for the given user ID."""
+        return IMPL.key_pair_count_by_user(context, user_id)
