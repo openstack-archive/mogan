@@ -396,4 +396,15 @@ class InstanceUserDataMalformed(MoganException):
     msg_fmt = _("User data needs to be valid base 64.")
 
 
+class KeyPairExists(MoganException):
+    _msg_fmt = _("KeyPaire with key name %(key_name)s already exists.")
+
+
+class KeypairNotFound(NotFound):
+    msg_fmt = _("Keypair %(name)s not found for user %(user_id)s")
+
+
+class InvalidKeypair(Invalid):
+    msg_fmt = _("Keypair data is invalid: %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError
