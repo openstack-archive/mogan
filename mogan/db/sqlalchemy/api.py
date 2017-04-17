@@ -836,6 +836,38 @@ class Connection(api.Connection):
                         uuid = reservation.uuid
                         raise exception.ReservationNotFound(uuid=uuid)
 
+    def key_pair_create(self, context, values):
+        key_pair_ref = models.KeyPair()
+        key_pair_ref.update(values)
+        with _session_for_write() as session:
+            try:
+                session.add(key_pair_ref)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.KeyPairExists(key_name=values['name'])
+            return key_pair_ref
+
+    def key_pair_destroy(self, context, user_id, name):
+        result = model_query(context, models.KeyPair).filter_by(
+            user_id=user_id).filter_by(name=name).delete()
+        if not result:
+            raise exception.KeypairNotFound(user_id=user_id, name=name)
+
+    def key_pair_get(self, context, user_id, name):
+        result = model_query(context, models.KeyPair).filter_by(
+            user_id=user_id).filter_by(name=name).first()
+        if not result:
+            raise exception.KeypairNotFound(user_id=user_id, name=name)
+        return result
+
+    def key_pair_get_all_by_user(self, context, user_id):
+        query = model_query(context, models.KeyPair).filter_by(user_id=user_id)
+        return query.all()
+
+    def key_pair_count_by_user(self, context, user_id):
+        return model_query(context, models.KeyPair).filter_by(
+            user_id=user_id).count()
+
 
 def _type_get_id_from_type_query(context, type_id):
     return model_query(context, models.InstanceTypes). \
