@@ -97,7 +97,7 @@ class OperationNotPermitted(NotAuthorized):
 
 
 class Forbidden(MoganException):
-    msg_fmt = _("Forbidden")
+    _msg_fmt = _("Forbidden")
     code = 403
 
 
@@ -145,7 +145,7 @@ class InvalidMAC(Invalid):
 
 
 class InvalidUUID(Invalid):
-    msg_fmt = _("Expected a uuid but received %(uuid)s.")
+    _msg_fmt = _("Expected a uuid but received %(uuid)s.")
 
 
 class InstanceTypeAlreadyExists(MoganException):
@@ -153,7 +153,7 @@ class InstanceTypeAlreadyExists(MoganException):
 
 
 class InstanceTypeNotFound(NotFound):
-    msg_fmt = _("InstanceType %(type_id)s could not be found.")
+    _msg_fmt = _("InstanceType %(type_id)s could not be found.")
 
 
 class InstanceAlreadyExists(MoganException):
@@ -161,7 +161,7 @@ class InstanceAlreadyExists(MoganException):
 
 
 class InstanceNotFound(NotFound):
-    msg_fmt = _("Instance %(instance)s could not be found.")
+    _msg_fmt = _("Instance %(instance)s could not be found.")
 
 
 class ComputeNodeAlreadyExists(MoganException):
@@ -169,7 +169,7 @@ class ComputeNodeAlreadyExists(MoganException):
 
 
 class ComputeNodeNotFound(NotFound):
-    msg_fmt = _("ComputeNode %(node)s could not be found.")
+    _msg_fmt = _("ComputeNode %(node)s could not be found.")
 
 
 class ComputePortAlreadyExists(MoganException):
@@ -177,7 +177,7 @@ class ComputePortAlreadyExists(MoganException):
 
 
 class ComputePortNotFound(NotFound):
-    msg_fmt = _("ComputePort %(port)s could not be found.")
+    _msg_fmt = _("ComputePort %(port)s could not be found.")
 
 
 class ComputeDiskAlreadyExists(MoganException):
@@ -185,25 +185,25 @@ class ComputeDiskAlreadyExists(MoganException):
 
 
 class ComputeDiskNotFound(NotFound):
-    msg_fmt = _("ComputeDisk %(disk)s could not be found.")
+    _msg_fmt = _("ComputeDisk %(disk)s could not be found.")
 
 
 class NodeNotFound(NotFound):
-    msg_fmt = _("Node associated with instance %(instance)s "
-                "could not be found.")
+    _msg_fmt = _("Node associated with instance %(instance)s "
+                 "could not be found.")
 
 
 class InvalidActionParameterValue(Invalid):
-    msg_fmt = _("The Parameter value: %(value)s for %(action) action of "
-                "instance %(instance)s is invalid.")
+    _msg_fmt = _("The Parameter value: %(value)s for %(action) action of "
+                 "instance %(instance)s is invalid.")
 
 
 class InstanceDeployFailure(Invalid):
-    msg_fmt = _("Failed to deploy instance: %(reason)s")
+    _msg_fmt = _("Failed to deploy instance: %(reason)s")
 
 
 class InstanceDeployAborted(Invalid):
-    msg_fmt = _("Instance deployment is aborted: %(reason)s")
+    _msg_fmt = _("Instance deployment is aborted: %(reason)s")
 
 
 class NoFreeEngineWorker(TemporaryFailure):
@@ -242,17 +242,17 @@ class NoValidNode(MoganException):
 
 
 class TypeExtraSpecUpdateCreateFailed(MoganException):
-    msg_fmt = _("Instance Type %(id)s extra spec cannot be updated or"
-                "created after %(retries)d retries.")
+    _msg_fmt = _("Instance Type %(id)s extra spec cannot be updated or"
+                 "created after %(retries)d retries.")
 
 
 class InstanceTypeExtraSpecsNotFound(NotFound):
-    msg_fmt = _("Instance Type %(type_id)s has no extra specs with "
-                "key %(extra_specs_key)s.")
+    _msg_fmt = _("Instance Type %(type_id)s has no extra specs with "
+                 "key %(extra_specs_key)s.")
 
 
 class InterfacePlugException(MoganException):
-    msg_fmt = _("Interface plugin failed")
+    _msg_fmt = _("Interface plugin failed")
 
 
 class NetworkError(MoganException):
@@ -260,25 +260,25 @@ class NetworkError(MoganException):
 
 
 class ValidationError(Invalid):
-    msg_fmt = "%(detail)s"
+    _msg_fmt = "%(detail)s"
 
 
 class ImageNotAuthorized(MoganException):
-    msg_fmt = _("Not authorized for image %(image_id)s.")
+    _msg_fmt = _("Not authorized for image %(image_id)s.")
 
 
 class ImageBadRequest(Invalid):
-    msg_fmt = _("Request of image %(image_id)s got BadRequest response: "
-                "%(response)s")
+    _msg_fmt = _("Request of image %(image_id)s got BadRequest response: "
+                 "%(response)s")
 
 
 class ImageNotFound(NotFound):
-    msg_fmt = _("Image %(image_id)s could not be found.")
+    _msg_fmt = _("Image %(image_id)s could not be found.")
 
 
 class GlanceConnectionFailed(MoganException):
-    msg_fmt = _("Connection to glance host %(server)s failed: "
-                "%(reason)s")
+    _msg_fmt = _("Connection to glance host %(server)s failed: "
+                 "%(reason)s")
 
 
 class PatchError(Invalid):
@@ -286,7 +286,7 @@ class PatchError(Invalid):
 
 
 class AZNotFound(NotFound):
-    msg_fmt = _("The availability zone could not be found.")
+    _msg_fmt = _("The availability zone could not be found.")
 
 
 class InvalidState(Invalid):
@@ -298,32 +298,32 @@ class DuplicateState(Conflict):
 
 
 class PortNotFound(NotFound):
-    msg_fmt = _("Port id %(port_id)s could not be found.")
+    _msg_fmt = _("Port id %(port_id)s could not be found.")
 
 
 class FloatingIpNotFoundForAddress(NotFound):
-    msg_fmt = _("Floating IP not found for address %(address)s.")
+    _msg_fmt = _("Floating IP not found for address %(address)s.")
 
 
 class FloatingIpMultipleFoundForAddress(MoganException):
-    msg_fmt = _("Multiple floating IPs are found for address %(address)s.")
+    _msg_fmt = _("Multiple floating IPs are found for address %(address)s.")
 
 
 class NetworkNotFound(NotFound):
-    msg_fmt = _("Network %(network_id)s could not be found.")
+    _msg_fmt = _("Network %(network_id)s could not be found.")
 
 
 class NetworkRequiresSubnet(Invalid):
-    msg_fmt = _("Network %(network_uuid)s requires a subnet in order to boot"
-                " instances on.")
+    _msg_fmt = _("Network %(network_uuid)s requires a subnet in order to boot"
+                 " instances on.")
 
 
 class InstanceIsLocked(Invalid):
-    msg_fmt = _("Instance %(instance_uuid)s is locked")
+    _msg_fmt = _("Instance %(instance_uuid)s is locked")
 
 
 class InstanceInMaintenance(Invalid):
-    msg_fmt = _("Instance %(instance_uuid)s is in maintenance mode")
+    _msg_fmt = _("Instance %(instance_uuid)s is in maintenance mode")
 
 
 class InvalidReservationExpiration(Invalid):
@@ -347,7 +347,7 @@ class OverQuota(MoganException):
 
 
 class PortLimitExceeded(OverQuota):
-    msg_fmt = _("Maximum number of ports exceeded")
+    _msg_fmt = _("Maximum number of ports exceeded")
 
 
 class QuotaAlreadyExists(MoganException):
@@ -365,7 +365,7 @@ class ReservationNotFound(NotFound):
 
 
 class InvalidToken(Invalid):
-    msg_fmt = _("Invalid token: %(token)s")
+    _msg_fmt = _("Invalid token: %(token)s")
 
 
 class ConsoleNotAvailable(MoganException):
@@ -373,27 +373,27 @@ class ConsoleNotAvailable(MoganException):
 
 
 class ConsoleTypeUnavailable(Invalid):
-    msg_fmt = _("Unavailable console type %(console_type)s.")
+    _msg_fmt = _("Unavailable console type %(console_type)s.")
 
 
 class ConfigDriveMountFailed(MoganException):
-    msg_fmt = _("Could not mount vfat config drive. %(operation)s failed. "
-                "Error: %(error)s")
+    _msg_fmt = _("Could not mount vfat config drive. %(operation)s failed. "
+                 "Error: %(error)s")
 
 
 class ConfigDriveUnknownFormat(MoganException):
-    msg_fmt = _("Unknown config drive format %(format)s. Select one of "
-                "iso9660 or vfat.")
+    _msg_fmt = _("Unknown config drive format %(format)s. Select one of "
+                 "iso9660 or vfat.")
 
 
 class InstanceUserDataTooLarge(MoganException):
-    msg_fmt = _("User data too large. User data must be no larger than "
-                "%(maxsize)s bytes once base64 encoded. Your data is "
-                "%(length)d bytes")
+    _msg_fmt = _("User data too large. User data must be no larger than "
+                 "%(maxsize)s bytes once base64 encoded. Your data is "
+                 "%(length)d bytes")
 
 
 class InstanceUserDataMalformed(MoganException):
-    msg_fmt = _("User data needs to be valid base 64.")
+    _msg_fmt = _("User data needs to be valid base 64.")
 
 
 ObjectActionError = obj_exc.ObjectActionError
