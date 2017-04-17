@@ -1,0 +1,5 @@
+{
+    "name": "test_flavor",
+    "description": "this is a test flavor",
+    "is_public": true
+}
