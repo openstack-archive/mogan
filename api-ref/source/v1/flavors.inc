@@ -1,21 +1,21 @@
 .. -*- rst -*-
 
-===============
- Instance Type
-===============
+=========
+ Flavors
+=========
 
-Show and manage Instance Types.
+Show and manage server flavors.
 
-Types are a way to describe the basic dimensions of a instance to be
+Flavors are a way to describe the basic dimensions of a instance to be
 created including how much ``cpu``, ``ram``, and ``disk space`` are
-allocated to an instance built with this type.
+allocated to an instance built with this flavor.
 
-List Types
-==========
+List Flavors
+============
 
-.. rest_method:: GET /types
+.. rest_method:: GET /flavors
 
-Lists all types accessible to your project.
+Lists all flavors accessible to your project.
 
 Normal response codes: 200
 
@@ -34,25 +34,25 @@ Response
    - name: type_name
    - links: links
    - description: type_description
-   - uuid: type_uuid
+   - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
    - is_public: type_is_public
    - extra_specs: type_extra_specs
 
-**Example List types**
+**Example List flavors**
 
-.. literalinclude:: samples/instance_types/types-list-resp.json
+.. literalinclude:: samples/flavors/flavors-list-resp.json
    :language: javascript
 
-Create Instance Type
-====================
+Create Flavor
+=============
 
-.. rest_method:: POST /types
+.. rest_method:: POST /flavors
 
-Creates a type.
+Creates a flavor.
 
-Creating a type is typically only available to administrators of a
+Creating a flavor is typically only available to administrators of a
 cloud because this has implications for scheduling efficiently in the cloud.
 
 Normal response codes: 201
@@ -68,11 +68,11 @@ Request
    - name: type_name
    - description: type_description
    - is_public: type_is_public_not_required
-   - uuid: type_uuid_not_required
+   - uuid: flavor_uuid_not_required
 
-**Example Create Type**
+**Example Create Flavor**
 
-.. literalinclude:: samples/instance_types/type-create-post-req.json
+.. literalinclude:: samples/flavors/flavor-create-post-req.json
    :language: javascript
 
 Response
@@ -83,25 +83,25 @@ Response
    - name: type_name
    - links: links
    - description: type_description
-   - uuid: type_uuid
+   - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
    - is_public: type_is_public
    - extra_specs: type_extra_specs
 
-**Example Create type**
+**Example Create flavor**
 
-.. literalinclude:: samples/instance_types/type-create-post-resp.json
+.. literalinclude:: samples/flavors/flavor-create-post-resp.json
    :language: javascript
 
-Update Instance Type
-====================
+Update Flavor
+=============
 
-.. rest_method:: PUT /types/{type_uuid}
+.. rest_method:: PUT /flavors/{flavor_uuid}
 
-Updates a type.
+Updates a flavor.
 
-Updating a type is typically only available to administrators of a
+Updating a flavor is typically only available to administrators of a
 cloud because this has implications for scheduling efficiently in the cloud.
 
 Normal response codes: 200
@@ -114,14 +114,14 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - type_uuid: type_uuid_path
+  - flavor_uuid: flavor_uuid_path
   - name: type_name
   - description: type_description
   - is_public: type_is_public_not_required
 
-**Example Update Type**
+**Example Update Flavor**
 
-.. literalinclude:: samples/instance_types/type-update-put-req.json
+.. literalinclude:: samples/flavors/flavor-update-put-req.json
    :language: javascript
 
 Response
@@ -132,23 +132,23 @@ Response
    - name: type_name
    - links: links
    - description: type_description
-   - uuid: type_uuid
+   - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
    - is_public: type_is_public
    - extra_specs: type_extra_specs
 
-**Example Update type**
+**Example Update flavor**
 
-.. literalinclude:: samples/instance_types/type-update-put-resp.json
+.. literalinclude:: samples/flavors/flavor-update-put-resp.json
    :language: javascript
 
-Show Instance Type Details
+Show Server Flavor Details
 ==========================
 
-.. rest_method:: GET /types/{type_uuid}
+.. rest_method:: GET /flavors/{flavor_uuid}
 
-Shows details for a type.
+Shows details for a flavor.
 
 Normal response codes: 200
 
@@ -159,7 +159,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - type_uuid: type_uuid_path
+  - flavor_uuid: flavor_uuid_path
 
 Response
 --------
@@ -169,26 +169,26 @@ Response
    - name: type_name
    - links: links
    - description: type_description
-   - uuid: type_uuid
+   - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
    - is_public: type_is_public
    - extra_specs: type_extra_specs
 
-**Example Show type Details**
+**Example Show Flavor Details**
 
-.. literalinclude:: samples/instance_types/type-get-resp.json
+.. literalinclude:: samples/flavors/flavor-get-resp.json
    :language: javascript
 
 
-Delete Instance Type
-====================
+Delete Flavor
+=============
 
-.. rest_method:: DELETE /types/{type_uuid}
+.. rest_method:: DELETE /flavors/{flavor_uuid}
 
-Deletes a type.
+Deletes a flavor.
 
-This is typically an admin only action. Deleting a type that is in use by
+This is typically an admin only action. Deleting a flavor that is in use by
 existing instances is not recommended as it can cause incorrect data to
 be returned to the user under some operations.
 
@@ -201,7 +201,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - type_uuid: type_uuid_path
+  - flavor_uuid: flavor_uuid_path
 
 Response
 --------
@@ -212,9 +212,9 @@ No body content is returned on a successful DELETE.
 List Extra Specs
 ================
 
-.. rest_method:: GET /types/{type_uuid}/extraspecs
+.. rest_method:: GET /flavors/{flavor_uuid}/extraspecs
 
-Lists all extra specs related to the given type.
+Lists all extra specs related to the given flavor.
 
 Normal response codes: 200
 
@@ -225,7 +225,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-    - type_uuid: type_uuid_path
+    - flavor_uuid: flavor_uuid_path
 
 Response
 --------
@@ -236,16 +236,16 @@ Response
 
 **Example List Extra Specs**
 
-.. literalinclude:: samples/instance_types/type-extra-specs-list-resp.json
+.. literalinclude:: samples/flavors/flavor-extra-specs-list-resp.json
    :language: javascript
 
 
 Create/Update Extra Spec
 ========================
 
-.. rest_method:: PATCH /types/{type_uuid}/extraspecs
+.. rest_method:: PATCH /flavors/{flavor_uuid}/extraspecs
 
-Create/update extra specs to the given type.
+Create/update extra specs to the given flavor.
 
 Normal response codes: 201
 
@@ -256,12 +256,12 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-    - type_uuid: type_uuid_path
+    - flavor_uuid: flavor_uuid_path
     - extra_specs: type_extra_specs
 
 **Example Create Extra Specs**
 
-.. literalinclude:: samples/instance_types/type-extra-specs-patch-req.json
+.. literalinclude:: samples/flavors/flavor-extra-specs-patch-req.json
    :language: javascript
 
 Response
@@ -273,16 +273,16 @@ Response
 
 **Example Create Extra Specs**
 
-.. literalinclude:: samples/instance_types/type-extra-specs-patch-resp.json
+.. literalinclude:: samples/flavors/flavor-extra-specs-patch-resp.json
    :language: javascript
 
 
 Delete Extra Spec
 =================
 
-.. rest_method:: DELETE /types/{type_uuid}/extraspecs/key
+.. rest_method:: DELETE /flavors/{flavor_uuid}/extraspecs/key
 
-Deletes an extra spec related to the specific type.
+Deletes an extra spec related to the specific flavor.
 
 Normal response codes: 204
 
@@ -293,7 +293,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - type_uuid: type_uuid_path
+  - flavor_uuid: flavor_uuid_path
   - key: spec_key_path
 
 Response

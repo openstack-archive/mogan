@@ -67,10 +67,10 @@ class InstanceType(base.APIBase):
         instance_type = InstanceType(**rpc_instance_type.as_dict())
         url = pecan.request.public_url
         instance_type.links = [link.Link.make_link('self', url,
-                                                   'types',
+                                                   'flavors',
                                                    instance_type.uuid),
                                link.Link.make_link('bookmark', url,
-                                                   'types',
+                                                   'flavors',
                                                    instance_type.uuid,
                                                    bookmark=True)
                                ]
@@ -81,14 +81,14 @@ class InstanceType(base.APIBase):
 class InstanceTypeCollection(base.APIBase):
     """API representation of a collection of instance type."""
 
-    types = [InstanceType]
+    flavors = [InstanceType]
     """A list containing Instance Type objects"""
 
     @staticmethod
     def convert_with_links(instance_types, url=None, **kwargs):
         collection = InstanceTypeCollection()
-        collection.types = [InstanceType.convert_with_links(type1)
-                            for type1 in instance_types]
+        collection.flavors = [InstanceType.convert_with_links(type1)
+                              for type1 in instance_types]
         return collection
 
 
