@@ -1,0 +1,20 @@
+{
+    "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDyCfP9RwNBG6BFvl8sWLRNRAC6QtTmYKflE7XPVAJZxceiouZ+5QbuDa8RPBorzfnlytAgwM/g9KyNvzX5NmH40cwP9h4uKoXZke3dK7UxCDv/ab+1UpONgbGOBN23gj6JRtlOCl7iRxSpgmKxiirbxKkpwFO1MI1dXYE7FHmrHsxy6FA4rKgM+U2aY8tPf80MHkMhO7P9nHf1YjLaHuRHmehKQgIAMUbb527PXW7JE3Q9qPjl5L4fpuP/dtx/hqfj3tEnQHY/8dyDtWLmi1U+7E7D8kbMh0PoMFfKUpwJ1e43MvvnOLuvIz8tTpOnN17pVpM1Yg5a7604Yb8LyOo/ Generated-by-Mogan",
+    "private_key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA8gnz/UcDQRugRb5fLFi0TUQAukLU5mCn5RO1z1QCWcXHoqLm\nfuUG7g2vETwaK8355crQIMDP4PSsjb81+TZh+NHMD/YeLiqF2ZHt3Su1MQg7/2m/\ntVKTjYGxjgTdt4I+iUbZTgpe4kcUqYJisYoq28SpKcBTtTCNXV2BOxR5qx7McuhQ\nOKyoDPlNmmPLT3/NDB5DITuz/Zx39WIy2h7kR5noSkICADFG2+duz11uyRN0Paj4\n5eS+H6bj/3bcf4an497RJ0B2P/Hcg7Vi5otVPuxOw/JGzIdD6DBXylKcCdXuNzL7\n5zi7ryM/LU6Tpzde6VaTNWIOWu+tOGG/C8jqPwIDAQABAoIBAEgZEucFekCwvANK\nfAs3uS2y7gyNz+F4NUsVnfjOa4zWT2tw3vw5uOC8jsOxhZI63w/GZEz9Ym7+M1Bd\n/vPncTOvOvweMktKO2jeAV76oBSlAUpJ8+NNX8qtMXi+llUNpRc7VYvbpvv8dHkx\n77g3EiE46bMYKVc1yUZgjhhNNxjzlVyt3Hq5mo+LfrXKLxsr0WwH3pPivmEQ6USw\neyRGuqDQGdl4KbNg7UyeBMyKJ/YXwk1zzeAc/WSek/tRfEhrxnPwU/2fOKQl6pSS\nPE2XfNCCCH/yh6Wr8w/GO3Ob0S7i4zwQfptC+xfQJ/7P49OwtlHefGNwnpg04RWd\nWex8zEECgYEA/W9ek9IQ3HqA43UdXdebkEqzPEPcO+YLDjjHUzghyk/Hprao7W+M\nVvQMQ1PlUMMqeWayOQw5yQDETc94LTj6LV7enDkHmaAY+IHYXe+ScsLP+G23Hkw9\nn2IrxZI6zI+28+CmrAaCh+e3jLMrfEQbi3yOSxydHC2YZ7b53O7NXXECgYEA9H0O\nnK9VnyD8dpzbkVrmF3aGCE937201OKvtkaaHEaJJPRI4jN+a4iSAYVhJWSlLMbC5\nSFXyAy7vsTPUuhvFpEAKThUt5ULkXlKhmqtxE6+2xhbuqO5kpYzLK7oOdpyA4YqP\nNuMGbOq0ovAoxjHE24wxBzZrK9AV0ZOTRLppqq8CgYB50OdH7CfYojWDn05vRexr\nTcybQg8A55EW0+nTMV7kjLZthszp2708KnAeiJvn1vd6hQdTbnH0EJ9Ku1eLfSCb\nYEdmFe92Q0LdaCQk+ruM1+D5C1uCf6j7DEf33lLO8qFA1hGnDDX/tzw9r/1N7LrE\nsCkBJ47I9Y2VBJlTPaGOsQKBgQCAIvsBi7NoTzWCRPue1vE44tmkiWHmjmoSZamB\naLHpwBB6fY495wOZ+l9+pXLr1ASg6mpxSvooSPU+/ldDo0KWrym3esovGjvuY4hn\nM+tz0egNMf+rciY1zfC93imuaJ/zlVcyARJhCzHZI9164qK2HmejzBWnRMvqp1nL\n75dp6QKBgAmDdeINSwAOCGgB/byq8V4IcOrKxPLQUcwb5VcwQRH1CsyHAOmQv4I1\nv6gw5S7FeorVBwtyj+en6O98P27TCQUv6JxDD0c5Eh6KBjWzLNAxk7hwsHVCNT0k\nDhQ6pYuF8E7jaiHsk6aIcu1ADxIpCoPNqkmhLuL86XMAEuh07jV3\n-----END RSA PRIVATE KEY-----\n",
+    "user_id": "4c1ea1d7a518420ca5fba507fdb38067",
+    "name": "test16",
+    "links": [
+        {
+            "href": "http://10.229.40.107:6688/v1/keypairs/test16",
+            "rel": "self"
+        },
+        {
+            "href": "http://10.229.40.107:6688/keypairs/test16",
+            "rel": "bookmark"
+        }
+    ],
+    "created_at": "2017-04-19T03:01:34.398162+00:00",
+    "updated_at": null,
+    "fingerprint": "ab:11:7d:ef:6f:26:76:49:5c:cc:e9:be:6a:55:68:b3",
+    "type": "ssh"
+}

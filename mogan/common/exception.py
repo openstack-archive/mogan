@@ -400,4 +400,15 @@ class Base64Exception(MoganException):
     _msg_fmt = _("Invalid Base 64 data for file %(path)s")
 
 
+class KeyPairExists(MoganException):
+    _msg_fmt = _("KeyPaire with key name %(key_name)s already exists.")
+
+
+class KeypairNotFound(NotFound):
+    _msg_fmt = _("Keypair %(name)s not found for user %(user_id)s")
+
+
+class InvalidKeypair(Invalid):
+    _msg_fmt = _("Keypair data is invalid: %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError

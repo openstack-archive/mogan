@@ -396,6 +396,8 @@ expected_object_fingerprints = {
     'InstanceNic': '1.0-78744332fe105f9c1796dc5295713d9f',
     'InstanceNics': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'Quota': '1.0-c8caa082f4d726cb63fdc5943f7cd186',
+    'KeyPair': '1.0-c6820166e307676c5900f7801831b84c',
+    'KeyPairList': '1.0-33a2e1bb91ad4082f9f63429b77c1244'
 }
 
 
