@@ -231,6 +231,70 @@ class InstanceTypeExtraSpecs(Base):
                     '== InstanceTypes.uuid')
 
 
+class InstanceTypeCpus(Base):
+    """Represents the instance type cpus."""
+
+    __tablename__ = 'instance_type_cpus'
+    id = Column(Integer, primary_key=True)
+    model = Column(String(255), nullable=False)
+    cores = Column(Integer, nullable=False)
+    instance_type_uuid = Column(Integer, nullable=False)
+    _type = orm.relationship(
+        InstanceTypes,
+        backref='cpus',
+        foreign_keys=instance_type_uuid,
+        primaryjoin='InstanceTypeCpus.instance_type_uuid '
+                    '== InstanceTypes.uuid')
+
+
+class InstanceTypeMemory(Base):
+    """Represents the instance type memory."""
+
+    __tablename__ = 'instance_type_memory'
+    id = Column(Integer, primary_key=True)
+    type = Column(String(255), nullable=False)
+    size_mb = Column(Integer, nullable=False)
+    instance_type_uuid = Column(Integer, nullable=False)
+    _type = orm.relationship(
+        InstanceTypes,
+        backref='memory',
+        foreign_keys=instance_type_uuid,
+        primaryjoin='InstanceTypeMemory.instance_type_uuid '
+                    '== InstanceTypes.uuid')
+
+
+class InstanceTypeDisk(Base):
+    """Represents the instance type disk."""
+
+    __tablename__ = 'instance_type_disk'
+    id = Column(Integer, primary_key=True)
+    type = Column(String(255), nullable=False)
+    size_gb = Column(Integer, nullable=False)
+    instance_type_uuid = Column(Integer, nullable=False)
+    _type = orm.relationship(
+        InstanceTypes,
+        backref='disk',
+        foreign_keys=instance_type_uuid,
+        primaryjoin='InstanceTypeDisk.instance_type_uuid '
+                    '== InstanceTypes.uuid')
+
+
+class InstanceTypeNic(Base):
+    """Represents the instance type nic."""
+
+    __tablename__ = 'instance_type_nic'
+    id = Column(Integer, primary_key=True)
+    type = Column(String(255), nullable=False)
+    speed = Column(Integer, nullable=False)
+    instance_type_uuid = Column(Integer, nullable=False)
+    _type = orm.relationship(
+        InstanceTypes,
+        backref='nic',
+        foreign_keys=instance_type_uuid,
+        primaryjoin='InstanceTypeNic.instance_type_uuid '
+                    '== InstanceTypes.uuid')
+
+
 class InstanceFault(Base):
     """Represents fault info for instance"""
 

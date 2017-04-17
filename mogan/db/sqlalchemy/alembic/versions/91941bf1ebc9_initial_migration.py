@@ -68,6 +68,62 @@ def upgrade():
         mysql_DEFAULT_CHARSET='UTF8'
     )
     op.create_table(
+        'instance_type_cpus',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('model', sa.String(length=255), nullable=True),
+        sa.Column('cores', sa.Integer(), nullable=False),
+        sa.Column('instance_type_uuid', sa.String(length=36), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.ForeignKeyConstraint(['instance_type_uuid'],
+                                ['instance_types.uuid']),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
+        'instance_type_memory',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('type', sa.String(length=255), nullable=True),
+        sa.Column('size_mb', sa.Integer(), nullable=False),
+        sa.Column('instance_type_uuid', sa.String(length=36), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.ForeignKeyConstraint(['instance_type_uuid'],
+                                ['instance_types.uuid']),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
+        'instance_type_disk',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('type', sa.String(length=255), nullable=True),
+        sa.Column('size_gb', sa.Integer(), nullable=False),
+        sa.Column('instance_type_uuid', sa.String(length=36), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.ForeignKeyConstraint(['instance_type_uuid'],
+                                ['instance_types.uuid']),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
+        'instance_type_nic',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('type', sa.String(length=255), nullable=True),
+        sa.Column('speed', sa.Integer(), nullable=False),
+        sa.Column('instance_type_uuid', sa.String(length=36), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.ForeignKeyConstraint(['instance_type_uuid'],
+                                ['instance_types.uuid']),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
         'instances',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
