@@ -224,3 +224,19 @@ def upgrade():
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
+    op.create_table(
+        'key_pairs',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
+        sa.Column('name', sa.String(length=255), nullable=False),
+        sa.Column('user_id', sa.String(length=255), nullable=True),
+        sa.Column('fingerprint', sa.String(255)),
+        sa.Column('public_key', sa.Text()),
+        sa.Column('type', sa.Enum('ssh', 'x509'), nullable=False,
+                  default='ssh'),
+        sa.UniqueConstraint('user_id', 'name',
+                            name="uniq_key_pairs0user_id0name"),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )

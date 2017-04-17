@@ -1,0 +1,19 @@
+{
+    "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDx8nkQv/zgGgB4rMYmIf+6A4l6Rr+o/6lHBQdW5aYd44bd8JttDCE/F/pNRr0lRE+PiqSPO8nDPHw0010JeMH9gYgnnFlyY3/OcJ02RhIPyyxYpv9FhY+2YiUkpwFOcLImyrxEsYXpD/0d3ac30bNH6Sw9JD9UZHYcpSxsIbECHw== Generated-by-Nova",
+    "user_id": "4c1ea1d7a518420ca5fba507fdb38067",
+    "name": "keypair-test",
+    "links": [
+        {
+            "href": "http://10.229.40.107:6688/v1/keypairs/keypair-test",
+            "rel": "self"
+        },
+        {
+            "href": "http://10.229.40.107:6688/keypairs/keypair-test",
+            "rel": "bookmark"
+        }
+    ],
+    "created_at": "2017-04-18T09:16:18.182631+00:00",
+    "updated_at": null,
+    "fingerprint": "1e:2c:9b:56:79:4b:45:77:f9:ca:7a:98:2c:b0:d5:3c",
+    "type": "ssh"
+}
