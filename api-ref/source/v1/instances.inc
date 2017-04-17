@@ -32,7 +32,7 @@ Request
 
   - name: instance_name
   - description: instance_description
-  - instance_type_uuid: typeRef
+  - instance_type_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - networks: networks
@@ -53,7 +53,7 @@ Response
 
   - name: instance_name
   - description: instance_description
-  - instance_type_uuid: typeRef
+  - instance_type_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - network_info: network_info
@@ -186,7 +186,7 @@ Response
 
   - name: instance_name
   - description: instance_description
-  - instance_type_uuid: typeRef
+  - instance_type_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - network_info: network_info
@@ -236,7 +236,7 @@ Response
 
   - name: instance_name
   - description: instance_description
-  - instance_type_uuid: typeRef
+  - instance_type_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - network_info: network_info
@@ -291,7 +291,7 @@ Response
 
   - name: instance_name
   - description: instance_description
-  - instance_type_uuid: typeRef
+  - instance_type_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - network_info: network_info

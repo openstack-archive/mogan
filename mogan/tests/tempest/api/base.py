@@ -50,10 +50,10 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
 
     @classmethod
     def _get_small_flavor(cls):
-        types = cls.baremetal_compute_client.list_instance_types()
-        for t in types:
-            if t['name'] == 'small':
-                return t['uuid']
+        flavors = cls.baremetal_compute_client.list_flavors()
+        for f in flavors:
+            if f['name'] == 'small':
+                return f['uuid']
         else:
             # TODO(liusheng) we shouldn't depend on the default
             # type created by devstack
@@ -70,7 +70,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
     @classmethod
     def resource_setup(cls):
         super(BaseBaremetalComputeTest, cls).resource_setup()
-        cls.type_ids = []
+        cls.flavor_ids = []
         cls.instance_ids = []
         cls.small_flavor = cls._get_small_flavor()
         cls.image_id = CONF.compute.image_ref
@@ -129,7 +129,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
     @classmethod
     def resource_cleanup(cls):
         cls.cleanup_resources(
-            cls.baremetal_compute_client.delete_instance_type, cls.type_ids)
+            cls.baremetal_compute_client.delete_flavor, cls.flavor_ids)
         cls.cleanup_resources(cls.baremetal_compute_client.delete_instance,
                               cls.instance_ids)
         super(BaseBaremetalComputeTest, cls).resource_cleanup()

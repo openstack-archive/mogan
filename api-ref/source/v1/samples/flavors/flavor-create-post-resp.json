@@ -1,12 +1,12 @@
 {
-  "description": "this is a test type",
+  "description": "this is a test flavor",
   "links": [
     {
-      "href": "http://10.3.150.17:6688/v1/types/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+      "href": "http://10.3.150.17:6688/v1/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
       "rel": "self"
     },
     {
-      "href": "http://10.3.150.17:6688/types/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+      "href": "http://10.3.150.17:6688/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
       "rel": "bookmark"
     }
   ],
@@ -15,5 +15,5 @@
   "updated_at": null,
   "extra_specs": {},
   "is_public": true,
-  "name": "test_type"
+  "name": "test_flavor"
 }
