@@ -28,6 +28,7 @@ from mogan.api.controllers import link
 from mogan.api.controllers.v1 import availability_zone
 from mogan.api.controllers.v1 import flavors
 from mogan.api.controllers.v1 import instances
+from mogan.api.controllers.v1 import keypairs
 from mogan.api import expose
 
 
@@ -81,6 +82,7 @@ class Controller(rest.RestController):
     flavors = flavors.FlavorsController()
     instances = instances.InstanceController()
     availability_zones = availability_zone.AvailabilityZoneController()
+    keypairs = keypairs.KeyPairController()
 
     @expose.expose(V1)
     def get(self):
