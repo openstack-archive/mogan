@@ -1,14 +1,14 @@
 {
-  "types": [
+  "flavors": [
     {
-      "description": "this is a test type1",
+      "description": "this is a test flavor1",
       "links": [
         {
-          "href": "http://10.3.150.17:6688/v1/types/2ce3df6b-f571-42e8-b6a8-8f7fa1c019ce",
+          "href": "http://10.3.150.17:6688/v1/flavors/2ce3df6b-f571-42e8-b6a8-8f7fa1c019ce",
           "rel": "self"
         },
         {
-          "href": "http://10.3.150.17:6688/types/2ce3df6b-f571-42e8-b6a8-8f7fa1c019ce",
+          "href": "http://10.3.150.17:6688/flavors/2ce3df6b-f571-42e8-b6a8-8f7fa1c019ce",
           "rel": "bookmark"
         }
       ],
@@ -22,14 +22,14 @@
       "name": "new_test1"
     },
     {
-      "description": "this is a test type2",
+      "description": "this is a test flavor2",
       "links": [
         {
-          "href": "http://10.3.150.17:6688/v1/types/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+          "href": "http://10.3.150.17:6688/v1/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
           "rel": "self"
         },
         {
-          "href": "http://10.3.150.17:6688/types/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+          "href": "http://10.3.150.17:6688/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
           "rel": "bookmark"
         }
       ],

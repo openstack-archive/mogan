@@ -21,6 +21,12 @@ api_version:
   type: string
   description: >
     The API version as returned in the links from the ``GET /`` call.
+flavor_uuid_path:
+  description: |
+    The UUID of the flavor.
+  in: path
+  required: true
+  type: string
 instance_ident:
   description: |
     The UUID of the instance.
@@ -30,12 +36,6 @@ instance_ident:
 spec_key_path:
   description: |
     The key of the extra spec.
-  in: path
-  required: true
-  type: string
-type_uuid_path:
-  description: |
-    The UUID of the type.
   in: path
   required: true
   type: string
@@ -125,6 +125,62 @@ fixed_address:
   in: body
   required: false
   type: string
+flavor_description:
+  description: |
+    The description of the flavor.
+  in: body
+  required: true
+  type: string
+flavor_extra_specs:
+  description: |
+    Extra spec key and value pairs associate with the flavor.
+  in: body
+  required: true
+  type: object
+flavor_is_public:
+  description: |
+    Whether the flavor is public (available to all projects) or scoped
+    to a set of projects. Default is True if not specified.
+  in: body
+  required: true
+  type: boolean
+flavor_is_public_not_required:
+  description: |
+    Whether the flavor is public (available to all projects) or scoped
+    to a set of projects. Default is True if not specified.
+  in: body
+  required: true
+  type: boolean
+flavor_name:
+  description: |
+    The name of the flavor.
+  in: body
+  required: true
+  type: string
+flavor_uuid:
+  description: |
+    The UUID of the flavor.
+  in: body
+  required: true
+  type: string
+flavor_uuid_not_required:
+  description: |
+    The UUID of the flavor.
+  in: body
+  required: false
+  type: string
+flavorRef:
+  description: |
+    The flavor reference, as a UUID for the flavor for your server instance.
+  in: body
+  required: true
+  type: string
+flavors:
+  description: |
+    An array of flavor objects.
+  in: body
+  required: true
+  type: array
 imageRef:
   description: |
     The UUID of the image to use for your instance.
@@ -275,62 +331,6 @@ provision_state:
   in: body
   required: true
   type: string
-type_description:
-  description: |
-    The description of the type.
-  in: body
-  required: true
-  type: string
-type_extra_specs:
-  description: |
-    Extra spec key and value pairs associate with the type.
-  in: body
-  required: true
-  type: object
-type_is_public:
-  description: |
-    Whether the type is public (available to all projects) or scoped
-    to a set of projects. Default is True if not specified.
-  in: body
-  required: true
-  type: boolean
-type_is_public_not_required:
-  description: |
-    Whether the type is public (available to all projects) or scoped
-    to a set of projects. Default is True if not specified.
-  in: body
-  required: true
-  type: boolean
-type_name:
-  description: |
-    The name of the type.
-  in: body
-  required: true
-  type: string
-type_uuid:
-  description: |
-    The UUID of the type.
-  in: body
-  required: true
-  type: string
-type_uuid_not_required:
-  description: |
-    The UUID of the type.
-  in: body
-  required: false
-  type: string
-typeRef:
-  description: |
-    The type reference, as a UUID or full URL, for the type for your server instance.
-  in: body
-  required: true
-  type: string
-types:
-  description: |
-    An array of type objects.
-  in: body
-  required: true
-  type: array
 updated_at:
   description: |
     The date and time when the resource was updated. The date and time

@@ -36,30 +36,30 @@ class BaremetalComputeClient(rest_client.RestClient):
     def serialize(self, body):
         return json.dumps(body)
 
-    def list_instance_types(self):
-        uri = '%s/types' % self.uri_prefix
+    def list_flavors(self):
+        uri = '%s/flavors' % self.uri_prefix
         resp, body = self.get(uri)
         self.expected_success(200, resp.status)
-        body = self.deserialize(body)['types']
+        body = self.deserialize(body)['flavors']
         return rest_client.ResponseBodyList(resp, body)
 
-    def show_instance_type(self, type_id):
-        uri = '%s/types/%s' % (self.uri_prefix, type_id)
+    def show_flavor(self, flavor_uuid):
+        uri = '%s/flavors/%s' % (self.uri_prefix, flavor_uuid)
         resp, body = self.get(uri)
         self.expected_success(200, resp.status)
         body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
-    def delete_instance_type(self, type_id):
-        uri = "%s/types/%s" % (self.uri_prefix, type_id)
+    def delete_flavor(self, flavor_uuid):
+        uri = "%s/flavors/%s" % (self.uri_prefix, flavor_uuid)
         resp, body = self.delete(uri)
         self.expected_success(204, resp.status)
         if body:
             body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
-    def create_instance_type(self, **kwargs):
-        uri = "%s/types" % self.uri_prefix
+    def create_flavor(self, **kwargs):
+        uri = "%s/flavors" % self.uri_prefix
         body = self.serialize(kwargs)
         resp, body = self.post(uri, body)
         self.expected_success(201, resp.status)

@@ -181,15 +181,15 @@ function _mogan_cleanup_mogan_dashboard {
 }
 
 
-function create_instance_type {
-    openstack baremetal flavor create ${MOGAN_DEFAULT_INSTANCE_TYPE} --description 'Mogan default instance type'
+function create_flavor {
+    openstack baremetal flavor create ${MOGAN_DEFAULT_FLAVOR} --description 'Mogan default flavor'
 }
 
 
 function update_ironic_node_type {
     ironic_nodes=$(openstack baremetal node list -c UUID -f value)
     for node in ${ironic_nodes};do
-        openstack baremetal node set --property node_type=${MOGAN_DEFAULT_INSTANCE_TYPE} ${node}
+        openstack baremetal node set --property node_type=${MOGAN_DEFAULT_FLAVOR} ${node}
     done
 }
 
@@ -212,7 +212,7 @@ if is_service_enabled mogan; then
         init_mogan
         start_mogan
         echo_summary "Creating instance type"
-        create_instance_type
+        create_flavor
         echo_summary "Updating ironic node properties"
         update_ironic_node_type
     fi
