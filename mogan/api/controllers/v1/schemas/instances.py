@@ -39,6 +39,7 @@ create_instance = {
         },
         'user_data': {'type': 'string', 'format': 'base64'},
         'personality': parameter_types.personality,
+        'key_name': parameter_types.name,
         'min_count': {'type': 'integer', 'minimum': 1},
         'max_count': {'type': 'integer', 'minimum': 1},
         'extra': parameter_types.extra,

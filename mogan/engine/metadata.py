@@ -50,7 +50,8 @@ class InvalidMetadataPath(Exception):
 class InstanceMetadata(object):
     """Instance metadata."""
 
-    def __init__(self, instance, content=None, user_data=None, extra_md=None):
+    def __init__(self, instance, content=None, user_data=None,
+                 key_pair=None, extra_md=None):
         """Creation of this object should basically cover all time consuming
         collection.  Methods after that should not cause time delays due to
         network operations or lengthy cpu operations.
@@ -75,6 +76,7 @@ class InstanceMetadata(object):
         self.uuid = instance.uuid
         self.content = {}
         self.files = []
+        self.keypair = key_pair
 
         # 'content' is passed in from the configdrive code in
         # mogan/engine/flows/create_instance.py. That's how we get the
@@ -110,6 +112,17 @@ class InstanceMetadata(object):
             metadata['files'] = self.files
         if self.extra_md:
             metadata.update(self.extra_md)
+
+        if self.keypair:
+            metadata['public_keys'] = {
+                self.keypair.name: self.keypair.public_key,
+            }
+
+            metadata['keys'] = [
+                {'name': self.keypair.name,
+                 'type': self.keypair.type,
+                 'data': self.keypair.public_key}
+            ]
 
         metadata['hostname'] = self.hostname
         metadata['name'] = self.instance.name

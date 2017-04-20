@@ -219,6 +219,12 @@ instance_uuid:
   in: body
   required: true
   type: string
+key_name:
+  description: |
+    Key pair name.
+  in: body
+  required: false
+  type: string
 keypair_fingerprint:
   in: body
   required: true
