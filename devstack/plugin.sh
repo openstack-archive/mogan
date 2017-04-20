@@ -121,20 +121,6 @@ function install_mogan {
     done
 
     setup_develop ${MOGAN_DIR}
-
-    if is_service_enabled horizon; then
-        _install_mogan_dashboard
-    fi
-}
-
-
-function _install_mogan_dashboard {
-    # add it when mogan dashboard is ready
-    :
-    #git_clone ${MOGAN_DASHBOARD_REPO} ${MOGAN_DASHBOARD_DIR} ${MOGAN_DASHBOARD_BRANCH}
-    #setup_develop ${MOGAN_DASHBOARD_DIR}
-    # add it when mogan dashboard is ready
-    #ln -fs ${MOGAN_DASHBOARD_DIR}/_xx_mogan.py.example ${HORIZON_DIR}/openstack_dashboard/local/enabled/_xx_mogan.py
 }
 
 
@@ -173,14 +159,7 @@ function stop_mogan {
 
 
 function cleanup_mogan {
-    if is_service_enabled horizon; then
-        _mogan_cleanup_mogan_dashboard
-    fi
-}
-
-
-function _mogan_cleanup_mogan_dashboard {
-    rm -f ${HORIZON_DIR}/openstack_dashboard/local/enabled/_xx_mogan.py
+    echo_summary "Cleanup mogan"
 }
 
 
@@ -227,8 +206,6 @@ if is_service_enabled mogan; then
 
     if [[ "$1" == "clean" ]]; then
         echo_summary "Cleaning mogan"
-        #add it when mogan dashboard
-        #cleanup_mogan
     fi
 fi
 
