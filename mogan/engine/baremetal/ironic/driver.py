@@ -283,6 +283,11 @@ class IronicDriver(base_driver.BaseEngineDriver):
             except client_e.BadRequest:
                 pass
 
+    def _cleanup_deploy(self, context, node, instance):
+        # NOTE(liusheng): here we may need to stop firewall if we have
+        # implemented in ironic like what Nova dose.
+        self.unplug_vifs(context, instance)
+
     def spawn(self, context, instance, configdrive_value):
         """Deploy an instance.
 
@@ -309,7 +314,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
             # something is wrong. undo what we have done
-            self._cleanup_deploy(node, instance)
+            self._cleanup_deploy(context, node, instance)
             raise exception.ValidationError(_(
                 "Ironic node: %(id)s failed to validate."
                 " (deploy: %(deploy)s, power: %(power)s)")
