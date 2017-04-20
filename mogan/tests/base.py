@@ -75,6 +75,7 @@ class TestCase(base.BaseTestCase):
                           sqlite_synchronous=False,
                           group='database')
         CONF.set_override('glance_api_servers', 'fake-glance', 'glance')
+        CONF.set_override('auth_url', 'fake-keystone', 'ironic')
         mogan_config.parse_args([], default_config_files=[])
 
     def config(self, **kw):

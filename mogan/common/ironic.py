@@ -15,6 +15,7 @@
 
 import ironicclient as ironic
 from ironicclient import exc as ironic_exc
+from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -40,6 +41,14 @@ class IronicClientWrapper(object):
         """Tell the wrapper to invalidate the cached ironic-client."""
         self._cached_client = None
 
+    def _get_auth_plugin(self):
+        """Load an auth plugin from CONF options."""
+        # If an auth plugin name is defined in `auth_type` option of [ironic]
+        # group, register its options and load it.
+        auth_plugin = ks_loading.load_auth_from_conf_options(CONF, 'ironic')
+
+        return auth_plugin
+
     def _get_client(self, retry_on_conflict=True):
         max_retries = CONF.ironic.api_max_retries if retry_on_conflict else 1
         retry_interval = (CONF.ironic.api_retry_interval
@@ -50,30 +59,23 @@ class IronicClientWrapper(object):
         if retry_on_conflict and self._cached_client is not None:
             return self._cached_client
 
-        auth_token = CONF.ironic.admin_auth_token
-        if auth_token is None:
-            kwargs = {'os_username': CONF.ironic.admin_username,
-                      'os_password': CONF.ironic.admin_password,
-                      'os_auth_url': CONF.ironic.admin_url,
-                      'os_tenant_name': CONF.ironic.admin_tenant_name,
-                      'os_service_type': 'baremetal',
-                      'os_endpoint_type': 'public',
-                      'ironic_url': CONF.ironic.api_endpoint}
-        else:
-            kwargs = {'os_auth_token': auth_token,
-                      'ironic_url': CONF.ironic.api_endpoint}
+        auth_plugin = self._get_auth_plugin()
 
-        if CONF.ironic.cafile:
-            kwargs['os_cacert'] = CONF.ironic.cafile
-            # Set the old option for compat with old clients
-            kwargs['ca_file'] = CONF.ironic.cafile
+        sess = ks_loading.load_session_from_conf_options(CONF,
+                                                         'ironic',
+                                                         auth=auth_plugin)
 
+        ironic_url = (CONF.ironic.api_endpoint
+                      if CONF.ironic.api_endpoint else None)
         # Retries for Conflict exception
+        kwargs = {}
         kwargs['max_retries'] = max_retries
         kwargs['retry_interval'] = retry_interval
         kwargs['os_ironic_api_version'] = '%d.%d' % IRONIC_API_VERSION
         try:
-            cli = ironic.client.get_client(IRONIC_API_VERSION[0], **kwargs)
+            cli = ironic.client.get_client(IRONIC_API_VERSION[0],
+                                           ironic_url=ironic_url,
+                                           session=sess, **kwargs)
             # Cache the client so we don't have to reconstruct and
             # reauthenticate it every time we need it.
             if retry_on_conflict:
