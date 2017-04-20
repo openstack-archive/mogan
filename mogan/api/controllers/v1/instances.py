@@ -583,6 +583,7 @@ class InstanceController(InstanceControllerBase):
         instance_type_uuid = instance.get('instance_type_uuid')
         image_uuid = instance.get('image_uuid')
         user_data = instance.get('user_data')
+        key_name = instance.get('key_name')
         personality = instance.pop('personality', None)
 
         injected_files = []
@@ -605,6 +606,7 @@ class InstanceController(InstanceControllerBase):
                 requested_networks=requested_networks,
                 user_data=user_data,
                 injected_files=injected_files,
+                key_name=key_name,
                 min_count=min_count,
                 max_count=max_count)
         except exception.InstanceTypeNotFound:
