@@ -109,6 +109,7 @@ class RPCAPITestCase(base.DbTestCase):
                           requested_networks=[],
                           user_data=None,
                           injected_files=None,
+                          key_pair=None,
                           request_spec=None,
                           filter_properties=None)
 

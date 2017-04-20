@@ -40,6 +40,7 @@ Request
   - networks.port_type: network_port_type
   - user_data: user_data
   - personality: personality
+  - key_name: key_name
 
 **Example Create Instance: JSON request**
 

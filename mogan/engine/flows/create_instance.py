@@ -210,17 +210,17 @@ class GenerateConfigDriveTask(flow_utils.MoganTask):
     """Generate ConfigDrive value the instance."""
 
     def __init__(self):
-        requires = ['instance', 'user_data', 'injected_files', 'configdrive',
-                    'context']
+        requires = ['instance', 'user_data', 'injected_files', 'key_pair',
+                    'configdrive', 'context']
         super(GenerateConfigDriveTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
 
     def _generate_configdrive(self, context, instance, user_data=None,
-                              files=None):
+                              files=None, key_pair=None):
         """Generate a config drive."""
 
         i_meta = instance_metadata.InstanceMetadata(
-            instance, content=files, user_data=user_data)
+            instance, content=files, user_data=user_data, key_pair=key_pair)
 
         with tempfile.NamedTemporaryFile() as uncompressed:
             with configdrive.ConfigDriveBuilder(instance_md=i_meta) as cdb:
@@ -236,12 +236,13 @@ class GenerateConfigDriveTask(flow_utils.MoganTask):
                 compressed.seek(0)
                 return base64.b64encode(compressed.read())
 
-    def execute(self, context, instance, user_data, injected_files,
+    def execute(self, context, instance, user_data, injected_files, key_pair,
                 configdrive):
 
         try:
             configdrive['value'] = self._generate_configdrive(
-                context, instance, user_data=user_data, files=injected_files)
+                context, instance, user_data=user_data, files=injected_files,
+                key_pair=key_pair)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 msg = ("Failed to build configdrive: %s" %
@@ -284,7 +285,8 @@ class CreateInstanceTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, instance, requested_networks, user_data,
-             injected_files, ports, request_spec, filter_properties):
+             injected_files, key_pair, ports, request_spec,
+             filter_properties):
 
     """Constructs and returns the manager entrypoint flow
 
@@ -310,6 +312,7 @@ def get_flow(context, manager, instance, requested_networks, user_data,
         'requested_networks': requested_networks,
         'user_data': user_data,
         'injected_files': injected_files,
+        'key_pair': key_pair,
         'ports': ports,
         'configdrive': {}
     }

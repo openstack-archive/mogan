@@ -50,7 +50,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         instance_type = self._create_instance_type()
         mock_check_nets.return_value = 3
 
-        base_opts, max_network_count = \
+        base_opts, max_network_count, key_pair = \
             self.engine_api._validate_and_build_base_options(
                 self.context,
                 instance_type=instance_type,
@@ -61,6 +61,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
                 extra={'k1', 'v1'},
                 requested_networks=None,
                 user_data=None,
+                key_name=None,
                 max_count=2)
 
         self.assertEqual('fake-user', base_opts['user_id'])
@@ -69,6 +70,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertEqual(instance_type.uuid, base_opts['instance_type_uuid'])
         self.assertEqual({'k1', 'v1'}, base_opts['extra'])
         self.assertEqual('test_az', base_opts['availability_zone'])
+        self.assertEqual(None, key_pair)
 
     @mock.patch.object(objects.Instance, 'create')
     def test__provision_instances(self, mock_inst_create):
@@ -109,7 +111,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
                         'availability_zone': 'test_az'}
         min_count = 1
         max_count = 2
-        mock_validate.return_value = (base_options, max_count)
+        mock_validate.return_value = (base_options, max_count, None)
         mock_get_image.side_effect = None
         mock_create.return_value = mock.MagicMock()
         mock_list_az.return_value = {'availability_zones': ['test_az']}
@@ -136,7 +138,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_validate.assert_called_once_with(
             self.context, instance_type, 'fake-uuid', 'fake-name',
             'fake-descritpion', 'test_az', {'k1', 'v1'}, requested_networks,
-            None, max_count)
+            None, None, max_count)
         self.assertTrue(mock_create.called)
         self.assertTrue(mock_get_image.called)
         res = self.dbapi._get_quota_usages(self.context, self.project_id)
@@ -180,7 +182,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
                         'availability_zone': 'test_az'}
         min_count = 11
         max_count = 20
-        mock_validate.return_value = (base_options, max_count)
+        mock_validate.return_value = (base_options, max_count, None)
         mock_get_image.side_effect = None
         mock_list_az.return_value = {'availability_zones': ['test_az']}
         requested_networks = [{'uuid': 'fake'}]
@@ -196,6 +198,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
             'test_az',
             {'k1', 'v1'},
             requested_networks,
+            None,
             None,
             None,
             min_count,
