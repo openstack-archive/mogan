@@ -77,7 +77,7 @@ class API(object):
                                          image_uuid, name, description,
                                          availability_zone, extra,
                                          requested_networks, user_data,
-                                         max_count):
+                                         key_name, max_count):
         """Verify all the input parameters"""
 
         if user_data:
@@ -98,6 +98,13 @@ class API(object):
                                                            requested_networks,
                                                            max_count)
 
+        if key_name is not None:
+            key_pair = objects.KeyPair.get_by_name(context,
+                                                   context.user_id,
+                                                   key_name)
+        else:
+            key_pair = None
+
         base_options = {
             'image_uuid': image_uuid,
             'status': states.BUILDING,
@@ -112,7 +119,7 @@ class API(object):
             'availability_zone': availability_zone}
 
         # return the validated options
-        return base_options, max_network_count
+        return base_options, max_network_count, key_pair
 
     def _new_instance_name_from_template(self, uuid, name, index):
         """Apply the template to instance name.
@@ -240,16 +247,18 @@ class API(object):
     def _create_instance(self, context, instance_type, image_uuid,
                          name, description, availability_zone, extra,
                          requested_networks, user_data, injected_files,
-                         min_count, max_count):
+                         key_name, min_count, max_count):
         """Verify all the input parameters"""
 
         # Verify the specified image exists
         if image_uuid:
             self._get_image(context, image_uuid)
 
-        base_options, max_net_count = self._validate_and_build_base_options(
-            context, instance_type, image_uuid, name, description,
-            availability_zone, extra, requested_networks, user_data, max_count)
+        base_options, max_net_count, key_pair = \
+            self._validate_and_build_base_options(
+                context, instance_type, image_uuid, name, description,
+                availability_zone, extra, requested_networks, user_data,
+                key_name, max_count)
 
         # max_net_count is the maximum number of instances requested by the
         # user adjusted for any network quota constraints, including
@@ -295,7 +304,8 @@ class API(object):
     def create(self, context, instance_type, image_uuid,
                name=None, description=None, availability_zone=None,
                extra=None, requested_networks=None, user_data=None,
-               injected_files=None, min_count=None, max_count=None):
+               injected_files=None, key_name=None, min_count=None,
+               max_count=None):
         """Provision instances
 
         Sending instance information to the engine and will handle
@@ -314,7 +324,8 @@ class API(object):
                                      image_uuid, name, description,
                                      availability_zone, extra,
                                      requested_networks, user_data,
-                                     injected_files, min_count, max_count)
+                                     injected_files, key_name,
+                                     min_count, max_count)
 
     def _delete_instance(self, context, instance):
 
