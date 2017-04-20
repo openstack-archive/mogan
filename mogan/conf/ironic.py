@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 
 opt_group = cfg.OptGroup(
@@ -21,59 +22,23 @@ opt_group = cfg.OptGroup(
     help="""
 Configuration options for Ironic driver (Bare Metal).
 If using the Ironic driver following options must be set:
-* admin_url
-* admin_tenant_name
-* admin_username
-* admin_password
 * api_endpoint
+* auth_type
+* auth_url
+* project_name
+* username
+* password
+* project_domain_id or project_domain_name
+* user_domain_id or user_domain_name
 """)
 
 opts = [
     cfg.StrOpt(
-        # TODO(raj_singh): Get this value from keystone service catalog
         'api_endpoint',
         sample_default='http://ironic.example.org:6385/',
         help='URL for the Ironic API endpoint'),
-    cfg.StrOpt(
-        'admin_username',
-        help='Ironic keystone admin username'),
-    cfg.StrOpt(
-        'admin_password',
-        secret=True,
-        help='Ironic keystone admin password'),
-    cfg.StrOpt(
-        'admin_auth_token',
-        secret=True,
-        deprecated_for_removal=True,
-        help="""
-Ironic keystone auth token. This option is deprecated and
-admin_username, admin_password and admin_tenant_name options
-are used for authorization.
-"""),
-    cfg.StrOpt(
-        # TODO(raj_singh): Change this option admin_url->auth_url to make it
-        # consistent with other clients (Neutron, Cinder). It requires lot
-        # of work in Ironic client to make this happen.
-        'admin_url',
-        help='Keystone public API endpoint'),
-    cfg.StrOpt(
-        'cafile',
-        default=None,
-        help="""
-Path to the PEM encoded Certificate Authority file to be used when verifying
-HTTPs connections with the Ironic driver. By default this option is not used.
-
-Possible values:
-
-* None - Default
-* Path to the CA file
-"""),
-    cfg.StrOpt(
-        'admin_tenant_name',
-        help='Ironic keystone tenant name'),
     cfg.IntOpt(
         'api_max_retries',
-        # TODO(raj_singh): Change this default to some sensible number
         default=60,
         min=0,
         help="""
@@ -97,7 +62,13 @@ Related options:
 """),
 ]
 
+ironic_opts = opts + ks_loading.get_session_conf_options() + \
+    ks_loading.get_auth_common_conf_options() + \
+    ks_loading.get_auth_plugin_conf_options('v3password')
+
 
 def register_opts(conf):
     conf.register_group(opt_group)
     conf.register_opts(opts, group=opt_group)
+    ks_loading.register_auth_conf_options(conf, group=opt_group.name)
+    ks_loading.register_session_conf_options(conf, group=opt_group.name)

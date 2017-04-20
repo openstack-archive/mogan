@@ -39,10 +39,10 @@ _opts = [
     ('database', mogan.conf.database.opts),
     ('engine', mogan.conf.engine.opts),
     ('glance', mogan.conf.glance.opts),
-    ('ironic', mogan.conf.ironic.opts),
+    ('ironic', mogan.conf.ironic.ironic_opts),
     ('keystone', mogan.conf.keystone.opts),
     ('neutron', mogan.conf.neutron.opts),
-    ('quota', mogan.conf.quota.opts),
+    ('quota', mogan.conf.quota.quota_opts),
     ('scheduler', mogan.conf.scheduler.opts),
 ]
 
