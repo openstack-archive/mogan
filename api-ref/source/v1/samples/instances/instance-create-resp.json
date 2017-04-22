@@ -22,13 +22,7 @@
     "updated_at": null,
     "project_id": "2f15c3524826465a9afbd150478b3b76",
     "user_id": "a6205fcab03d4a289251f420456b1289",
-    "network_info": {
-        "3c5b24d1-21b7-4036-8bd1-b0aefe65533d": {
-            "network": "42a01505-855d-4f3b-9b8b-0abd413b3036",
-            "mac_address": "aa:bb:cc:dd:ee:ff",
-            "fixed_ip": "10.1.0.100"
-        }
-    },
+    "network_info": [],
     "extra": {
         "My Server Name" : "Apache1"
     }

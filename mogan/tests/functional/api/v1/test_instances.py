@@ -146,12 +146,12 @@ class TestInstances(v1_test.APITestV1):
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
         self.assertEqual(None, resp['availability_zone'])
-        self.assertEqual({}, resp['network_info'])
+        self.assertEqual([], resp['nics'])
         self.assertEqual({'fake_key': 'fake_value'}, resp['extra'])
         self.assertIn('links', resp)
         self.assertIn('created_at', resp)
         self.assertIn('updated_at', resp)
-        self.assertIn('network_info', resp)
+        self.assertIn('nics', resp)
         self.assertIn('project_id', resp)
         self.assertIn('launched_at', resp)
 
@@ -168,12 +168,12 @@ class TestInstances(v1_test.APITestV1):
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
         self.assertEqual(None, resp['availability_zone'])
-        self.assertEqual({}, resp['network_info'])
+        self.assertEqual([], resp['nics'])
         self.assertEqual({'fake_key': 'fake_value'}, resp['extra'])
         self.assertIn('links', resp)
         self.assertIn('created_at', resp)
         self.assertIn('updated_at', resp)
-        self.assertIn('network_info', resp)
+        self.assertIn('nics', resp)
         self.assertIn('project_id', resp)
         self.assertIn('launched_at', resp)
 

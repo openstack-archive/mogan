@@ -1,18 +1,21 @@
 {
-  "ports" : {
-    "b95c5372-437e-4dfc-99d0-084549d48c49" : {
-      "network" : "8cea9878-3d75-4001-9aab-5a69dce0c328",
-      "mac_address" : "52:54:00:1f:5b:20",
-      "fixed_ips" : [
+    "nics": [
         {
-          "ip_address" : "11.0.0.7",
-          "subnet_id" : "fd9cf9ea-b4c6-4532-8b75-2756a7041433"
-        },
-        {
-          "ip_address" : "fd65:e420:7cd2::9",
-          "subnet_id" : "a9043703-f3be-4c94-af19-5a23a4e4b54c"
+            "network_id": "f31af5a2-f14d-4007-b2e5-abeb82429b87",
+            "port_id": "99845c22-6268-46c1-b068-1dbcb8adaf68",
+            "floating_ip": null,
+            "port_type": null,
+            "mac_address": "52:54:00:cc:ed:87",
+            "fixed_ips": [
+                {
+                    "subnet_id": "5a324b29-9aca-43d8-a6c3-31986dda95b5",
+                    "ip_address": "11.0.0.6"
+                },
+                {
+                    "subnet_id": "9baceab1-40ec-4c53-ad83-530a625bddb1",
+                    "ip_address": "fdaa:67c7:e09e:0:5054:ff:fecc:ed87"
+                }
+            ]
         }
-      ]
-    }
-  }
+    ]
 }

@@ -56,7 +56,7 @@ Response
   - instance_type_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
-  - network_info: network_info
+  - nics: nics
   - links: links
   - uuid: instance_uuid
   - status: instance_status
@@ -189,7 +189,7 @@ Response
   - instance_type_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
-  - network_info: network_info
+  - nics: nics
   - links: links
   - uuid: instance_uuid
   - status: instance_status
@@ -239,7 +239,7 @@ Response
   - instance_type_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
-  - network_info: network_info
+  - nics: nics
   - links: links
   - uuid: instance_uuid
   - status: instance_status
@@ -294,7 +294,7 @@ Response
   - instance_type_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
-  - network_info: network_info
+  - nics: nics
   - links: links
   - uuid: instance_uuid
   - status: instance_status
