@@ -334,8 +334,13 @@ class FloatingIPController(InstanceControllerBase):
 class InstanceNetworks(base.APIBase):
     """API representation of the networks of an instance."""
 
-    ports = {wtypes.text: types.jsontype}
-    """The network information of the instance"""
+    nics = types.jsontype
+    """The instance nics information of the instance"""
+
+    def __init__(self, **kwargs):
+        self.fields = ['nics']
+        ret_nics = api_utils.show_nics(kwargs.get('nics') or [])
+        super(InstanceNetworks, self).__init__(nics=ret_nics)
 
 
 class InstanceNetworksController(InstanceControllerBase):
@@ -352,9 +357,7 @@ class InstanceNetworksController(InstanceControllerBase):
         :param instance_uuid: the UUID of a instance.
         """
         rpc_instance = self._resource or self._get_resource(instance_uuid)
-
-        return InstanceNetworks(
-            ports=rpc_instance.instance_nics.to_legacy_dict())
+        return InstanceNetworks(nics=rpc_instance.nics.as_list_of_dict())
 
 
 class Instance(base.APIBase):
@@ -394,8 +397,8 @@ class Instance(base.APIBase):
     image_uuid = types.uuid
     """The image UUID of the instance"""
 
-    network_info = {wtypes.text: types.jsontype}
-    """The network information of the instance"""
+    nics = types.jsontype
+    """The nics information of the instance"""
 
     links = wsme.wsattr([link.Link], readonly=True)
     """A list containing a self link"""
@@ -410,15 +413,11 @@ class Instance(base.APIBase):
         super(Instance, self).__init__(**kwargs)
         self.fields = []
         for field in objects.Instance.fields:
-            # TODO(liusheng) workaround to keep the output of API request same
-            # as before
             if field == 'nics':
-                network_info = kwargs.get(field, None)
-                if network_info is not None:
-                    network_info = network_info.to_legacy_dict()
-                else:
-                    network_info = {}
-                setattr(self, 'network_info', network_info)
+                self.fields.append(field)
+                nics = api_utils.show_nics(kwargs.get('nics') or [])
+                setattr(self, field, nics)
+                continue
             # Skip fields we do not expose.
             if not hasattr(self, field):
                 continue
@@ -453,7 +452,7 @@ class InstancePatchType(types.JsonPatchType):
         return defaults + ['/project_id', '/user_id', '/status',
                            '/power_state', '/availability_zone',
                            '/instance_type_uuid', 'image_uuid',
-                           '/isntance_nics', '/launched_at']
+                           '/nics', '/launched_at']
 
 
 class InstanceCollection(base.APIBase):
@@ -655,6 +654,8 @@ class InstanceController(InstanceControllerBase):
 
         # Update only the fields that have changed
         for field in objects.Instance.fields:
+            if field == 'nics':
+                continue
             try:
                 patch_val = getattr(instance, field)
             except AttributeError:
@@ -667,7 +668,7 @@ class InstanceController(InstanceControllerBase):
 
         rpc_instance.save()
 
-        return Instance.convert_with_links(rpc_instance)
+        return Instance.convert_with_links(rpc_instance.as_dict())
 
     @policy.authorize_wsgi("mogan:instance", "delete")
     @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)

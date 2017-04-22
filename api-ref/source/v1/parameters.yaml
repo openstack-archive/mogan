@@ -331,7 +331,7 @@ multi_instacne_name_body:
   in: body
   required: true
   type: string
-network_info:
+nics:
   description: |
     The port info in the requested network for the instance, with fixed_ip, mac_address, and
     network uuid

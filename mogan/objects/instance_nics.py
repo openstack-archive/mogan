@@ -95,16 +95,5 @@ class InstanceNics(object_base.ObjectListBase, base.MoganObject,
     def as_list_of_dict(self):
         return [obj.obj_to_primitive()['mogan_object.data'] for obj in self]
 
-    # TODO(liusheng) this is for temporarily keep the return of API save as
-    # before, it is better to refactor the API return format
-    def to_legacy_dict(self):
-        legacy_network_info = {}
-        for nic in self:
-            port = {nic.port_id: {'network': nic.network_id,
-                                  'mac_address': nic.mac_address,
-                                  'fixed_ips': nic.fixed_ips}}
-            legacy_network_info.update(port)
-        return legacy_network_info
-
     def get_port_ids(self):
         return [x.port_id for x in self]
