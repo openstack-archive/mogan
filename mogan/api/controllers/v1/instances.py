@@ -354,7 +354,7 @@ class InstanceNetworksController(InstanceControllerBase):
         rpc_instance = self._resource or self._get_resource(instance_uuid)
 
         return InstanceNetworks(
-            ports=rpc_instance.instance_nics.to_legacy_dict())
+            ports=rpc_instance.instance_nics.as_list_of_dict())
 
 
 class Instance(base.APIBase):
@@ -394,7 +394,7 @@ class Instance(base.APIBase):
     image_uuid = types.uuid
     """The image UUID of the instance"""
 
-    network_info = {wtypes.text: types.jsontype}
+    nics = {wtypes.text: types.jsontype}
     """The network information of the instance"""
 
     links = wsme.wsattr([link.Link], readonly=True)
@@ -410,15 +410,6 @@ class Instance(base.APIBase):
         super(Instance, self).__init__(**kwargs)
         self.fields = []
         for field in objects.Instance.fields:
-            # TODO(liusheng) workaround to keep the output of API request same
-            # as before
-            if field == 'nics':
-                network_info = kwargs.get(field, None)
-                if network_info is not None:
-                    network_info = network_info.to_legacy_dict()
-                else:
-                    network_info = {}
-                setattr(self, 'network_info', network_info)
             # Skip fields we do not expose.
             if not hasattr(self, field):
                 continue
