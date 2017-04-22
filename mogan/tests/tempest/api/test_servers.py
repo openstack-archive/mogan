@@ -36,7 +36,7 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         self.assertIn('project_id', resp)
         self.assertIn('user_id', resp)
         self.assertIn('availability_zone', resp)
-        self.assertIn('network_info', resp)
+        self.assertIn('nics', resp)
         self.assertIn('name', resp)
 
         # Test show
@@ -54,7 +54,7 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         self.assertIn('project_id', resp)
         self.assertIn('user_id', resp)
         self.assertIn('availability_zone', resp)
-        self.assertIn('network_info', resp)
+        self.assertIn('nics', resp)
         self.assertIn('name', resp)
 
         # Test list
