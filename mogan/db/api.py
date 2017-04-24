@@ -179,6 +179,19 @@ class Connection(object):
         extra specs dict argument
         """
 
+    # Flavor access
+    @abc.abstractmethod
+    def flavor_access_add(self, context, flavor_id, project_id):
+        """Add flavor access for project."""
+
+    @abc.abstractmethod
+    def flavor_access_get(self, context, flavor_id):
+        """Get flavor access by flavor id."""
+
+    @abc.abstractmethod
+    def flavor_access_remove(self, context, flavor_id, project_id):
+        """Remove flavor access for project."""
+
     @abc.abstractmethod
     def instance_nics_get_by_instance_uuid(self, context, instance_uuid):
         """Get the Nics info of an instnace.

@@ -34,11 +34,13 @@ class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
         'description': object_fields.StringField(nullable=True),
         'is_public': object_fields.BooleanField(),
         'extra_specs': object_fields.FlexibleDictField(),
+        'projects': object_fields.ListOfStringsField(),
     }
 
     def __init__(self, *args, **kwargs):
         super(InstanceType, self).__init__(*args, **kwargs)
         self._orig_extra_specs = {}
+        self._orig_projects = {}
 
     def obj_reset_changes(self, fields=None, recursive=False):
         super(InstanceType, self).obj_reset_changes(fields=fields,
@@ -47,12 +49,18 @@ class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
             self._orig_extra_specs = (dict(self.extra_specs)
                                       if self.obj_attr_is_set('extra_specs')
                                       else {})
+        if fields is None or 'projects' in fields:
+            self._orig_projects = (list(self.projects)
+                                   if self.obj_attr_is_set('projects')
+                                   else [])
 
     def obj_what_changed(self):
         changes = super(InstanceType, self).obj_what_changed()
         if ('extra_specs' in self and
                 self.extra_specs != self._orig_extra_specs):
             changes.add('extra_specs')
+        if 'projects' in self and self.projects != self._orig_projects:
+            changes.add('projects')
         return changes
 
     @staticmethod
@@ -90,6 +98,7 @@ class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
 
     def save(self, context=None):
         updates = self.obj_get_changes()
+        projects = updates.pop('projects', None)
         extra_specs = updates.pop('extra_specs', None)
         if extra_specs is not None:
             deleted_keys = (set(self._orig_extra_specs.keys()) -
@@ -98,8 +107,18 @@ class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
         else:
             added_keys = deleted_keys = None
 
+        if projects is not None:
+            deleted_projects = set(self._orig_projects) - set(projects)
+            added_projects = set(projects) - set(self._orig_projects)
+        else:
+            added_projects = deleted_projects = None
+
         if added_keys or deleted_keys:
             self.save_extra_specs(context, self.extra_specs, deleted_keys)
+
+        if added_projects or deleted_projects:
+            self.save_projects(added_projects, deleted_projects)
+
         self.dbapi.instance_type_update(context, self.uuid, updates)
 
     def save_extra_specs(self, context, to_add=None, to_delete=None):
@@ -119,3 +138,21 @@ class InstanceType(base.MoganObject, object_base.VersionedObjectDictCompat):
         for key in to_delete:
             self.dbapi.type_extra_specs_delete(context, ident, key)
         self.obj_reset_changes(['extra_specs'])
+
+    def save_projects(self, to_add=None, to_delete=None):
+        """Add or delete projects.
+
+        :param:to_add: A list of projects to add
+        :param:to_delete: A list of projects to remove
+        """
+        ident = self.uuid
+
+        to_add = to_add if to_add is not None else []
+        to_delete = to_delete if to_delete is not None else []
+
+        for project_id in to_add:
+            self.dbapi.flavor_access_add(context, ident, project_id)
+
+        for project_id in to_delete:
+            self.dbapi.flavor_access_remove(context, ident, project_id)
+        self.obj_reset_changes(['projects'])
