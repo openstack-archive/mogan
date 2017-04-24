@@ -39,6 +39,12 @@ spec_key_path:
   in: path
   required: true
   type: string
+tenant_id_path:
+  description: |
+    The UUID of the tenant in a multi-tenancy cloud.
+  in: path
+  required: true
+  type: string
 
 # variables in query
 all_tenants:
@@ -125,6 +131,12 @@ fixed_address:
   in: body
   required: false
   type: string
+flavor_access:
+  description: |
+    A list of tenants.
+  in: body
+  required: true
+  type: array
 flavor_description:
   description: |
     The description of the flavor.
@@ -399,6 +411,12 @@ project_id_body:
 provision_state:
   description: |
     One of the provisioning verbs, currently only support rebuild.
+  in: body
+  required: true
+  type: string
+tenant_id_body:
+  description: |
+    The UUID of the tenant in a multi-tenancy cloud.
   in: body
   required: true
   type: string
