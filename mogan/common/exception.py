@@ -164,6 +164,16 @@ class InstanceNotFound(NotFound):
     _msg_fmt = _("Instance %(instance)s could not be found.")
 
 
+class FlavorAccessExists(MoganException):
+    _msg_fmt = _("Flavor access already exists for flavor %(flavor_id)s "
+                 "and project %(project_id)s combination.")
+
+
+class FlavorAccessNotFound(NotFound):
+    _msg_fmt = _("Flavor access not found for %(flavor_id)s / "
+                 "%(project_id)s combination.")
+
+
 class ComputeNodeAlreadyExists(MoganException):
     _msg_fmt = _("ComputeNode with node_uuid %(node)s already exists.")
 

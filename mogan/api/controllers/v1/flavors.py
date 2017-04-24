@@ -28,6 +28,15 @@ from mogan.common.i18n import _
 from mogan import objects
 
 
+def _marshall_flavor_access(flavor):
+    rval = []
+    for project_id in flavor.projects:
+        rval.append({'flavor_id': flavor.flavorid,
+                     'tenant_id': project_id})
+
+    return {'flavor_access': rval}
+
+
 class Flavor(base.APIBase):
     """API representation of a flavor.
 
@@ -125,10 +134,31 @@ class FlavorExtraSpecsController(rest.RestController):
         flavor.save()
 
 
+class FlavorAccessController(rest.RestController):
+    """REST controller for flavor access."""
+
+    @expose.expose(wtypes.text, types.uuid)
+    def get_all(self, flavor_uuid):
+        """Retrieve a list of extra specs of the queried flavor."""
+
+        flavor = objects.InstanceType.get(pecan.request.context,
+                                          flavor_uuid)
+
+        # public flavor to all projects
+        if flavor.is_public:
+            msg = _("Access list not available for public flavors.")
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.NOT_FOUND)
+
+        # private flavor to listed projects only
+        return _marshall_flavor_access(flavor)
+
+
 class FlavorsController(rest.RestController):
     """REST controller for Flavors."""
 
     extraspecs = FlavorExtraSpecsController()
+    access = FlavorAccessController()
 
     @expose.expose(FlavorCollection)
     def get_all(self):
