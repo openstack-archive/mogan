@@ -125,6 +125,12 @@ fixed_address:
   in: body
   required: false
   type: string
+flavor_access:
+  description: |
+    A list of tenants.
+  in: body
+  required: true
+  type: array
 flavor_description:
   description: |
     The description of the flavor.

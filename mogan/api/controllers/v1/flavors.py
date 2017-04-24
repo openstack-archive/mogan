@@ -21,11 +21,21 @@ from wsme import types as wtypes
 
 from mogan.api.controllers import base
 from mogan.api.controllers import link
+from mogan.api.controllers.v1.schemas import flavor_access
 from mogan.api.controllers.v1 import types
 from mogan.api import expose
+from mogan.api import validation
 from mogan.common import exception
 from mogan.common.i18n import _
 from mogan import objects
+
+
+def _marshall_flavor_access(flavor):
+    rval = []
+    for project_id in flavor.projects:
+        rval.append(project_id)
+
+    return {'flavor_access': rval}
 
 
 class Flavor(base.APIBase):
@@ -125,10 +135,75 @@ class FlavorExtraSpecsController(rest.RestController):
         flavor.save()
 
 
+class FlavorAccessController(rest.RestController):
+    """REST controller for flavor access."""
+
+    @expose.expose(wtypes.text, types.uuid)
+    def get_all(self, flavor_uuid):
+        """Retrieve a list of extra specs of the queried flavor."""
+
+        flavor = objects.InstanceType.get(pecan.request.context,
+                                          flavor_uuid)
+
+        # public flavor to all projects
+        if flavor.is_public:
+            msg = _("Access list not available for public flavors.")
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.NOT_FOUND)
+
+        # private flavor to listed projects only
+        return _marshall_flavor_access(flavor)
+
+    @expose.expose(wtypes.text, types.uuid, body=types.jsontype,
+                   status_code=http_client.CREATED)
+    def post(self, flavor_uuid, tenant):
+        """Add flavor access for the given tenant."""
+        validation.check_schema(tenant, flavor_access.add_tenant_access)
+
+        flavor = objects.InstanceType.get(pecan.request.context,
+                                          flavor_uuid)
+        if flavor.is_public:
+            msg = _("Can not add access to a public flavor.")
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.CONFLICT)
+
+        try:
+            flavor.projects.append(tenant['tenant_id'])
+            flavor.save()
+        except exception.FlavorNotFound as e:
+            raise wsme.exc.ClientSideError(
+                e.message, status_code=http_client.NOT_FOUND)
+        except exception.FlavorAccessExists as err:
+            raise wsme.exc.ClientSideError(
+                err.message, status_code=http_client.CONFLICT)
+        return _marshall_flavor_access(flavor)
+
+    @expose.expose(None, types.uuid, types.uuid,
+                   status_code=http_client.NO_CONTENT)
+    def delete(self, flavor_uuid, tenant_id):
+        """Remove flavor access for the given tenant."""
+
+        flavor = objects.InstanceType.get(pecan.request.context,
+                                          flavor_uuid)
+        try:
+            # TODO(zhenguo): this should be synchronized.
+            if tenant_id in flavor.projects:
+                flavor.projects.remove(tenant_id)
+                flavor.save()
+            else:
+                raise exception.FlavorAccessNotFound(flavor_id=flavor.uuid,
+                                                     project_id=tenant_id)
+        except (exception.FlavorAccessNotFound,
+                exception.FlavorNotFound) as e:
+            raise wsme.exc.ClientSideError(
+                e.message, status_code=http_client.NOT_FOUND)
+
+
 class FlavorsController(rest.RestController):
     """REST controller for Flavors."""
 
     extraspecs = FlavorExtraSpecsController()
+    access = FlavorAccessController()
 
     @expose.expose(FlavorCollection)
     def get_all(self):
