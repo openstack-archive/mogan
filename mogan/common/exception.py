@@ -311,6 +311,11 @@ class PortNotFound(NotFound):
     _msg_fmt = _("Port id %(port_id)s could not be found.")
 
 
+class InterfaceAttachFailed(Invalid):
+    msg_fmt = _("Failed to attach network adapter device to "
+                "%(server_uuid)s")
+
+
 class FloatingIpNotFoundForAddress(NotFound):
     _msg_fmt = _("Floating IP not found for address %(address)s.")
 

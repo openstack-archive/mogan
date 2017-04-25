@@ -87,6 +87,14 @@ class IronicDriver(base_driver.BaseEngineDriver):
         return self.ironicclient.call('node.get', node_uuid,
                                       fields=_NODE_FIELDS)
 
+    def get_node_by_server_uuid(self, server_uuid):
+        """Get the node by server uuid"""
+        try:
+            return self.ironicclient.call('node.get_by_instance_uuid',
+                                          server_uuid, fields=_NODE_FIELDS)
+        except ironic_exc.NotFound:
+            raise exception.ServerNotFound(server=server_uuid)
+
     def _validate_server_and_node(self, server):
         """Get the node associated with the server.
 

@@ -47,7 +47,6 @@ network_port_id = {
     'type': 'string', 'format': 'uuid'
 }
 
-
 port_type = {
     'type': 'string', 'minLength': 1, 'maxLength': 255,
 }
