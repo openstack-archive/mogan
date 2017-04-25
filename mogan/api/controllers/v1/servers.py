@@ -20,12 +20,14 @@ from oslo_utils import netutils
 import pecan
 from pecan import rest
 from six.moves import http_client
+from webob import exc
 import wsme
 from wsme import types as wtypes
 
 from mogan.api.controllers import base
 from mogan.api.controllers import link
 from mogan.api.controllers.v1.schemas import floating_ips as fip_schemas
+from mogan.api.controllers.v1.schemas import interfaces as interface_schemas
 from mogan.api.controllers.v1.schemas import servers as server_schemas
 from mogan.api.controllers.v1 import types
 from mogan.api.controllers.v1 import utils as api_utils
@@ -35,6 +37,7 @@ from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common import policy
 from mogan.common import states
+from mogan.common import utils
 from mogan import network
 from mogan import objects
 
@@ -331,6 +334,45 @@ class FloatingIPController(ServerControllerBase):
                 msg, status_code=http_client.BAD_REQUEST)
 
 
+class InterfaceController(ServerControllerBase):
+    def __init__(self, *args, **kwargs):
+        super(InterfaceController, self).__init__(*args, **kwargs)
+        self.network_api = network.API()
+
+    @policy.authorize_wsgi("mogan:server", "attach_interface", False)
+    @expose.expose(None, types.uuid, body=types.jsontype,
+                   status_code=http_client.NO_CONTENT)
+    def post(self, server_uuid, interface):
+        """Attach Interface.
+
+        :param server_uuid: UUID of a server.
+        :param interface: The Baremetal Port ID within the request body.
+        """
+        validation.check_schema(interface, interface_schemas.attach_interface)
+
+        network_id = interface.get('net_id', None)
+        pif_id = interface.get('pif_id', None)
+
+        if not network_id:
+            msg = _("Must input network_id")
+            raise exc.HTTPBadRequest(explanation=msg)
+
+        server = self._resource or self._get_resource(server_uuid)
+        try:
+            self.network_api.attach_interface(
+                pecan.request.context,
+                server, network_id, pif_id)
+        except (exception.ServerIsLocked,
+                exception.ComputePortInUse) as e:
+            raise exc.HTTPConflict(explanation=e.format_message())
+        except (exception.ComputePortNotFound,
+                exception.NetworkNotFound) as e:
+            raise exc.HTTPNotFound(explanation=e.format_message())
+        except exception.InterfaceAttachFailed as state_error:
+            utils.raise_http_conflict_for_server_invalid_state(
+                state_error, 'attach_interface', server_uuid)
+
+
 class ServerNetworks(base.APIBase):
     """API representation of the networks of a server."""
 
@@ -343,6 +385,8 @@ class ServerNetworksController(ServerControllerBase):
 
     floatingips = FloatingIPController()
     """Expose floatingip as a sub-element of networks"""
+    interfaces = InterfaceController()
+    """Expose interface as a sub-element of networks"""
 
     @policy.authorize_wsgi("mogan:server", "get_networks")
     @expose.expose(ServerNetworks, types.uuid)

@@ -103,6 +103,12 @@ availability_zones:
   in: body
   required: true
   type: array
+compute_port_uuid:
+  description: |
+    The UUID of the compute port.
+  in: body
+  required: false
+  type: string
 console_info:
   description: |
     The remote console object.

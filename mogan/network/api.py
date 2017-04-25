@@ -19,6 +19,8 @@ from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common import keystone
 from mogan.conf import CONF
+from mogan.engine.baremetal.ironic import driver as ironic_driver
+from mogan import objects
 
 LOG = logging.getLogger(__name__)
 
@@ -186,6 +188,56 @@ class API(object):
         client = get_client(context.auth_token)
         fip = self._get_floating_ip_by_address(client, address)
         client.update_floatingip(fip['id'], {'floatingip': {'port_id': None}})
+
+    def _get_pif_by_pif_id(self, context, pif_id):
+        pif = objects.ComputePort.get(context, pif_id)
+        extra = pif.as_dict().get('extra_specs')
+        vif = extra.get('vif_port_id') if extra else None
+        if vif:
+            raise exception.ComputePortInUse(port_id=pif_id)
+        else:
+            return pif
+
+    def _choose_pif_from_node(self, context, node):
+        pifs = node['ports']
+        pif_ids = []
+        for pif in pifs:
+            pif_ids.append(pif.uuid)
+            extra = pif.as_dict().get('extra')
+            vif = extra.get('vif_port_id') if extra else None
+            if not vif:
+                return pif
+        raise exception.ComputePortInUse(port_id=pif_ids)
+
+    def _check_server_state(self, context, server):
+        if server.locked and not context.is_admin:
+            raise exception.ServerIsLocked(server_uuid=server.uuid)
+
+    def attach_interface(self, context, server,
+                         net_id=None, pif_id=None):
+        self._check_server_state(context, server)
+        node = objects.ComputeNode.get(context, server.node_uuid)
+        if pif_id:
+            pif = self._get_pif_by_pif_id(context, pif_id)
+        if not pif_id:
+            pif = self._choose_pif_from_node(context, node)
+        mac = pif.address
+        vif = self.create_port(
+            context, net_id, mac, server.uuid)
+        vif_dict = vif['port']
+        ironic_driver.plug_vif(pif.port_uuid,
+                               vif_dict['id'])
+        nics_obj = objects.ServerNics(context)
+        nic_dict = {'port_id': vif_dict['id'],
+                    'network_id': vif_dict['network_id'],
+                    'mac_address': vif_dict['mac_address'],
+                    'fixed_ips': vif_dict['fixed_ips'],
+                    'port_type': pif.get('port_type'),
+                    'server_uuid': server.uuid}
+        nics_obj.objects.append(objects.ServerNic(
+            context, **nic_dict))
+        server.nics = nics_obj
+        server.save()
 
     def _get_available_networks(self, context, project_id,
                                 net_ids, client):
