@@ -187,6 +187,35 @@ class API(object):
         fip = self._get_floating_ip_by_address(client, address)
         client.update_floatingip(fip['id'], {'floatingip': {'port_id': None}})
 
+    def allocate_port_for_instance(self, context, client,
+                                   instance, net_id, port_id, mac):
+        if net_id:
+            search_opts = {'network_id': net_id,
+                           'mac_address': mac}
+            ports = client.list_ports(**search_opts)
+            for port in ports:
+                if not port.get('device_id', None):
+                    port_id = port['id']
+                    break
+        if not port_id:
+            port_id = self.create_port(context, net_id, mac, instance.uuid)
+        return port_id
+
+    def attach_interface(self, context, instance,
+                         net_id, port_id, mac):
+        """Attach an interface to an instance"""
+        client = get_client(context.auth_token)
+        port_id = self.allocate_port_for_instance(context, client, instance,
+                                                  net_id, port_id, mac)
+        port_update_body = {
+            'port': {
+                'network_id': net_id,
+                'mac_address': mac,
+                'device_id': instance.uuid,
+            }
+        }
+        client.update_port(port_id, port_update_body)
+
     def _get_available_networks(self, context, project_id,
                                 net_ids, client):
         """Return a network list available for the tenant."""

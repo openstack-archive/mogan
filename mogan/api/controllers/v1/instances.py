@@ -20,6 +20,7 @@ from oslo_utils import netutils
 import pecan
 from pecan import rest
 from six.moves import http_client
+from webob import exc
 import wsme
 from wsme import types as wtypes
 
@@ -27,6 +28,7 @@ from mogan.api.controllers import base
 from mogan.api.controllers import link
 from mogan.api.controllers.v1.schemas import floating_ips as fip_schemas
 from mogan.api.controllers.v1.schemas import instances as inst_schemas
+from mogan.api.controllers.v1.schemas import interfaces as interface_schemas
 from mogan.api.controllers.v1 import types
 from mogan.api.controllers.v1 import utils as api_utils
 from mogan.api import expose
@@ -329,6 +331,42 @@ class FloatingIPController(InstanceControllerBase):
                     "%(id)s.") % {'address': address, 'id': instance_uuid}
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
+
+
+class InterfaceController(InstanceControllerBase):
+    def __init__(self, *args, **kwargs):
+        super(InterfaceController, self).__init__(*args, **kwargs)
+        self.network_api = network.API()
+
+    @policy.authorize_wsgi("mogan:instance", "attach_interfaces", False)
+    @expose.expose(None, types.uuid, body=types.jsontype,
+                   status_code=http_client.NO_CONTENT)
+    def post(self, instance_uuid, interface):
+        """Attach Interface.
+
+        :param instance_uuid: UUID of a instance.
+        :param interface: The Port ID within the request body.
+        """
+        validation.check_schema(interface, interface_schemas.attach_interface)
+
+        net_id = interface.get('net_id', None)
+        port_id = interface.get('port_id', None)
+        try:
+            mac = interface['mac']
+        except Exception:
+            pass
+
+        if net_id and port_id:
+            msg = _("Must not input both network_id and port_id")
+            raise exc.HTTPBadRequest(explanation=msg)
+
+        instance = self._resource or self._get_resource(instance_uuid)
+        try:
+            self.network_api.attach_interface(
+                pecan.request.context,
+                instance, net_id, port_id, mac)
+        except Exception:
+            pass
 
 
 class InstanceNetworks(base.APIBase):
