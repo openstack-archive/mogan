@@ -60,7 +60,7 @@ class DbInstanceTypeExtraSpecsTestCase(base.DbTestCase):
     def test_delete_extra_specs_does_not_exist(self):
         self.dbapi.extra_specs_update_or_create(
             self.context, self.instance_type['uuid'], self.specs)
-        self.assertRaises(exception.InstanceTypeExtraSpecsNotFound,
+        self.assertRaises(exception.FlavorExtraSpecsNotFound,
                           self.dbapi.type_extra_specs_delete,
                           self.context,
                           self.instance_type['uuid'],

@@ -609,8 +609,8 @@ class InstanceController(InstanceControllerBase):
                 key_name=key_name,
                 min_count=min_count,
                 max_count=max_count)
-        except exception.InstanceTypeNotFound:
-            msg = (_("InstanceType %s could not be found") %
+        except exception.FlavorNotFound:
+            msg = (_("Flavor %s could not be found") %
                    instance_type_uuid)
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)

@@ -34,7 +34,7 @@ class DbInstanceTypeTestCase(base.DbTestCase):
         utils.create_test_instance_type(name='testing')
 
     def test_create_instance_type_already_exists(self):
-        self.assertRaises(exception.InstanceTypeAlreadyExists,
+        self.assertRaises(exception.FlavorAlreadyExists,
                           utils.create_test_instance_type,
                           uuid=self.instance_type['uuid'])
 
@@ -56,7 +56,7 @@ class DbInstanceTypeTestCase(base.DbTestCase):
         self.assertEqual(self.instance_type['uuid'], instance_type['uuid'])
 
     def test_get_instance_type_that_does_not_exist(self):
-        self.assertRaises(exception.InstanceTypeNotFound,
+        self.assertRaises(exception.FlavorNotFound,
                           self.dbapi.instance_type_get,
                           self.context,
                           uuidutils.generate_uuid())
@@ -65,13 +65,13 @@ class DbInstanceTypeTestCase(base.DbTestCase):
         self.dbapi.instance_type_destroy(self.context,
                                          self.instance_type['uuid'])
 
-        self.assertRaises(exception.InstanceTypeNotFound,
+        self.assertRaises(exception.FlavorNotFound,
                           self.dbapi.instance_type_destroy,
                           self.context,
                           self.instance_type['uuid'])
 
     def test_destroy_instance_type_that_does_not_exist(self):
-        self.assertRaises(exception.InstanceTypeNotFound,
+        self.assertRaises(exception.FlavorNotFound,
                           self.dbapi.instance_type_destroy,
                           self.context,
                           uuidutils.generate_uuid())

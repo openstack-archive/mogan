@@ -172,7 +172,7 @@ class FlavorsController(rest.RestController):
         try:
             flavor_in_db = objects.InstanceType.get(
                 pecan.request.context, flavor_uuid)
-        except exception.InstanceTypeNotFound:
+        except exception.FlavorTypeNotFound:
             msg = (_("InstanceType %s could not be found") %
                    flavor_uuid)
             raise wsme.exc.ClientSideError(

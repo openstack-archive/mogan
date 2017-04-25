@@ -57,7 +57,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         else:
             # TODO(liusheng) we shouldn't depend on the default
             # type created by devstack
-            raise exception.InstanceTypeNotFound("'small' type not found.")
+            raise exception.FlavorNotFound("'small' flavor not found.")
 
     @classmethod
     def _get_net_id(cls):

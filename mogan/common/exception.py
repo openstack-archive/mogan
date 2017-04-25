@@ -148,12 +148,12 @@ class InvalidUUID(Invalid):
     _msg_fmt = _("Expected a uuid but received %(uuid)s.")
 
 
-class InstanceTypeAlreadyExists(MoganException):
-    _msg_fmt = _("InstanceType with uuid %(uuid)s already exists.")
+class FlavorAlreadyExists(MoganException):
+    _msg_fmt = _("Flavor with uuid %(uuid)s already exists.")
 
 
-class InstanceTypeNotFound(NotFound):
-    _msg_fmt = _("InstanceType %(type_id)s could not be found.")
+class FlavorNotFound(NotFound):
+    _msg_fmt = _("Flavor %(type_id)s could not be found.")
 
 
 class InstanceAlreadyExists(MoganException):
@@ -241,13 +241,13 @@ class NoValidNode(MoganException):
     message = _("No valid node was found. %(reason)s")
 
 
-class TypeExtraSpecUpdateCreateFailed(MoganException):
-    _msg_fmt = _("Instance Type %(id)s extra spec cannot be updated or"
+class FlavorExtraSpecUpdateCreateFailed(MoganException):
+    _msg_fmt = _("Flavor %(id)s extra spec cannot be updated or"
                  "created after %(retries)d retries.")
 
 
-class InstanceTypeExtraSpecsNotFound(NotFound):
-    _msg_fmt = _("Instance Type %(type_id)s has no extra specs with "
+class FlavorExtraSpecsNotFound(NotFound):
+    _msg_fmt = _("Flavor %(flavor_id)s has no extra specs with "
                  "key %(extra_specs_key)s.")
 
 

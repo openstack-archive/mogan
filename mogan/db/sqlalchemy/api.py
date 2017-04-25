@@ -125,7 +125,7 @@ class Connection(api.Connection):
                 session.add(instance_type)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise exception.InstanceTypeAlreadyExists(uuid=values['uuid'])
+                raise exception.FlavorAlreadyExists(uuid=values['uuid'])
             return _dict_with_extra_specs(instance_type)
 
     def instance_type_get(self, context, instance_type_uuid):
@@ -134,7 +134,7 @@ class Connection(api.Connection):
         try:
             return _dict_with_extra_specs(query.one())
         except NoResultFound:
-            raise exception.InstanceTypeNotFound(
+            raise exception.FlavorNotFound(
                 type_id=instance_type_uuid)
 
     def instance_type_update(self, context, instance_type_id, values):
@@ -144,7 +144,7 @@ class Connection(api.Connection):
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise exception.InstanceTypeNotFound(
+                raise exception.FlavorNotFound(
                     type_id=instance_type_id)
 
             ref.update(values)
@@ -170,7 +170,7 @@ class Connection(api.Connection):
 
             count = query.delete()
             if count != 1:
-                raise exception.InstanceTypeNotFound(
+                raise exception.FlavorNotFound(
                     type_id=instance_type_uuid)
 
     def instance_create(self, context, values):
@@ -454,7 +454,7 @@ class Connection(api.Connection):
                     # a concurrent transaction has been committed,
                     # try again unless this was the last attempt
                     if attempt == max_retries - 1:
-                        raise exception.TypeExtraSpecUpdateCreateFailed(
+                        raise exception.FlavorExtraSpecUpdateCreateFailed(
                             id=instance_type_uuid, retries=max_retries)
 
     def instance_type_extra_specs_get(self, context, type_id):
@@ -467,8 +467,8 @@ class Connection(api.Connection):
             delete(synchronize_session=False)
         # did not find the extra spec
         if result == 0:
-            raise exception.InstanceTypeExtraSpecsNotFound(
-                extra_specs_key=key, type_id=type_id)
+            raise exception.FlavorExtraSpecsNotFound(
+                extra_specs_key=key, flavor_id=type_id)
 
     def instance_nic_update_or_create(self, context, port_id, values):
         with _session_for_write() as session:
@@ -877,7 +877,7 @@ def _type_get_id_from_type_query(context, type_id):
 def _type_get_id_from_type(context, type_id):
     result = _type_get_id_from_type_query(context, type_id).first()
     if not result:
-        raise exception.InstanceTypeNotFound(type_id=type_id)
+        raise exception.FlavorNotFound(type_id=type_id)
     return result.uuid
 
 
