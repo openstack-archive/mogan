@@ -190,6 +190,10 @@ class ComputePortNotFound(NotFound):
     _msg_fmt = _("ComputePort %(port)s could not be found.")
 
 
+class ComputePortInUse(Invalid):
+    _msg_fmt = _("ComputePort id %(port)s is in use.")
+
+
 class ComputeDiskAlreadyExists(MoganException):
     _msg_fmt = _("ComputeDisk with disk_uuid %(disk)s already exists.")
 
@@ -309,6 +313,11 @@ class DuplicateState(Conflict):
 
 class PortNotFound(NotFound):
     _msg_fmt = _("Port id %(port_id)s could not be found.")
+
+
+class InterfaceAttachFailed(Invalid):
+    msg_fmt = _("Failed to attach network adapter device to "
+                "%(server_uuid)s")
 
 
 class FloatingIpNotFoundForAddress(NotFound):

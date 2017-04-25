@@ -551,3 +551,44 @@ class EngineManager(base_manager.BaseEngineManager):
                 'host': parsed_url.hostname,
                 'port': parsed_url.port,
                 'internal_access_path': None}
+
+    def _choose_pif_from_node(self, context, node):
+        pifs = self.driver.get_ports_from_node(node.uuid, detail=True)
+        pif_ids = []
+        for pif in pifs:
+            pif_ids.append(pif.uuid)
+            vif = pif.extra.get('vif_port_id', None)
+            if not vif:
+                return pif
+        if not pif_ids:
+            LOG.debug("Node %(node.uuid)s has no pysical ports. ")
+        else:
+            raise exception.ComputePortInUse(port=pif_ids)
+
+    def _check_server_state(self, context, server):
+        if server.locked and not context.is_admin:
+            raise exception.ServerIsLocked(server_uuid=server.uuid)
+
+    def attach_interface(self, context, server, net_id=None):
+        self._check_server_state(context, server)
+        node = self.driver.get_node_by_server_uuid(server.uuid)
+        pif = self._choose_pif_from_node(context, node)
+        mac = pif.address
+        vif = self.network_api.create_port(context, net_id, mac, server.uuid)
+        vif_dict = vif['port']
+        try:
+            self.driver.plug_vif(pif.uuid, vif_dict['id'])
+
+            nics_obj = objects.ServerNics(context)
+            nic_dict = {'port_id': vif_dict['id'],
+                        'network_id': vif_dict['network_id'],
+                        'mac_address': vif_dict['mac_address'],
+                        'fixed_ips': vif_dict['fixed_ips'],
+                        'port_type': vif_dict.get('port_type'),
+                        'server_uuid': server.uuid}
+            nics_obj.objects.append(objects.ServerNic(
+                context, **nic_dict))
+            server.nics = nics_obj
+            server.save()
+        except Exception as e:
+            raise exception.InterfaceAttachFailed(message=e.message)
