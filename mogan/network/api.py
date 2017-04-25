@@ -19,6 +19,8 @@ from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common import keystone
 from mogan.conf import CONF
+from mogan.engine.baremetal.ironic import driver
+from mogan import objects
 
 LOG = logging.getLogger(__name__)
 
@@ -61,6 +63,9 @@ def get_client(token=None):
 
 class API(object):
     """API for interacting with the neutron 2.x API."""
+
+    def __init__(self):
+        self.ironic_driver = driver.IronicDriver()
 
     def create_port(self, context, network_uuid, mac, server_uuid):
         """Create neutron port."""
@@ -186,6 +191,64 @@ class API(object):
         client = get_client(context.auth_token)
         fip = self._get_floating_ip_by_address(client, address)
         client.update_floatingip(fip['id'], {'floatingip': {'port_id': None}})
+
+    def _get_pif_by_pif_id(self, context, pif_id, node):
+        # can i use this pif?
+        pif = self.ironic_driver.get_port(pif_id)
+        pifs = self.ironic_driver.get_ports_from_node(node.uuid, detail=True)
+        for port in pifs:
+            if port.uuid == pif.uuid:
+                vif = pif.extra.get('vif_port_id', None)
+                if vif:
+                    raise exception.ComputePortInUse(port=pif_id)
+                else:
+                    return pif
+
+    def _choose_pif_from_node(self, context, node):
+        pifs = self.ironic_driver.get_ports_from_node(node.uuid, detail=True)
+        pif_ids = []
+        for pif in pifs:
+            pif_ids.append(pif.uuid)
+            vif = pif.extra.get('vif_port_id', None)
+            if not vif:
+                return pif
+        if not pif_ids:
+            LOG.debug("Node %(node.uuid)s has no pysical ports. ")
+        else:
+            raise exception.ComputePortInUse(port=pif_ids)
+
+    def _check_server_state(self, context, server):
+        if server.locked and not context.is_admin:
+            raise exception.ServerIsLocked(server_uuid=server.uuid)
+
+    def attach_interface(self, context, server,
+                         net_id=None, pif_id=None):
+        self._check_server_state(context, server)
+        node = self.ironic_driver.get_node_by_server_uuid(server.uuid)
+        if pif_id:
+            pif = self._get_pif_by_pif_id(context, pif_id, node)
+            if not pif:
+                raise exception.ComputePortNotFound(port=pif_id)
+        else:
+            pif = self._choose_pif_from_node(context, node)
+        mac = pif.address
+        vif = self.create_port(
+            context, net_id, mac, server.uuid)
+        vif_dict = vif['port']
+        self.ironic_driver.plug_vif(pif.uuid,
+                                    vif_dict['id'])
+
+        nics_obj = objects.ServerNics(context)
+        nic_dict = {'port_id': vif_dict['id'],
+                    'network_id': vif_dict['network_id'],
+                    'mac_address': vif_dict['mac_address'],
+                    'fixed_ips': vif_dict['fixed_ips'],
+                    'port_type': vif_dict.get('port_type'),
+                    'server_uuid': server.uuid}
+        nics_obj.objects.append(objects.ServerNic(
+            context, **nic_dict))
+        server.nics = nics_obj
+        server.save()
 
     def _get_available_networks(self, context, project_id,
                                 net_ids, client):

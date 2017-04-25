@@ -97,3 +97,33 @@ Response
 --------
 
 If successful, this method does not return content in the response body.
+
+
+Add (Associate) Interface
+=========================
+
+.. rest_method:: POST /v1/servers/{server_uuid}/networks/interfaces
+
+Adds a interface to a server.
+
+Normal response code: 204
+
+Error codes: 400,401,403,404,409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+    - server_uuid: server_ident
+    - net_id: network_uuid
+    - pif_id: compute_port_uuid
+
+**Example request to Add (Associate) Interface to a server:**
+
+.. literalinclude:: samples/server_networks/server-attach-interface-req.json
+
+Response
+--------
+
+If successful, this method does not return content in the response body.
