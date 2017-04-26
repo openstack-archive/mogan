@@ -1,0 +1,21 @@
+{
+    "servers": [
+        {
+            "description": "this is a test server",
+            "links": [
+                {
+                    "href": "http://localhost:6688/v1/servers/f978ef48-d4af-4dad-beec-e6174309bc71",
+                    "rel": "self"
+                },
+                {
+                    "href": "http://localhost:6688/servers/f978ef48-d4af-4dad-beec-e6174309bc71",
+                    "rel": "bookmark"
+                }
+            ],
+            "name": "test_server",
+            "status": "building",
+            "power_state": "power on",
+            "uuid": "f978ef48-d4af-4dad-beec-e6174309bc71"
+        }
+    ]
+}

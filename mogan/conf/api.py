@@ -48,13 +48,13 @@ opts = [
                        "the service, this option should be False; note, you "
                        "will want to change public API endpoint to represent "
                        "SSL termination URL with 'public_endpoint' option.")),
-    cfg.StrOpt('multi_instance_name_template',
+    cfg.StrOpt('multi_server_name_template',
                default='%(name)s-%(count)d',
-               help='When creating multiple instances with a single request '
-                    'this template will be used to build the instance name '
-                    'for each instance. The benefit is that the instances '
+               help='When creating multiple servers with a single request '
+                    'this template will be used to build the server name '
+                    'for each server. The benefit is that the servers '
                     'end up with different names. To restore legacy '
-                    'behavior of every instance having the same name, set '
+                    'behavior of every server having the same name, set '
                     'this option to "%(name)s".  Valid keys for the '
                     'template are: name, uuid, count.'),
 ]

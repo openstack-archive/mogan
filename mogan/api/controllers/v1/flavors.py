@@ -65,7 +65,7 @@ class Flavor(base.APIBase):
 
     def __init__(self, **kwargs):
         self.fields = []
-        for field in objects.InstanceType.fields:
+        for field in objects.Flavor.fields:
             # Skip fields we do not expose.
             if not hasattr(self, field):
                 continue
@@ -109,8 +109,7 @@ class FlavorExtraSpecsController(rest.RestController):
     def get_all(self, flavor_uuid):
         """Retrieve a list of extra specs of the queried flavor."""
 
-        flavor = objects.InstanceType.get(pecan.request.context,
-                                          flavor_uuid)
+        flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         return dict(extra_specs=flavor.extra_specs)
 
     @expose.expose(types.jsontype, types.uuid, body=types.jsontype,
@@ -118,8 +117,7 @@ class FlavorExtraSpecsController(rest.RestController):
     def patch(self, flavor_uuid, extra_spec):
         """Create/update extra specs for the given flavor."""
 
-        flavor = objects.InstanceType.get(pecan.request.context,
-                                          flavor_uuid)
+        flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         flavor.extra_specs = dict(flavor.extra_specs, **extra_spec)
         flavor.save()
         return dict(extra_specs=flavor.extra_specs)
@@ -129,8 +127,7 @@ class FlavorExtraSpecsController(rest.RestController):
     def delete(self, flavor_uuid, spec_name):
         """Delete an extra specs for the given flavor."""
 
-        flavor = objects.InstanceType.get(pecan.request.context,
-                                          flavor_uuid)
+        flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         del flavor.extra_specs[spec_name]
         flavor.save()
 
@@ -142,8 +139,8 @@ class FlavorAccessController(rest.RestController):
     def get_all(self, flavor_uuid):
         """Retrieve a list of extra specs of the queried flavor."""
 
-        flavor = objects.InstanceType.get(pecan.request.context,
-                                          flavor_uuid)
+        flavor = objects.Flavor.get(pecan.request.context,
+                                    flavor_uuid)
 
         # public flavor to all projects
         if flavor.is_public:
@@ -160,8 +157,8 @@ class FlavorAccessController(rest.RestController):
         """Add flavor access for the given tenant."""
         validation.check_schema(tenant, flavor_access.add_tenant_access)
 
-        flavor = objects.InstanceType.get(pecan.request.context,
-                                          flavor_uuid)
+        flavor = objects.Flavor.get(pecan.request.context,
+                                    flavor_uuid)
         if flavor.is_public:
             msg = _("Can not add access to a public flavor.")
             raise wsme.exc.ClientSideError(
@@ -182,8 +179,8 @@ class FlavorAccessController(rest.RestController):
     def delete(self, flavor_uuid, tenant_id):
         """Remove flavor access for the given tenant."""
 
-        flavor = objects.InstanceType.get(pecan.request.context,
-                                          flavor_uuid)
+        flavor = objects.Flavor.get(pecan.request.context,
+                                    flavor_uuid)
         try:
             # TODO(zhenguo): this should be synchronized.
             if tenant_id in flavor.projects:
@@ -208,7 +205,7 @@ class FlavorsController(rest.RestController):
     def get_all(self):
         """Retrieve a list of flavor."""
 
-        flavors = objects.InstanceType.list(pecan.request.context)
+        flavors = objects.Flavor.list(pecan.request.context)
         return FlavorCollection.convert_with_links(flavors)
 
     @expose.expose(Flavor, types.uuid)
@@ -217,8 +214,7 @@ class FlavorsController(rest.RestController):
 
         :param flavor_uuid: UUID of a flavor.
         """
-        rpc_flavor = objects.InstanceType.get(pecan.request.context,
-                                              flavor_uuid)
+        rpc_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         return Flavor.convert_with_links(rpc_flavor)
 
     @expose.expose(Flavor, body=Flavor,
@@ -228,8 +224,8 @@ class FlavorsController(rest.RestController):
 
         :param flavor: a flavor within the request body.
         """
-        new_flavor = objects.InstanceType(pecan.request.context,
-                                          **flavor.as_dict())
+        new_flavor = objects.Flavor(pecan.request.context,
+                                    **flavor.as_dict())
         new_flavor.create()
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('flavors',
@@ -244,10 +240,10 @@ class FlavorsController(rest.RestController):
         :param flavor: a flavor within the request body.
         """
         try:
-            flavor_in_db = objects.InstanceType.get(
+            flavor_in_db = objects.Flavor.get(
                 pecan.request.context, flavor_uuid)
         except exception.FlavorTypeNotFound:
-            msg = (_("InstanceType %s could not be found") %
+            msg = (_("Flavor %s could not be found") %
                    flavor_uuid)
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
@@ -270,6 +266,5 @@ class FlavorsController(rest.RestController):
 
         :param flavor_uuid: UUID of a flavor.
         """
-        rpc_flavor = objects.InstanceType.get(pecan.request.context,
-                                              flavor_uuid)
+        rpc_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         rpc_flavor.destroy()

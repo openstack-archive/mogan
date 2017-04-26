@@ -14,7 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Instance Metadata information."""
+"""Server Metadata information."""
 
 import posixpath
 
@@ -47,39 +47,39 @@ class InvalidMetadataPath(Exception):
     pass
 
 
-class InstanceMetadata(object):
-    """Instance metadata."""
+class ServerMetadata(object):
+    """Server metadata."""
 
-    def __init__(self, instance, content=None, user_data=None,
+    def __init__(self, server, content=None, user_data=None,
                  key_pair=None, extra_md=None):
         """Creation of this object should basically cover all time consuming
         collection.  Methods after that should not cause time delays due to
         network operations or lengthy cpu operations.
 
-        The user should then get a single instance and make multiple method
+        The user should then get a single server and make multiple method
         calls on it.
         """
         if not content:
             content = []
 
-        self.instance = instance
+        self.server = server
         self.extra_md = extra_md
-        self.availability_zone = instance.availability_zone
+        self.availability_zone = server.availability_zone
 
         if user_data is not None:
             self.userdata_raw = base64.decode_as_bytes(user_data)
         else:
             self.userdata_raw = None
 
-        # TODO(zhenguo): Add hostname to instance object
-        self.hostname = instance.name
-        self.uuid = instance.uuid
+        # TODO(zhenguo): Add hostname to server object
+        self.hostname = server.name
+        self.uuid = server.uuid
         self.content = {}
         self.files = []
         self.keypair = key_pair
 
         # 'content' is passed in from the configdrive code in
-        # mogan/engine/flows/create_instance.py. That's how we get the
+        # mogan/engine/flows/create_server.py. That's how we get the
         # injected files (personalities) in.
         for (path, contents) in content:
             key = "%04i" % len(self.content)
@@ -125,7 +125,7 @@ class InstanceMetadata(object):
             ]
 
         metadata['hostname'] = self.hostname
-        metadata['name'] = self.instance.name
+        metadata['name'] = self.server.name
         metadata['availability_zone'] = self.availability_zone
 
         return jsonutils.dump_as_bytes(metadata)
@@ -170,7 +170,7 @@ class InstanceMetadata(object):
                 if OPENSTACK_VERSIONS != versions:
                     LOG.debug("future versions %s hidden in version list",
                               [v for v in OPENSTACK_VERSIONS
-                               if v not in versions], instance=self.instance)
+                               if v not in versions], server=self.server)
                 versions += ["latest"]
             return versions
 

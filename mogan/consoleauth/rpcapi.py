@@ -51,14 +51,14 @@ class ConsoleAuthAPI(object):
                                      serializer=serializer)
 
     def authorize_console(self, ctxt, token, console_type, host, port,
-                          internal_access_path, instance_uuid,
+                          internal_access_path, server_uuid,
                           access_url):
         # The remote side doesn't return anything, but we want to block
         # until it completes.'
         msg_args = dict(token=token, console_type=console_type,
                         host=host, port=port,
                         internal_access_path=internal_access_path,
-                        instance_uuid=instance_uuid,
+                        server_uuid=server_uuid,
                         access_url=access_url)
 
         cctxt = self.client.prepare()
@@ -68,8 +68,8 @@ class ConsoleAuthAPI(object):
         cctxt = self.client.prepare()
         return cctxt.call(ctxt, 'check_token', token=token)
 
-    def delete_tokens_for_instance(self, ctxt, instance_uuid):
+    def delete_tokens_for_server(self, ctxt, server_uuid):
         cctxt = self.client.prepare()
         return cctxt.cast(ctxt,
-                          'delete_tokens_for_instance',
-                          instance_uuid=instance_uuid)
+                          'delete_tokens_for_server',
+                          server_uuid=server_uuid)

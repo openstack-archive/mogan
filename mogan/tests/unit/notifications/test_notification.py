@@ -20,7 +20,7 @@ from mogan.notifications import base as notification_base
 from mogan.notifications.objects import base as notification
 from mogan.objects import base
 from mogan.objects import fields
-from mogan.objects import instance as inst_obj
+from mogan.objects import server as server_obj
 from mogan.tests import base as test_base
 from mogan.tests.unit.db import utils as db_utils
 
@@ -226,9 +226,9 @@ class TestNotificationBase(test_base.TestCase):
 
 
 notification_object_data = {
-    'InstancePayload': '1.0-e0f5f1a93307435bff6ccb1b69d66003',
-    'InstanceActionPayload': '1.0-406ba4240e7dc166a10069484397c3e1',
-    'InstanceActionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
+    'ServerPayload': '1.0-6a060a6bebc672c105c14b4cef979527',
+    'ServerActionPayload': '1.0-b558fd2bcce6388507b67a834f09689f',
+    'ServerActionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
     'ExceptionPayload': '1.0-7c31986d8d78bed910c324965c431e18',
     'ExceptionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
     'EventType': '1.0-93493dd78bdfed806fca70c91d85cbb4',
@@ -295,38 +295,40 @@ def get_extra_data(obj_class):
     return extra_data
 
 
-class TestInstanceActionNotification(test_base.TestCase):
-    @mock.patch('mogan.notifications.objects.instance.'
-                'InstanceActionNotification._emit')
-    def test_send_version_instance_action(self, mock_emit):
+class TestServerActionNotification(test_base.TestCase):
+    @mock.patch('mogan.notifications.objects.server.'
+                'ServerActionNotification._emit')
+    def test_send_version_server_action(self, mock_emit):
         # Make sure that the notification payload chooses the values in
-        # instance.flavor.$value instead of instance.$value
-        fake_inst_values = db_utils.get_test_instance()
-        instance = inst_obj.Instance(**fake_inst_values)
-        notification_base.notify_about_instance_action(
+        # server.flavor.$value instead of server.$value
+        fake_server_values = db_utils.get_test_server()
+        server = server_obj.Server(**fake_server_values)
+        notification_base.notify_about_server_action(
             mock.MagicMock(),
-            instance,
+            server,
             'test-host',
             fields.NotificationAction.CREATE,
             fields.NotificationPhase.START,
             'mogan-compute')
-        self.assertEqual('instance.create.start',
+        self.assertEqual('server.create.start',
                          mock_emit.call_args_list[0][1]['event_type'])
         self.assertEqual('mogan-compute:test-host',
                          mock_emit.call_args_list[0][1]['publisher_id'])
         payload = mock_emit.call_args_list[0][1]['payload'][
             'mogan_object.data']
-        self.assertEqual(fake_inst_values['uuid'], payload['uuid'])
-        self.assertEqual(fake_inst_values['instance_type_uuid'],
-                         payload['instance_type_uuid'])
-        self.assertEqual(fake_inst_values['status'], payload['status'])
-        self.assertEqual(fake_inst_values['user_id'], payload['user_id'])
-        self.assertEqual(fake_inst_values['availability_zone'],
+        self.assertEqual(fake_server_values['uuid'], payload['uuid'])
+        self.assertEqual(fake_server_values['flavor_uuid'],
+                         payload['flavor_uuid'])
+        self.assertEqual(fake_server_values['status'], payload['status'])
+        self.assertEqual(fake_server_values['user_id'], payload['user_id'])
+        self.assertEqual(fake_server_values['availability_zone'],
                          payload['availability_zone'])
-        self.assertEqual(fake_inst_values['name'], payload['name'])
-        self.assertEqual(fake_inst_values['image_uuid'], payload['image_uuid'])
-        self.assertEqual(fake_inst_values['project_id'], payload['project_id'])
-        self.assertEqual(fake_inst_values['description'],
+        self.assertEqual(fake_server_values['name'], payload['name'])
+        self.assertEqual(fake_server_values['image_uuid'],
+                         payload['image_uuid'])
+        self.assertEqual(fake_server_values['project_id'],
+                         payload['project_id'])
+        self.assertEqual(fake_server_values['description'],
                          payload['description'])
-        self.assertEqual(fake_inst_values['power_state'],
+        self.assertEqual(fake_server_values['power_state'],
                          payload['power_state'])
