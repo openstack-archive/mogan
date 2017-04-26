@@ -39,6 +39,12 @@ spec_key_path:
   in: path
   required: true
   type: string
+port_ident:
+  description: |
+    ID of a network port.
+  in: path
+  required: true
+  type: string
 
 # variables in query
 all_tenants:

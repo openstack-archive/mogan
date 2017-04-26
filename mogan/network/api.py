@@ -114,6 +114,57 @@ class API(object):
                     port_id, exc_info=True)
                 raise e
 
+    def detach_interface(self, context, instance_uuid, port_id):
+        """Detach network interface """
+        client = get_client(context.auth_token)
+        interface = self._get_interface_by_instance(client, instance_uuid,
+                                                    port_id)
+        self._unbind_ports(context, client, interface)
+
+    def _get_interface_by_instance(self, client, instance_uuid, port_id):
+        interfaces = self._safe_get_interfaces(client,
+                                               instance=instance_uuid)
+        if len(interfaces) == 0:
+            raise exception.InterfaceNotFoundForInstance(
+                instance=instance_uuid)
+        else:
+            for index in range(len(interfaces)):
+                if interfaces[index]['id'] == port_id:
+                    return interfaces[index]
+            raise exception.InterfaceNotFoundForInstance(
+                instance=instance_uuid)
+
+    def _safe_get_interfaces(self, client, **kwargs):
+        try:
+            return client.list_ports(**kwargs)['ports']
+        except neutron_exceptions.NotFound:
+            return []
+        except neutron_exceptions.NeutronClientException as e:
+            # bug/1513879 neutron client is currently using
+            # NeutronClientException when there is no L3 API
+            if e.status_code == 404:
+                return []
+            with excutils.save_and_reraise_exception():
+                LOG.exception('Unable to access interface for %s',
+                              ', '.join(['%s %s' % (k, v)
+                                         for k, v in kwargs.items()]))
+
+    def _unbind_ports(self, context, client, interface):
+        #   if port_id is None:
+        #   continue
+        port_req_body = {'port': {'device_id': '', 'device_owner': '',
+                                  'binding:host_id': '',
+                                  'binding:profile': {}}}
+        try:
+            client.update_port(interface['id'], port_req_body)
+        except neutron_exceptions.PortNotFoundClient:
+            LOG.debug('Unable to unbind port %s as it no longer exists.',
+                      interface['id'])
+        except Exception:
+            msg = _('Unable to clear device ID for port '
+                    '%(port_id)') % ({'port_id': interface['id']})
+            LOG.exception(msg)
+
     def _safe_get_floating_ips(self, client, **kwargs):
         """Get floating IP gracefully handling 404 from Neutron."""
         try:
