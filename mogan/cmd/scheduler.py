@@ -20,17 +20,23 @@ The Mogan Scheduler Service
 import sys
 
 from oslo_config import cfg
+from oslo_reports import guru_meditation_report as gmr
+from oslo_reports import opts as gmr_opts
 from oslo_service import service
 
 from mogan.common import constants
 from mogan.common import service as mogan_service
+from mogan import version
 
 CONF = cfg.CONF
 
 
 def main():
+    gmr_opts.set_defaults(CONF)
     # Parse config file and command line options, then start logging
     mogan_service.prepare_service(sys.argv)
+
+    gmr.TextGuruMeditation.setup_autorun(version, conf=CONF)
 
     mgr = mogan_service.RPCService('mogan.scheduler.manager',
                                    'SchedulerManager',

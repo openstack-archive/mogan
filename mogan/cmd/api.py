@@ -18,15 +18,21 @@
 import sys
 
 from oslo_config import cfg
+from oslo_reports import guru_meditation_report as gmr
+from oslo_reports import opts as gmr_opts
 
 from mogan.common import service as mogan_service
+from mogan import version
 
 CONF = cfg.CONF
 
 
 def main():
+    gmr_opts.set_defaults(CONF)
     # Parse config file and command line options, then start logging
     mogan_service.prepare_service(sys.argv)
+
+    gmr.TextGuruMeditation.setup_autorun(version, conf=CONF)
 
     # Build and start the WSGI app
     launcher = mogan_service.process_launcher()
