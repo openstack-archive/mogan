@@ -65,3 +65,11 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Guru Meditation Reports
+=======================
+
+.. toctree::
+   :maxdepth: 1
+
+   dev/gmr
