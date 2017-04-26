@@ -26,7 +26,7 @@ class ComputePort(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
-    dbapi = dbapi.get_instance()
+    dbapi = dbapi.get_server()
 
     fields = {
         'id': object_fields.IntegerField(read_only=True),
@@ -88,7 +88,7 @@ class ComputePortList(object_base.ObjectListBase, base.MoganObject,
 
     VERSION = '1.0'
 
-    dbapi = dbapi.get_instance()
+    dbapi = dbapi.get_server()
 
     fields = {
         'objects': object_fields.ListOfObjectsField('ComputePort')

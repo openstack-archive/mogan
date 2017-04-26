@@ -45,11 +45,11 @@ class BaseFilter(object):
                 yield obj
 
     # Set to true in a subclass if a filter only needs to be run once
-    # for each request rather than for each instance
+    # for each request rather than for each server
     run_filter_once_per_request = False
 
     def run_filter_for_index(self, index):
-        """Return True if the filter needs to be run for n-th instances.
+        """Return True if the filter needs to be run for n-th servers.
 
         Only need to override this if a filter needs anything other than
         "first only" or "all" behaviour.
@@ -67,19 +67,19 @@ class BaseFilterHandler(base_handler.BaseHandler):
                         part_filter_results, filter_properties):
         # Log the filtration history
         rspec = filter_properties.get("request_spec", {})
-        msg_dict = {"inst_id": rspec.get("instance_id", ""),
+        msg_dict = {"server_id": rspec.get("server_id", ""),
                     "str_results": six.text_type(full_filter_results),
                     }
         full_msg = ("Filtering removed all nodes for the request with "
-                    "instance ID "
-                    "'%(inst_id)s'. Filter results: %(str_results)s"
+                    "server ID "
+                    "'%(server_id)s'. Filter results: %(str_results)s"
                     ) % msg_dict
         msg_dict["str_results"] = ', '.join(
             ("%(cls_name)s: (start: %(start)s, end: %(end)s)") %
             {"cls_name": value[0], "start": value[1], "end": value[2]}
             for value in part_filter_results)
         part_msg = ("Filtering removed all nodes for the request with "
-                    "instance ID '%(inst_id)s'. "
+                    "server ID '%(server_id)s'. "
                     "Filter results: %(str_results)s") % msg_dict
         LOG.debug(full_msg)
         LOG.info(part_msg)

@@ -22,7 +22,7 @@ opts = [
                default='iso9660',
                choices=('iso9660', 'vfat'),
                help=_('Configuration drive format that will contain '
-                      'metadata attached to the instance when it boots.')),
+                      'metadata attached to the server when it boots.')),
     cfg.StrOpt('mkisofs_cmd',
                default='genisoimage',
                help=_('Name or path of the tool used for ISO image '

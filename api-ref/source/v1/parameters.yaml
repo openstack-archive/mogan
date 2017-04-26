@@ -27,9 +27,9 @@ flavor_uuid_path:
   in: path
   required: true
   type: string
-instance_ident:
+server_ident:
   description: |
-    The UUID of the instance.
+    The UUID of the server.
   in: path
   required: true
   type: string
@@ -49,7 +49,7 @@ tenant_id_path:
 # variables in query
 all_tenants:
   description: |
-    Specify the ``all_tenants=1`` query parameter to list all instances
+    Specify the ``all_tenants=1`` query parameter to list all servers
     for all projects. By default this is only allowed by admin users.
   in: query
   required: false
@@ -59,11 +59,11 @@ fields:
     One or more fields to be returned in the response.
 
     For example, the following request returns only the ``uuid``
-    and ``name`` fields for each instance:
+    and ``name`` fields for each server:
 
     ::
 
-       GET /v1/instances?fields=uuid,name
+       GET /v1/servers?fields=uuid,name
   in: query
   required: false
   type: array
@@ -84,11 +84,11 @@ address:
   type: string
 availability_zone:
   description: |
-    The availability zone from which to launch the instance. When you provision resources,
-    you specify from which availability zone you want your instance to be built.  Typically,
+    The availability zone from which to launch the server. When you provision resources,
+    you specify from which availability zone you want your server to be built.  Typically,
     you use availability zones to arrange bare metal nodes into logical groups.
     An availability zone provides a form of physical isolation and redundancy from
-    other availability zones. For instance, if some racks in your data center are
+    other availability zones. For server, if some racks in your data center are
     on a separate power source, you can put servers in those racks in their own availability
     zone. Availability zones can also help separate different classes of hardware.  By
     segregating resources into availability zones, you can ensure that your application
@@ -183,7 +183,7 @@ flavor_uuid_not_required:
   type: string
 flavorRef:
   description: |
-    The flavor reference, as a UUID for the flavor for your server instance.
+    The flavor reference, as a UUID for the flavor for your server server.
   in: body
   required: true
   type: string
@@ -195,39 +195,39 @@ flavors:
   type: array
 imageRef:
   description: |
-    The UUID of the image to use for your instance.
+    The UUID of the image to use for your server.
   in: body
   required: true
   type: string
-instance_description:
+server_description:
   description: |
-    A free form description of the instance. Limited to 255 characters
+    A free form description of the server. Limited to 255 characters
     in length.
   in: body
   required: false
   type: string
-instance_name:
+server_name:
   description: |
-    The instance name.
+    The server name.
   in: body
   required: true
   type: string
-instance_power_state:
+server_power_state:
   description: |
-    The current power state of this instance. Usually, “power on” or “power off”, but may be “None”
+    The current power state of this server. Usually, “power on” or “power off”, but may be “None”
     if Mogan is unable to determine the power state (eg, due to hardware failure)
   in: body
   required: true
   type: string
-instance_status:
+server_status:
   description: |
-    The status of this instance. Usually, "building", "active", "error", or "None".
+    The status of this server. Usually, "building", "active", "error", or "None".
   in: body
   required: true
   type: string
-instance_uuid:
+server_uuid:
   description: |
-    The UUID of the instance
+    The UUID of the server
   in: body
   required: true
   type: string
@@ -304,7 +304,7 @@ keypairs:
     Array of Keypair objects
 launched_at:
   description: |
-    The date and time when the instance was launched. The date and time
+    The date and time when the server was launched. The date and time
     stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
 
     ::
@@ -325,19 +325,19 @@ links:
   type: array
 lock_state:
   description: |
-    The request to lock/unlock instances.
+    The request to lock/unlock servers.
   in: body
   required: true
   type: boolean
 max_count_body:
   description: |
-      The max number of instances to be created. Defaults to the value of ``min_count``.
+      The max number of servers to be created. Defaults to the value of ``min_count``.
   in: body
   required: false
   type: integer
 min_count_body:
   description: |
-    The min number of instances to be created. Defaults to 1.
+    The min number of servers to be created. Defaults to 1.
   in: body
   required: false
   type: integer
@@ -351,30 +351,30 @@ multi_instacne_name_body:
   type: string
 network_info:
   description: |
-    The port info in the requested network for the instance, with fixed_ip, mac_address, and
+    The port info in the requested network for the server, with fixed_ip, mac_address, and
     network uuid
   in: body
   required: true
   type: dict
 network_port_type:
   description: |
-    To provision the server instance with a specified type of NIC(like 1GE or 10 GE) for a
+    To provision the server server with a specified type of NIC(like 1GE or 10 GE) for a
     network, specify the type of the NIC in the ``port_type`` key in a dict in ``networks`` list.
   in: body
   required: false
   type: string
 network_uuid:
   description: |
-    To provision the server instance with a NIC for a network, specify the UUID of
+    To provision the server server with a NIC for a network, specify the UUID of
     the network in the ``uuid`` key in a dict in ``networks`` list.
   in: body
   required: true
   type: string
 networks:
   description: |
-    A list of networks of the tenant. Optionally, you can create one or more NICs on the instance.
-    To provision the server instance with a NIC for a network, specify the UUID of the network
-    in the ``uuid`` key in a dict in ``networks`` list. To provision the server instance with a
+    A list of networks of the tenant. Optionally, you can create one or more NICs on the server.
+    To provision the server server with a NIC for a network, specify the UUID of the network
+    in the ``uuid`` key in a dict in ``networks`` list. To provision the server server with a
     specified type of NIC, specify the port-type key in a dict in a ``networks`` list.
   in: body
   required: true
@@ -389,7 +389,7 @@ personality:
   type: string
 power_state:
   description: |
-    The current power state of this Instance. Usually, "power on" or
+    The current power state of this Server. Usually, "power on" or
     "power off", but may be "None" if Mogan is unable to determine the power
     state (eg, due to hardware failure).
   in: body
@@ -443,7 +443,7 @@ user_data:
   type: string
 user_id_body:
   description: |
-    The user ID of the user who owns the instance.
+    The user ID of the user who owns the server.
   in: body
   required: true
   type: string

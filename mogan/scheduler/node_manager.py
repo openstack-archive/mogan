@@ -38,7 +38,7 @@ class NodeState(object):
         self.capabilities = node.extra_specs
         self.availability_zone = node.availability_zone \
             or CONF.engine.default_availability_zone
-        self.instance_type = node.node_type
+        self.flavor = node.node_type
         self.ports = node.ports
 
     def consume_from_request(self, context):

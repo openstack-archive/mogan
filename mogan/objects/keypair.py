@@ -30,7 +30,7 @@ class KeyPair(base.MoganObject):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
-    dbapi = dbapi.get_instance()
+    dbapi = dbapi.get_server()
 
     fields = {
         'id': fields.IntegerField(),
@@ -85,7 +85,7 @@ class KeyPairList(object_base.ObjectListBase, base.MoganObject):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
-    dbapi = dbapi.get_instance()
+    dbapi = dbapi.get_server()
 
     fields = {
         'objects': fields.ListOfObjectsField('KeyPair'),
