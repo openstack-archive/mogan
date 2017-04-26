@@ -35,12 +35,12 @@ CONFIGDRIVESIZE_BYTES = 64 * units.Mi
 class ConfigDriveBuilder(object):
     """Build config drives, optionally as a context manager."""
 
-    def __init__(self, instance_md=None):
+    def __init__(self, server_md=None):
         self.imagefile = None
         self.mdfiles = []
 
-        if instance_md is not None:
-            self.add_instance_metadata(instance_md)
+        if server_md is not None:
+            self.add_server_metadata(server_md)
 
     def __enter__(self):
         return self
@@ -64,8 +64,8 @@ class ConfigDriveBuilder(object):
                 data = data.encode('utf-8')
             f.write(data)
 
-    def add_instance_metadata(self, instance_md):
-        for (path, data) in instance_md.metadata_for_config_drive():
+    def add_server_metadata(self, server_md):
+        for (path, data) in server_md.metadata_for_config_drive():
             self.mdfiles.append((path, data))
 
     def _write_md_files(self, basedir):

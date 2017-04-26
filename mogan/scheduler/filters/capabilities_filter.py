@@ -22,7 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class CapabilitiesFilter(filters.BaseNodeFilter):
-    """NodeFilter to work with resource instance type records."""
+    """NodeFilter to work with resource server type records."""
 
     def _satisfies_extra_specs(self, capabilities, resource_type):
         """Check if capabilities satisfy resource type requirements.
@@ -68,7 +68,7 @@ class CapabilitiesFilter(filters.BaseNodeFilter):
                     break
             else:
                 # Nothing matched, so bail out
-                LOG.debug('Instance type extra spec requirement '
+                LOG.debug('Flavor extra spec requirement '
                           '"%(key)s=%(req)s" does not match reported '
                           'capability "%(cap)s"',
                           {'key': key, 'req': req, 'cap': cap})

@@ -10,7 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""The FilterScheduler is for creating instances.
+"""The FilterScheduler is for creating servers.
 
 You can customize this scheduler by specifying your own node Filters and
 Weighing Functions.
@@ -46,9 +46,9 @@ class FilterScheduler(driver.Scheduler):
 
         Can be overridden in a subclass to add more data.
         """
-        instance = request_spec['instance_properties']
+        server = request_spec['server_properties']
         filter_properties['availability_zone'] = \
-            instance.get('availability_zone')
+            server.get('availability_zone')
 
     def _max_attempts(self):
         max_attempts = CONF.scheduler.scheduler_max_attempts
@@ -58,9 +58,9 @@ class FilterScheduler(driver.Scheduler):
                       "must be >=1"))
         return max_attempts
 
-    def _log_instance_error(self, instance_id, retry):
-        """Log requests with exceptions from previous instance operations."""
-        exc = retry.pop('exc', None)  # string-ified exception from instance
+    def _log_server_error(self, server_id, retry):
+        """Log requests with exceptions from previous server operations."""
+        exc = retry.pop('exc', None)  # string-ified exception from server
         if not exc:
             return  # no exception info from a previous attempt, skip
 
@@ -69,9 +69,9 @@ class FilterScheduler(driver.Scheduler):
             return  # no previously attempted nodes, skip
 
         last_node = nodes[-1]
-        LOG.error("Error scheduling %(instance_id)s from last node: "
+        LOG.error("Error scheduling %(server_id)s from last node: "
                   "%(last_node)s : %(exc)s",
-                  {'instance_id': instance_id,
+                  {'server_id': server_id,
                    'last_node': last_node,
                    'exc': exc})
 
@@ -87,15 +87,15 @@ class FilterScheduler(driver.Scheduler):
             # re-scheduling is disabled.
             return
 
-        instance_id = request_spec.get('instance_id')
-        self._log_instance_error(instance_id, retry)
+        server_id = request_spec.get('server_id')
+        self._log_server_error(server_id, retry)
 
         if retry['num_attempts'] > max_attempts:
             raise exception.NoValidNode(
                 _("Exceeded max scheduling attempts %(max_attempts)d "
-                  "for instance %(instance_id)s") %
+                  "for server %(server_id)s") %
                 {'max_attempts': max_attempts,
-                 'instance_id': instance_id})
+                 'server_id': server_id})
 
     def _get_weighted_candidates(self, context, request_spec,
                                  filter_properties=None):
@@ -104,9 +104,9 @@ class FilterScheduler(driver.Scheduler):
         Returned list is ordered by their fitness.
         """
         # Since Mogan is using mixed filters from Oslo and it's own, which
-        # takes 'resource_XX' and 'instance_XX' as input respectively, copying
-        # 'instance_type' to 'resource_type' will make both filters happy.
-        instance_type = resource_type = request_spec.get("instance_type")
+        # takes 'resource_XX' and 'server_XX' as input respectively, copying
+        # 'flavor' to 'resource_type' will make both filters happy.
+        flavor = resource_type = request_spec.get("flavor")
 
         config_options = self._get_configuration_options()
 
@@ -118,7 +118,7 @@ class FilterScheduler(driver.Scheduler):
 
         filter_properties.update({'request_spec': request_spec_dict,
                                   'config_options': config_options,
-                                  'instance_type': instance_type,
+                                  'flavor': flavor,
                                   'resource_type': resource_type})
 
         self.populate_filter_properties(request_spec,
@@ -158,9 +158,9 @@ class FilterScheduler(driver.Scheduler):
             weighed_nodes = self._get_weighted_candidates(
                 context, request_spec, filter_properties)
             if not weighed_nodes:
-                LOG.warning('No weighed nodes found for instance '
+                LOG.warning('No weighed nodes found for server '
                             'with properties: %s',
-                            request_spec.get('instance_type'))
+                            request_spec.get('flavor'))
                 raise exception.NoValidNode(_("No weighed nodes available"))
 
             node = self._choose_top_node(weighed_nodes, request_spec)

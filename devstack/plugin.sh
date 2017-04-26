@@ -193,7 +193,7 @@ if is_service_enabled mogan; then
         echo_summary "Initializing mogan"
         init_mogan
         start_mogan
-        echo_summary "Creating instance type"
+        echo_summary "Creating flavor"
         create_flavor
         echo_summary "Updating ironic node properties"
         update_ironic_node_type

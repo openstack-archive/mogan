@@ -21,7 +21,7 @@ LOG = logging.getLogger(__name__)
 
 
 class PortsFilter(filters.BaseNodeFilter):
-    """NodeFilter to work with resource instance type records."""
+    """NodeFilter to work with resource server type records."""
 
     def _find_port_type(self, ports, port_type):
         """Check if ports has the specified port type."""
@@ -55,7 +55,7 @@ class PortsFilter(filters.BaseNodeFilter):
     def node_passes(self, node_state, filter_properties):
         """Return a list of nodes that can create resource_type."""
         spec = filter_properties.get('request_spec', {})
-        props = spec.get('instance_properties', {})
+        props = spec.get('server_properties', {})
         networks = props.get('networks')
         if not self._satisfies_networks(node_state.ports, networks):
             LOG.debug("%(node_state)s fails network ports "
