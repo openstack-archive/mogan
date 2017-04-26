@@ -33,97 +33,97 @@ from mogan.tests.unit.objects import utils as obj_utils
 CONF = cfg.CONF
 
 
-class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
-                             tests_db_base.DbTestCase):
+class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
+                           tests_db_base.DbTestCase):
 
     @mock.patch.object(network_api.API, 'delete_port')
     def test_destroy_networks(self, delete_port_mock):
-        instance = obj_utils.create_test_instance(self.context)
-        inst_port_id = instance.nics[0].port_id
+        server = obj_utils.create_test_server(self.context)
+        inst_port_id = server.nics[0].port_id
         delete_port_mock.side_effect = None
         port = mock.MagicMock()
         port.extra = {'vif_port_id': 'fake-vif'}
         port.uuid = 'fake-uuid'
         self._start_service()
 
-        self.service.destroy_networks(self.context, instance)
+        self.service.destroy_networks(self.context, server)
         self._stop_service()
 
         delete_port_mock.assert_called_once_with(
-            self.context, inst_port_id, instance.uuid)
+            self.context, inst_port_id, server.uuid)
 
     @mock.patch.object(IronicDriver, 'destroy')
     @mock.patch.object(IronicDriver, 'unplug_vifs')
     @mock.patch.object(manager.EngineManager, 'destroy_networks')
-    def _test__delete_instance(self, destroy_networks_mock, unplug_mock,
-                               destroy_node_mock, state=None):
+    def _test__delete_server(self, destroy_networks_mock, unplug_mock,
+                             destroy_node_mock, state=None):
         fake_node = mock.MagicMock()
         fake_node.provision_state = state
-        instance = obj_utils.create_test_instance(self.context)
+        server = obj_utils.create_test_server(self.context)
         destroy_networks_mock.side_effect = None
         unplug_mock.side_effect = None
         destroy_node_mock.side_effect = None
         self._start_service()
 
-        self.service._delete_instance(self.context, instance)
+        self.service._delete_server(self.context, server)
         self._stop_service()
 
-        destroy_networks_mock.assert_called_once_with(self.context, instance)
-        unplug_mock.assert_called_once_with(self.context, instance)
-        destroy_node_mock.assert_called_once_with(self.context, instance)
+        destroy_networks_mock.assert_called_once_with(self.context, server)
+        unplug_mock.assert_called_once_with(self.context, server)
+        destroy_node_mock.assert_called_once_with(self.context, server)
 
-    def test__delete_instance_cleaning(self):
-        self._test__delete_instance(state=ironic_states.CLEANING)
+    def test__delete_server_cleaning(self):
+        self._test__delete_server(state=ironic_states.CLEANING)
 
-    def test__delete_instance_cleanwait(self):
-        self._test__delete_instance(state=ironic_states.CLEANWAIT)
+    def test__delete_server_cleanwait(self):
+        self._test__delete_server(state=ironic_states.CLEANWAIT)
 
-    @mock.patch.object(manager.EngineManager, '_delete_instance')
-    def test_delete_instance(self, delete_inst_mock):
+    @mock.patch.object(manager.EngineManager, '_delete_server')
+    def test_delete_server(self, delete_inst_mock):
         fake_node = mock.MagicMock()
         fake_node.provision_state = ironic_states.ACTIVE
-        instance = obj_utils.create_test_instance(
+        server = obj_utils.create_test_server(
             self.context, status=states.DELETING)
         delete_inst_mock.side_effect = None
         self._start_service()
 
-        self.service.delete_instance(self.context, instance)
+        self.service.delete_server(self.context, server)
         self._stop_service()
 
-        delete_inst_mock.assert_called_once_with(mock.ANY, instance)
+        delete_inst_mock.assert_called_once_with(mock.ANY, server)
 
-    @mock.patch.object(manager.EngineManager, '_delete_instance')
-    def test_delete_instance_unassociated(self, delete_inst_mock):
+    @mock.patch.object(manager.EngineManager, '_delete_server')
+    def test_delete_server_unassociated(self, delete_inst_mock):
         fake_node = mock.MagicMock()
         fake_node.provision_state = ironic_states.ACTIVE
-        instance = obj_utils.create_test_instance(
+        server = obj_utils.create_test_server(
             self.context, status=states.DELETING, node_uuid=None)
         self._start_service()
 
-        self.service.delete_instance(self.context, instance)
+        self.service.delete_server(self.context, server)
         self._stop_service()
 
         delete_inst_mock.assert_not_called()
 
     @mock.patch.object(IronicDriver, 'get_power_state')
     @mock.patch.object(IronicDriver, 'set_power_state')
-    def test_change_instance_power_state(
+    def test_change_server_power_state(
             self, set_power_mock, get_power_mock):
-        instance = obj_utils.create_test_instance(
+        server = obj_utils.create_test_server(
             self.context, status=states.POWERING_ON)
         fake_node = mock.MagicMock()
         fake_node.target_power_state = ironic_states.NOSTATE
         get_power_mock.return_value = states.POWER_ON
         self._start_service()
 
-        self.service.set_power_state(self.context, instance,
+        self.service.set_power_state(self.context, server,
                                      ironic_states.POWER_ON)
         self._stop_service()
 
         set_power_mock.assert_called_once_with(self.context,
-                                               instance,
+                                               server,
                                                ironic_states.POWER_ON)
-        get_power_mock.assert_called_once_with(self.context, instance.uuid)
+        get_power_mock.assert_called_once_with(self.context, server.uuid)
 
     @mock.patch.object(ironic.IronicClientWrapper, 'call')
     def test_get_serial_console(self, mock_ironic_call):
@@ -138,9 +138,9 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
             {"console_enabled": False, "console_info": fake_console_url},
             mock.MagicMock(),
             {"console_enabled": True, "console_info": fake_console_url}]
-        instance = obj_utils.create_test_instance(self.context)
+        server = obj_utils.create_test_server(self.context)
         self._start_service()
-        console = self.service.get_serial_console(self.context, instance)
+        console = self.service.get_serial_console(self.context, server)
         self._stop_service()
         self.assertEqual(4321, console['port'])
         self.assertTrue(
@@ -148,7 +148,7 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         self.assertEqual('localhost', console['host'])
         self.assertIn('token', console)
 
-    def test_wrap_instance_fault(self):
+    def test_wrap_server_fault(self):
         inst = {"uuid": uuidutils.generate_uuid()}
 
         called = {'fault_added': False}
@@ -156,19 +156,19 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         def did_it_add_fault(*args):
             called['fault_added'] = True
 
-        self.stub_out('mogan.common.utils.add_instance_fault_from_exc',
+        self.stub_out('mogan.common.utils.add_server_fault_from_exc',
                       did_it_add_fault)
 
-        @manager.wrap_instance_fault
-        def failer(engine_manager, context, instance):
+        @manager.wrap_server_fault
+        def failer(engine_manager, context, server):
             raise NotImplementedError()
 
         self.assertRaises(NotImplementedError, failer,
-                          manager.EngineManager, self.context, instance=inst)
+                          manager.EngineManager, self.context, server=inst)
 
         self.assertTrue(called['fault_added'])
 
-    def test_wrap_instance_fault_no_instance(self):
+    def test_wrap_server_fault_no_server(self):
         inst = {"uuid": uuidutils.generate_uuid()}
 
         called = {'fault_added': False}
@@ -176,14 +176,14 @@ class ManageInstanceTestCase(mgr_utils.ServiceSetUpMixin,
         def did_it_add_fault(*args):
             called['fault_added'] = True
 
-        self.stub_out('mogan.common.utils.add_instance_fault_from_exc',
+        self.stub_out('mogan.common.utils.add_server_fault_from_exc',
                       did_it_add_fault)
 
-        @manager.wrap_instance_fault
-        def failer(engine_manager, context, instance):
-            raise exception.InstanceNotFound(instance=instance['uuid'])
+        @manager.wrap_server_fault
+        def failer(engine_manager, context, server):
+            raise exception.ServerNotFound(server=server['uuid'])
 
-        self.assertRaises(exception.InstanceNotFound, failer,
-                          manager.EngineManager, self.context, instance=inst)
+        self.assertRaises(exception.ServerNotFound, failer,
+                          manager.EngineManager, self.context, server=inst)
 
         self.assertFalse(called['fault_added'])

@@ -38,22 +38,22 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.context = context.RequestContext(user=self.user_id,
                                               tenant=self.project_id)
 
-    def _create_instance_type(self):
-        inst_type = db_utils.get_test_instance_type()
+    def _create_flavor(self):
+        inst_type = db_utils.get_test_flavor()
         inst_type['extra'] = {}
-        type_obj = objects.InstanceType(self.context, **inst_type)
+        type_obj = objects.Flavor(self.context, **inst_type)
         type_obj.create(self.context)
         return type_obj
 
     @mock.patch('mogan.engine.api.API._check_requested_networks')
     def test__validate_and_build_base_options(self, mock_check_nets):
-        instance_type = self._create_instance_type()
+        flavor = self._create_flavor()
         mock_check_nets.return_value = 3
 
         base_opts, max_network_count, key_pair = \
             self.engine_api._validate_and_build_base_options(
                 self.context,
-                instance_type=instance_type,
+                flavor=flavor,
                 image_uuid='fake-uuid',
                 name='fake-name',
                 description='fake-descritpion',
@@ -67,44 +67,44 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertEqual('fake-user', base_opts['user_id'])
         self.assertEqual('fake-project', base_opts['project_id'])
         self.assertEqual(states.BUILDING, base_opts['status'])
-        self.assertEqual(instance_type.uuid, base_opts['instance_type_uuid'])
+        self.assertEqual(flavor.uuid, base_opts['flavor_uuid'])
         self.assertEqual({'k1', 'v1'}, base_opts['extra'])
         self.assertEqual('test_az', base_opts['availability_zone'])
         self.assertEqual(None, key_pair)
 
-    @mock.patch.object(objects.Instance, 'create')
-    def test__provision_instances(self, mock_inst_create):
+    @mock.patch.object(objects.Server, 'create')
+    def test__provision_servers(self, mock_inst_create):
         mock_inst_create.return_value = mock.MagicMock()
 
         base_options = {'image_uuid': 'fake-uuid',
                         'status': states.BUILDING,
                         'user_id': 'fake-user',
                         'project_id': 'fake-project',
-                        'instance_type_uuid': 'fake-type-uuid',
+                        'flavor_uuid': 'fake-type-uuid',
                         'name': 'fake-name',
                         'description': 'fake-description',
                         'extra': {},
                         'availability_zone': None}
         min_count = 1
         max_count = 2
-        self.engine_api._provision_instances(self.context, base_options,
-                                             min_count, max_count)
+        self.engine_api._provision_servers(self.context, base_options,
+                                           min_count, max_count)
         calls = [mock.call() for i in range(max_count)]
         mock_inst_create.assert_has_calls(calls)
 
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'create_instance')
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'create_server')
     @mock.patch('mogan.engine.api.API._get_image')
     @mock.patch('mogan.engine.api.API._validate_and_build_base_options')
     @mock.patch('mogan.engine.api.API.list_availability_zones')
     def test_create(self, mock_list_az, mock_validate, mock_get_image,
                     mock_create):
-        instance_type = self._create_instance_type()
+        flavor = self._create_flavor()
 
         base_options = {'image_uuid': 'fake-uuid',
                         'status': states.BUILDING,
                         'user_id': 'fake-user',
                         'project_id': 'fake-project',
-                        'instance_type_uuid': 'fake-type-uuid',
+                        'flavor_uuid': 'fake-type-uuid',
                         'name': 'fake-name',
                         'description': 'fake-description',
                         'extra': {'k1', 'v1'},
@@ -119,12 +119,12 @@ class ComputeAPIUnitTest(base.DbTestCase):
 
         res = self.dbapi._get_quota_usages(self.context, self.project_id)
         before_in_use = 0
-        if res.get('instances') is not None:
-            before_in_use = res.get('instances').in_use
+        if res.get('servers') is not None:
+            before_in_use = res.get('servers').in_use
 
         self.engine_api.create(
             self.context,
-            instance_type=instance_type,
+            flavor=flavor,
             image_uuid='fake-uuid',
             name='fake-name',
             description='fake-descritpion',
@@ -136,25 +136,25 @@ class ComputeAPIUnitTest(base.DbTestCase):
 
         mock_list_az.assert_called_once_with(self.context)
         mock_validate.assert_called_once_with(
-            self.context, instance_type, 'fake-uuid', 'fake-name',
+            self.context, flavor, 'fake-uuid', 'fake-name',
             'fake-descritpion', 'test_az', {'k1', 'v1'}, requested_networks,
             None, None, max_count)
         self.assertTrue(mock_create.called)
         self.assertTrue(mock_get_image.called)
         res = self.dbapi._get_quota_usages(self.context, self.project_id)
-        after_in_use = res.get('instances').in_use
+        after_in_use = res.get('servers').in_use
         self.assertEqual(before_in_use + 2, after_in_use)
 
     @mock.patch('mogan.engine.api.API.list_availability_zones')
     def test_create_with_invalid_az(self, mock_list_az):
-        instance_type = mock.MagicMock()
+        flavor = mock.MagicMock()
         mock_list_az.return_value = {'availability_zones': ['invalid_az']}
 
         self.assertRaises(
             exception.AZNotFound,
             self.engine_api.create,
             self.context,
-            instance_type,
+            flavor,
             'fake-uuid',
             'fake-name',
             'fake-descritpion',
@@ -169,13 +169,13 @@ class ComputeAPIUnitTest(base.DbTestCase):
     @mock.patch('mogan.engine.api.API.list_availability_zones')
     def test_create_over_quota_limit(self, mock_list_az, mock_validate,
                                      mock_get_image):
-        instance_type = self._create_instance_type()
+        flavor = self._create_flavor()
 
         base_options = {'image_uuid': 'fake-uuid',
                         'status': states.BUILDING,
                         'user_id': 'fake-user',
                         'project_id': 'fake-project',
-                        'instance_type_uuid': 'fake-type-uuid',
+                        'flavor_uuid': 'fake-type-uuid',
                         'name': 'fake-name',
                         'description': 'fake-description',
                         'extra': {'k1', 'v1'},
@@ -191,7 +191,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
             exception.OverQuota,
             self.engine_api.create,
             self.context,
-            instance_type,
+            flavor,
             'fake-uuid',
             'fake-name',
             'fake-descritpion',
@@ -204,116 +204,116 @@ class ComputeAPIUnitTest(base.DbTestCase):
             min_count,
             max_count)
 
-    def _create_fake_instance_obj(self, fake_instance):
-        fake_instance_obj = objects.Instance(self.context, **fake_instance)
-        fake_instance_obj.create(self.context)
-        return fake_instance_obj
+    def _create_fake_server_obj(self, fake_server):
+        fake_server_obj = objects.Server(self.context, **fake_server)
+        fake_server_obj.create(self.context)
+        return fake_server_obj
 
     def test_lock_by_owner(self):
-        fake_instance = db_utils.get_test_instance(
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id)
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
-        self.engine_api.lock(self.context, fake_instance_obj)
-        self.assertTrue(fake_instance_obj.locked)
-        self.assertEqual('owner', fake_instance_obj.locked_by)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
+        self.engine_api.lock(self.context, fake_server_obj)
+        self.assertTrue(fake_server_obj.locked)
+        self.assertEqual('owner', fake_server_obj.locked_by)
 
     def test_unlock_by_owner(self):
-        fake_instance = db_utils.get_test_instance(
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
             locked=True, locked_by='owner')
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
-        self.engine_api.unlock(self.context, fake_instance_obj)
-        self.assertFalse(fake_instance_obj.locked)
-        self.assertEqual(None, fake_instance_obj.locked_by)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
+        self.engine_api.unlock(self.context, fake_server_obj)
+        self.assertFalse(fake_server_obj.locked)
+        self.assertEqual(None, fake_server_obj.locked_by)
 
     def test_lock_by_admin(self):
-        fake_instance = db_utils.get_test_instance(
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id)
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
-        self.engine_api.lock(admin_context, fake_instance_obj)
-        self.assertTrue(fake_instance_obj.locked)
-        self.assertEqual('admin', fake_instance_obj.locked_by)
+        self.engine_api.lock(admin_context, fake_server_obj)
+        self.assertTrue(fake_server_obj.locked)
+        self.assertEqual('admin', fake_server_obj.locked_by)
 
     def test_unlock_by_admin(self):
-        fake_instance = db_utils.get_test_instance(
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
             locked=True, locked_by='owner')
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
-        self.engine_api.unlock(admin_context, fake_instance_obj)
-        self.assertFalse(fake_instance_obj.locked)
-        self.assertEqual(None, fake_instance_obj.locked_by)
+        self.engine_api.unlock(admin_context, fake_server_obj)
+        self.assertFalse(fake_server_obj.locked)
+        self.assertEqual(None, fake_server_obj.locked_by)
 
-    @mock.patch('mogan.engine.api.API._delete_instance')
-    def test_delete_locked_instance_with_non_admin(self, mock_deleted):
-        fake_instance = db_utils.get_test_instance(
+    @mock.patch('mogan.engine.api.API._delete_server')
+    def test_delete_locked_server_with_non_admin(self, mock_deleted):
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
             locked=True, locked_by='owner')
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
-        self.assertRaises(exception.InstanceIsLocked,
+        fake_server_obj = self._create_fake_server_obj(fake_server)
+        self.assertRaises(exception.ServerIsLocked,
                           self.engine_api.delete,
-                          self.context, fake_instance_obj)
+                          self.context, fake_server_obj)
         mock_deleted.assert_not_called()
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'set_power_state')
-    def test_power_locked_instance_with_non_admin(self, mock_powered):
-        fake_instance = db_utils.get_test_instance(
+    def test_power_locked_server_with_non_admin(self, mock_powered):
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
             locked=True, locked_by='owner')
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
-        self.assertRaises(exception.InstanceIsLocked,
+        fake_server_obj = self._create_fake_server_obj(fake_server)
+        self.assertRaises(exception.ServerIsLocked,
                           self.engine_api.power,
-                          self.context, fake_instance_obj, 'reboot')
+                          self.context, fake_server_obj, 'reboot')
         mock_powered.assert_not_called()
 
-    @mock.patch('mogan.engine.api.API._delete_instance')
-    def test_delete_locked_instance_with_admin(self, mock_deleted):
-        fake_instance = db_utils.get_test_instance(
+    @mock.patch('mogan.engine.api.API._delete_server')
+    def test_delete_locked_server_with_admin(self, mock_deleted):
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
             locked=True, locked_by='owner')
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
-        self.engine_api.delete(admin_context, fake_instance_obj)
+        self.engine_api.delete(admin_context, fake_server_obj)
         self.assertTrue(mock_deleted.called)
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'set_power_state')
-    def test_power_locked_instance_with_admin(self, mock_powered):
-        fake_instance = db_utils.get_test_instance(
+    def test_power_locked_server_with_admin(self, mock_powered):
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
             locked=True, locked_by='owner')
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
-        self.engine_api.power(admin_context, fake_instance_obj, 'reboot')
+        self.engine_api.power(admin_context, fake_server_obj, 'reboot')
         self.assertTrue(mock_powered.called)
 
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_instance')
-    def test_rebuild_locked_instance_with_non_admin(self, mock_rebuild):
-        fake_instance = db_utils.get_test_instance(
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_server')
+    def test_rebuild_locked_server_with_non_admin(self, mock_rebuild):
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
             locked=True, locked_by='owner')
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
-        self.assertRaises(exception.InstanceIsLocked,
+        fake_server_obj = self._create_fake_server_obj(fake_server)
+        self.assertRaises(exception.ServerIsLocked,
                           self.engine_api.rebuild,
-                          self.context, fake_instance_obj)
+                          self.context, fake_server_obj)
         mock_rebuild.assert_not_called()
 
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_instance')
-    def test_rebuild_locked_instance_with_admin(self, mock_rebuild):
-        fake_instance = db_utils.get_test_instance(
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_server')
+    def test_rebuild_locked_server_with_admin(self, mock_rebuild):
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
             locked=True, locked_by='owner')
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
-        self.engine_api.rebuild(admin_context, fake_instance_obj)
+        self.engine_api.rebuild(admin_context, fake_server_obj)
         self.assertTrue(mock_rebuild.called)
 
-    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_instance')
-    def test_rebuild_instance(self, mock_rebuild):
-        fake_instance = db_utils.get_test_instance(
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_server')
+    def test_rebuild_server(self, mock_rebuild):
+        fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id)
-        fake_instance_obj = self._create_fake_instance_obj(fake_instance)
-        self.engine_api.rebuild(self.context, fake_instance_obj)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
+        self.engine_api.rebuild(self.context, fake_server_obj)
         self.assertTrue(mock_rebuild.called)
 
     def test_list_availability_zone(self):

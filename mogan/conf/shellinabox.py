@@ -29,7 +29,7 @@ The IP address which is used by the ``mogan-shellinaboxproxy`` service to
 listen for incoming requests.
 
 The ``mogan-shellinaboxproxy`` service listens on this IP address for incoming
-connection requests to instances which expose shellinabox serial console.
+connection requests to servers which expose shellinabox serial console.
 
 Possible values:
 
@@ -55,7 +55,7 @@ The port number which is used by the ``mogan-shellinaboxproxy`` service to
 listen for incoming requests.
 
 The ``mogan-shellinaboxproxy`` service listens on this port number for incoming
-connection requests to instances which expose shellinabox serial console.
+connection requests to servers which expose shellinabox serial console.
 
 Possible values:
 
@@ -78,7 +78,7 @@ The URL an end user would use to connect to the ``mogan-shellinaboxproxy``
 service.
 
 The ``mogan-shellinaboxproxy`` service is called with this token enriched URL
-and establishes the connection to the proper instance.
+and establishes the connection to the proper server.
 
 Possible values:
 

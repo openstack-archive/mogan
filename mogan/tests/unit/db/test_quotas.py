@@ -43,7 +43,7 @@ class DbQuotaTestCase(base.DbTestCase):
         ids_project_1 = []
         ids_project_2 = []
         ids_project_all = []
-        resource_names = ['instances', 'instances_type', 'test_resource']
+        resource_names = ['servers', 'servers_type', 'test_resource']
         for i in range(0, 3):
             quota = utils.create_test_quota(project_id='project_1',
                                             resource_name=resource_names[i])
@@ -111,4 +111,4 @@ class DbQuotaTestCase(base.DbTestCase):
                           self.context,
                           quota.project_id,
                           quota.resource_name,
-                          {'resource_name': 'instance_test'})
+                          {'resource_name': 'server_test'})

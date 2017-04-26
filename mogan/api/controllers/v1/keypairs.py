@@ -93,7 +93,7 @@ class KeyPairCollection(base.APIBase):
     """API representation of a collection of keypairs."""
 
     keypairs = [KeyPair]
-    """A list containing Instance Type objects"""
+    """A list containing Flavor objects"""
 
     @staticmethod
     def convert_with_links(keypairs, url=None, **kwargs):

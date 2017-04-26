@@ -29,7 +29,7 @@ import sqlalchemy as sa
 
 def upgrade():
     op.create_table(
-        'instance_types',
+        'flavors',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('uuid', sa.String(length=36), nullable=False),
@@ -41,34 +41,34 @@ def upgrade():
         mysql_DEFAULT_CHARSET='UTF8'
     )
     op.create_table(
-        'instance_type_extra_specs',
+        'flavor_extra_specs',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('instance_type_uuid', sa.String(length=36), nullable=False),
+        sa.Column('flavor_uuid', sa.String(length=36), nullable=False),
         sa.Column('key', sa.String(length=255), nullable=False),
         sa.Column('value', sa.String(length=255), nullable=False),
-        sa.ForeignKeyConstraint(['instance_type_uuid'],
-                                ['instance_types.uuid']),
+        sa.ForeignKeyConstraint(['flavor_uuid'],
+                                ['flavors.uuid']),
         sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
     op.create_table(
-        'instance_type_projects',
+        'flavor_projects',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('instance_type_uuid', sa.String(length=36), nullable=True),
+        sa.Column('flavor_uuid', sa.String(length=36), nullable=True),
         sa.Column('project_id', sa.String(length=36), nullable=True),
-        sa.ForeignKeyConstraint(['instance_type_uuid'],
-                                ['instance_types.uuid']),
+        sa.ForeignKeyConstraint(['flavor_uuid'],
+                                ['flavors.uuid']),
         sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
     op.create_table(
-        'instances',
+        'servers',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('uuid', sa.String(length=36), nullable=True),
@@ -79,7 +79,7 @@ def upgrade():
         sa.Column('description', sa.String(length=255), nullable=True),
         sa.Column('status', sa.String(length=255), nullable=True),
         sa.Column('power_state', sa.String(length=15), nullable=True),
-        sa.Column('instance_type_uuid', sa.String(length=36), nullable=True),
+        sa.Column('flavor_uuid', sa.String(length=36), nullable=True),
         sa.Column('image_uuid', sa.String(length=36), nullable=True),
         sa.Column('launched_at', sa.DateTime(), nullable=True),
         sa.Column('availability_zone', sa.String(length=255), nullable=True),
@@ -88,7 +88,7 @@ def upgrade():
         sa.Column('locked', sa.Boolean(), nullable=True),
         sa.Column('locked_by', sa.Enum('admin', 'owner'), nullable=True),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('uuid', name='uniq_instances0uuid'),
+        sa.UniqueConstraint('uuid', name='uniq_servers0uuid'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
@@ -143,31 +143,31 @@ def upgrade():
         mysql_DEFAULT_CHARSET='UTF8'
     )
     op.create_table(
-        'instance_nics',
+        'server_nics',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('instance_uuid', sa.String(length=36), nullable=False),
+        sa.Column('server_uuid', sa.String(length=36), nullable=False),
         sa.Column('port_id', sa.String(length=36), nullable=False),
         sa.Column('mac_address', sa.String(length=36), nullable=True),
         sa.Column('network_id', sa.String(length=36), nullable=True),
         sa.Column('port_type', sa.String(length=64), nullable=True),
         sa.Column('floating_ip', sa.String(length=64), nullable=True),
         sa.Column('fixed_ips', sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(['instance_uuid'], ['instances.uuid'], ),
+        sa.ForeignKeyConstraint(['server_uuid'], ['servers.uuid'], ),
         sa.PrimaryKeyConstraint('port_id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
     op.create_table(
-        'instance_faults',
+        'server_faults',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('instance_uuid', sa.String(length=36), nullable=True),
+        sa.Column('server_uuid', sa.String(length=36), nullable=True),
         sa.Column('code', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('message', sa.String(length=255), nullable=True),
         sa.Column('detail', sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(['instance_uuid'], ['instances.uuid']),
+        sa.ForeignKeyConstraint(['server_uuid'], ['servers.uuid']),
         sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'

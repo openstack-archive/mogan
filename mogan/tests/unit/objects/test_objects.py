@@ -382,7 +382,7 @@ class _TestObject(object):
 # version bump. It is md5 hash of object fields and remotable methods.
 # The fingerprint values should only be changed if there is a version bump.
 expected_object_fingerprints = {
-    'Instance': '1.0-a4d843f506946e824fe6accb842e0a84',
+    'Server': '1.0-a4d843f506946e824fe6accb842e0a84',
     'ComputeNode': '1.0-36221253681d9acb88efe2a9113071c7',
     'ComputeNodeList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'ComputePort': '1.0-ca4c1817ad7324286813f2cfcdcf802e',
@@ -391,10 +391,10 @@ expected_object_fingerprints = {
     'ComputeDiskList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'InstanceFault': '1.0-6b5b01b2cc7b6b547837acb168ec6eb9',
     'InstanceFaultList': '1.0-43e8aad0258652921f929934e9e048fd',
-    'InstanceType': '1.0-d1cf232312ff8101aa5a19908b476d67',
+    'Flavor': '1.0-d1cf232312ff8101aa5a19908b476d67',
     'MyObj': '1.1-aad62eedc5a5cc8bcaf2982c285e753f',
-    'InstanceNic': '1.0-78744332fe105f9c1796dc5295713d9f',
-    'InstanceNics': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
+    'ServerNic': '1.0-78744332fe105f9c1796dc5295713d9f',
+    'ServerNics': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'Quota': '1.0-c8caa082f4d726cb63fdc5943f7cd186',
     'KeyPair': '1.0-c6820166e307676c5900f7801831b84c',
     'KeyPairList': '1.0-33a2e1bb91ad4082f9f63429b77c1244'
