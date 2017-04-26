@@ -301,6 +301,14 @@ class PortNotFound(NotFound):
     _msg_fmt = _("Port id %(port_id)s could not be found.")
 
 
+class InterfaceNotFoundForInstance(NotFound):
+    _msg_fmt = _("Interface not found for instance %(instance)s.")
+
+
+class InterfaceMultipleFoundForInstance(MoganException):
+    _msg_fmt = _("Multiple interfaces are found for instance %(instance)s.")
+
+
 class FloatingIpNotFoundForAddress(NotFound):
     _msg_fmt = _("Floating IP not found for address %(address)s.")
 

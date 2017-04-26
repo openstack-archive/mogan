@@ -114,6 +114,9 @@ instance_policies = [
     policy.RuleDefault('mogan:availability_zone:get_all',
                        'rule:default',
                        description='Get the availability zone list'),
+    policy.RuleDefault('mogan:instance:detach_interface',
+                       'rule:default',
+                       description='Detach a network interface'),
 ]
 
 

@@ -27,6 +27,7 @@ from mogan.api.controllers import base
 from mogan.api.controllers import link
 from mogan.api.controllers.v1.schemas import floating_ips as fip_schemas
 from mogan.api.controllers.v1.schemas import instances as inst_schemas
+from mogan.api.controllers.v1.schemas import interfaces as interface_schemas
 from mogan.api.controllers.v1 import types
 from mogan.api.controllers.v1 import utils as api_utils
 from mogan.api import expose
@@ -330,6 +331,40 @@ class FloatingIPController(InstanceControllerBase):
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
 
+class InterfaceController(InstanceControllerBase):
+
+    def __init__(self, *args, **kwargs):
+        super(InterfaceController, self).__init__(*args, **kwargs)
+        self.network_api = network.API()
+
+    @policy.authorize_wsgi("mogan:instance", "detach_interface", False)
+    @expose.expose(None, types.uuid, body=types.jsontype,
+                   status_code=http_client.NO_CONTENT)
+    def delete(sele,instance_uuid,port_id):
+        """Detach Interface
+
+        :param instance_uuid: UUID of a instance.
+        :param interface: The Port ID within the request body.
+        """
+        instance = self._resource or self._get_resource(instance_uuid)
+        instance_nics = instance.nics
+        for nic in instance_nics:
+            if nic.port_id == port_id:
+                try:
+                    self.network_api.detach_interface(pecan.request.context,
+                                                      port_id)
+                except exception.Forbidden as e:
+                    raise wsme.exc.ClientSideError(
+                        e.message, status_code=http_client.FORBIDDEN)
+                except exception.CannotDetachInterfaceByPortID:
+                    msg = _('Cannot detach interface by port_id')
+                    raise wsme.exc.ClientSideError(
+                        msg, status_code=http_client.FORBIDDEN)
+                except exception.InterfaceNotAttached:
+                    msg = _('Interface is not attached')
+                    raise wsme.exc.ClientSideError(
+                        msg, status_code=http_client.BAD_REQUEST)
+
 
 class InstanceNetworks(base.APIBase):
     """API representation of the networks of an instance."""
@@ -343,6 +378,8 @@ class InstanceNetworksController(InstanceControllerBase):
 
     floatingips = FloatingIPController()
     """Expose floatingip as a sub-element of networks"""
+    interfaces = InterfaceController()
+    """Expose interface as a sub-element of networks"""
 
     @policy.authorize_wsgi("mogan:instance", "get_networks")
     @expose.expose(InstanceNetworks, types.uuid)
