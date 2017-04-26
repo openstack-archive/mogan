@@ -42,7 +42,7 @@ class ConsoleAuthManager(object):
         self.topic = topic
         self._started = False
         self._cache = None
-        self._cache_instance = None
+        self._cache_server = None
         self.engine_rpcapi = rpcapi.EngineAPI()
 
     def init_host(self):
@@ -74,25 +74,25 @@ class ConsoleAuthManager(object):
         return self._cache
 
     @property
-    def cache_instance(self):
-        """Init a permanent cache region for instance token storage."""
-        if self._cache_instance is None:
+    def cache_server(self):
+        """Init a permanent cache region for server token storage."""
+        if self._cache_server is None:
             cache_ttl = CONF.cache.expiration_time
             try:
                 CONF.set_override('expiration_time', None, 'cache')
                 cache_region = oslo_cache.create_region()
-                self._cache_instance = oslo_cache.configure_cache_region(
+                self._cache_server = oslo_cache.configure_cache_region(
                     CONF, cache_region)
             finally:
                 CONF.set_override('expiration_time', cache_ttl, 'cache')
-        return self._cache_instance
+        return self._cache_server
 
     def reset(self):
         LOG.info('Reloading Mogan engine RPC API')
         self.engine_rpcapi = rpcapi.EngineAPI()
 
-    def _get_tokens_for_instance(self, instance_uuid):
-        tokens_str = self.cache_instance.get(instance_uuid.encode('UTF-8'))
+    def _get_tokens_for_server(self, server_uuid):
+        tokens_str = self.cache_server.get(server_uuid.encode('UTF-8'))
         if not tokens_str:
             tokens = []
         else:
@@ -100,11 +100,11 @@ class ConsoleAuthManager(object):
         return tokens
 
     def authorize_console(self, context, token, console_type, host, port,
-                          internal_access_path, instance_uuid,
+                          internal_access_path, server_uuid,
                           access_url=None):
 
         token_dict = {'token': token,
-                      'instance_uuid': instance_uuid,
+                      'server_uuid': server_uuid,
                       'console_type': console_type,
                       'host': host,
                       'port': port,
@@ -114,7 +114,7 @@ class ConsoleAuthManager(object):
         data = jsonutils.dumps(token_dict)
 
         self.cache.set(token.encode('UTF-8'), data)
-        tokens = self._get_tokens_for_instance(instance_uuid)
+        tokens = self._get_tokens_for_server(server_uuid)
 
         # Remove the expired tokens from cache.
         token_values = self.cache.get_multi(
@@ -123,20 +123,20 @@ class ConsoleAuthManager(object):
                   if value]
         tokens.append(token)
 
-        self.cache_instance.set(instance_uuid.encode('UTF-8'),
+        self.cache_server.set(server_uuid.encode('UTF-8'),
                                 jsonutils.dumps(tokens))
 
         LOG.info("Received Token: %(token)s, %(token_dict)s",
                  {'token': token, 'token_dict': token_dict})
 
     def _validate_token(self, context, token):
-        instance_uuid = token['instance_uuid']
-        if instance_uuid is None:
+        server_uuid = token['server_uuid']
+        if server_uuid is None:
             return False
         return True
         # TODO(need to validate the console port)
         # return self.compute_rpcapi.validate_console_port(
-        # context, instance, token['port'], token['console_type'])
+        # context, server, token['port'], token['console_type'])
 
     def check_token(self, context, token):
         token_str = self.cache.get(token.encode('UTF-8'))
@@ -148,8 +148,8 @@ class ConsoleAuthManager(object):
             if self._validate_token(context, token):
                 return token
 
-    def delete_tokens_for_instance(self, context, instance_uuid):
-        tokens = self._get_tokens_for_instance(instance_uuid)
+    def delete_tokens_for_server(self, context, server_uuid):
+        tokens = self._get_tokens_for_server(server_uuid)
         self.cache.delete_multi(
             [tok.encode('UTF-8') for tok in tokens])
-        self.cache_instance.delete(instance_uuid.encode('UTF-8'))
+        self.cache_server.delete(server_uuid.encode('UTF-8'))

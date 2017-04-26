@@ -1,5 +1,5 @@
 {
-    "event_type": "instance.create.start",
+    "event_type": "server.create.start",
     "payload": {
         "mogan_object.name": "InstanceActionPayload",
         "mogan_object.namespace": "mogan",

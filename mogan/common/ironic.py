@@ -110,7 +110,7 @@ class IronicClientWrapper(object):
         :param retry_on_conflict: Boolean value. Whether the request should be
                                   retried in case of a conflict error
                                   (HTTP 409) or not. If retry_on_conflict is
-                                  False the cached instance of the client
+                                  False the cached server of the client
                                   won't be used. Defaults to True.
         """
         retry_on_conflict = kwargs.pop('retry_on_conflict', True)

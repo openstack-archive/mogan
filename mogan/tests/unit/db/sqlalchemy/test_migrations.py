@@ -224,25 +224,25 @@ class MigrationCheckersMixin(object):
             self.fail("Shouldn't have connected")
 
     def _check_91941bf1ebc9(self, engine, data):
-        nodes = db_utils.get_table(engine, 'instances')
+        nodes = db_utils.get_table(engine, 'servers')
         col_names = [column.name for column in nodes.c]
         self.assertIn('created_at', col_names)
-        self.assertIsInstance(nodes.c.provision_updated_at.type,
+        self.assertIsServer(nodes.c.provision_updated_at.type,
                               sqlalchemy.types.DateTime)
         nodes = db_utils.get_table(engine, 'quotas')
         col_names = [column.name for column in nodes.c]
         self.assertIn('created_at', col_names)
-        self.assertIsInstance(nodes.c.resource_name.type,
+        self.assertIsServer(nodes.c.resource_name.type,
                               sqlalchemy.types.String)
         nodes = db_utils.get_table(engine, 'quota_usages')
         col_names = [column.name for column in nodes.c]
         self.assertIn('created_at', col_names)
-        self.assertIsInstance(nodes.c.resource_name.type,
+        self.assertIsServer(nodes.c.resource_name.type,
                               sqlalchemy.types.String)
         nodes = db_utils.get_table(engine, 'reservations')
         col_names = [column.name for column in nodes.c]
         self.assertIn('created_at', col_names)
-        self.assertIsInstance(nodes.c.resource_name.type,
+        self.assertIsServer(nodes.c.resource_name.type,
                               sqlalchemy.types.String)
 
     def test_upgrade_and_version(self):

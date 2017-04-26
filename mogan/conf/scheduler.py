@@ -33,7 +33,7 @@ opts = [
     cfg.ListOpt('scheduler_default_filters',
                 default=[
                     'AvailabilityZoneFilter',
-                    'InstanceTypeFilter',
+                    'FlavorFilter',
                     'CapabilitiesFilter',
                     'PortsFilter'
                 ],

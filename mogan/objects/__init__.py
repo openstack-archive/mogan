@@ -25,10 +25,10 @@ def register_all():
     # NOTE(danms): You must make sure your object gets imported in this
     # function in order for it to be registered by services that may
     # need to receive it via RPC.
-    __import__('mogan.objects.instance_type')
-    __import__('mogan.objects.instance')
-    __import__('mogan.objects.instance_nics')
-    __import__('mogan.objects.instance_fault')
+    __import__('mogan.objects.flavor')
+    __import__('mogan.objects.server')
+    __import__('mogan.objects.server_nics')
+    __import__('mogan.objects.server_fault')
     __import__('mogan.objects.compute_node')
     __import__('mogan.objects.compute_port')
     __import__('mogan.objects.compute_disk')
