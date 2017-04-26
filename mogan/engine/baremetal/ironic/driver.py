@@ -42,7 +42,7 @@ _UNPROVISION_STATES = (ironic_states.ACTIVE, ironic_states.DEPLOYFAIL,
 
 _NODE_FIELDS = ('uuid', 'power_state', 'target_power_state', 'provision_state',
                 'target_provision_state', 'last_error', 'maintenance',
-                'properties', 'instance_uuid')
+                'properties', 'server_uuid')
 
 
 def map_power_state(state):
@@ -53,7 +53,7 @@ def map_power_state(state):
         return states.NOSTATE
 
 
-def _log_ironic_polling(what, node, instance):
+def _log_ironic_polling(what, node, server):
     power_state = (None if node.power_state is None else
                    '"%s"' % node.power_state)
     tgt_power_state = (None if node.target_power_state is None else
@@ -73,7 +73,7 @@ def _log_ironic_polling(what, node, instance):
                    tgt_power_state=tgt_power_state,
                    prov_state=prov_state,
                    tgt_prov_state=tgt_prov_state),
-              instance=instance)
+              server=server)
 
 
 class IronicDriver(base_driver.BaseEngineDriver):
@@ -87,17 +87,17 @@ class IronicDriver(base_driver.BaseEngineDriver):
         return self.ironicclient.call('node.get', node_uuid,
                                       fields=_NODE_FIELDS)
 
-    def _validate_instance_and_node(self, instance):
-        """Get the node associated with the instance.
+    def _validate_server_and_node(self, server):
+        """Get the node associated with the server.
 
-        Check with the Ironic service that this instance is associated with a
+        Check with the Ironic service that this server is associated with a
         node, and return the node.
         """
         try:
-            return self.ironicclient.call('node.get_by_instance_uuid',
-                                          instance.uuid, fields=_NODE_FIELDS)
+            return self.ironicclient.call('node.get_by_server_uuid',
+                                          server.uuid, fields=_NODE_FIELDS)
         except ironic_exc.NotFound:
-            raise exception.InstanceNotFound(instance=instance.uuid)
+            raise exception.ServerNotFound(server=server.uuid)
 
     def _parse_node_properties(self, node):
         """Helper method to parse the node's properties."""
@@ -168,85 +168,85 @@ class IronicDriver(base_driver.BaseEngineDriver):
         }
         return dic
 
-    def _add_instance_info_to_node(self, node, instance):
+    def _add_server_info_to_node(self, node, server):
 
         patch = list()
-        # Associate the node with an instance
-        patch.append({'path': '/instance_uuid', 'op': 'add',
-                      'value': instance.uuid})
+        # Associate the node with an server
+        patch.append({'path': '/server_uuid', 'op': 'add',
+                      'value': server.uuid})
         # Add the required fields to deploy a node.
-        patch.append({'path': '/instance_info/image_source', 'op': 'add',
-                      'value': instance.image_uuid})
+        patch.append({'path': '/server_info/image_source', 'op': 'add',
+                      'value': server.image_uuid})
         # TODO(zhenguo) Add partition support
-        patch.append({'path': '/instance_info/root_gb', 'op': 'add',
+        patch.append({'path': '/server_info/root_gb', 'op': 'add',
                       'value': str(node.properties.get('local_gb', 0))})
 
         try:
             # FIXME(lucasagomes): The "retry_on_conflict" parameter was added
             # to basically causes the deployment to fail faster in case the
             # node picked by the scheduler is already associated with another
-            # instance due bug #1341420.
+            # server due bug #1341420.
             self.ironicclient.call('node.update', node.uuid, patch,
                                    retry_on_conflict=False)
         except ironic_exc.BadRequest:
             msg = (_("Failed to add deploy parameters on node %(node)s "
-                     "when provisioning the instance %(instance)s")
-                   % {'node': node.uuid, 'instance': instance.uuid})
+                     "when provisioning the server %(server)s")
+                   % {'node': node.uuid, 'server': server.uuid})
             LOG.error(msg)
-            raise exception.InstanceDeployFailure(msg)
+            raise exception.ServerDeployFailure(msg)
 
-    def _remove_instance_info_from_node(self, node, instance):
-        patch = [{'path': '/instance_info', 'op': 'remove'},
-                 {'path': '/instance_uuid', 'op': 'remove'}]
+    def _remove_server_info_from_node(self, node, server):
+        patch = [{'path': '/server_info', 'op': 'remove'},
+                 {'path': '/server_uuid', 'op': 'remove'}]
         try:
             self.ironicclient.call('node.update', node.uuid, patch)
         except ironic_exc.BadRequest as e:
             LOG.warning("Failed to remove deploy parameters from node "
-                        "%(node)s when unprovisioning the instance "
-                        "%(instance)s: %(reason)s",
-                        {'node': node.uuid, 'instance': instance.uuid,
+                        "%(node)s when unprovisioning the server "
+                        "%(server)s: %(reason)s",
+                        {'node': node.uuid, 'server': server.uuid,
                          'reason': six.text_type(e)})
 
-    def _wait_for_active(self, instance):
+    def _wait_for_active(self, server):
         """Wait for the node to be marked as ACTIVE in Ironic."""
-        instance.refresh()
-        if instance.status in (states.DELETING, states.ERROR, states.DELETED):
-            raise exception.InstanceDeployAborted(
-                _("Instance %s provisioning was aborted") % instance.uuid)
+        server.refresh()
+        if server.status in (states.DELETING, states.ERROR, states.DELETED):
+            raise exception.ServerDeployAborted(
+                _("Server %s provisioning was aborted") % server.uuid)
 
-        node = self._validate_instance_and_node(instance)
+        node = self._validate_server_and_node(server)
         if node.provision_state == ironic_states.ACTIVE:
             # job is done
             LOG.debug("Ironic node %(node)s is now ACTIVE",
-                      dict(node=node.uuid), instance=instance)
+                      dict(node=node.uuid), server=server)
             raise loopingcall.LoopingCallDone()
 
         if node.target_provision_state in (ironic_states.DELETED,
                                            ironic_states.AVAILABLE):
             # ironic is trying to delete it now
-            raise exception.InstanceNotFound(instance=instance.uuid)
+            raise exception.ServerNotFound(server=server.uuid)
 
         if node.provision_state in (ironic_states.NOSTATE,
                                     ironic_states.AVAILABLE):
             # ironic already deleted it
-            raise exception.InstanceNotFound(instance=instance.uuid)
+            raise exception.ServerNotFound(server=server.uuid)
 
         if node.provision_state == ironic_states.DEPLOYFAIL:
             # ironic failed to deploy
-            msg = (_("Failed to provision instance %(inst)s: %(reason)s")
-                   % {'inst': instance.uuid, 'reason': node.last_error})
-            raise exception.InstanceDeployFailure(msg)
+            msg = (_("Failed to provision server %(inst)s: %(reason)s")
+                   % {'inst': server.uuid, 'reason': node.last_error})
+            raise exception.ServerDeployFailure(msg)
 
-        _log_ironic_polling('become ACTIVE', node, instance)
+        _log_ironic_polling('become ACTIVE', node, server)
 
-    def _wait_for_power_state(self, instance, message):
+    def _wait_for_power_state(self, server, message):
         """Wait for the node to complete a power state change."""
-        node = self._validate_instance_and_node(instance)
+        node = self._validate_server_and_node(server)
 
         if node.target_power_state == ironic_states.NOSTATE:
             raise loopingcall.LoopingCallDone()
 
-        _log_ironic_polling(message, node, instance)
+        _log_ironic_polling(message, node, server)
 
     def _get_hypervisor_type(self):
         """Get hypervisor type."""
@@ -266,14 +266,14 @@ class IronicDriver(base_driver.BaseEngineDriver):
                   'value': port_id}]
         self.ironicclient.call("port.update", ironic_port_id, patch)
 
-    def unplug_vifs(self, context, instance):
-        LOG.debug("unplug: instance_uuid=%(uuid)s vif=%(instance_nics)s",
-                  {'uuid': instance.uuid,
-                   'instance_nics': str(instance.nics)})
+    def unplug_vifs(self, context, server):
+        LOG.debug("unplug: server_uuid=%(uuid)s vif=%(server_nics)s",
+                  {'uuid': server.uuid,
+                   'server_nics': str(server.nics)})
         patch = [{'op': 'remove',
                   'path': '/extra/vif_port_id'}]
 
-        ports = self.get_ports_from_node(instance.node_uuid)
+        ports = self.get_ports_from_node(server.node_uuid)
 
         for port in ports:
             try:
@@ -283,42 +283,42 @@ class IronicDriver(base_driver.BaseEngineDriver):
             except client_e.BadRequest:
                 pass
 
-    def _cleanup_deploy(self, context, node, instance):
+    def _cleanup_deploy(self, context, node, server):
         # NOTE(liusheng): here we may need to stop firewall if we have
         # implemented in ironic like what Nova dose.
-        self.unplug_vifs(context, instance)
+        self.unplug_vifs(context, server)
 
-    def spawn(self, context, instance, configdrive_value):
-        """Deploy an instance.
+    def spawn(self, context, server, configdrive_value):
+        """Deploy an server.
 
         :param context: The security context.
-        :param instance: The instance object.
+        :param server: The server object.
         :param configdrive_value: The configdrive value to be injected.
         """
-        LOG.debug('Spawn called for instance', instance=instance)
+        LOG.debug('Spawn called for server', server=server)
 
         # The engine manager is meant to know the node uuid, so missing uuid
         # is a significant issue. It may mean we've been passed the wrong data.
-        node_uuid = instance.node_uuid
+        node_uuid = server.node_uuid
         if not node_uuid:
             raise ironic_exc.BadRequest(
                 _("Ironic node uuid not supplied to "
-                  "driver for instance %s.") % instance.uuid)
+                  "driver for server %s.") % server.uuid)
 
-        # add instance info to node
+        # add server info to node
         node = self._get_node(node_uuid)
-        self._add_instance_info_to_node(node, instance)
+        self._add_server_info_to_node(node, server)
 
         # validate we are ready to do the deploy
         validate_chk = self.ironicclient.call("node.validate", node_uuid)
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
             # something is wrong. undo what we have done
-            self._cleanup_deploy(context, node, instance)
+            self._cleanup_deploy(context, node, server)
             raise exception.ValidationError(_(
                 "Ironic node: %(id)s failed to validate."
                 " (deploy: %(deploy)s, power: %(power)s)")
-                % {'id': instance.node_uuid,
+                % {'id': server.node_uuid,
                    'deploy': validate_chk.deploy,
                    'power': validate_chk.power})
 
@@ -329,26 +329,26 @@ class IronicDriver(base_driver.BaseEngineDriver):
                                    configdrive=configdrive_value)
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                msg = ("Failed to request Ironic to provision instance "
+                msg = ("Failed to request Ironic to provision server "
                        "%(inst)s: %(reason)s",
-                       {'inst': instance.uuid,
+                       {'inst': server.uuid,
                         'reason': six.text_type(e)})
                 LOG.error(msg)
 
         timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
-                                                     instance)
+                                                     server)
         try:
             timer.start(interval=CONF.ironic.api_retry_interval).wait()
             LOG.info('Successfully provisioned Ironic node %s',
-                     node.uuid, instance=instance)
+                     node.uuid, server=server)
         except Exception:
             with excutils.save_and_reraise_exception():
-                LOG.error("Error deploying instance %(instance)s on "
+                LOG.error("Error deploying server %(server)s on "
                           "baremetal node %(node)s.",
-                          {'instance': instance.uuid,
+                          {'server': server.uuid,
                            'node': node_uuid})
 
-    def _unprovision(self, instance, node):
+    def _unprovision(self, server, node):
         """This method is called from destroy() to unprovision
         already provisioned node after required checks.
         """
@@ -361,7 +361,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             # TODO(deva): This exception should be added to
             #             python-ironicclient and matched directly,
             #             rather than via __name__.
-            if getattr(e, '__name__', None) != 'InstanceDeployFailure':
+            if getattr(e, '__name__', None) != 'ServerDeployFailure':
                 raise
 
         # using a dict because this is modified in the local method
@@ -369,10 +369,10 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         def _wait_for_provision_state():
             try:
-                node = self._validate_instance_and_node(instance)
-            except exception.InstanceNotFound:
-                LOG.debug("Instance already removed from Ironic",
-                          instance=instance)
+                node = self._validate_server_and_node(server)
+            except exception.ServerNotFound:
+                LOG.debug("Server already removed from Ironic",
+                          server=server)
                 raise loopingcall.LoopingCallDone()
             if node.provision_state in (ironic_states.NOSTATE,
                                         ironic_states.CLEANING,
@@ -381,15 +381,15 @@ class IronicDriver(base_driver.BaseEngineDriver):
                                         ironic_states.AVAILABLE):
                 # From a user standpoint, the node is unprovisioned. If a node
                 # gets into CLEANFAIL state, it must be fixed in Ironic, but we
-                # can consider the instance unprovisioned.
+                # can consider the server unprovisioned.
                 LOG.debug("Ironic node %(node)s is in state %(state)s, "
-                          "instance is now unprovisioned.",
+                          "server is now unprovisioned.",
                           dict(node=node.uuid, state=node.provision_state),
-                          instance=instance)
+                          server=server)
                 raise loopingcall.LoopingCallDone()
 
             if data['tries'] >= CONF.ironic.api_max_retries + 1:
-                msg = (_("Error destroying the instance on node %(node)s. "
+                msg = (_("Error destroying the server on node %(node)s. "
                          "Provision state still '%(state)s'.")
                        % {'state': node.provision_state,
                           'node': node.uuid})
@@ -398,36 +398,36 @@ class IronicDriver(base_driver.BaseEngineDriver):
             else:
                 data['tries'] += 1
 
-            _log_ironic_polling('unprovision', node, instance)
+            _log_ironic_polling('unprovision', node, server)
 
         # wait for the state transition to finish
         timer = loopingcall.FixedIntervalLoopingCall(_wait_for_provision_state)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
 
-    def destroy(self, context, instance):
-        """Destroy the specified instance, if it can be found.
+    def destroy(self, context, server):
+        """Destroy the specified server, if it can be found.
 
         :param context: The security context.
-        :param instance: The instance object.
+        :param server: The server object.
         """
-        LOG.debug('Destroy called for instance', instance=instance)
+        LOG.debug('Destroy called for server', server=server)
         try:
-            node = self._validate_instance_and_node(instance)
-        except exception.InstanceNotFound:
-            LOG.warning("Destroy called on non-existing instance %s.",
-                        instance.uuid)
+            node = self._validate_server_and_node(server)
+        except exception.ServerNotFound:
+            LOG.warning("Destroy called on non-existing server %s.",
+                        server.uuid)
             return
 
         if node.provision_state in _UNPROVISION_STATES:
-            self._unprovision(instance, node)
+            self._unprovision(server, node)
         else:
             # NOTE(hshiina): if spawn() fails before ironic starts
-            #                provisioning, instance information should be
+            #                provisioning, server information should be
             #                removed from ironic node.
-            self._remove_instance_info_from_node(node, instance)
+            self._remove_server_info_from_node(node, server)
 
         LOG.info('Successfully unprovisioned Ironic node %s',
-                 node.uuid, instance=instance)
+                 node.uuid, server=server)
 
     def get_available_resources(self):
         """Helper function to return the list of resources.
@@ -485,7 +485,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         """
         params = {
             'associated': True,
-            'fields': ('instance_uuid', 'maintenance'),
+            'fields': ('server_uuid', 'maintenance'),
             'limit': 0
         }
         try:
@@ -507,7 +507,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         params = {
             'maintenance': False,
             'associated': True,
-            'fields': ('instance_uuid', 'power_state', 'target_power_state'),
+            'fields': ('server_uuid', 'power_state', 'target_power_state'),
             'limit': 0
         }
         try:
@@ -518,22 +518,22 @@ class IronicDriver(base_driver.BaseEngineDriver):
             node_list = []
         return node_list
 
-    def get_power_state(self, context, instance_uuid):
+    def get_power_state(self, context, server_uuid):
         try:
-            node = self.ironicclient.call('node.get_by_instance_uuid',
-                                          instance_uuid,
+            node = self.ironicclient.call('node.get_by_server_uuid',
+                                          server_uuid,
                                           fields=('power_state',))
             return map_power_state(node.power_state)
         except client_e.NotFound:
             return map_power_state(ironic_states.NOSTATE)
 
-    def set_power_state(self, context, instance, state):
-        """Set power state on the specified instance.
+    def set_power_state(self, context, server, state):
+        """Set power state on the specified server.
 
         :param context: The security context.
-        :param instance: The instance object.
+        :param server: The server object.
         """
-        node = self._validate_instance_and_node(instance)
+        node = self._validate_server_and_node(server)
         if state == "soft_off":
             self.ironicclient.call("node.set_power_state",
                                    node.uuid, "off", soft=True)
@@ -544,38 +544,38 @@ class IronicDriver(base_driver.BaseEngineDriver):
             self.ironicclient.call("node.set_power_state",
                                    node.uuid, state)
         timer = loopingcall.FixedIntervalLoopingCall(
-            self._wait_for_power_state, instance, state)
+            self._wait_for_power_state, server, state)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
 
-    def rebuild(self, context, instance):
-        """Rebuild/redeploy an instance.
+    def rebuild(self, context, server):
+        """Rebuild/redeploy an server.
 
         :param context: The security context.
-        :param instance: The instance object.
+        :param server: The server object.
         """
-        LOG.debug('Rebuild called for instance', instance=instance)
+        LOG.debug('Rebuild called for server', server=server)
 
         # trigger the node rebuild
         try:
             self.ironicclient.call("node.set_provision_state",
-                                   instance.node_uuid,
+                                   server.node_uuid,
                                    ironic_states.REBUILD)
         except (ironic_exc.InternalServerError,
                 ironic_exc.BadRequest) as e:
-            msg = (_("Failed to request Ironic to rebuild instance "
-                     "%(inst)s: %(reason)s") % {'inst': instance.uuid,
+            msg = (_("Failed to request Ironic to rebuild server "
+                     "%(inst)s: %(reason)s") % {'inst': server.uuid,
                                                 'reason': six.text_type(e)})
-            raise exception.InstanceDeployFailure(msg)
+            raise exception.ServerDeployFailure(msg)
 
         # Although the target provision state is REBUILD, it will actually go
         # to ACTIVE once the redeploy is finished.
         timer = loopingcall.FixedIntervalLoopingCall(self._wait_for_active,
-                                                     instance)
+                                                     server)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
-        LOG.info('Instance was successfully rebuilt', instance=instance)
+        LOG.info('Server was successfully rebuilt', server=server)
 
-    def get_serial_console_by_instance(self, context, instance):
-        node = self._validate_instance_and_node(instance)
+    def get_serial_console_by_server(self, context, server):
+        node = self._validate_server_and_node(server)
         node_uuid = node.uuid
 
         def _get_console():
@@ -596,7 +596,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             if console['console_enabled'] == state:
                 raise loopingcall.LoopingCallDone(retvalue=console)
 
-            _log_ironic_polling('set console mode', node, instance)
+            _log_ironic_polling('set console mode', node, server)
 
             # Return False to start backing off
             return False

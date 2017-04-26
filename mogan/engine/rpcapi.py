@@ -49,12 +49,12 @@ class EngineAPI(object):
                                      version_cap=self.RPC_API_VERSION,
                                      serializer=serializer)
 
-    def create_instance(self, context, instance, requested_networks,
+    def create_server(self, context, server, requested_networks,
                         user_data, injected_files, key_pair, request_spec,
                         filter_properties):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        cctxt.cast(context, 'create_instance', instance=instance,
+        cctxt.cast(context, 'create_server', server=server,
                    requested_networks=requested_networks,
                    user_data=user_data,
                    injected_files=injected_files,
@@ -62,23 +62,23 @@ class EngineAPI(object):
                    request_spec=request_spec,
                    filter_properties=filter_properties)
 
-    def delete_instance(self, context, instance):
-        """Signal to engine service to delete an instance."""
+    def delete_server(self, context, server):
+        """Signal to engine service to delete an server."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        cctxt.cast(context, 'delete_instance', instance=instance)
+        cctxt.cast(context, 'delete_server', server=server)
 
-    def set_power_state(self, context, instance, state):
-        """Signal to engine service to perform power action on instance."""
+    def set_power_state(self, context, server, state):
+        """Signal to engine service to perform power action on server."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.cast(context, 'set_power_state',
-                          instance=instance, state=state)
+                          server=server, state=state)
 
-    def rebuild_instance(self, context, instance):
-        """Signal to engine service to rebuild an instance."""
+    def rebuild_server(self, context, server):
+        """Signal to engine service to rebuild an server."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.cast(context, 'rebuild_instance', instance=instance)
+        return cctxt.cast(context, 'rebuild_server', server=server)
 
-    def get_serial_console(self, context, instance):
+    def get_serial_console(self, context, server):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'get_serial_console',
-                          instance=instance)
+                          server=server)

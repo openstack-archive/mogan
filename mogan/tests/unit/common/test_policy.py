@@ -25,13 +25,13 @@ class TestAuthorizeWsgi(base.TestCase):
         self.ctxt = context.RequestContext(
             tenant='c18e8a1a870d4c08a0b51ced6e0b6459',
             user='cdbf77d47f1d4d04ad9b7ff62b672467')
-        self.test_inst = utils.get_test_instance(self.ctxt)
+        self.test_inst = utils.get_test_server(self.ctxt)
         self.fake_controller._get_resource.return_value = self.test_inst
 
-        def power(self, instance_uuid, target):
+        def power(self, server_uuid, target):
             pass
 
-        def lock(self, instance_uuid, target):
+        def lock(self, server_uuid, target):
             pass
 
         self.fake_power = power
@@ -41,15 +41,15 @@ class TestAuthorizeWsgi(base.TestCase):
     def test_authorize_power_action_owner(self, mocked_pecan_request):
         mocked_pecan_request.context = self.ctxt
 
-        policy.authorize_wsgi("mogan:instance", "set_power_state")(
-            self.fake_power)(self.fake_controller, 'fake_instance_id', 'off')
+        policy.authorize_wsgi("mogan:server", "set_power_state")(
+            self.fake_power)(self.fake_controller, 'fake_server_id', 'off')
 
     @mock.patch('pecan.request')
     def test_authorize_power_action_admin(self, mocked_pecan_request):
         mocked_pecan_request.context = context.get_admin_context()
 
-        policy.authorize_wsgi("mogan:instance", "set_power_state")(
-            self.fake_power)(self.fake_controller, 'fake_instance_id', 'off')
+        policy.authorize_wsgi("mogan:server", "set_power_state")(
+            self.fake_power)(self.fake_controller, 'fake_server_id', 'off')
 
     @mock.patch('pecan.response')
     @mock.patch('pecan.request')
@@ -59,27 +59,27 @@ class TestAuthorizeWsgi(base.TestCase):
             tenant='non-exist-tenant',
             user='non-exist-user')
 
-        data = policy.authorize_wsgi("mogan:instance", "set_power_state")(
-            self.fake_power)(self.fake_controller, 'fake_instance_id',
+        data = policy.authorize_wsgi("mogan:server", "set_power_state")(
+            self.fake_power)(self.fake_controller, 'fake_server_id',
                              'reboot')
         self.assertEqual(403, mocked_pecan_response.status)
         self.assertEqual('Access was denied to the following resource: '
-                         'mogan:instance:set_power_state',
+                         'mogan:server:set_power_state',
                          data['faultstring'])
 
     @mock.patch('pecan.request')
     def test_authorize_lock_action_owner(self, mocked_pecan_request):
         mocked_pecan_request.context = self.ctxt
 
-        policy.authorize_wsgi("mogan:instance", "set_lock_state")(
-            self.fake_lock)(self.fake_controller, 'fake_instance_id', True)
+        policy.authorize_wsgi("mogan:server", "set_lock_state")(
+            self.fake_lock)(self.fake_controller, 'fake_server_id', True)
 
     @mock.patch('pecan.request')
     def test_authorize_lock_action_admin(self, mocked_pecan_request):
         mocked_pecan_request.context = context.get_admin_context()
 
-        policy.authorize_wsgi("mogan:instance", "set_lock_state")(
-            self.fake_lock)(self.fake_controller, 'fake_instance_id', True)
+        policy.authorize_wsgi("mogan:server", "set_lock_state")(
+            self.fake_lock)(self.fake_controller, 'fake_server_id', True)
 
     @mock.patch('pecan.response')
     @mock.patch('pecan.request')
@@ -89,10 +89,10 @@ class TestAuthorizeWsgi(base.TestCase):
             tenant='non-exist-tenant',
             user='non-exist-user')
 
-        data = policy.authorize_wsgi("mogan:instance", "set_lock_state")(
-            self.fake_lock)(self.fake_controller, 'fake_instance_id',
+        data = policy.authorize_wsgi("mogan:server", "set_lock_state")(
+            self.fake_lock)(self.fake_controller, 'fake_server_id',
                             True)
         self.assertEqual(403, mocked_pecan_response.status)
         self.assertEqual('Access was denied to the following resource: '
-                         'mogan:instance:set_lock_state',
+                         'mogan:server:set_lock_state',
                          data['faultstring'])

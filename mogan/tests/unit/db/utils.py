@@ -20,8 +20,8 @@ from mogan.common import states
 from mogan.db import api as db_api
 
 
-def get_test_instance(**kw):
-    fake_instance_nics = [{
+def get_test_server(**kw):
+    fake_server_nics = [{
         'port_id': uuidutils.generate_uuid(),
         'network_id': 'bf942f63-c284-4eb8-925b-c2fa1a89ed33',
         'mac_address': '52:54:00:6a:b7:cc',
@@ -49,12 +49,12 @@ def get_test_instance(**kw):
         'user_id': kw.get('user_id', 'cdbf77d47f1d4d04ad9b7ff62b672467'),
         'status': kw.get('status', states.ACTIVE),
         'power_state': kw.get('power_state', 'power on'),
-        'instance_type_uuid': kw.get('instance_type_uuid',
+        'flavor_uuid': kw.get('flavor_uuid',
                                      '28708dff-283c-449e-9bfa-a48c93480c86'),
         'availability_zone': kw.get('availability_zone', 'test_az'),
         'image_uuid': kw.get('image_uuid',
                              'ac3b2291-b9ef-45f6-8eeb-21ac568a64a5'),
-        'nics': kw.get('nics', fake_instance_nics),
+        'nics': kw.get('nics', fake_server_nics),
         'node_uuid': kw.get('node_uuid',
                             'f978ef48-d4af-4dad-beec-e6174309bc71'),
         'launched_at': kw.get('launched_at'),
@@ -66,23 +66,23 @@ def get_test_instance(**kw):
     }
 
 
-def create_test_instance(context={}, **kw):
-    """Create test instance entry in DB and return Instance DB object.
+def create_test_server(context={}, **kw):
+    """Create test server entry in DB and return Server DB object.
 
-    Function to be used to create test Instance objects in the database.
+    Function to be used to create test Server objects in the database.
 
     :param context: The request context, for access checks.
-    :param kw: kwargs with overriding values for instance's attributes.
-    :returns: Test Instance DB object.
+    :param kw: kwargs with overriding values for server's attributes.
+    :returns: Test Server DB object.
 
     """
-    instance = get_test_instance(**kw)
+    server = get_test_server(**kw)
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
-        del instance['id']
-    dbapi = db_api.get_instance()
+        del server['id']
+    dbapi = db_api.get_server()
 
-    return dbapi.instance_create(context, instance)
+    return dbapi.server_create(context, server)
 
 
 def get_test_compute_node(**kw):
@@ -121,7 +121,7 @@ def create_test_compute_node(context={}, **kw):
     # specified explicitly just delete it.
     if 'ports' not in kw:
         del node['ports']
-    dbapi = db_api.get_instance()
+    dbapi = db_api.get_server()
 
     return dbapi.compute_node_create(context, node)
 
@@ -155,7 +155,7 @@ def create_test_compute_port(context={}, **kw):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
         del port['id']
-    dbapi = db_api.get_instance()
+    dbapi = db_api.get_server()
 
     return dbapi.compute_port_create(context, port)
 
@@ -189,12 +189,12 @@ def create_test_compute_disk(context={}, **kw):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
         del disk['id']
-    dbapi = db_api.get_instance()
+    dbapi = db_api.get_server()
 
     return dbapi.compute_disk_create(context, disk)
 
 
-def get_test_instance_type(**kw):
+def get_test_flavor(**kw):
     return {
         'uuid': kw.get('uuid', uuidutils.generate_uuid()),
         'name': kw.get('name', 'test'),
@@ -205,25 +205,25 @@ def get_test_instance_type(**kw):
     }
 
 
-def create_test_instance_type(context={}, **kw):
-    """Create test instance type entry in DB and return the DB object.
+def create_test_flavor(context={}, **kw):
+    """Create test server type entry in DB and return the DB object.
 
-    Function to be used to create test Instance Type objects in the database.
+    Function to be used to create test Flavor objects in the database.
 
     :param context: The request context, for access checks.
-    :param kw: kwargs with overriding values for instance type's attributes.
-    :returns: Test Instance Type DB object.
+    :param kw: kwargs with overriding values for server type's attributes.
+    :returns: Test Flavor DB object.
 
     """
-    instance_type = get_test_instance_type(**kw)
-    dbapi = db_api.get_instance()
+    flavor = get_test_flavor(**kw)
+    dbapi = db_api.get_server()
 
-    return dbapi.instance_type_create(context, instance_type)
+    return dbapi.flavor_create(context, flavor)
 
 
-def get_test_instance_fault(**kw):
+def get_test_server_fault(**kw):
     return {
-        'instance_uuid': kw.get('instance_uuid'),
+        'server_uuid': kw.get('server_uuid'),
         'code': kw.get('code', 404),
         'message': kw.get('message', 'message'),
         'detail': kw.get('detail', 'detail'),
@@ -232,26 +232,26 @@ def get_test_instance_fault(**kw):
     }
 
 
-def create_test_instance_fault(context={}, **kw):
-    """Create test instance fault entry in DB and return the DB object.
+def create_test_server_fault(context={}, **kw):
+    """Create test server fault entry in DB and return the DB object.
 
-    Function to be used to create test Instance Fault objects in the database.
+    Function to be used to create test Server Fault objects in the database.
 
     :param context: The request context, for access checks.
-    :param kw: kwargs with overriding values for instance fault's attributes.
-    :returns: Test Instance Fault DB object.
+    :param kw: kwargs with overriding values for server fault's attributes.
+    :returns: Test Server Fault DB object.
 
     """
-    instance_fault = get_test_instance_fault(**kw)
-    dbapi = db_api.get_instance()
+    server_fault = get_test_server_fault(**kw)
+    dbapi = db_api.get_server()
 
-    return dbapi.instance_fault_create(context, instance_fault)
+    return dbapi.server_fault_create(context, server_fault)
 
 
 def get_test_quota(**kw):
     return {
         'id': kw.get('id', 123),
-        'resource_name': kw.get('resource_name', 'instances'),
+        'resource_name': kw.get('resource_name', 'servers'),
         'project_id': kw.get('project_id',
                              'c18e8a1a870d4c08a0b51ced6e0b6459'),
         'hard_limit': kw.get('hard_limit', 10),
@@ -267,7 +267,7 @@ def create_test_quota(context={}, **kw):
     Function to be used to create test Quota objects in the database.
 
     :param context: The request context, for access checks.
-    :param kw: kwargs with overriding values for instance's attributes.
+    :param kw: kwargs with overriding values for server's attributes.
     :returns: Test Quota DB object.
 
     """
@@ -275,6 +275,6 @@ def create_test_quota(context={}, **kw):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
         del quota['id']
-    dbapi = db_api.get_instance()
+    dbapi = db_api.get_server()
 
     return dbapi.quota_create(context, quota)

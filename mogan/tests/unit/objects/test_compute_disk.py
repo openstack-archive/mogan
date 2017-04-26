@@ -52,7 +52,7 @@ class TestComputeDiskObject(base.DbTestCase):
             disks = objects.ComputeDisk.list(self.context)
 
             mock_disk_get_all.assert_called_once_with(self.context)
-            self.assertIsInstance(disks[0], objects.ComputeDisk)
+            self.assertIsServer(disks[0], objects.ComputeDisk)
             self.assertEqual(self.context, disks[0]._context)
 
     def test_create(self):

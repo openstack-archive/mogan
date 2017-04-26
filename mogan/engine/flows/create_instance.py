@@ -32,36 +32,36 @@ from mogan.common import flow_utils
 from mogan.common.i18n import _
 from mogan.common import utils
 from mogan.engine import configdrive
-from mogan.engine import metadata as instance_metadata
+from mogan.engine import metadata as server_metadata
 from mogan import objects
 
 
 LOG = logging.getLogger(__name__)
 
-ACTION = 'instance:create'
+ACTION = 'server:create'
 CONF = cfg.CONF
 
 
 class OnFailureRescheduleTask(flow_utils.MoganTask):
     """Triggers a rescheduling request to be sent when reverting occurs.
 
-    If rescheduling doesn't occur this task errors out the instance.
+    If rescheduling doesn't occur this task errors out the server.
     """
 
     def __init__(self, engine_rpcapi):
-        requires = ['filter_properties', 'request_spec', 'instance',
+        requires = ['filter_properties', 'request_spec', 'server',
                     'requested_networks', 'user_data', 'injected_files',
                     'key_pair', 'context']
         super(OnFailureRescheduleTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
         self.engine_rpcapi = engine_rpcapi
-        # These exception types will trigger the instance to be set into error
+        # These exception types will trigger the server to be set into error
         # status rather than being rescheduled.
         self.no_reschedule_exc_types = [
-            # The instance has been removed from the database, that can not
+            # The server has been removed from the database, that can not
             # be fixed by rescheduling.
-            exception.InstanceNotFound,
-            exception.InstanceDeployAborted,
+            exception.ServerNotFound,
+            exception.ServerDeployAborted,
             exception.NetworkError,
         ]
 
@@ -69,11 +69,11 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         pass
 
     def _reschedule(self, context, cause, request_spec, filter_properties,
-                    instance, requested_networks, user_data, injected_files,
+                    server, requested_networks, user_data, injected_files,
                     key_pair):
         """Actions that happen during the rescheduling attempt occur here."""
 
-        create_instance = self.engine_rpcapi.create_instance
+        create_server = self.engine_rpcapi.create_server
         if not filter_properties:
             filter_properties = {}
         if 'retry' not in filter_properties:
@@ -82,10 +82,10 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         retry_info = filter_properties['retry']
         num_attempts = retry_info.get('num_attempts', 0)
 
-        LOG.debug("Instance %(instance_id)s: re-scheduling %(method)s "
+        LOG.debug("Server %(server_id)s: re-scheduling %(method)s "
                   "attempt %(num)d due to %(reason)s",
-                  {'instance_id': instance.uuid,
-                   'method': utils.make_pretty_name(create_instance),
+                  {'server_id': server.uuid,
+                   'method': utils.make_pretty_name(create_server),
                    'num': num_attempts,
                    'reason': cause.exception_str})
 
@@ -93,55 +93,55 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             # Stringify to avoid circular ref problem in json serialization
             retry_info['exc'] = traceback.format_exception(*cause.exc_info)
 
-        return create_instance(context, instance, requested_networks,
+        return create_server(context, server, requested_networks,
                                user_data=user_data,
                                injected_files=injected_files,
                                key_pair=key_pair,
                                request_spec=request_spec,
                                filter_properties=filter_properties)
 
-    def revert(self, context, result, flow_failures, instance, **kwargs):
-        # Cleanup associated instance node uuid
-        if instance.node_uuid:
+    def revert(self, context, result, flow_failures, server, **kwargs):
+        # Cleanup associated server node uuid
+        if server.node_uuid:
             # If the compute node is still in DB, release it.
             try:
-                cn = objects.ComputeNode.get(context, instance.node_uuid)
+                cn = objects.ComputeNode.get(context, server.node_uuid)
             except exception.ComputeNodeNotFound:
                 pass
             else:
                 cn.destroy()
-            instance.node_uuid = None
-            instance.save()
+            server.node_uuid = None
+            server.save()
 
         # Check if we have a cause which can tell us not to reschedule and
-        # set the instance's status to error.
+        # set the server's status to error.
         for failure in flow_failures.values():
             if failure.check(*self.no_reschedule_exc_types):
-                LOG.error("Instance %s: create failed and no reschedule.",
-                          instance.uuid)
+                LOG.error("Server %s: create failed and no reschedule.",
+                          server.uuid)
                 return False
 
         cause = list(flow_failures.values())[0]
         try:
-            self._reschedule(context, cause, instance=instance, **kwargs)
+            self._reschedule(context, cause, server=server, **kwargs)
             return True
         except exception.MoganException:
-            LOG.exception("Instance %s: rescheduling failed",
-                          instance.uuid)
+            LOG.exception("Server %s: rescheduling failed",
+                          server.uuid)
 
         return False
 
 
 class BuildNetworkTask(flow_utils.MoganTask):
-    """Build network for the instance."""
+    """Build network for the server."""
 
     def __init__(self, manager):
-        requires = ['instance', 'requested_networks', 'ports', 'context']
+        requires = ['server', 'requested_networks', 'ports', 'context']
         super(BuildNetworkTask, self).__init__(addons=[ACTION],
                                                requires=requires)
         self.manager = manager
 
-    def _build_networks(self, context, instance, requested_networks, ports):
+    def _build_networks(self, context, server, requested_networks, ports):
 
         # TODO(zhenguo): This seems not needed as our scheduler has already
         # guaranteed this.
@@ -150,18 +150,18 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 "Ironic node: %(id)s virtual to physical interface count"
                 "  mismatch"
                 " (Vif count: %(vif_count)d, Pif count: %(pif_count)d)")
-                % {'id': instance.node_uuid,
+                % {'id': server.node_uuid,
                    'vif_count': len(requested_networks),
                    'pif_count': len(ports)})
 
-        nics_obj = objects.InstanceNics(context)
+        nics_obj = objects.ServerNics(context)
         for vif in requested_networks:
             for pif in ports:
                 # Match the specified port type with physical interface type
                 if vif.get('port_type', 'None') == pif.port_type:
                     try:
                         port = self.manager.network_api.create_port(
-                            context, vif['net_id'], pif.address, instance.uuid)
+                            context, vif['net_id'], pif.address, server.uuid)
                         port_dict = port['port']
 
                         self.manager.driver.plug_vif(pif.port_uuid,
@@ -171,61 +171,61 @@ class BuildNetworkTask(flow_utils.MoganTask):
                                     'mac_address': port_dict['mac_address'],
                                     'fixed_ips': port_dict['fixed_ips'],
                                     'port_type': vif.get('port_type'),
-                                    'instance_uuid': instance.uuid}
-                        nics_obj.objects.append(objects.InstanceNic(
+                                    'server_uuid': server.uuid}
+                        nics_obj.objects.append(objects.ServerNic(
                             context, **nic_dict))
 
                     except Exception:
                         # Set nics here, so we can clean up the
                         # created networks during reverting.
-                        instance.nics = nics_obj
-                        LOG.error("Instance %s: create network failed",
-                                  instance.uuid)
+                        server.nics = nics_obj
+                        LOG.error("Server %s: create network failed",
+                                  server.uuid)
                         raise exception.NetworkError(_(
-                            "Build network for instance failed."))
+                            "Build network for server failed."))
         return nics_obj
 
-    def execute(self, context, instance, requested_networks, ports):
-        instance_nics = self._build_networks(
+    def execute(self, context, server, requested_networks, ports):
+        server_nics = self._build_networks(
             context,
-            instance,
+            server,
             requested_networks,
             ports)
 
-        instance.nics = instance_nics
-        instance.save()
+        server.nics = server_nics
+        server.save()
 
-    def revert(self, context, result, flow_failures, instance, **kwargs):
+    def revert(self, context, result, flow_failures, server, **kwargs):
         # Check if we need to clean up networks.
-        if instance.nics:
-            LOG.debug("Instance %s: cleaning up node networks",
-                      instance.uuid)
-            self.manager.destroy_networks(context, instance)
+        if server.nics:
+            LOG.debug("Server %s: cleaning up node networks",
+                      server.uuid)
+            self.manager.destroy_networks(context, server)
             # Unset nics here as we have destroyed it.
-            instance.nics = None
+            server.nics = None
             return True
 
         return False
 
 
 class GenerateConfigDriveTask(flow_utils.MoganTask):
-    """Generate ConfigDrive value the instance."""
+    """Generate ConfigDrive value the server."""
 
     def __init__(self):
-        requires = ['instance', 'user_data', 'injected_files', 'key_pair',
+        requires = ['server', 'user_data', 'injected_files', 'key_pair',
                     'configdrive', 'context']
         super(GenerateConfigDriveTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
 
-    def _generate_configdrive(self, context, instance, user_data=None,
+    def _generate_configdrive(self, context, server, user_data=None,
                               files=None, key_pair=None):
         """Generate a config drive."""
 
-        i_meta = instance_metadata.InstanceMetadata(
-            instance, content=files, user_data=user_data, key_pair=key_pair)
+        i_meta = server_metadata.ServerMetadata(
+            server, content=files, user_data=user_data, key_pair=key_pair)
 
         with tempfile.NamedTemporaryFile() as uncompressed:
-            with configdrive.ConfigDriveBuilder(instance_md=i_meta) as cdb:
+            with configdrive.ConfigDriveBuilder(server_md=i_meta) as cdb:
                 cdb.make_drive(uncompressed.name)
 
             with tempfile.NamedTemporaryFile() as compressed:
@@ -238,55 +238,55 @@ class GenerateConfigDriveTask(flow_utils.MoganTask):
                 compressed.seek(0)
                 return base64.b64encode(compressed.read())
 
-    def execute(self, context, instance, user_data, injected_files, key_pair,
+    def execute(self, context, server, user_data, injected_files, key_pair,
                 configdrive):
 
         try:
             configdrive['value'] = self._generate_configdrive(
-                context, instance, user_data=user_data, files=injected_files,
+                context, server, user_data=user_data, files=injected_files,
                 key_pair=key_pair)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 msg = ("Failed to build configdrive: %s" %
                        six.text_type(e))
-                LOG.error(msg, instance=instance)
+                LOG.error(msg, server=server)
 
-        LOG.info("Config drive for instance %(instance)s created.",
-                 {'instance': instance.uuid})
+        LOG.info("Config drive for server %(server)s created.",
+                 {'server': server.uuid})
 
 
-class CreateInstanceTask(flow_utils.MoganTask):
-    """Build and deploy the instance."""
+class CreateServerTask(flow_utils.MoganTask):
+    """Build and deploy the server."""
 
     def __init__(self, driver):
-        requires = ['instance', 'configdrive', 'context']
-        super(CreateInstanceTask, self).__init__(addons=[ACTION],
+        requires = ['server', 'configdrive', 'context']
+        super(CreateServerTask, self).__init__(addons=[ACTION],
                                                  requires=requires)
         self.driver = driver
-        # These exception types will trigger the instance to be cleaned.
-        self.instance_cleaned_exc_types = [
-            exception.InstanceDeployFailure,
+        # These exception types will trigger the server to be cleaned.
+        self.server_cleaned_exc_types = [
+            exception.ServerDeployFailure,
             loopingcall.LoopingCallTimeOut,
         ]
 
-    def execute(self, context, instance, configdrive):
+    def execute(self, context, server, configdrive):
         configdrive_value = configdrive.get('value')
-        self.driver.spawn(context, instance, configdrive_value)
+        self.driver.spawn(context, server, configdrive_value)
         LOG.info('Successfully provisioned Ironic node %s',
-                 instance.node_uuid)
+                 server.node_uuid)
 
-    def revert(self, context, result, flow_failures, instance, **kwargs):
-        # Check if we have a cause which need to clean up instance.
+    def revert(self, context, result, flow_failures, server, **kwargs):
+        # Check if we have a cause which need to clean up server.
         for failure in flow_failures.values():
-            if failure.check(*self.instance_cleaned_exc_types):
-                LOG.debug("Instance %s: destroy ironic node", instance.uuid)
-                self.driver.destroy(context, instance)
+            if failure.check(*self.server_cleaned_exc_types):
+                LOG.debug("Server %s: destroy ironic node", server.uuid)
+                self.driver.destroy(context, server)
                 return True
 
         return False
 
 
-def get_flow(context, manager, instance, requested_networks, user_data,
+def get_flow(context, manager, server, requested_networks, user_data,
              injected_files, key_pair, ports, request_spec,
              filter_properties):
 
@@ -294,14 +294,14 @@ def get_flow(context, manager, instance, requested_networks, user_data,
 
     This flow will do the following:
 
-    1. Build networks for the instance and set port id back to baremetal port
-    2. Generate configdrive value for instance.
+    1. Build networks for the server and set port id back to baremetal port
+    2. Generate configdrive value for server.
     3. Do node deploy and handle errors.
     4. Reschedule if the tasks are on failure.
     """
 
     flow_name = ACTION.replace(":", "_") + "_manager"
-    instance_flow = linear_flow.Flow(flow_name)
+    server_flow = linear_flow.Flow(flow_name)
 
     # This injects the initial starting flow values into the workflow so that
     # the dependency order of the tasks provides/requires can be correctly
@@ -310,7 +310,7 @@ def get_flow(context, manager, instance, requested_networks, user_data,
         'context': context,
         'filter_properties': filter_properties,
         'request_spec': request_spec,
-        'instance': instance,
+        'server': server,
         'requested_networks': requested_networks,
         'user_data': user_data,
         'injected_files': injected_files,
@@ -319,10 +319,10 @@ def get_flow(context, manager, instance, requested_networks, user_data,
         'configdrive': {}
     }
 
-    instance_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
+    server_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
                       BuildNetworkTask(manager),
                       GenerateConfigDriveTask(),
-                      CreateInstanceTask(manager.driver))
+                      CreateServerTask(manager.driver))
 
     # Now load (but do not run) the flow using the provided initial data.
-    return taskflow.engines.load(instance_flow, store=create_what)
+    return taskflow.engines.load(server_flow, store=create_what)

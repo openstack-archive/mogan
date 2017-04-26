@@ -31,7 +31,7 @@ from mogan.common import states
 from mogan.common import utils
 from mogan.conf import CONF
 from mogan.engine import base_manager
-from mogan.engine.flows import create_instance
+from mogan.engine.flows import create_server
 from mogan.notifications import base as notifications
 from mogan import objects
 from mogan.objects import fields
@@ -40,26 +40,26 @@ from mogan.objects import quota
 LOG = log.getLogger(__name__)
 
 
-@utils.expects_func_args('instance')
-def wrap_instance_fault(function):
-    """Wraps a method to catch exceptions related to instances.
+@utils.expects_func_args('server')
+def wrap_server_fault(function):
+    """Wraps a method to catch exceptions related to servers.
 
     This decorator wraps a method to catch any exceptions having to do with
-    an instance that may get thrown. It then logs an instance fault in the db.
+    an server that may get thrown. It then logs an server fault in the db.
     """
 
     @functools.wraps(function)
     def decorated_function(self, context, *args, **kwargs):
         try:
             return function(self, context, *args, **kwargs)
-        except exception.InstanceNotFound:
+        except exception.ServerNotFound:
             raise
         except Exception as e:
             kwargs.update(dict(zip(function.__code__.co_varnames[2:], args)))
 
             with excutils.save_and_reraise_exception():
-                utils.add_instance_fault_from_exc(context,
-                                                  kwargs['instance'],
+                utils.add_server_fault_from_exc(context,
+                                                  kwargs['server'],
                                                   e, sys.exc_info())
 
     return decorated_function
@@ -75,7 +75,7 @@ class EngineManager(base_manager.BaseEngineManager):
     def __init__(self, *args, **kwargs):
         super(EngineManager, self).__init__(*args, **kwargs)
         self.quota = quota.Quota()
-        self.quota.register_resource(objects.quota.InstanceResource())
+        self.quota.register_resource(objects.quota.ServerResource())
 
     def _get_compute_port(self, context, port_uuid):
         """Gets compute port by the uuid."""
@@ -185,97 +185,97 @@ class EngineManager(base_manager.BaseEngineManager):
             # Just retrun if we fail to get nodes real power state.
             return
 
-        node_dict = {node.instance_uuid: node for node in nodes
+        node_dict = {node.server_uuid: node for node in nodes
                      if node.target_power_state is None}
 
         if not node_dict:
-            LOG.warning("While synchronizing instance power states, "
-                        "found none instance with stable power state "
+            LOG.warning("While synchronizing server power states, "
+                        "found none server with stable power state "
                         "on the hypervisor.")
             return
 
-        def _sync(db_instance, node_power_state):
+        def _sync(db_server, node_power_state):
             # This must be synchronized as we query state from two separate
             # sources, the driver (ironic) and the database. They are set
-            # (in stop_instance) and read, in sync.
-            @utils.synchronized(db_instance.uuid)
-            def sync_instance_power_state():
-                self._sync_instance_power_state(context, db_instance,
+            # (in stop_server) and read, in sync.
+            @utils.synchronized(db_server.uuid)
+            def sync_server_power_state():
+                self._sync_server_power_state(context, db_server,
                                                 node_power_state)
 
             try:
-                sync_instance_power_state()
+                sync_server_power_state()
             except Exception:
                 LOG.exception("Periodic sync_power_state task had an "
-                              "error while processing an instance.",
-                              instance=db_instance)
+                              "error while processing an server.",
+                              server=db_server)
 
-            self._syncs_in_progress.pop(db_instance.uuid)
+            self._syncs_in_progress.pop(db_server.uuid)
 
-        db_instances = objects.Instance.list(context)
-        for db_instance in db_instances:
-            # process syncs asynchronously - don't want instance locking to
+        db_servers = objects.Server.list(context)
+        for db_server in db_servers:
+            # process syncs asynchronously - don't want server locking to
             # block entire periodic task thread
-            uuid = db_instance.uuid
+            uuid = db_server.uuid
             if uuid in self._syncs_in_progress:
                 LOG.debug('Sync power state already in progress for %s', uuid)
                 continue
 
-            if db_instance.status not in (states.ACTIVE, states.STOPPED):
-                if db_instance.status in states.UNSTABLE_STATES:
-                    LOG.info("During sync_power_state the instance has a "
+            if db_server.status not in (states.ACTIVE, states.STOPPED):
+                if db_server.status in states.UNSTABLE_STATES:
+                    LOG.info("During sync_power_state the server has a "
                              "pending task (%(task)s). Skip.",
-                             {'task': db_instance.status},
-                             instance=db_instance)
+                             {'task': db_server.status},
+                             server=db_server)
                 continue
 
             if uuid not in node_dict:
                 continue
 
             node_power_state = node_dict[uuid].power_state
-            if db_instance.power_state != node_power_state:
+            if db_server.power_state != node_power_state:
                 LOG.debug('Triggering sync for uuid %s', uuid)
                 self._syncs_in_progress[uuid] = True
-                self._sync_power_pool.spawn_n(_sync, db_instance,
+                self._sync_power_pool.spawn_n(_sync, db_server,
                                               node_power_state)
 
-    def _sync_instance_power_state(self, context, db_instance,
+    def _sync_server_power_state(self, context, db_server,
                                    node_power_state):
-        """Align instance power state between the database and hypervisor.
+        """Align server power state between the database and hypervisor.
 
-        If the instance is not found on the hypervisor, but is in the database,
-        then a stop() API will be called on the instance.
+        If the server is not found on the hypervisor, but is in the database,
+        then a stop() API will be called on the server.
         """
 
-        # We re-query the DB to get the latest instance info to minimize
+        # We re-query the DB to get the latest server info to minimize
         # (not eliminate) race condition.
-        db_instance.refresh()
-        db_power_state = db_instance.power_state
+        db_server.refresh()
+        db_power_state = db_server.power_state
 
-        if db_instance.status not in (states.ACTIVE, states.STOPPED):
+        if db_server.status not in (states.ACTIVE, states.STOPPED):
             # on the receiving end of mogan-engine, it could happen
-            # that the DB instance already report the new resident
+            # that the DB server already report the new resident
             # but the actual BM has not showed up on the hypervisor
             # yet. In this case, let's allow the loop to continue
             # and run the state sync in a later round
-            LOG.info("During sync_power_state the instance has a "
+            LOG.info("During sync_power_state the server has a "
                      "pending task (%(task)s). Skip.",
-                     {'task': db_instance.task_state},
-                     instance=db_instance)
+                     {'task': db_server.task_state},
+                     server=db_server)
             return
 
         if node_power_state != db_power_state:
-            LOG.info('During _sync_instance_power_state the DB '
+            LOG.info('During _sync_server_power_state the DB '
                      'power_state (%(db_power_state)s) does not match '
                      'the node_power_state from the hypervisor '
                      '(%(node_power_state)s). Updating power_state in the '
                      'DB to match the hypervisor.',
                      {'db_power_state': db_power_state,
                       'node_power_state': node_power_state},
-                     instance=db_instance)
+                     server=db_server)
             # power_state is always updated from hypervisor to db
-            db_instance.power_state = node_power_state
-            db_instance.save()
+            db_server.power_state = node_power_state
+            db_server.save()
 
     @periodic_task.periodic_task(spacing=CONF.engine.sync_maintenance_interval,
                                  run_immediately=True)
@@ -291,26 +291,26 @@ class EngineManager(base_manager.BaseEngineManager):
             # Just retrun if we fail to get nodes maintenance state.
             return
 
-        node_dict = {node.instance_uuid: node for node in nodes}
+        node_dict = {node.server_uuid: node for node in nodes}
 
         if not node_dict:
-            LOG.warning("While synchronizing instance maintenance states, "
-                        "found none node with instance associated on the "
+            LOG.warning("While synchronizing server maintenance states, "
+                        "found none node with server associated on the "
                         "hypervisor.")
             return
 
-        db_instances = objects.Instance.list(context)
-        for instance in db_instances:
-            uuid = instance.uuid
+        db_servers = objects.Server.list(context)
+        for server in db_servers:
+            uuid = server.uuid
 
-            # If instance in unstable states and the node goes to maintenance,
+            # If server in unstable states and the node goes to maintenance,
             # just skip the syncing process as the pending task should be goes
             # to error state instead.
-            if instance.status in states.UNSTABLE_STATES:
-                LOG.info("During sync_maintenance_state the instance "
+            if server.status in states.UNSTABLE_STATES:
+                LOG.info("During sync_maintenance_state the server "
                          "has a pending task (%(task)s). Skip.",
-                         {'task': instance.status},
-                         instance=instance)
+                         {'task': server.status},
+                         server=server)
                 continue
 
             if uuid not in node_dict:
@@ -318,40 +318,40 @@ class EngineManager(base_manager.BaseEngineManager):
 
             node_maintenance = node_dict[uuid].maintenance
 
-            if instance.status == states.MAINTENANCE and not node_maintenance:
+            if server.status == states.MAINTENANCE and not node_maintenance:
                 # TODO(zhenguo): need to check whether we need states machine
                 # transition here, and currently we just move to ACTIVE state
                 # regardless of it's real power state which may need sync power
                 # state periodic task to correct it.
-                instance.status = states.ACTIVE
-                instance.save()
-            elif node_maintenance and instance.status != states.MAINTENANCE:
-                instance.status = states.MAINTENANCE
-                instance.save()
+                server.status = states.ACTIVE
+                server.save()
+            elif node_maintenance and server.status != states.MAINTENANCE:
+                server.status = states.MAINTENANCE
+                server.save()
 
-    def destroy_networks(self, context, instance):
-        ports = instance.nics.get_port_ids()
+    def destroy_networks(self, context, server):
+        ports = server.nics.get_port_ids()
         for port in ports:
-            self.network_api.delete_port(context, port, instance.uuid)
+            self.network_api.delete_port(context, port, server.uuid)
 
-    def _rollback_instances_quota(self, context, number):
-        reserve_opts = {'instances': number}
+    def _rollback_servers_quota(self, context, number):
+        reserve_opts = {'servers': number}
         reservations = self.quota.reserve(context, **reserve_opts)
         if reservations:
             self.quota.commit(context, reservations)
 
-    @wrap_instance_fault
-    def create_instance(self, context, instance, requested_networks,
+    @wrap_server_fault
+    def create_server(self, context, server, requested_networks,
                         user_data, injected_files, key_pair, request_spec=None,
                         filter_properties=None):
         """Perform a deployment."""
-        LOG.debug("Starting instance...", instance=instance)
-        notifications.notify_about_instance_action(
-            context, instance, self.host,
+        LOG.debug("Starting server...", server=server)
+        notifications.notify_about_server_action(
+            context, server, self.host,
             action=fields.NotificationAction.CREATE,
             phase=fields.NotificationPhase.START)
 
-        fsm = utils.get_state_machine(start_state=instance.status,
+        fsm = utils.get_state_machine(start_state=server.status,
                                       target_state=states.ACTIVE)
 
         if filter_properties is None:
@@ -372,24 +372,24 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             node = self.scheduler_rpcapi.select_destinations(
                 context, request_spec, filter_properties)
-            instance.node_uuid = node['node_uuid']
-            instance.save()
+            server.node_uuid = node['node_uuid']
+            server.save()
             # Add a retry entry for the selected node
             nodes = retry['nodes']
             nodes.append(node['node_uuid'])
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                utils.process_event(fsm, instance, event='error')
-                LOG.error("Created instance %(uuid)s failed. "
+                utils.process_event(fsm, server, event='error')
+                LOG.error("Created server %(uuid)s failed. "
                           "Exception: %(exception)s",
-                          {"uuid": instance.uuid,
+                          {"uuid": server.uuid,
                            "exception": e})
 
         try:
-            flow_engine = create_instance.get_flow(
+            flow_engine = create_server.get_flow(
                 context,
                 self,
-                instance,
+                server,
                 requested_networks,
                 user_data,
                 injected_files,
@@ -400,13 +400,13 @@ class EngineManager(base_manager.BaseEngineManager):
             )
         except Exception:
             with excutils.save_and_reraise_exception():
-                utils.process_event(fsm, instance, event='error')
-                self._rollback_instances_quota(context, -1)
-                msg = _("Create manager instance flow failed.")
+                utils.process_event(fsm, server, event='error')
+                self._rollback_servers_quota(context, -1)
+                msg = _("Create manager server flow failed.")
                 LOG.exception(msg)
 
         def _run_flow():
-            # This code executes create instance flow. If something goes wrong,
+            # This code executes create server flow. If something goes wrong,
             # flow reverts all job that was done and reraises an exception.
             # Otherwise, all data that was generated by flow becomes available
             # in flow engine's storage.
@@ -417,130 +417,130 @@ class EngineManager(base_manager.BaseEngineManager):
             _run_flow()
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                instance.power_state = states.NOSTATE
-                utils.process_event(fsm, instance, event='error')
-                self._rollback_instances_quota(context, -1)
-                LOG.error("Created instance %(uuid)s failed."
+                server.power_state = states.NOSTATE
+                utils.process_event(fsm, server, event='error')
+                self._rollback_servers_quota(context, -1)
+                LOG.error("Created server %(uuid)s failed."
                           "Exception: %(exception)s",
-                          {"uuid": instance.uuid,
+                          {"uuid": server.uuid,
                            "exception": e})
         else:
             # Advance the state model for the given event. Note that this
-            # doesn't alter the instance in any way. This may raise
+            # doesn't alter the server in any way. This may raise
             # InvalidState, if this event is not allowed in the current state.
-            instance.power_state = self.driver.get_power_state(context,
-                                                               instance.uuid)
-            instance.launched_at = timeutils.utcnow()
-            utils.process_event(fsm, instance, event='done')
-            LOG.info("Created instance %s successfully.", instance.uuid)
+            server.power_state = self.driver.get_power_state(context,
+                                                               server.uuid)
+            server.launched_at = timeutils.utcnow()
+            utils.process_event(fsm, server, event='done')
+            LOG.info("Created server %s successfully.", server.uuid)
 
-    def _delete_instance(self, context, instance):
-        """Delete an instance
+    def _delete_server(self, context, server):
+        """Delete an server
 
         :param context: mogan request context
-        :param instance: instance object
+        :param server: server object
         """
         # TODO(zhenguo): Add delete notification
 
         try:
-            self.destroy_networks(context, instance)
+            self.destroy_networks(context, server)
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                LOG.error("Destroy networks for instance %(uuid)s failed. "
+                LOG.error("Destroy networks for server %(uuid)s failed. "
                           "Exception: %(exception)s",
-                          {"uuid": instance.uuid, "exception": e})
+                          {"uuid": server.uuid, "exception": e})
 
-        self.driver.unplug_vifs(context, instance)
-        self.driver.destroy(context, instance)
+        self.driver.unplug_vifs(context, server)
+        self.driver.destroy(context, server)
 
-    @wrap_instance_fault
-    def delete_instance(self, context, instance):
-        """Delete an instance."""
-        LOG.debug("Deleting instance...")
+    @wrap_server_fault
+    def delete_server(self, context, server):
+        """Delete an server."""
+        LOG.debug("Deleting server...")
 
-        fsm = utils.get_state_machine(start_state=instance.status,
+        fsm = utils.get_state_machine(start_state=server.status,
                                       target_state=states.DELETED)
 
-        @utils.synchronized(instance.uuid)
-        def do_delete_instance(instance):
+        @utils.synchronized(server.uuid)
+        def do_delete_server(server):
             try:
-                self._delete_instance(context, instance)
-            except exception.InstanceNotFound:
-                LOG.info("Instance disappeared during terminate",
-                         instance=instance)
+                self._delete_server(context, server)
+            except exception.ServerNotFound:
+                LOG.info("Server disappeared during terminate",
+                         server=server)
             except Exception:
                 # As we're trying to delete always go to Error if something
-                # goes wrong that _delete_instance can't handle.
+                # goes wrong that _delete_server can't handle.
                 with excutils.save_and_reraise_exception():
-                    LOG.exception('Setting instance status to ERROR',
-                                  instance=instance)
-                    instance.power_state = states.NOSTATE
-                    utils.process_event(fsm, instance, event='error')
-                    self._rollback_instances_quota(context, 1)
+                    LOG.exception('Setting server status to ERROR',
+                                  server=server)
+                    server.power_state = states.NOSTATE
+                    utils.process_event(fsm, server, event='error')
+                    self._rollback_servers_quota(context, 1)
 
-        # Issue delete request to driver only if instance is associated with
+        # Issue delete request to driver only if server is associated with
         # a underlying node.
-        if instance.node_uuid:
-            do_delete_instance(instance)
+        if server.node_uuid:
+            do_delete_server(server)
 
-        instance.power_state = states.NOSTATE
-        utils.process_event(fsm, instance, event='done')
-        instance.destroy()
+        server.power_state = states.NOSTATE
+        utils.process_event(fsm, server, event='done')
+        server.destroy()
 
-    def set_power_state(self, context, instance, state):
-        """Set power state for the specified instance."""
+    def set_power_state(self, context, server, state):
+        """Set power state for the specified server."""
 
-        fsm = utils.get_state_machine(start_state=instance.status)
+        fsm = utils.get_state_machine(start_state=server.status)
 
-        @utils.synchronized(instance.uuid)
+        @utils.synchronized(server.uuid)
         def do_set_power_state():
-            LOG.debug('Power %(state)s called for instance %(instance)s',
+            LOG.debug('Power %(state)s called for server %(server)s',
                       {'state': state,
-                       'instance': instance})
-            self.driver.set_power_state(context, instance, state)
+                       'server': server})
+            self.driver.set_power_state(context, server, state)
 
         do_set_power_state()
-        instance.power_state = self.driver.get_power_state(context,
-                                                           instance.uuid)
-        utils.process_event(fsm, instance, event='done')
+        server.power_state = self.driver.get_power_state(context,
+                                                           server.uuid)
+        utils.process_event(fsm, server, event='done')
         LOG.info('Successfully set node power state: %s',
-                 state, instance=instance)
+                 state, server=server)
 
-    def _rebuild_instance(self, context, instance):
-        """Perform rebuild action on the specified instance."""
+    def _rebuild_server(self, context, server):
+        """Perform rebuild action on the specified server."""
 
         # TODO(zhenguo): Add delete notification
 
-        self.driver.rebuild(context, instance)
+        self.driver.rebuild(context, server)
 
-    @wrap_instance_fault
-    def rebuild_instance(self, context, instance):
-        """Destroy and re-make this instance.
+    @wrap_server_fault
+    def rebuild_server(self, context, server):
+        """Destroy and re-make this server.
 
         :param context: mogan request context
-        :param instance: instance object
+        :param server: server object
         """
 
-        LOG.debug('Rebuilding instance', instance=instance)
+        LOG.debug('Rebuilding server', server=server)
 
-        fsm = utils.get_state_machine(start_state=instance.status)
+        fsm = utils.get_state_machine(start_state=server.status)
 
         try:
-            self._rebuild_instance(context, instance)
+            self._rebuild_server(context, server)
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                utils.process_event(fsm, instance, event='error')
-                LOG.error("Rebuild instance %(uuid)s failed."
+                utils.process_event(fsm, server, event='error')
+                LOG.error("Rebuild server %(uuid)s failed."
                           "Exception: %(exception)s",
-                          {"uuid": instance.uuid,
+                          {"uuid": server.uuid,
                            "exception": e})
 
-        utils.process_event(fsm, instance, event='done')
-        LOG.info('Instance was successfully rebuilt', instance=instance)
+        utils.process_event(fsm, server, event='done')
+        LOG.info('Server was successfully rebuilt', server=server)
 
-    def get_serial_console(self, context, instance):
-        node_console_info = self.driver.get_serial_console_by_instance(
-            context, instance)
+    def get_serial_console(self, context, server):
+        node_console_info = self.driver.get_serial_console_by_server(
+            context, server)
         token = uuidutils.generate_uuid()
         access_url = '%s?token=%s' % (
             CONF.shellinabox_console.shellinabox_base_url, token)

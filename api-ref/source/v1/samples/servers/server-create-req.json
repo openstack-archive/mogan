@@ -1,0 +1,27 @@
+{
+    "name": "test_server",
+    "description": "this is a test server",
+    "server_type_uuid": "0607b5f3-6111-424d-ba46-f5de39a6fa69",
+    "image_uuid": "efe0a06f-ca95-4808-b41e-9f55b9c5eb98",
+    "availability_zone": "mogan",
+    "networks": [
+        {
+            "net_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31"
+        },
+        {
+            "net_id": "8e8ceb07-4641-4188-9b22-840755e92ee2",
+            "port_type": "10GE"
+        }
+    ],
+    "extra" : {
+        "My Server Name" : "Apache1"
+    },
+    "personality": [
+        {
+            "path": "/etc/banner.txt",
+            "contents": "ICAgICAgDQoiQSBjbG91ZCBkb2VzIG5vdCBrbm93IHdoeSBp dCBtb3ZlcyBpbiBqdXN0IHN1Y2ggYSBkaXJlY3Rpb24gYW5k IGF0IHN1Y2ggYSBzcGVlZC4uLkl0IGZlZWxzIGFuIGltcHVs c2lvbi4uLnRoaXMgaXMgdGhlIHBsYWNlIHRvIGdvIG5vdy4g QnV0IHRoZSBza3kga25vd3MgdGhlIHJlYXNvbnMgYW5kIHRo ZSBwYXR0ZXJucyBiZWhpbmQgYWxsIGNsb3VkcywgYW5kIHlv dSB3aWxsIGtub3csIHRvbywgd2hlbiB5b3UgbGlmdCB5b3Vy c2VsZiBoaWdoIGVub3VnaCB0byBzZWUgYmV5b25kIGhvcml6 b25zLiINCg0KLVJpY2hhcmQgQmFjaA=="
+        }
+    ],
+    "user_data": "IyEvYmluL2Jhc2gKL2Jpbi9zdQplY2hvICJJIGFtIGluIHlvdSEiCg==",
+    "key_name": "test_key"
+}

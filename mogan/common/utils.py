@@ -99,7 +99,7 @@ def validate_and_normalize_mac(address):
 def make_pretty_name(method):
     """Makes a pretty name for a function/method."""
     meth_pieces = [method.__name__]
-    # If its an instance method attempt to tack on the class name
+    # If its an server method attempt to tack on the class name
     if hasattr(method, '__self__') and method.__self__ is not None:
         try:
             meth_pieces.insert(0, method.__self__.__class__.__name__)
@@ -122,10 +122,10 @@ def get_state_machine(start_state=None, target_state=None):
     return fsm
 
 
-def process_event(fsm, instance, event=None):
+def process_event(fsm, server, event=None):
     fsm.process_event(event)
-    instance.status = fsm.current_state
-    instance.save()
+    server.status = fsm.current_state
+    server.save()
 
 
 def get_wrapped_function(function):
@@ -196,7 +196,7 @@ def safe_truncate(value, length):
     return u_value
 
 
-def add_instance_fault_from_exc(context, instance, fault, exc_info=None,
+def add_server_fault_from_exc(context, server, fault, exc_info=None,
                                 fault_message=None):
     """Adds the specified fault to the database."""
     code = 500
@@ -216,8 +216,8 @@ def add_instance_fault_from_exc(context, instance, fault, exc_info=None,
     fault_dict = dict(exception=fault)
     fault_dict["message"] = message
     fault_dict["code"] = code
-    fault_obj = objects.InstanceFault(context=context)
-    fault_obj.instance_uuid = instance.uuid
+    fault_obj = objects.ServerFault(context=context)
+    fault_obj.server_uuid = server.uuid
     fault_obj.update(fault_dict)
     code = fault_obj.code
     fault_obj.detail = _get_fault_detail(exc_info, code)

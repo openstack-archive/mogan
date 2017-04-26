@@ -12,7 +12,7 @@ will be added to build a full path.
 
 For instance, if the ``service url`` is
 ``http://mycompute.pvt/mogan/v1`` then the full API call for
-``/instances`` is ``http://mycompute.pvt/mogan/v1/instances``.
+``/servers`` is ``http://mycompute.pvt/mogan/v1/servers``.
 
 Depending on the deployment the baremetal compute service url might
 be http or https, a custom port, a custom path, and include your
@@ -23,5 +23,5 @@ to work at a single site. It should always be discovered from the
 Identity token.
 
 As such, for the rest of this document we will be using short hand
-where ``GET /instances`` really means ``GET
-{your_service_url}/instances``.
+where ``GET /servers`` really means ``GET
+{your_service_url}/servers``.

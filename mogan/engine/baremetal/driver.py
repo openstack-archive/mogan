@@ -52,10 +52,10 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def get_power_state(self, context, instance_uuid):
-        """Return a node's power state by passing instance uuid.
+    def get_power_state(self, context, server_uuid):
+        """Return a node's power state by passing server uuid.
 
-        :param instance_uuid: mogan instance uuid to get power state.
+        :param server_uuid: mogan server uuid to get power state.
         """
         raise NotImplementedError()
 
@@ -84,40 +84,40 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def unplug_vifs(self, context, instance):
+    def unplug_vifs(self, context, server):
         """Unplug network interfaces.
 
-        :param instance: the instance object.
+        :param server: the server object.
         """
         raise NotImplementedError()
 
-    def spawn(self, context, instance, configdrive_value):
-        """Create a new instance on the provision platform.
+    def spawn(self, context, server, configdrive_value):
+        """Create a new server on the provision platform.
 
         :param context: security context
-        :param instance: mogan instance object.
+        :param server: mogan server object.
         :param configdrive_value: The configdrive value to be injected.
         """
         raise NotImplementedError()
 
-    def destroy(self, context, instance):
+    def destroy(self, context, server):
         """Trigger node destroy process.
 
-        :param instance: the instance to destory.
+        :param server: the server to destory.
         """
         raise NotImplementedError()
 
-    def rebuild(self, context, instance):
+    def rebuild(self, context, server):
         """Trigger node deploy process.
 
-        :param instance: instance to rebuild.
+        :param server: server to rebuild.
         """
         raise NotImplementedError()
 
-    def get_serial_console_by_instance(self, context, instance):
-        """Get console info by instance.
+    def get_serial_console_by_server(self, context, server):
+        """Get console info by server.
 
-        :param instance: instance to get its console info.
+        :param server: server to get its console info.
         """
         raise NotImplementedError()
 
@@ -130,7 +130,7 @@ def load_engine_driver(engine_driver):
     argument.
 
     :param engine_driver: a engine driver name to override the config opt
-    :returns: a EngineDriver instance
+    :returns: a EngineDriver server
     """
 
     if not engine_driver:

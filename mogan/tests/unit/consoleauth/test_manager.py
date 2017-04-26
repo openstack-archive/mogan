@@ -30,12 +30,12 @@ class ConsoleAuthManagerTestCase(test.TestCase):
         super(ConsoleAuthManagerTestCase, self).setUp()
         self.manager = manager.ConsoleAuthManager('test-host',
                                                   'test-consoleauth-topic')
-        self.instance_uuid = 'e7481762-3215-4489-bde5-0068a6bf79d1'
+        self.server_uuid = 'e7481762-3215-4489-bde5-0068a6bf79d1'
         self.config(backend='oslo_cache.dict', enabled=True,
                     group='cache')
         self.addCleanup(
-            self.manager.delete_tokens_for_instance, self.context,
-            self.instance_uuid)
+            self.manager.delete_tokens_for_server, self.context,
+            self.server_uuid)
 
     def test_reset(self):
         with mock.patch('mogan.engine.rpcapi.EngineAPI') as mock_rpc:
@@ -51,33 +51,33 @@ class ConsoleAuthManagerTestCase(test.TestCase):
         self.config(expiration_time=1, group='cache')
         self.manager.authorize_console(
             self.context, token, 'shellinabox', '127.0.0.1', 4321,
-            None, self.instance_uuid, None)
+            None, self.server_uuid, None)
         self.assertIsNotNone(self.manager.check_token(self.context, token))
         time.sleep(1)
         self.assertIsNone(self.manager.check_token(self.context, token))
 
-    def test_multiple_tokens_for_instance(self):
+    def test_multiple_tokens_for_server(self):
         tokens = [u"token" + str(i) for i in range(10)]
 
         for token in tokens:
             self.manager.authorize_console(
                 self.context, token, 'shellinabox', '127.0.0.1', 4321,
-                None, self.instance_uuid, None)
+                None, self.server_uuid, None)
 
         for token in tokens:
             self.assertIsNotNone(
                 self.manager.check_token(self.context, token))
 
-    def test_delete_tokens_for_instance(self):
+    def test_delete_tokens_for_server(self):
         tokens = [u"token" + str(i) for i in range(10)]
         for token in tokens:
             self.manager.authorize_console(
                 self.context, token, 'shellinabox', '127.0.0.1', 4321,
-                None, self.instance_uuid, None)
-        self.manager.delete_tokens_for_instance(self.context,
-                                                self.instance_uuid)
-        stored_tokens = self.manager._get_tokens_for_instance(
-            self.instance_uuid)
+                None, self.server_uuid, None)
+        self.manager.delete_tokens_for_server(self.context,
+                                                self.server_uuid)
+        stored_tokens = self.manager._get_tokens_for_server(
+            self.server_uuid)
 
         self.assertEqual(len(stored_tokens), 0)
 
@@ -91,16 +91,16 @@ class ConsoleAuthManagerTestCase(test.TestCase):
 
         self.manager.authorize_console(
             self.context, token, 'shellinabox', '127.0.0.1', 4321,
-            None, self.instance_uuid, None)
+            None, self.server_uuid, None)
         time.sleep(1)
         self.assertIsNone(self.manager.check_token(self.context, token))
 
         token1 = u'mytok2'
         self.manager.authorize_console(
             self.context, token1, 'shellinabox', '127.0.0.1', 4321,
-            None, self.instance_uuid, None)
-        stored_tokens = self.manager._get_tokens_for_instance(
-            self.instance_uuid)
+            None, self.server_uuid, None)
+        stored_tokens = self.manager._get_tokens_for_server(
+            self.server_uuid)
         # when trying to store token1, expired token is removed fist.
         self.assertEqual(len(stored_tokens), 1)
         self.assertEqual(stored_tokens[0], token1)
