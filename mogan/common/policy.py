@@ -42,10 +42,10 @@ default_policies = [
     policy.RuleDefault('public_api',
                        'is_public_api:True',
                        description='Internal flag for public API routes'),
-    # Generic default to hide instance secrets
-    policy.RuleDefault('show_instance_secrets',
+    # Generic default to hide server secrets
+    policy.RuleDefault('show_server_secrets',
                        '!',
-                       description='Show or mask secrets within instance information in API responses'),  # noqa
+                       description='Show or mask secrets within server information in API responses'),  # noqa
     # The policy check "@" will always accept an access. The empty list
     # (``[]``) or the empty string (``""``) is equivalent to the "@"
     policy.RuleDefault('allow',
@@ -74,43 +74,43 @@ default_policies = [
 #             All of these may be overridden by configuration, but we can
 #             depend on their existence throughout the code.
 
-instance_policies = [
-    policy.RuleDefault('mogan:instance:get',
+server_policies = [
+    policy.RuleDefault('mogan:server:get',
                        'rule:default',
-                       description='Retrieve Instance records'),
-    policy.RuleDefault('mogan:instance:get_states',
+                       description='Retrieve Server records'),
+    policy.RuleDefault('mogan:server:get_states',
                        'rule:default',
-                       description='View Instance power and provision state'),
-    policy.RuleDefault('mogan:instance:create',
+                       description='View Server power and provision state'),
+    policy.RuleDefault('mogan:server:create',
                        'rule:allow',
-                       description='Create Instance records'),
-    policy.RuleDefault('mogan:instance:delete',
+                       description='Create Server records'),
+    policy.RuleDefault('mogan:server:delete',
                        'rule:default',
-                       description='Delete Instance records'),
-    policy.RuleDefault('mogan:instance:update',
+                       description='Delete Server records'),
+    policy.RuleDefault('mogan:server:update',
                        'rule:default',
-                       description='Update Instance records'),
-    policy.RuleDefault('mogan:instance:set_power_state',
+                       description='Update Server records'),
+    policy.RuleDefault('mogan:server:set_power_state',
                        'rule:default',
-                       description='Perform the power action on an instance'),
-    policy.RuleDefault('mogan:instance:get_networks',
+                       description='Perform the power action on a server'),
+    policy.RuleDefault('mogan:server:get_networks',
                        'rule:default',
-                       description='Get Instance network information'),
-    policy.RuleDefault('mogan:instance:associate_floatingip',
+                       description='Get Server network information'),
+    policy.RuleDefault('mogan:server:associate_floatingip',
                        'rule:default',
-                       description='Associate a floating ip with an instance'),
-    policy.RuleDefault('mogan:instance:disassociate_floatingip',
+                       description='Associate a floating ip with a server'),
+    policy.RuleDefault('mogan:server:disassociate_floatingip',
                        'rule:default',
                        description='Disassociate a floating ip'),
-    policy.RuleDefault('mogan:instance:set_lock_state',
+    policy.RuleDefault('mogan:server:set_lock_state',
                        'rule:default',
-                       description='Lock/UnLock an instance'),
-    policy.RuleDefault('mogan:instance:set_provision_state',
+                       description='Lock/UnLock a server'),
+    policy.RuleDefault('mogan:server:set_provision_state',
                        'rule:default',
-                       description='Set the provision state of an instance'),
-    policy.RuleDefault('mogan:instance:get_serial_console',
+                       description='Set the provision state of a server'),
+    policy.RuleDefault('mogan:server:get_serial_console',
                        'rule:default',
-                       description='Get serial console for an instance'),
+                       description='Get serial console for a server'),
     policy.RuleDefault('mogan:availability_zone:get_all',
                        'rule:default',
                        description='Get the availability zone list'),
@@ -119,7 +119,7 @@ instance_policies = [
 
 def list_policies():
     policies = (default_policies
-                + instance_policies)
+                + server_policies)
     return policies
 
 
@@ -155,7 +155,7 @@ def init_enforcer(policy_file=None, rules=None,
 
 
 def get_enforcer():
-    """Provides access to the single instance of Policy enforcer."""
+    """Provides access to the single server of Policy enforcer."""
 
     if not _ENFORCER:
         init_enforcer()
@@ -196,9 +196,9 @@ def authorize_wsgi(api_name, act=None, need_target=True):
                when create some resource , maybe target is not needed.
        example:
            from mogan.common import policy
-           class InstancesController(rest.RestController):
+           class ServersController(rest.RestController):
                ....
-               @policy.authorize_wsgi("mogan:instance", "delete")
+               @policy.authorize_wsgi("mogan:server", "delete")
                @wsme_pecan.wsexpose(None, types.uuid_or_name, status_code=204)
                def delete(self, bay_ident):
                    ...

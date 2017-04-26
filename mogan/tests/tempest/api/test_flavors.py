@@ -35,10 +35,10 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
 
     @decorators.idempotent_id('4b256d35-47a9-4195-8f7e-56ceb4ce4737')
     def test_flavor_list(self):
-        # List instance types
+        # List server types
         flavor_list = self.baremetal_compute_client.list_flavors()
 
-        # Verify created instance type in the list
+        # Verify created server type in the list
         fetched_ids = [f['uuid'] for f in flavor_list]
         missing_flavors = [a for a in self.flavor_ids if a not in fetched_ids]
         self.assertEqual(0, len(missing_flavors),

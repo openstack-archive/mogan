@@ -28,8 +28,8 @@ IMPL = db_api.DBAPI.from_config(cfg.CONF, backend_mapping=_BACKEND_MAPPING,
                                 lazy=True)
 
 
-def get_instance():
-    """Return a DB API instance."""
+def get_server():
+    """Return a DB API server."""
     return IMPL
 
 
@@ -41,46 +41,46 @@ class Connection(object):
     def __init__(self):
         """Constructor."""
 
-    # Instance Types
+    # Flavors
     @abc.abstractmethod
-    def instance_type_create(self, context, values):
-        """Create a new instance type."""
+    def flavor_create(self, context, values):
+        """Create a new server type."""
 
     @abc.abstractmethod
-    def instance_type_get(self, context, instance_type_uuid):
-        """Get instance type by uuid."""
+    def flavor_get(self, context, flavor_uuid):
+        """Get server type by uuid."""
 
-    def instance_type_update(self, context, instance_type_id, values):
-        """Update an instance type."""
-
-    @abc.abstractmethod
-    def instance_type_get_all(self, context):
-        """Get all instance types."""
+    def flavor_update(self, context, flavor_id, values):
+        """Update a server type."""
 
     @abc.abstractmethod
-    def instance_type_destroy(self, context, instance_type_uuid):
-        """Delete an instance type."""
-
-    # Instances
-    @abc.abstractmethod
-    def instance_create(self, context, values):
-        """Create a new instance."""
+    def flavor_get_all(self, context):
+        """Get all server types."""
 
     @abc.abstractmethod
-    def instance_get(self, context, instance_id):
-        """Get instance by name."""
+    def flavor_destroy(self, context, flavor_uuid):
+        """Delete a server type."""
+
+    # Servers
+    @abc.abstractmethod
+    def server_create(self, context, values):
+        """Create a new server."""
 
     @abc.abstractmethod
-    def instance_get_all(self, context, project_only):
-        """Get all instances."""
+    def server_get(self, context, server_id):
+        """Get server by name."""
 
     @abc.abstractmethod
-    def instance_destroy(self, context, instance_id):
-        """Delete an instance."""
+    def server_get_all(self, context, project_only):
+        """Get all servers."""
 
     @abc.abstractmethod
-    def instance_update(self, context, instance_id, values):
-        """Update an instance."""
+    def server_destroy(self, context, server_id):
+        """Delete a server."""
+
+    @abc.abstractmethod
+    def server_update(self, context, server_id, values):
+        """Update a server."""
 
     # Compute nodes
     @abc.abstractmethod
@@ -157,48 +157,48 @@ class Connection(object):
     def compute_disk_update(self, context, disk_uuid, values):
         """Update a compute disk."""
 
-    # Instance Type extra specs
+    # Flavor extra specs
     @abc.abstractmethod
     def extra_specs_update_or_create(self, context,
-                                     instance_type_uuid, extra_specs):
-        """Create or update instance type extra specs.
+                                     flavor_uuid, extra_specs):
+        """Create or update server type extra specs.
 
         This adds or modifies the key/value pairs specified in the
         extra specs dict argument
         """
 
     @abc.abstractmethod
-    def instance_type_extra_specs_get(self, context, type_id):
-        """Get instance type extra specs"""
+    def flavor_extra_specs_get(self, context, type_id):
+        """Get server type extra specs"""
 
     @abc.abstractmethod
-    def type_extra_specs_delete(self, context, instance_type_uuid, key):
-        """Delete instance type extra specs.
+    def type_extra_specs_delete(self, context, flavor_uuid, key):
+        """Delete server type extra specs.
 
         This deletes the key/value pairs specified in the
         extra specs dict argument
         """
 
     @abc.abstractmethod
-    def instance_nics_get_by_instance_uuid(self, context, instance_uuid):
+    def server_nics_get_by_server_uuid(self, context, server_uuid):
         """Get the Nics info of an instnace.
 
-        This query the Nics info of the specified instance.
+        This query the Nics info of the specified server.
         """
 
-    def instance_nic_update_or_create(self, context, port_id, values):
+    def server_nic_update_or_create(self, context, port_id, values):
         """Update/Create a nic db entry.
 
         This creates or updates a nic db entry.
         """
-    # Instances Faults
+    # Servers Faults
     @abc.abstractmethod
-    def instance_fault_create(self, context, values):
-        """Create a new Instance Fault."""
+    def server_fault_create(self, context, values):
+        """Create a new Server Fault."""
 
     @abc.abstractmethod
-    def instance_fault_get_by_instance_uuids(self, context, instance_uuids):
-        """Get all instance faults for the provided instance_uuids."""
+    def server_fault_get_by_server_uuids(self, context, server_uuids):
+        """Get all server faults for the provided server_uuids."""
 
     @abc.abstractmethod
     def quota_get(self, context, project_id, resource_name):

@@ -27,7 +27,7 @@ class ComputeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
-    dbapi = dbapi.get_instance()
+    dbapi = dbapi.get_server()
 
     fields = {
         'id': object_fields.IntegerField(read_only=True),
@@ -100,7 +100,7 @@ class ComputeNodeList(object_base.ObjectListBase, base.MoganObject,
 
     VERSION = '1.0'
 
-    dbapi = dbapi.get_instance()
+    dbapi = dbapi.get_server()
 
     fields = {
         'objects': object_fields.ListOfObjectsField('ComputeNode')

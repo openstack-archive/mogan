@@ -71,36 +71,36 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
     def resource_setup(cls):
         super(BaseBaremetalComputeTest, cls).resource_setup()
         cls.flavor_ids = []
-        cls.instance_ids = []
+        cls.server_ids = []
         cls.small_flavor = cls._get_small_flavor()
         cls.image_id = CONF.compute.image_ref
         cls.net_id = cls._get_net_id()
 
     @classmethod
-    def create_instance(cls, wait_until_active=True):
-        body = {'name': data_utils.rand_name('mogan_instance'),
-                'description': "mogan tempest instance",
-                'instance_type_uuid': cls.small_flavor,
+    def create_server(cls, wait_until_active=True):
+        body = {'name': data_utils.rand_name('mogan_server'),
+                'description': "mogan tempest server",
+                'flavor_uuid': cls.small_flavor,
                 'image_uuid': cls.image_id,
                 "networks": [{"net_id": cls.net_id}]
                 }
-        resp = cls.baremetal_compute_client.create_instance(**body)
-        cls.instance_ids.append(resp['uuid'])
+        resp = cls.baremetal_compute_client.create_server(**body)
+        cls.server_ids.append(resp['uuid'])
         if wait_until_active:
-            cls._wait_for_instances_status(resp['uuid'], 'active', 15, 900)
+            cls._wait_for_servers_status(resp['uuid'], 'active', 15, 900)
         return resp
 
     @classmethod
-    def _wait_for_instances_status(cls, inst_id, status,
+    def _wait_for_servers_status(cls, inst_id, status,
                                    wait_interval, wait_timeout):
-        """Waits for a Instance to reach a given status."""
+        """Waits for a Server to reach a given status."""
         inst_status = None
         start = int(time.time())
 
         while inst_status != status:
             time.sleep(wait_interval)
             try:
-                body = cls.baremetal_compute_client.show_instance(inst_id)
+                body = cls.baremetal_compute_client.show_server(inst_id)
                 inst_status = body['status']
             except lib_exc.NotFound:
                 if status == 'deleted':
@@ -108,11 +108,11 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
                 else:
                     raise
             if inst_status == 'error' and status != 'error':
-                msg = ('Failed to provision instance %s' % inst_id)
-                raise exception.InstanceDeployFailure(msg)
+                msg = ('Failed to provision server %s' % inst_id)
+                raise exception.ServerDeployFailure(msg)
 
             if int(time.time()) - start >= wait_timeout:
-                message = ('Instance %s failed to reach %s status '
+                message = ('Server %s failed to reach %s status '
                            '(current %s) within the required time (%s s).' %
                            (inst_id, status, inst_status,
                             wait_timeout))
@@ -130,6 +130,6 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
     def resource_cleanup(cls):
         cls.cleanup_resources(
             cls.baremetal_compute_client.delete_flavor, cls.flavor_ids)
-        cls.cleanup_resources(cls.baremetal_compute_client.delete_instance,
-                              cls.instance_ids)
+        cls.cleanup_resources(cls.baremetal_compute_client.delete_server,
+                              cls.server_ids)
         super(BaseBaremetalComputeTest, cls).resource_cleanup()

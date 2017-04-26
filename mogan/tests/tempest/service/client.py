@@ -66,30 +66,30 @@ class BaremetalComputeClient(rest_client.RestClient):
         body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
-    def create_instance(self, **kwargs):
-        uri = "%s/instances" % self.uri_prefix
+    def create_server(self, **kwargs):
+        uri = "%s/servers" % self.uri_prefix
         body = self.serialize(kwargs)
         resp, body = self.post(uri, body)
         self.expected_success(201, resp.status)
         body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
-    def list_instances(self):
-        uri = '%s/instances' % self.uri_prefix
+    def list_servers(self):
+        uri = '%s/servers' % self.uri_prefix
         resp, body = self.get(uri)
         self.expected_success(200, resp.status)
-        body = self.deserialize(body)['instances']
+        body = self.deserialize(body)['servers']
         return rest_client.ResponseBodyList(resp, body)
 
-    def show_instance(self, instance_id):
-        uri = '%s/instances/%s' % (self.uri_prefix, instance_id)
+    def show_server(self, server_id):
+        uri = '%s/servers/%s' % (self.uri_prefix, server_id)
         resp, body = self.get(uri)
         self.expected_success(200, resp.status)
         body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
-    def delete_instance(self, instance_id):
-        uri = "%s/instances/%s" % (self.uri_prefix, instance_id)
+    def delete_server(self, server_id):
+        uri = "%s/servers/%s" % (self.uri_prefix, server_id)
         resp, body = self.delete(uri)
         self.expected_success(204, resp.status)
         if body:

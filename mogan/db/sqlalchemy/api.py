@@ -95,7 +95,7 @@ def add_identity_filter(query, value):
 
 
 def _dict_with_extra_specs(inst_type_query):
-    """Takes an instance type query and returns it as a dictionary."""
+    """Takes a server type query and returns it as a dictionary."""
     inst_type_dict = dict(inst_type_query)
     extra_specs = {x['key']: x['value']
                    for x in inst_type_query['extra_specs']}
@@ -107,144 +107,144 @@ class Connection(api.Connection):
     """SqlAlchemy connection."""
 
     def __init__(self):
-        self.QUOTA_SYNC_FUNCTIONS = {'_sync_instances': self._sync_instances}
+        self.QUOTA_SYNC_FUNCTIONS = {'_sync_servers': self._sync_servers}
         pass
 
-    def instance_type_create(self, context, values):
+    def flavor_create(self, context, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
         if not values.get('description'):
             values['description'] = ""
 
-        instance_type = models.InstanceTypes()
-        instance_type.update(values)
+        flavor = models.Flavors()
+        flavor.update(values)
 
         with _session_for_write() as session:
             try:
-                session.add(instance_type)
+                session.add(flavor)
                 session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.FlavorAlreadyExists(uuid=values['uuid'])
-            return _dict_with_extra_specs(instance_type)
+            return _dict_with_extra_specs(flavor)
 
-    def instance_type_get(self, context, instance_type_uuid):
-        query = model_query(context, models.InstanceTypes).filter_by(
-            uuid=instance_type_uuid).options(joinedload('extra_specs'))
+    def flavor_get(self, context, flavor_uuid):
+        query = model_query(context, models.Flavors).filter_by(
+            uuid=flavor_uuid).options(joinedload('extra_specs'))
         try:
             return _dict_with_extra_specs(query.one())
         except NoResultFound:
             raise exception.FlavorNotFound(
-                type_id=instance_type_uuid)
+                type_id=flavor_uuid)
 
-    def instance_type_update(self, context, instance_type_id, values):
+    def flavor_update(self, context, flavor_id, values):
         with _session_for_write():
-            query = model_query(context, models.InstanceTypes)
-            query = add_identity_filter(query, instance_type_id)
+            query = model_query(context, models.Flavors)
+            query = add_identity_filter(query, flavor_id)
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
                 raise exception.FlavorNotFound(
-                    type_id=instance_type_id)
+                    type_id=flavor_id)
 
             ref.update(values)
             return ref
 
-    def instance_type_get_all(self, context):
-        results = model_query(context, models.InstanceTypes)
+    def flavor_get_all(self, context):
+        results = model_query(context, models.Flavors)
         return [_dict_with_extra_specs(i) for i in results]
 
-    def instance_type_destroy(self, context, instance_type_uuid):
+    def flavor_destroy(self, context, flavor_uuid):
         with _session_for_write():
             # First clean up all extra specs related to this type
-            type_id = _type_get_id_from_type(context, instance_type_uuid)
+            type_id = _type_get_id_from_type(context, flavor_uuid)
             extra_query = model_query(
                 context,
-                models.InstanceTypeExtraSpecs).filter_by(
-                instance_type_uuid=type_id)
+                models.FlavorExtraSpecs).filter_by(
+                flavor_uuid=type_id)
             extra_query.delete()
 
             # Then delete the type record
-            query = model_query(context, models.InstanceTypes)
-            query = add_identity_filter(query, instance_type_uuid)
+            query = model_query(context, models.Flavors)
+            query = add_identity_filter(query, flavor_uuid)
 
             count = query.delete()
             if count != 1:
                 raise exception.FlavorNotFound(
-                    type_id=instance_type_uuid)
+                    type_id=flavor_uuid)
 
-    def instance_create(self, context, values):
+    def server_create(self, context, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
-        instance_nics = values.pop('nics', [])
-        instance = models.Instance()
-        instance.update(values)
+        server_nics = values.pop('nics', [])
+        server = models.Server()
+        server.update(values)
         nic_refs = []
-        for nic in instance_nics:
-            nic_ref = models.InstanceNic()
+        for nic in server_nics:
+            nic_ref = models.ServerNic()
             nic_ref.update(nic)
             nic_refs.append(nic_ref)
         with _session_for_write() as session:
             try:
-                session.add(instance)
+                session.add(server)
                 for nic_r in nic_refs:
                     session.add(nic_r)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise exception.InstanceAlreadyExists(name=values['name'])
-            return instance
+                raise exception.ServerAlreadyExists(name=values['name'])
+            return server
 
-    def instance_get(self, context, instance_id):
+    def server_get(self, context, server_id):
         query = model_query(
             context,
-            models.Instance,
-            instance=True).filter_by(uuid=instance_id)
+            models.Server,
+            server=True).filter_by(uuid=server_id)
         try:
             return query.one()
         except NoResultFound:
-            raise exception.InstanceNotFound(instance=instance_id)
+            raise exception.ServerNotFound(server=server_id)
 
-    def instance_get_all(self, context, project_only):
-        return model_query(context, models.Instance,
-                           instance=True, project_only=project_only)
+    def server_get_all(self, context, project_only):
+        return model_query(context, models.Server,
+                           server=True, project_only=project_only)
 
-    def instance_destroy(self, context, instance_id):
+    def server_destroy(self, context, server_id):
         with _session_for_write():
-            query = model_query(context, models.Instance)
-            query = add_identity_filter(query, instance_id)
+            query = model_query(context, models.Server)
+            query = add_identity_filter(query, server_id)
 
-            nics_query = model_query(context, models.InstanceNic).filter_by(
-                instance_uuid=instance_id)
+            nics_query = model_query(context, models.ServerNic).filter_by(
+                server_uuid=server_id)
             nics_query.delete()
 
             faults_query = model_query(
                 context,
-                models.InstanceFault).filter_by(instance_uuid=instance_id)
+                models.ServerFault).filter_by(server_uuid=server_id)
             faults_query.delete()
             count = query.delete()
             if count != 1:
-                raise exception.InstanceNotFound(instance=instance_id)
+                raise exception.ServerNotFound(server=server_id)
 
-    def instance_update(self, context, instance_id, values):
+    def server_update(self, context, server_id, values):
         if 'uuid' in values:
-            msg = _("Cannot overwrite UUID for an existing Instance.")
+            msg = _("Cannot overwrite UUID for an existing Server.")
             raise exception.InvalidParameterValue(err=msg)
 
         try:
-            return self._do_update_instance(context, instance_id, values)
+            return self._do_update_server(context, server_id, values)
         except db_exc.DBDuplicateEntry as e:
             if 'name' in e.columns:
                 raise exception.DuplicateName(name=values['name'])
 
-    def _do_update_instance(self, context, instance_id, values):
+    def _do_update_server(self, context, server_id, values):
         with _session_for_write():
-            query = model_query(context, models.Instance, instance=True)
-            query = add_identity_filter(query, instance_id)
+            query = model_query(context, models.Server, server=True)
+            query = add_identity_filter(query, server_id)
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise exception.InstanceNotFound(instance=instance_id)
+                raise exception.ServerNotFound(server=server_id)
 
             ref.update(values)
         return ref
@@ -416,9 +416,9 @@ class Connection(api.Connection):
         return ref
 
     def extra_specs_update_or_create(self, context,
-                                     instance_type_uuid, specs,
+                                     flavor_uuid, specs,
                                      max_retries=10):
-        """Create or update instance type extra specs.
+        """Create or update server type extra specs.
 
         This adds or modifies the key/value pairs specified in the
         extra specs dict argument
@@ -427,9 +427,9 @@ class Connection(api.Connection):
             with _session_for_write() as session:
                 try:
                     spec_refs = model_query(
-                        context, models.InstanceTypeExtraSpecs). \
-                        filter_by(instance_type_uuid=instance_type_uuid). \
-                        filter(models.InstanceTypeExtraSpecs.key.in_(
+                        context, models.FlavorExtraSpecs). \
+                        filter_by(flavor_uuid=flavor_uuid). \
+                        filter(models.FlavorExtraSpecs.key.in_(
                             specs.keys())).with_lockmode('update').all()
 
                     existing_keys = set()
@@ -441,10 +441,10 @@ class Connection(api.Connection):
                     for key, value in specs.items():
                         if key in existing_keys:
                             continue
-                        spec_ref = models.InstanceTypeExtraSpecs()
+                        spec_ref = models.FlavorExtraSpecs()
                         spec_ref.update(
                             {"key": key, "value": value,
-                             "instance_type_uuid": instance_type_uuid})
+                             "flavor_uuid": flavor_uuid})
 
                         session.add(spec_ref)
                         session.flush()
@@ -455,42 +455,42 @@ class Connection(api.Connection):
                     # try again unless this was the last attempt
                     if attempt == max_retries - 1:
                         raise exception.FlavorExtraSpecUpdateCreateFailed(
-                            id=instance_type_uuid, retries=max_retries)
+                            id=flavor_uuid, retries=max_retries)
 
-    def instance_type_extra_specs_get(self, context, type_id):
+    def flavor_extra_specs_get(self, context, type_id):
         rows = _type_extra_specs_get_query(context, type_id).all()
         return {row['key']: row['value'] for row in rows}
 
     def type_extra_specs_delete(self, context, type_id, key):
         result = _type_extra_specs_get_query(context, type_id). \
-            filter(models.InstanceTypeExtraSpecs.key == key). \
+            filter(models.FlavorExtraSpecs.key == key). \
             delete(synchronize_session=False)
         # did not find the extra spec
         if result == 0:
             raise exception.FlavorExtraSpecsNotFound(
                 extra_specs_key=key, flavor_id=type_id)
 
-    def instance_nic_update_or_create(self, context, port_id, values):
+    def server_nic_update_or_create(self, context, port_id, values):
         with _session_for_write() as session:
-            query = model_query(context, models.InstanceNic).filter_by(
+            query = model_query(context, models.ServerNic).filter_by(
                 port_id=port_id)
             nic = query.first()
             if not nic:
-                nic = models.InstanceNic()
+                nic = models.ServerNic()
             values.update(port_id=port_id)
             nic.update(values)
             session.add(nic)
             session.flush()
         return nic
 
-    def instance_nics_get_by_instance_uuid(self, context, instance_uuid):
-        return model_query(context, models.InstanceNic).filter_by(
-            instance_uuid=instance_uuid).all()
+    def server_nics_get_by_server_uuid(self, context, server_uuid):
+        return model_query(context, models.ServerNic).filter_by(
+            server_uuid=server_uuid).all()
 
-    def instance_fault_create(self, context, values):
-        """Create a new InstanceFault."""
+    def server_fault_create(self, context, values):
+        """Create a new ServerFault."""
 
-        fault = models.InstanceFault()
+        fault = models.ServerFault()
         fault.update(values)
 
         with _session_for_write() as session:
@@ -498,22 +498,22 @@ class Connection(api.Connection):
             session.flush()
             return fault
 
-    def instance_fault_get_by_instance_uuids(self, context, instance_uuids):
-        """Get all instance faults for the provided instance_uuids."""
-        if not instance_uuids:
+    def server_fault_get_by_server_uuids(self, context, server_uuids):
+        """Get all server faults for the provided server_uuids."""
+        if not server_uuids:
             return {}
 
-        rows = model_query(context, models.InstanceFault).\
-            filter(models.InstanceFault.instance_uuid.in_(instance_uuids)).\
+        rows = model_query(context, models.ServerFault).\
+            filter(models.ServerFault.server_uuid.in_(server_uuids)).\
             order_by(desc("created_at"), desc("id")).all()
 
         output = {}
-        for instance_uuid in instance_uuids:
-            output[instance_uuid] = []
+        for server_uuid in server_uuids:
+            output[server_uuid] = []
 
         for row in rows:
             data = dict(row)
-            output[row['instance_uuid']].append(data)
+            output[row['server_uuid']].append(data)
 
         return output
 
@@ -647,10 +647,10 @@ class Connection(api.Connection):
                                                      project_id=project_id)
         return reservation_ref
 
-    def _sync_instances(self, context, project_id):
-        query = model_query(context, models.Instance, instance=True).\
+    def _sync_servers(self, context, project_id):
+        query = model_query(context, models.Server, server=True).\
             filter_by(project_id=project_id).all()
-        return {'instances': len(query) or 0}
+        return {'servers': len(query) or 0}
 
     def quota_reserve(self, context, resources, quotas, deltas, expire,
                       until_refresh, max_age, project_id,
@@ -870,7 +870,7 @@ class Connection(api.Connection):
 
 
 def _type_get_id_from_type_query(context, type_id):
-    return model_query(context, models.InstanceTypes). \
+    return model_query(context, models.Flavors). \
         filter_by(uuid=type_id)
 
 
@@ -882,5 +882,5 @@ def _type_get_id_from_type(context, type_id):
 
 
 def _type_extra_specs_get_query(context, type_id):
-    return model_query(context, models.InstanceTypeExtraSpecs). \
-        filter_by(instance_type_uuid=type_id)
+    return model_query(context, models.FlavorExtraSpecs). \
+        filter_by(flavor_uuid=type_id)
