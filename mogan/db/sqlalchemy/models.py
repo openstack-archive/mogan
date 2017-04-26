@@ -63,12 +63,12 @@ class MoganBase(models.TimestampMixin,
 Base = declarative_base(cls=MoganBase)
 
 
-class Instance(Base):
-    """Represents possible types for instances."""
+class Server(Base):
+    """Represents possible types for servers."""
 
-    __tablename__ = 'instances'
+    __tablename__ = 'servers'
     __table_args__ = (
-        schema.UniqueConstraint('uuid', name='uniq_instances0uuid'),
+        schema.UniqueConstraint('uuid', name='uniq_servers0uuid'),
         table_args()
     )
     id = Column(Integer, primary_key=True)
@@ -79,7 +79,7 @@ class Instance(Base):
     user_id = Column(String(36), nullable=True)
     status = Column(String(255), nullable=True)
     power_state = Column(String(15), nullable=True)
-    instance_type_uuid = Column(String(36), nullable=True)
+    flavor_uuid = Column(String(36), nullable=True)
     availability_zone = Column(String(255), nullable=True)
     image_uuid = Column(String(36), nullable=True)
     node_uuid = Column(String(36), nullable=True)
@@ -153,100 +153,99 @@ class ComputeDisk(Base):
         primaryjoin='ComputeNode.node_uuid == ComputeDisk.node_uuid')
 
 
-class InstanceNic(Base):
-    """Represents the NIC info for instances."""
+class ServerNic(Base):
+    """Represents the NIC info for servers."""
 
-    __tablename__ = 'instance_nics'
-    instance_uuid = Column(String(36), nullable=True)
+    __tablename__ = 'server_nics'
+    server_uuid = Column(String(36), nullable=True)
     port_id = Column(String(36), primary_key=True)
     mac_address = Column(String(32), nullable=False)
     network_id = Column(String(36), nullable=True)
     fixed_ips = Column(db_types.JsonEncodedList)
     port_type = Column(String(64), nullable=True)
     floating_ip = Column(String(64), nullable=True)
-    _instance = orm.relationship(
-        Instance,
-        backref=orm.backref('instance_nics', uselist=False),
-        foreign_keys=instance_uuid,
-        primaryjoin='Instance.uuid == InstanceNic.instance_uuid')
+    _server = orm.relationship(
+        Server,
+        backref=orm.backref('server_nics', uselist=False),
+        foreign_keys=server_uuid,
+        primaryjoin='Server.uuid == ServerNic.server_uuid')
 
 
-class InstanceTypes(Base):
-    """Represents possible types for instances."""
+class Flavors(Base):
+    """Represents possible types for servers."""
 
-    __tablename__ = 'instance_types'
+    __tablename__ = 'flavors'
     uuid = Column(String(36), primary_key=True)
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=True)
     is_public = Column(Boolean, default=True)
-    instances = orm.relationship(
-        Instance,
-        backref=orm.backref('instance_type', uselist=False),
+    servers = orm.relationship(
+        Server,
+        backref=orm.backref('flavor', uselist=False),
         foreign_keys=uuid,
-        primaryjoin='Instance.instance_type_uuid == InstanceTypes.uuid')
+        primaryjoin='Server.flavor_uuid == Flavors.uuid')
 
 
-class InstanceTypeProjects(Base):
-    """Represents projects associated instance_types."""
+class FlavorProjects(Base):
+    """Represents projects associated flavors."""
 
-    __tablename__ = 'instance_type_projects'
+    __tablename__ = 'flavor_projects'
     __table_args__ = (
         schema.UniqueConstraint(
-            'instance_type_uuid', 'project_id',
-            name='uniq_instance_type_projects0instance_type_uuid0project_id'
+            'flavor_uuid', 'project_id',
+            name='uniq_flavor_projects0flavor_uuid0project_id'
         ),
         table_args()
     )
     id = Column(Integer, primary_key=True)
-    instance_type_uuid = Column(Integer, nullable=True)
+    flavor_uuid = Column(Integer, nullable=True)
     project_id = Column(String(36), nullable=True)
-    instances = orm.relationship(
-        InstanceTypes,
+    servers = orm.relationship(
+        Flavors,
         backref=orm.backref('projects', uselist=False),
-        foreign_keys=instance_type_uuid,
-        primaryjoin='InstanceTypeProjects.instance_type_uuid'
-                    ' == InstanceTypes.uuid')
+        foreign_keys=flavor_uuid,
+        primaryjoin='FlavorProjects.flavor_uuid'
+                    ' == Flavors.uuid')
 
 
-class InstanceTypeExtraSpecs(Base):
-    """Represents additional specs as key/value pairs for an instance_type."""
-    __tablename__ = 'instance_type_extra_specs'
+class FlavorExtraSpecs(Base):
+    """Represents additional specs as key/value pairs for an flavor."""
+    __tablename__ = 'flavor_extra_specs'
     __table_args__ = (
         schema.UniqueConstraint(
-            "instance_type_uuid", "key",
-            name=("uniq_instance_type_extra_specs0"
-                  "instance_type_uuid")
+            "flavor_uuid", "key",
+            name=("uniq_flavor_extra_specs0"
+                  "flavor_uuid")
         ),
         {'mysql_collate': 'utf8_bin'},
     )
     id = Column(Integer, primary_key=True)
     key = Column(String(255))
     value = Column(String(255))
-    instance_type_uuid = Column(String(36), ForeignKey('instance_types.uuid'),
-                                nullable=False)
-    instance_type = orm.relationship(
-        InstanceTypes, backref="extra_specs",
-        foreign_keys=instance_type_uuid,
-        primaryjoin='InstanceTypeExtraSpecs.instance_type_uuid '
-                    '== InstanceTypes.uuid')
+    flavor_uuid = Column(String(36), ForeignKey('flavors.uuid'),
+                         nullable=False)
+    flavor = orm.relationship(
+        Flavors, backref="extra_specs",
+        foreign_keys=flavor_uuid,
+        primaryjoin='FlavorExtraSpecs.flavor_uuid '
+                    '== Flavors.uuid')
 
 
-class InstanceFault(Base):
-    """Represents fault info for instance"""
+class ServerFault(Base):
+    """Represents fault info for server"""
 
-    __tablename__ = "instance_faults"
+    __tablename__ = "server_faults"
 
     id = Column(Integer, primary_key=True, nullable=False)
-    instance_uuid = Column(String(36),
-                           ForeignKey('instances.uuid'))
+    server_uuid = Column(String(36), ForeignKey('servers.uuid'))
     code = Column(Integer(), nullable=False)
     message = Column(String(255))
     detail = Column(MediumText())
-    instance = orm.relationship(
-        Instance,
-        backref=orm.backref('instance_faults', uselist=False),
-        foreign_keys=instance_uuid,
-        primaryjoin='Instance.uuid == InstanceFault.instance_uuid')
+    server = orm.relationship(
+        Server,
+        backref=orm.backref('server_faults', uselist=False),
+        foreign_keys=server_uuid,
+        primaryjoin='Server.uuid == ServerFault.server_uuid')
 
 
 class Quota(Base):

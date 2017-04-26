@@ -350,14 +350,14 @@ Run stack.sh::
 
     ./stack.sh
 
-Source credentials, and spawn an instance as the ``demo`` user::
+Source credentials, and spawn a server as the ``demo`` user::
 
     source ~/devstack/openrc
 
     # query the image id of the default cirros image
     image=$(openstack image show $DEFAULT_IMAGE_NAME -f value -c id)
 
-    # spawn instance
+    # spawn server
     As our moganclient is not ready now, will add this soon...
 
 Building developer documentation

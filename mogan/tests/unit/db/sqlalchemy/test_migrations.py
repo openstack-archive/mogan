@@ -224,7 +224,7 @@ class MigrationCheckersMixin(object):
             self.fail("Shouldn't have connected")
 
     def _check_91941bf1ebc9(self, engine, data):
-        nodes = db_utils.get_table(engine, 'instances')
+        nodes = db_utils.get_table(engine, 'servers')
         col_names = [column.name for column in nodes.c]
         self.assertIn('created_at', col_names)
         self.assertIsInstance(nodes.c.provision_updated_at.type,

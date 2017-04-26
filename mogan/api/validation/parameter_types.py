@@ -53,7 +53,7 @@ port_type = {
 }
 
 
-instance_type_id = {
+flavor_id = {
     'type': 'string', 'format': 'uuid'
 }
 

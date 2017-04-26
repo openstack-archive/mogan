@@ -40,39 +40,39 @@ def check_keyword_arguments(func):
     return wrapper
 
 
-def get_test_instance(ctxt, **kw):
-    """Return a Instance object with appropriate attributes.
+def get_test_server(ctxt, **kw):
+    """Return a Server object with appropriate attributes.
 
     NOTE: The object leaves the attributes marked as changed, such
     that a create() could be used to commit it to the DB.
     """
-    kw['object_type'] = 'instance'
-    get_db_instance_checked = check_keyword_arguments(
-        db_utils.get_test_instance)
-    db_instance = get_db_instance_checked(**kw)
+    kw['object_type'] = 'server'
+    get_db_server_checked = check_keyword_arguments(
+        db_utils.get_test_server)
+    db_server = get_db_server_checked(**kw)
 
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
-        del db_instance['id']
-    instance = objects.Instance(ctxt, **db_instance)
-    return instance
+        del db_server['id']
+    server = objects.Server(ctxt, **db_server)
+    return server
 
 
-def create_test_instance(ctxt, **kw):
-    """Create and return a test instance object.
+def create_test_server(ctxt, **kw):
+    """Create and return a test server object.
 
-    Create a instance in the DB and return a Instance object with appropriate
+    Create a server in the DB and return a Server object with appropriate
     attributes.
     """
-    instance = get_test_instance(ctxt, **kw)
-    instance.create()
-    return instance
+    server = get_test_server(ctxt, **kw)
+    server.create()
+    return server
 
 
-def get_test_instance_fault(**kw):
+def get_test_server_fault(**kw):
     return {
         'id': kw.get('id', 123456),
-        'instance_uuid': kw.get('instance_uuid'),
+        'server_uuid': kw.get('server_uuid'),
         'code': kw.get('code', 404),
         'message': kw.get('message', 'message'),
         'detail': kw.get('detail', 'detail'),
@@ -81,13 +81,13 @@ def get_test_instance_fault(**kw):
     }
 
 
-def get_test_instance_faults(**kw):
+def get_test_server_faults(**kw):
     return {
         'fake-uuid': [
-            {'id': 1, 'instance_uuid': kw.get('instance_uuid'), 'code': 123,
+            {'id': 1, 'server_uuid': kw.get('server_uuid'), 'code': 123,
              'message': 'msg1', 'detail': 'detail', 'created_at': None,
              'updated_at': None},
-            {'id': 2, 'instance_uuid': kw.get('instance_uuid'), 'code': 456,
+            {'id': 2, 'server_uuid': kw.get('server_uuid'), 'code': 456,
              'message': 'msg2', 'detail': 'detail', 'created_at': None,
              'updated_at': None},
         ]
