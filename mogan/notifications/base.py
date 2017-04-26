@@ -18,7 +18,7 @@ the system.
 
 from mogan.notifications.objects import base as notification_base
 from mogan.notifications.objects import exception as notification_exception
-from mogan.notifications.objects import instance as instance_notification
+from mogan.notifications.objects import server as server_notification
 from mogan.objects import fields
 
 
@@ -34,10 +34,10 @@ def _get_fault_and_priority_from_exc(exception):
     return fault, priority
 
 
-def notify_about_instance_action(context, instance, host, action, phase=None,
+def notify_about_server_action(context, server, host, action, phase=None,
                                  binary='mogan-engine', exception=None):
-    """Send versioned notification about the action made on the instance
-    :param instance: the instance which the action performed on
+    """Send versioned notification about the action made on the server
+    :param server: the server which the action performed on
     :param host: the host emitting the notification
     :param action: the name of the action
     :param phase: the phase of the action
@@ -47,16 +47,16 @@ def notify_about_instance_action(context, instance, host, action, phase=None,
 
     fault, priority = _get_fault_and_priority_from_exc(exception)
 
-    payload = instance_notification.InstanceActionPayload(
-        instance=instance,
+    payload = server_notification.ServerActionPayload(
+        server=server,
         fault=fault)
-    notification = instance_notification.InstanceActionNotification(
+    notification = server_notification.ServerActionNotification(
         context=context,
         priority=priority,
         publisher=notification_base.NotificationPublisher(
             context=context, host=host, binary=binary),
         event_type=notification_base.EventType(
-            object='instance',
+            object='server',
             action=action,
             phase=phase),
         payload=payload)

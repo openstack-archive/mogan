@@ -156,12 +156,12 @@ class FlavorNotFound(NotFound):
     _msg_fmt = _("Flavor %(type_id)s could not be found.")
 
 
-class InstanceAlreadyExists(MoganException):
-    _msg_fmt = _("Instance with name %(name)s already exists.")
+class ServerAlreadyExists(MoganException):
+    _msg_fmt = _("Server with name %(name)s already exists.")
 
 
-class InstanceNotFound(NotFound):
-    _msg_fmt = _("Instance %(instance)s could not be found.")
+class ServerNotFound(NotFound):
+    _msg_fmt = _("Server %(server)s could not be found.")
 
 
 class ComputeNodeAlreadyExists(MoganException):
@@ -189,21 +189,21 @@ class ComputeDiskNotFound(NotFound):
 
 
 class NodeNotFound(NotFound):
-    _msg_fmt = _("Node associated with instance %(instance)s "
+    _msg_fmt = _("Node associated with server %(server)s "
                  "could not be found.")
 
 
 class InvalidActionParameterValue(Invalid):
     _msg_fmt = _("The Parameter value: %(value)s for %(action) action of "
-                 "instance %(instance)s is invalid.")
+                 "server %(server)s is invalid.")
 
 
-class InstanceDeployFailure(Invalid):
-    _msg_fmt = _("Failed to deploy instance: %(reason)s")
+class ServerDeployFailure(Invalid):
+    _msg_fmt = _("Failed to deploy server: %(reason)s")
 
 
-class InstanceDeployAborted(Invalid):
-    _msg_fmt = _("Instance deployment is aborted: %(reason)s")
+class ServerDeployAborted(Invalid):
+    _msg_fmt = _("Server deployment is aborted: %(reason)s")
 
 
 class NoFreeEngineWorker(TemporaryFailure):
@@ -213,7 +213,7 @@ class NoFreeEngineWorker(TemporaryFailure):
 
 
 class DuplicateName(Conflict):
-    _msg_fmt = _("A instance with name %(name)s already exists.")
+    _msg_fmt = _("A server with name %(name)s already exists.")
 
 
 class KeystoneUnauthorized(MoganException):
@@ -315,15 +315,15 @@ class NetworkNotFound(NotFound):
 
 class NetworkRequiresSubnet(Invalid):
     _msg_fmt = _("Network %(network_uuid)s requires a subnet in order to boot"
-                 " instances on.")
+                 " servers on.")
 
 
-class InstanceIsLocked(Invalid):
-    _msg_fmt = _("Instance %(instance_uuid)s is locked")
+class ServerIsLocked(Invalid):
+    _msg_fmt = _("Server %(server_uuid)s is locked")
 
 
-class InstanceInMaintenance(Invalid):
-    _msg_fmt = _("Instance %(instance_uuid)s is in maintenance mode")
+class ServerInMaintenance(Invalid):
+    _msg_fmt = _("Server %(server_uuid)s is in maintenance mode")
 
 
 class InvalidReservationExpiration(Invalid):
@@ -386,13 +386,13 @@ class ConfigDriveUnknownFormat(MoganException):
                  "iso9660 or vfat.")
 
 
-class InstanceUserDataTooLarge(MoganException):
+class ServerUserDataTooLarge(MoganException):
     _msg_fmt = _("User data too large. User data must be no larger than "
                  "%(maxsize)s bytes once base64 encoded. Your data is "
                  "%(length)d bytes")
 
 
-class InstanceUserDataMalformed(MoganException):
+class ServerUserDataMalformed(MoganException):
     _msg_fmt = _("User data needs to be valid base 64.")
 
 

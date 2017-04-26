@@ -27,7 +27,7 @@ from mogan.api.controllers import base
 from mogan.api.controllers import link
 from mogan.api.controllers.v1 import availability_zone
 from mogan.api.controllers.v1 import flavors
-from mogan.api.controllers.v1 import instances
+from mogan.api.controllers.v1 import servers
 from mogan.api.controllers.v1 import keypairs
 from mogan.api import expose
 
@@ -38,11 +38,11 @@ class V1(base.APIBase):
     id = wtypes.text
     """The ID of the version, also acts as the release number"""
 
-    instances = [link.Link]
-    """Links to the instances resource"""
+    servers = [link.Link]
+    """Links to the servers resource"""
 
     flavors = [link.Link]
-    """Links to the instance types resource"""
+    """Links to the server types resource"""
 
     availability_zones = [link.Link]
     """Links to the availability zones resource"""
@@ -54,11 +54,11 @@ class V1(base.APIBase):
     def convert():
         v1 = V1()
         v1.id = "v1"
-        v1.instances = [link.Link.make_link('self', pecan.request.public_url,
-                                            'instances', ''),
+        v1.servers = [link.Link.make_link('self', pecan.request.public_url,
+                                            'servers', ''),
                         link.Link.make_link('bookmark',
                                             pecan.request.public_url,
-                                            'instances', '',
+                                            'servers', '',
                                             bookmark=True)
                         ]
         v1.flavors = [link.Link.make_link('self', pecan.request.public_url,
@@ -91,7 +91,7 @@ class Controller(rest.RestController):
     """Version 1 API controller root."""
 
     flavors = flavors.FlavorsController()
-    instances = instances.InstanceController()
+    servers = servers.ServerController()
     availability_zones = availability_zone.AvailabilityZoneController()
     keypairs = keypairs.KeyPairController()
 

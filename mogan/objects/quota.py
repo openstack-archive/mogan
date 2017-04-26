@@ -14,7 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Quotas for instances."""
+"""Quotas for servers."""
 
 import datetime
 
@@ -38,7 +38,7 @@ class Quota(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
-    dbapi = dbapi.get_instance()
+    dbapi = dbapi.get_server()
 
     fields = {
         'id': object_fields.IntegerField(),
@@ -164,7 +164,7 @@ class DbQuotaDriver(object):
     The default driver utilizes the local database.
     """
 
-    dbapi = dbapi.get_instance()
+    dbapi = dbapi.get_server()
 
     def get_project_quotas(self, context, resources, project_id, usages=True):
         """Retrieve quotas for a project.
@@ -185,11 +185,11 @@ class DbQuotaDriver(object):
         for p_quota in res:
             project_quotas[p_quota.resource_name] = p_quota.hard_limit
         if project_quotas == {}:
-            self.dbapi.quota_create(context, {'resource_name': 'instances',
+            self.dbapi.quota_create(context, {'resource_name': 'servers',
                                               'project_id': project_id,
                                               'hard_limit': 10,
                                               'allocated': 0})
-            project_quotas['instances'] = 10
+            project_quotas['servers'] = 10
         allocated_quotas = None
         if usages:
             project_usages = self.dbapi.quota_usage_get_all_by_project(
@@ -374,7 +374,7 @@ class BaseResource(object):
     def __init__(self, name, sync, count=None):
         """Initializes a Resource.
 
-        :param name: The name of the resource, i.e., "instances".
+        :param name: The name of the resource, i.e., "servers".
         :param sync: A dbapi methods name which returns a dictionary
                      to resynchronize the in_use count for one or more
                      resources, as described above.
@@ -407,12 +407,12 @@ class BaseResource(object):
         return -1
 
 
-class InstanceResource(BaseResource):
-    """ReservableResource for a specific instance."""
+class ServerResource(BaseResource):
+    """ReservableResource for a specific server."""
 
-    def __init__(self, name='instances'):
-        """Initializes a InstanceResource.
+    def __init__(self, name='servers'):
+        """Initializes a ServerResource.
 
-        :param name: The kind of resource, i.e., "instances".
+        :param name: The kind of resource, i.e., "servers".
         """
-        super(InstanceResource, self).__init__(name, "_sync_%s" % name)
+        super(ServerResource, self).__init__(name, "_sync_%s" % name)

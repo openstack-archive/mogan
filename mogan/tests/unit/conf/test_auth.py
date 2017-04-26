@@ -58,7 +58,7 @@ class AuthConfTestCase(base.TestCase):
     def test_load_auth(self):
         auth = mogan_auth.load_auth(self.cfg_fixture.conf, self.test_group)
         # NOTE(pas-ha) 'password' auth_plugin is used
-        self.assertIsInstance(auth, kaidentity.generic.password.Password)
+        self.assertIsServer(auth, kaidentity.generic.password.Password)
         self.assertEqual('http://127.0.0.1:9898', auth.auth_url)
 
     def test_load_auth_missing_options(self):

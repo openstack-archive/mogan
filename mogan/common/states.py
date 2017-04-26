@@ -14,11 +14,11 @@
 #    under the License.
 
 """
-Mapping of bare metal instance states.
+Mapping of bare metal server states.
 
-Setting the instance `power_state` is handled by the engine's power
+Setting the server `power_state` is handled by the engine's power
 synchronization thread. Based on the power state retrieved from the
-hypervisor for the instance.
+hypervisor for the server.
 """
 
 from oslo_log import log as logging
@@ -32,10 +32,10 @@ LOG = logging.getLogger(__name__)
 ##############
 
 POWER_ON = 'power on'
-""" Instance is powered on. """
+""" Server is powered on. """
 
 POWER_OFF = 'power off'
-""" Instance is powered off. """
+""" Server is powered off. """
 
 NOSTATE = None
 """ No state information """
@@ -61,7 +61,7 @@ provision_state via the REST API.
 
 
 #################
-# Instance states
+# Server states
 #################
 
 """ Mapping of state-changing events that are PUT to the REST API

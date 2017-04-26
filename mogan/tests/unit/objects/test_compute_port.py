@@ -52,7 +52,7 @@ class TestComputePortObject(base.DbTestCase):
             ports = objects.ComputePort.list(self.context)
 
             mock_port_get_all.assert_called_once_with(self.context)
-            self.assertIsInstance(ports[0], objects.ComputePort)
+            self.assertIsServer(ports[0], objects.ComputePort)
             self.assertEqual(self.context, ports[0]._context)
 
     def test_create(self):

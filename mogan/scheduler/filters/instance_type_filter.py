@@ -16,17 +16,17 @@
 from mogan.scheduler import filters
 
 
-class InstanceTypeFilter(filters.BaseNodeFilter):
-    """Filters Nodes by instance type."""
+class FlavorFilter(filters.BaseNodeFilter):
+    """Filters Nodes by server type."""
 
-    # Instance types do not change within a request
+    # Flavors do not change within a request
     run_filter_once_per_request = True
 
     def node_passes(self, node_state, filter_properties):
         spec = filter_properties.get('request_spec', {})
-        instance_type = spec.get('instance_type', {})
-        type_name = instance_type.get('name')
+        flavor = spec.get('flavor', {})
+        type_name = flavor.get('name')
 
         if type_name:
-            return type_name == node_state.instance_type
+            return type_name == node_state.flavor
         return True

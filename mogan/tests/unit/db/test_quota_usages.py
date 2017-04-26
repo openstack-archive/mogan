@@ -34,49 +34,49 @@ class DbQuotaUsageTestCase(base.DbTestCase):
     def setUp(self):
         super(DbQuotaUsageTestCase, self).setUp()
         self.context = context.get_admin_context()
-        self.instance = quota.InstanceResource()
-        self.resources = {self.instance.name: self.instance}
+        self.server = quota.ServerResource()
+        self.resources = {self.server.name: self.server}
         self.project_id = "c18e8a1a870d4c08a0b51ced6e0b6459"
 
     def test_quota_usage_reserve(self):
         utils.create_test_quota()
-        dbapi = db_api.get_instance()
+        dbapi = db_api.get_server()
         r = dbapi.quota_reserve(self.context, self.resources,
-                                {'instances': 10},
-                                {'instances': 1},
+                                {'servers': 10},
+                                {'servers': 1},
                                 datetime.datetime(2099, 1, 1, 0, 0),
                                 CONF.quota.until_refresh, CONF.quota.max_age,
                                 project_id=self.project_id)
-        self.assertEqual('instances', r[0].resource_name)
+        self.assertEqual('servers', r[0].resource_name)
 
     def test_reserve_commit(self):
         utils.create_test_quota()
-        dbapi = db_api.get_instance()
+        dbapi = db_api.get_server()
         rs = dbapi.quota_reserve(self.context, self.resources,
-                                 {'instances': 10},
-                                 {'instances': 1},
+                                 {'servers': 10},
+                                 {'servers': 1},
                                  datetime.datetime(2099, 1, 1, 0, 0),
                                  CONF.quota.until_refresh, CONF.quota.max_age,
                                  project_id=self.project_id)
         r = dbapi.quota_usage_get_all_by_project(self.context, self.project_id)
-        before_in_use = r['instances']['in_use']
+        before_in_use = r['servers']['in_use']
         dbapi.reservation_commit(self.context, rs, self.project_id)
         r = dbapi.quota_usage_get_all_by_project(self.context, self.project_id)
-        after_in_use = r['instances']['in_use']
+        after_in_use = r['servers']['in_use']
         self.assertEqual(before_in_use + 1, after_in_use)
 
     def test_reserve_rollback(self):
         utils.create_test_quota()
-        dbapi = db_api.get_instance()
+        dbapi = db_api.get_server()
         rs = dbapi.quota_reserve(self.context, self.resources,
-                                 {'instances': 10},
-                                 {'instances': 1},
+                                 {'servers': 10},
+                                 {'servers': 1},
                                  datetime.datetime(2099, 1, 1, 0, 0),
                                  CONF.quota.until_refresh, CONF.quota.max_age,
                                  project_id=self.project_id)
         r = dbapi.quota_usage_get_all_by_project(self.context, self.project_id)
-        before_in_use = r['instances']['in_use']
+        before_in_use = r['servers']['in_use']
         dbapi.reservation_rollback(self.context, rs, self.project_id)
         r = dbapi.quota_usage_get_all_by_project(self.context, self.project_id)
-        after_in_use = r['instances']['in_use']
+        after_in_use = r['servers']['in_use']
         self.assertEqual(before_in_use, after_in_use)
