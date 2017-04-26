@@ -58,7 +58,7 @@ This state is replacing the NOSTATE state used prior to Kilo.
 """
 
 ACTIVE = 'active'
-""" Node is successfully deployed and associated with an instance. """
+""" Node is successfully deployed and associated with a server. """
 
 DEPLOYWAIT = 'wait call-back'
 """ Node is waiting to be deployed.

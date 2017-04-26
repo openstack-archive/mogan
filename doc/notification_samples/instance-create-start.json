@@ -1,11 +1,11 @@
 {
-    "event_type": "instance.create.start",
+    "event_type": "server.create.start",
     "payload": {
-        "mogan_object.name": "InstanceActionPayload",
+        "mogan_object.name": "ServerActionPayload",
         "mogan_object.namespace": "mogan",
         "mogan_object.version": "1.0",
         "mogan_object.data": {
-            "instance_type_uuid": "6ce9904f-c61f-4ee8-afbe-c852c05258f6",
+            "flavor_uuid": "6ce9904f-c61f-4ee8-afbe-c852c05258f6",
             "status": "building",
             "user_id": "dfc14a6e939646d1929362de1758d7b2",
             "uuid": "e1a7b5b7-c76c-4459-8328-10deda95819f",

@@ -6,9 +6,9 @@
 
 Show and manage server flavors.
 
-Flavors are a way to describe the basic dimensions of a instance to be
+Flavors are a way to describe the basic dimensions of a server to be
 created including how much ``cpu``, ``ram``, and ``disk space`` are
-allocated to an instance built with this flavor.
+allocated to a server built with this flavor.
 
 List Flavors
 ============
@@ -189,7 +189,7 @@ Delete Flavor
 Deletes a flavor.
 
 This is typically an admin only action. Deleting a flavor that is in use by
-existing instances is not recommended as it can cause incorrect data to
+existing servers is not recommended as it can cause incorrect data to
 be returned to the user under some operations.
 
 Normal response codes: 204

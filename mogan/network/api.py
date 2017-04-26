@@ -62,7 +62,7 @@ def get_client(token=None):
 class API(object):
     """API for interacting with the neutron 2.x API."""
 
-    def create_port(self, context, network_uuid, mac, instance_uuid):
+    def create_port(self, context, network_uuid, mac, server_uuid):
         """Create neutron port."""
 
         client = get_client(context.auth_token)
@@ -70,7 +70,7 @@ class API(object):
             'port': {
                 'network_id': network_uuid,
                 'mac_address': mac,
-                'device_id': instance_uuid,
+                'device_id': server_uuid,
             }
         }
 
@@ -78,8 +78,8 @@ class API(object):
             port = client.create_port(body)
         except neutron_exceptions.NeutronClientException as e:
             msg = (_("Could not create neutron port on network %(net)s for "
-                     "instance %(instance)s. %(exc)s"),
-                   {'net': network_uuid, 'instance': instance_uuid, 'exc': e})
+                     "server %(server)s. %(exc)s"),
+                   {'net': network_uuid, 'server': server_uuid, 'exc': e})
             LOG.exception(msg)
             raise exception.NetworkError(msg)
         return port
@@ -99,7 +99,7 @@ class API(object):
                    {'port_id': port_id, 'reason': e})
             raise exception.NetworkError(msg)
 
-    def delete_port(self, context, port_id, instance_uuid):
+    def delete_port(self, context, port_id, server_uuid):
         """Delete neutron port."""
 
         client = get_client(context.auth_token)
@@ -110,7 +110,7 @@ class API(object):
                 LOG.warning("Port %s does not exist", port_id)
             else:
                 LOG.warning(
-                    "Failed to delete port %s for instance.",
+                    "Failed to delete port %s for server.",
                     port_id, exc_info=True)
                 raise e
 
@@ -149,8 +149,8 @@ class API(object):
         fip = self._get_floating_ip_by_address(client, address)
         return fip
 
-    def get_instance_id_by_floating_address(self, context, address):
-        """Return the instance id a floating IP's fixed IP is allocated to."""
+    def get_server_id_by_floating_address(self, context, address):
+        """Return the server id a floating IP's fixed IP is allocated to."""
         client = get_client(context.auth_token)
         fip = self._get_floating_ip_by_address(client, address)
         if not fip['port_id']:
@@ -161,9 +161,9 @@ class API(object):
         except exception.PortNotFound:
             # NOTE: Here is a potential race condition between _show_port() and
             # _get_floating_ip_by_address(). fip['port_id'] shows a port which
-            # is the server instance's. At _get_floating_ip_by_address(),
-            # Neutron returns the list which includes the instance. Just after
-            # that, the deletion of the instance happens and Neutron returns
+            # is the server server's. At _get_floating_ip_by_address(),
+            # Neutron returns the list which includes the server. Just after
+            # that, the deletion of the server happens and Neutron returns
             # 404 on _show_port().
             LOG.debug('The port(%s) is not found', fip['port_id'])
             return None
@@ -181,7 +181,7 @@ class API(object):
         client.update_floatingip(fip['id'], {'floatingip': param})
 
     def disassociate_floating_ip(self, context, address):
-        """Disassociate a floating IP from the instance."""
+        """Disassociate a floating IP from the server."""
 
         client = get_client(context.auth_token)
         fip = self._get_floating_ip_by_address(client, address)
@@ -202,12 +202,12 @@ class API(object):
 
         return nets
 
-    def _ports_needed_per_instance(self, context, client, requested_networks):
+    def _ports_needed_per_server(self, context, client, requested_networks):
 
-        ports_needed_per_instance = 0
+        ports_needed_per_server = 0
         net_ids_requested = []
         for request in requested_networks:
-            ports_needed_per_instance += 1
+            ports_needed_per_server += 1
             net_ids_requested.append(request['net_id'])
 
         # Now check to see if all requested networks exist
@@ -231,27 +231,27 @@ class API(object):
                         id_str = id_str and id_str + ', ' + _id or _id
                     raise exception.NetworkNotFound(network_id=id_str)
 
-        return ports_needed_per_instance
+        return ports_needed_per_server
 
-    def validate_networks(self, context, requested_networks, num_instances):
+    def validate_networks(self, context, requested_networks, num_servers):
         """Validate that the tenant can use the requested networks.
 
-        Return the number of instances than can be successfully allocated
+        Return the number of servers than can be successfully allocated
         with the requested network configuration.
         """
         LOG.debug('validate_networks() for %s', requested_networks)
 
         client = get_client(context.auth_token)
-        ports_needed_per_instance = self._ports_needed_per_instance(
+        ports_needed_per_server = self._ports_needed_per_server(
             context, client, requested_networks)
 
         # Check the quota and return how many of the requested number of
-        # instances can be created
-        if ports_needed_per_instance:
+        # servers can be created
+        if ports_needed_per_server:
             quotas = client.show_quota(context.project_id)['quota']
             if quotas.get('port', -1) == -1:
                 # Unlimited Port Quota
-                return num_instances
+                return num_servers
 
             # We only need the port count so only ask for ids back.
             params = dict(tenant_id=context.project_id, fields=['id'])
@@ -263,13 +263,13 @@ class API(object):
                        {'ports': len(ports),
                         'quota': quotas.get('port')})
                 raise exception.PortLimitExceeded(msg)
-            ports_needed = ports_needed_per_instance * num_instances
+            ports_needed = ports_needed_per_server * num_servers
             if free_ports >= ports_needed:
-                return num_instances
+                return num_servers
             else:
-                return free_ports // ports_needed_per_instance
+                return free_ports // ports_needed_per_server
 
-        return num_instances
+        return num_servers
 
 
 def _ensure_requested_network_ordering(accessor, unordered, preferred):

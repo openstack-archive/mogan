@@ -42,16 +42,16 @@ class RPCAPITestCase(base.DbTestCase):
 
     def setUp(self):
         super(RPCAPITestCase, self).setUp()
-        self.fake_instance = dbutils.get_test_instance()
-        self.fake_instance_obj = objects.Instance._from_db_object(
-            objects.Instance(self.context), self.fake_instance)
-        self.fake_type = dbutils.get_test_instance_type()
+        self.fake_server = dbutils.get_test_server()
+        self.fake_server_obj = objects.Server._from_db_object(
+            objects.Server(self.context), self.fake_server)
+        self.fake_type = dbutils.get_test_flavor()
         self.fake_type['extra_specs'] = {}
-        self.fake_type_obj = objects.InstanceType._from_db_object(
-            self.context, objects.InstanceType(self.context), self.fake_type)
+        self.fake_type_obj = objects.Flavor._from_db_object(
+            self.context, objects.Flavor(self.context), self.fake_type)
 
-    def test_serialized_instance_has_uuid(self):
-        self.assertIn('uuid', self.fake_instance)
+    def test_serialized_server_has_uuid(self):
+        self.assertIn('uuid', self.fake_server)
 
     def _test_rpcapi(self, method, rpc_method, **kwargs):
         rpcapi = engine_rpcapi.EngineAPI(topic='fake-topic')
@@ -101,11 +101,11 @@ class RPCAPITestCase(base.DbTestCase):
                                                  expected_args):
                         self.assertEqual(arg, expected_arg)
 
-    def test_create_instance(self):
-        self._test_rpcapi('create_instance',
+    def test_create_server(self):
+        self._test_rpcapi('create_server',
                           'cast',
                           version='1.0',
-                          instance=self.fake_instance_obj,
+                          server=self.fake_server_obj,
                           requested_networks=[],
                           user_data=None,
                           injected_files=None,
@@ -113,21 +113,21 @@ class RPCAPITestCase(base.DbTestCase):
                           request_spec=None,
                           filter_properties=None)
 
-    def test_delete_instance(self):
-        self._test_rpcapi('delete_instance',
+    def test_delete_server(self):
+        self._test_rpcapi('delete_server',
                           'cast',
                           version='1.0',
-                          instance=self.fake_instance_obj)
+                          server=self.fake_server_obj)
 
     def test_set_power_state(self):
         self._test_rpcapi('set_power_state',
                           'cast',
                           version='1.0',
-                          instance=self.fake_instance_obj,
+                          server=self.fake_server_obj,
                           state='power on')
 
-    def test_rebuild_instance(self):
-        self._test_rpcapi('rebuild_instance',
+    def test_rebuild_server(self):
+        self._test_rpcapi('rebuild_server',
                           'cast',
                           version='1.0',
-                          instance=self.fake_instance_obj)
+                          server=self.fake_server_obj)
