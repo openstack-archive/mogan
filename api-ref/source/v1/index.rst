@@ -11,4 +11,5 @@ Baremetal Compute API V1 (CURRENT)
 .. include:: instance_states.inc
 .. include:: instance_networks.inc
 .. include:: flavors.inc
+.. include:: flavor_access.inc
 .. include:: availability_zones.inc

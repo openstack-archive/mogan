@@ -164,6 +164,13 @@ class Connection(api.Connection):
                 instance_type_uuid=type_id)
             extra_query.delete()
 
+            # Clean up all access related to this flavor
+            project_query = model_query(
+                context,
+                models.InstanceTypeProjects).filter_by(
+                instance_type_uuid=type_id)
+            project_query.delete()
+
             # Then delete the type record
             query = model_query(context, models.InstanceTypes)
             query = add_identity_filter(query, instance_type_uuid)
@@ -469,6 +476,31 @@ class Connection(api.Connection):
         if result == 0:
             raise exception.FlavorExtraSpecsNotFound(
                 extra_specs_key=key, flavor_id=type_id)
+
+    def flavor_access_get(self, context, flavor_id):
+        return _flavor_access_query(context, flavor_id)
+
+    def flavor_access_add(self, context, flavor_id, project_id):
+        access_ref = models.InstanceTypeProjects()
+        access_ref.update({"instance_type_uuid": flavor_id,
+                           "project_id": project_id})
+        with _session_for_write() as session:
+            try:
+                session.add(access_ref)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.FlavorAccessExists(flavor_id=flavor_id,
+                                                   project_id=project_id)
+        return access_ref
+
+    def flavor_access_remove(self, context, flavor_id, project_id):
+        count = _flavor_access_query(context, flavor_id). \
+            filter_by(project_id=project_id). \
+            delete(synchronize_session=False)
+
+        if count == 0:
+            raise exception.FlavorAccessNotFound(flavor_id=flavor_id,
+                                                 project_id=project_id)
 
     def instance_nic_update_or_create(self, context, port_id, values):
         with _session_for_write() as session:
@@ -884,3 +916,8 @@ def _type_get_id_from_type(context, type_id):
 def _type_extra_specs_get_query(context, type_id):
     return model_query(context, models.InstanceTypeExtraSpecs). \
         filter_by(instance_type_uuid=type_id)
+
+
+def _flavor_access_query(context, flavor_id):
+    return model_query(context, models.InstanceTypeProjects). \
+        filter_by(instance_type_uuid=flavor_id)
