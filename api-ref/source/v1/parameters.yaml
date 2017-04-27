@@ -103,6 +103,18 @@ availability_zones:
   in: body
   required: true
   type: array
+console_info:
+  description: |
+    The remote console object.
+  in: body
+  required: true
+  type: object
+console_url:
+  description: |
+    The URL is used to connect the console.
+  in: body
+  required: true
+  type: string
 created_at:
   description: |
     The date and time when the resource was created. The date and time
