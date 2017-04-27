@@ -29,6 +29,7 @@ Response
 .. rest_parameters:: parameters.yaml
 
   - console: console_info
+  - url: console_url
 
 **Example instance network:**
 
