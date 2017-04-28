@@ -1,0 +1,4 @@
+---
+features:
+  - Introduce versioned notification base, and add instances action
+    notification in Mogan.

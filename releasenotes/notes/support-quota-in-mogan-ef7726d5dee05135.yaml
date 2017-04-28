@@ -1,5 +1,5 @@
 ---
 features:
-  - Support quota for instances in Mogan, add quota operation in creating and
-    deleting instances process. Now only support database quota driver by
+  - Support quota for servers in Mogan, add quota operation in creating and
+    deleting servers process. Now only support database quota driver by
     default.

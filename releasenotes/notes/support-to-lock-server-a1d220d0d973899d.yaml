@@ -1,0 +1,4 @@
+---
+features:
+  - Add a lock API to change server to maintance. That will disallow
+    deleting server after locking.

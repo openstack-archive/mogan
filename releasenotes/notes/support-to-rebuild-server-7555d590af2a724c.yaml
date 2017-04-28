@@ -1,0 +1,4 @@
+---
+features:
+  - Support to rebuild the baremetal server in Mogan. This feature will
+    change the server's provision state by using Irnoic API.
