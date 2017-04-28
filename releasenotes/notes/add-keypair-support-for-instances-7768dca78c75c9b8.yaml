@@ -1,0 +1,5 @@
+---
+features:
+  - Add ssh keypair support for baremetal instances like nova, as admin_pass
+    is not worked with cloud-init by default, keypair is a must for users to
+    access and manage the instances.

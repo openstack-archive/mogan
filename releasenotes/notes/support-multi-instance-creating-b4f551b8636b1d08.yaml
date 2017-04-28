@@ -1,0 +1,4 @@
+---
+features:
+  - Support to create multi-instance in one request of mogan. Mogan will check
+    and find the exact number of instances which will be created finally.

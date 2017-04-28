@@ -1,0 +1,4 @@
+---
+features:
+  - Add a lock API to change instance to maintance. That will disallow
+    deleting instances after locking.
