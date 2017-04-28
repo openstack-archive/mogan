@@ -291,7 +291,7 @@ class EngineManager(base_manager.BaseEngineManager):
             # Just retrun if we fail to get nodes maintenance state.
             return
 
-        node_dict = {node.server_uuid: node for node in nodes}
+        node_dict = {node.instance_uuid: node for node in nodes}
 
         if not node_dict:
             LOG.warning("While synchronizing server maintenance states, "
