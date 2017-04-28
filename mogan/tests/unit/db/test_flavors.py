@@ -27,7 +27,6 @@ class DbFlavorTestCase(base.DbTestCase):
 
     def setUp(self):
         super(DbFlavorTestCase, self).setUp()
-        self.context = {}
         self.flavor = utils.create_test_flavor()
 
     def test_create_flavor(self):

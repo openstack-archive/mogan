@@ -24,9 +24,11 @@ from oslo_log import log as logging
 from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
+from sqlalchemy.sql import true
 
 from mogan.common import exception
 from mogan.common.i18n import _
@@ -131,6 +133,14 @@ class Connection(api.Connection):
     def flavor_get(self, context, flavor_uuid):
         query = model_query(context, models.Flavors).filter_by(
             uuid=flavor_uuid).options(joinedload('extra_specs'))
+
+        if not context.is_admin:
+            the_filter = [models.Flavors.is_public == true()]
+            the_filter.extend([
+                models.Flavors.projects.any(project_id=context.project_id)
+            ])
+            query = query.filter(or_(*the_filter))
+
         try:
             return _dict_with_extra_specs(query.one())
         except NoResultFound:
