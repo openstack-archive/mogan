@@ -92,7 +92,7 @@ class TestServers(v1_test.APITestV1):
         super(TestServers, self).setUp()
         self._prepare_flavor()
         self.addCleanup(self._clean_servers)
-        self.addCleanup(self._clean_type)
+        self.addCleanup(self._clean_flavor)
 
     def _clean_servers(self):
         for server_uuid in self.INSTANCE_UUIDS:
@@ -100,8 +100,10 @@ class TestServers(v1_test.APITestV1):
             self.delete('/servers/' + server_uuid, status=204,
                         expect_errors=True)
 
-    def _clean_type(self):
-        self.delete('/flavors/' + self.INSTANCE_TYPE_UUID, status=204)
+    def _clean_flavor(self):
+        headers = self.gen_headers(self.context, roles="admin")
+        self.delete('/flavors/' + self.INSTANCE_TYPE_UUID,
+                    headers=headers, status=204)
 
     def _make_app(self):
         return super(TestServers, self)._make_app()
@@ -109,9 +111,10 @@ class TestServers(v1_test.APITestV1):
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
     def _prepare_flavor(self, mocked):
         mocked.side_effect = [self.INSTANCE_TYPE_UUID]
+        headers = self.gen_headers(self.context, roles="admin")
         body = {"name": "type_for_server_testing",
                 "description": "type for server testing"}
-        self.post_json('/flavors', body, status=201)
+        self.post_json('/flavors', body, headers=headers, status=201)
 
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
     def _prepare_server(self, amount, mocked):

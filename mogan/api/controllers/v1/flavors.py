@@ -27,6 +27,7 @@ from mogan.api import expose
 from mogan.api import validation
 from mogan.common import exception
 from mogan.common.i18n import _
+from mogan.common import policy
 from mogan import objects
 
 
@@ -105,6 +106,7 @@ class FlavorCollection(base.APIBase):
 class FlavorExtraSpecsController(rest.RestController):
     """REST controller for flavor extra specs."""
 
+    @policy.authorize_wsgi("mogan:flavor_extra_specs", "get_all")
     @expose.expose(wtypes.text, types.uuid)
     def get_all(self, flavor_uuid):
         """Retrieve a list of extra specs of the queried flavor."""
@@ -112,6 +114,7 @@ class FlavorExtraSpecsController(rest.RestController):
         flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         return dict(extra_specs=flavor.extra_specs)
 
+    @policy.authorize_wsgi("mogan:flavor_extra_specs", "patch")
     @expose.expose(types.jsontype, types.uuid, body=types.jsontype,
                    status_code=http_client.ACCEPTED)
     def patch(self, flavor_uuid, extra_spec):
@@ -122,6 +125,7 @@ class FlavorExtraSpecsController(rest.RestController):
         flavor.save()
         return dict(extra_specs=flavor.extra_specs)
 
+    @policy.authorize_wsgi("mogan:flavor_extra_specs", "delete")
     @expose.expose(None, types.uuid, wtypes.text,
                    status_code=http_client.NO_CONTENT)
     def delete(self, flavor_uuid, spec_name):
@@ -135,6 +139,7 @@ class FlavorExtraSpecsController(rest.RestController):
 class FlavorAccessController(rest.RestController):
     """REST controller for flavor access."""
 
+    @policy.authorize_wsgi("mogan:flavor_access", "get_all")
     @expose.expose(wtypes.text, types.uuid)
     def get_all(self, flavor_uuid):
         """Retrieve a list of extra specs of the queried flavor."""
@@ -151,6 +156,7 @@ class FlavorAccessController(rest.RestController):
         # private flavor to listed projects only
         return _marshall_flavor_access(flavor)
 
+    @policy.authorize_wsgi("mogan:flavor_access", "add_tenant_access")
     @expose.expose(None, types.uuid, body=types.jsontype,
                    status_code=http_client.NO_CONTENT)
     def post(self, flavor_uuid, tenant):
@@ -174,6 +180,7 @@ class FlavorAccessController(rest.RestController):
             raise wsme.exc.ClientSideError(
                 err.message, status_code=http_client.CONFLICT)
 
+    @policy.authorize_wsgi("mogan:flavor_access", "remove_tenant_access")
     @expose.expose(None, types.uuid, types.uuid,
                    status_code=http_client.NO_CONTENT)
     def delete(self, flavor_uuid, tenant_id):
@@ -201,6 +208,7 @@ class FlavorsController(rest.RestController):
     extraspecs = FlavorExtraSpecsController()
     access = FlavorAccessController()
 
+    @policy.authorize_wsgi("mogan:flavor", "get_all")
     @expose.expose(FlavorCollection)
     def get_all(self):
         """Retrieve a list of flavor."""
@@ -208,6 +216,7 @@ class FlavorsController(rest.RestController):
         flavors = objects.Flavor.list(pecan.request.context)
         return FlavorCollection.convert_with_links(flavors)
 
+    @policy.authorize_wsgi("mogan:flavor", "get_one")
     @expose.expose(Flavor, types.uuid)
     def get_one(self, flavor_uuid):
         """Retrieve information about the given flavor.
@@ -217,6 +226,7 @@ class FlavorsController(rest.RestController):
         rpc_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         return Flavor.convert_with_links(rpc_flavor)
 
+    @policy.authorize_wsgi("mogan:flavor", "create")
     @expose.expose(Flavor, body=Flavor,
                    status_code=http_client.CREATED)
     def post(self, flavor):
@@ -232,6 +242,7 @@ class FlavorsController(rest.RestController):
                                                  new_flavor.uuid)
         return Flavor.convert_with_links(new_flavor)
 
+    @policy.authorize_wsgi("mogan:flavor", "update")
     @expose.expose(Flavor, types.uuid, body=Flavor)
     def put(self, flavor_uuid, flavor):
         """Update a flavor.
@@ -260,6 +271,7 @@ class FlavorsController(rest.RestController):
                                                  flavor_in_db.uuid)
         return Flavor.convert_with_links(flavor_in_db)
 
+    @policy.authorize_wsgi("mogan:flavor", "delete")
     @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)
     def delete(self, flavor_uuid):
         """Delete a flavor.
