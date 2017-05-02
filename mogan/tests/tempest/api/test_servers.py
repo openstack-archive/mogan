@@ -207,3 +207,14 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
             self.server_ids[0])
         for nic in nics:
             self.assertIsNone(nic['floating_ip'])
+
+    def test_server_detach_interface(self):
+        self._ensure_states_before_test()
+        nics_before = self.baremetal_compute_client.server_get_networks(
+            self.server_ids[0])
+        port_id = nics_before[0]['port_id']
+        self.baremetal_compute_client.server_detach_interface(
+            self.server_ids[0], port_id=port_id)
+        nics_after = self.baremetal_compute_client.server_get_networks(
+            self.server_ids[0])
+        self.assertEqual(len(nics_before) - 1, len(nics_after))

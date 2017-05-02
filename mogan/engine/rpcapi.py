@@ -87,3 +87,8 @@ class EngineAPI(object):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         cctxt.call(context, 'attach_interface',
                    server=server, net_id=net_id)
+
+    def detach_interface(self, context, server, port_id):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        cctxt.call(context, 'detach_interface', server=server,
+                   port_id=port_id)
