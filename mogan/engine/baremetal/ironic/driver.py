@@ -261,27 +261,31 @@ class IronicDriver(base_driver.BaseEngineDriver):
     def plug_vif(self, node_uuid, port_id):
         self.ironicclient.call("node.vif_attach", node_uuid, port_id)
 
-    def unplug_vifs(self, context, server):
-        LOG.debug("unplug: server_uuid=%(uuid)s vif=%(server_nics)s",
+    def unplug_vifs(self, context, server, port_id):
+        LOG.debug("unplug: server_uuid=%(uuid)s vif=%(server_nics)s "
+                  "port=%(port_id)s",
                   {'uuid': server.uuid,
-                   'server_nics': str(server.nics)})
-        patch = [{'op': 'remove',
-                  'path': '/extra/vif_port_id'}]
+                   'server_nics': str(server.nics),
+                   'port_id': port_id})
+        node = self._get_node(server.node_uuid)
+        self._unplug_vifs(node, server, port_id)
 
-        ports = self.get_ports_from_node(server.node_uuid)
-
-        for port in ports:
-            try:
-                if 'vif_port_id' in port.extra:
-                    self.ironicclient.call("port.update",
-                                           port.uuid, patch)
-            except client_e.BadRequest:
-                pass
+    def _unplug_vifs(self, node, server, port_id):
+        for vif in server.nics:
+            if port_id == vif['port_id']:
+                try:
+                    self.ironicclient.call("node.vif_detach", node.uuid,
+                                           port_id)
+                except ironic.exc.BadRequest:
+                    LOG.debug(
+                        "VIF %(vif)s isn't attached to Ironic node %(node)s",
+                        {'vif': port_id, 'node': node.uuid})
 
     def _cleanup_deploy(self, context, node, server):
         # NOTE(liusheng): here we may need to stop firewall if we have
         # implemented in ironic like what Nova dose.
-        self.unplug_vifs(context, server)
+        for vif in server.nics:
+            self.unplug_vifs(context, server, vif['port_id'])
 
     def spawn(self, context, server, configdrive_value):
         """Deploy a server.
