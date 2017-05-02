@@ -331,3 +331,12 @@ class ComputeAPIUnitTest(base.DbTestCase):
         azs = self.engine_api.list_availability_zones(self.context)
 
         self.assertItemsEqual(['az1', 'az2'], azs['availability_zones'])
+
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'detach_interface')
+    def test_detach_interface(self, mock_detach_interface):
+        fake_server = db_utils.get_test_server(
+            user_id=self.user_id, project_id=self.project_id)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
+        self.engine_api.detach_interface(self.context, fake_server_obj,
+                                         fake_server_obj['nics'][0]['port_id'])
+        self.assertTrue(mock_detach_interface.called)

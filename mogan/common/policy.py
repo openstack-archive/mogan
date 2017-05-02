@@ -153,6 +153,9 @@ server_policies = [
     policy.RuleDefault('mogan:node:get_all',
                        'rule:admin_api',
                        description='Retrieve all compute nodes'),
+    policy.RuleDefault('mogan:server:detach_interface',
+                       'rule:default',
+                       description='Detach a network interface'),
 ]
 
 
