@@ -536,6 +536,13 @@ class Connection(api.Connection):
         return model_query(context, models.ServerNic).filter_by(
             server_uuid=server_uuid).all()
 
+    def server_nic_delete(self, context, port_id):
+        query = model_query(context, models.ServerNic).filter_by(
+            port_id=port_id)
+        count = query.delete()
+        if count != 1:
+            raise exception.InterfaceNotFoundForServer()
+
     def server_fault_create(self, context, values):
         """Create a new ServerFault."""
 
