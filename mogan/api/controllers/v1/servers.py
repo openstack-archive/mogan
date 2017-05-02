@@ -368,6 +368,28 @@ class InterfaceController(ServerControllerBase):
         except exception.InterfaceAttachFailed as e:
             raise wsme.exc.ClientSideError(
                 six.text_type(e), status_code=http_client.CONFLICT)
+        pecan.request.engine_api.attach_interface(pecan.request.context,
+                                                  server, net_id)
+
+    @policy.authorize_wsgi("mogan:server", "detach_interface", False)
+    @expose.expose(None, types.uuid, types.uuid,
+                   status_code=http_client.NO_CONTENT)
+    def delete(self, server_uuid, port_id):
+        """Detach Interface
+
+        :param server_uuid: UUID of a server.
+        :param port_id: The Port ID within the request body.
+        """
+        server = self._resource or self._get_resource(server_uuid)
+        server_nics = server.nics
+        if not server_nics:
+            raise exception.InterfaceNotFoundForServer(server=server_uuid)
+
+        if port_id not in [nic.port_id for nic in server_nics]:
+            raise exception.InterfaceNotFoundForServer(server=server_uuid)
+
+        pecan.request.engine_api.detach_interface(pecan.request.context,
+                                                  server, port_id)
 
 
 class ServerNetworks(base.APIBase):
