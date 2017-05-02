@@ -20,6 +20,7 @@ from mogan.common.i18n import _
 from mogan.common import keystone
 from mogan.conf import CONF
 
+
 LOG = logging.getLogger(__name__)
 
 _NEUTRON_SESSION = None
@@ -113,6 +114,41 @@ class API(object):
                     "Failed to delete port %s for server.",
                     port_id, exc_info=True)
                 raise e
+
+    def detach_neutron_port(self, context, server, port_id):
+        """Detach neutron port from server """
+        client = get_client(context.auth_token)
+        interface = self._get_interface_by_server(client, server, port_id)
+        self.delete_port(context, port_id=interface['id'],
+                         server_uuid=server.uuid)
+
+    def _get_interface_by_server(self, client, server, port_id):
+        interfaces = self._safe_get_interfaces(client,
+                                               device_id=server.uuid)
+        if not interfaces:
+            raise exception.InterfaceNotFoundForServer(
+                server=server.uuid)
+        else:
+            for index in range(len(interfaces)):
+                if interfaces[index]['id'] == port_id:
+                    return interfaces[index]
+            raise exception.InterfaceNotFoundForServer(
+                server=server.uuid)
+
+    def _safe_get_interfaces(self, client, **kwargs):
+        try:
+            return client.list_ports(**kwargs)['ports']
+        except neutron_exceptions.NotFound:
+            return []
+        except neutron_exceptions.NeutronClientException as e:
+            # bug/1513879 neutron client is currently using
+            # NeutronClientException when there is no L3 API
+            if e.status_code == 404:
+                return []
+            with excutils.save_and_reraise_exception():
+                LOG.exception('Unable to access interface for %s',
+                              ', '.join(['%s %s' % (k, v)
+                                         for k, v in kwargs.items()]))
 
     def _safe_get_floating_ips(self, client, **kwargs):
         """Get floating IP gracefully handling 404 from Neutron."""

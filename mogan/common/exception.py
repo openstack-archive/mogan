@@ -320,6 +320,24 @@ class InterfaceAttachFailed(Invalid):
                 "%(server_uuid)s")
 
 
+class InterfaceNotFoundForServer(NotFound):
+    _msg_fmt = _("Interface not found for server %(server)s.")
+
+
+class InterfaceNotAttached(MoganException):
+    _msg_fmt = _("Interface is not attached.")
+
+
+class DetachNeutronPortFailed(Invalid):
+    _msg_fmt = _("Failed to detach the neutron port from "
+                 "%(server_uuid)s")
+
+
+class UnplugVifsFailed(Invalid):
+    msg_fmt = _("Failed to detach the ironic port for "
+                "%(server_uuid)s")
+
+
 class FloatingIpNotFoundForAddress(NotFound):
     _msg_fmt = _("Floating IP not found for address %(address)s.")
 
