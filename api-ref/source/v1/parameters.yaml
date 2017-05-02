@@ -42,6 +42,9 @@ spec_key_path:
 tenant_id_path:
   description: |
     The UUID of the tenant in a multi-tenancy cloud.
+port_ident:
+  description: |
+    ID of a network port.
   in: path
   required: true
   type: string

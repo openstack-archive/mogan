@@ -516,3 +516,8 @@ class API(object):
     @check_server_lock
     def attach_interface(self, context, server, net_id):
         self.engine_rpcapi.attach_interface(context, server, net_id)
+
+    @check_server_lock
+    def detach_interface(self, context, server, port_id):
+        self.engine_rpcapi.detach_interface(context, server=server,
+                                            port_id=port_id)
