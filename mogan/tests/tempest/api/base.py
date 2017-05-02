@@ -76,8 +76,10 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         cls.flavor_ids = []
         cls.server_ids = []
         cls.small_flavor = cls._get_small_flavor()
-        cls.image_id = CONF.compute.image_ref
-        cls.net_id = cls._get_net_id()
+        # cls.image_id = CONF.compute.image_ref
+        # cls.net_id = cls._get_net_id()
+        cls.image_id = "5429656d-5462-4522-b2c6-bedd527844f4"
+        cls.net_id = "0102ac97-02b2-41c8-9372-bb0631cb7a0e"
         cls.ext_net_id = CONF.network.public_network_id
 
     @classmethod

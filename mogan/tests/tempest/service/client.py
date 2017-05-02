@@ -52,6 +52,8 @@ class BaremetalComputeClient(rest_client.RestClient):
         return rest_client.ResponseBody(resp, body)
 
     def delete_flavor(self, flavor_uuid):
+        import pdb
+        pdb.set_trace()
         uri = "%s/flavors/%s" % (self.uri_prefix, flavor_uuid)
         resp, body = self.delete(uri)
         self.expected_success(204, resp.status)
@@ -219,6 +221,15 @@ class BaremetalComputeClient(rest_client.RestClient):
     def server_disassociate_floatingip(self, server_id, floatingip):
         uri = '%s/servers/%s/networks/floatingips/%s' % (
             self.uri_prefix, server_id, floatingip)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def server_detach_interface(self, server_id, port_id):
+        uri = '%s/servers/%s/networks/interfaces/%s' % (self.uri_prefix,
+                                                        server_id, port_id)
         resp, body = self.delete(uri)
         self.expected_success(204, resp.status)
         if body:
