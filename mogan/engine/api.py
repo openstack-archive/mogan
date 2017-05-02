@@ -515,3 +515,7 @@ class API(object):
 
     def attach_interface(self, context, server, net_id):
         self.engine_rpcapi.attach_interface(context, server, net_id)
+
+    def detach_interface(self, context, server, port_id):
+        self.engine_rpcapi.detach_interface(context, server=server,
+                                            port_id=port_id)

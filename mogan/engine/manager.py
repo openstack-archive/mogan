@@ -593,3 +593,17 @@ class EngineManager(base_manager.BaseEngineManager):
             server.save()
         except Exception as e:
             raise exception.InterfaceAttachFailed(message=e.message)
+
+    def detach_interface(self, context, server, port_id):
+        LOG.debug('Detaching interface', server=server)
+        try:
+            self.network_api.detach_neutron_port(context, server, port_id)
+        except Exception:
+            msg = _('Detach neutron port %(port_id) failed'
+                    ) % ({'port_id': port_id})
+            LOG.exception(msg)
+        try:
+            self.driver.unplug_vifs(context, server)
+        except Exception:
+            LOG.exception('Detach ironic port failed')
+        LOG.info('Interface was successfully detached', server=server)
