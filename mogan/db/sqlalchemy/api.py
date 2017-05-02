@@ -605,13 +605,6 @@ class Connection(api.Connection):
             raise exception.FlavorAccessNotFound(flavor_id=flavor_id,
                                                  project_id=project_id)
 
-    def server_nic_delete(self, context, port_id):
-        query = model_query(context, models.ServerNic).filter_by(
-            port_id=port_id)
-        count = query.delete()
-        if count != 1:
-            raise exception.PortNotFound()
-
     def server_nic_update_or_create(self, context, port_id, values):
         with _session_for_write() as session:
             query = model_query(context, models.ServerNic).filter_by(
@@ -628,6 +621,13 @@ class Connection(api.Connection):
     def server_nics_get_by_server_uuid(self, context, server_uuid):
         return model_query(context, models.ServerNic).filter_by(
             server_uuid=server_uuid).all()
+
+    def server_nic_delete(self, context, port_id):
+        query = model_query(context, models.ServerNic).filter_by(
+            port_id=port_id)
+        count = query.delete()
+        if count != 1:
+            raise exception.InterfaceNotFoundForServer()
 
     def server_fault_create(self, context, values):
         """Create a new ServerFault."""

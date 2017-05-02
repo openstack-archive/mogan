@@ -311,6 +311,18 @@ class PortNotFound(NotFound):
     _msg_fmt = _("Port id %(port_id)s could not be found.")
 
 
+class InterfaceNotFoundForServer(NotFound):
+    _msg_fmt = _("Interface not found for server %(server)s.")
+
+
+class CannotDetachInterfaceByPortID(MoganException):
+    _msg_fmt = _("Can't detach interface by port ID.")
+
+
+class InterfaceNotAttached(MoganException):
+    _msg_fmt = _("Interface is not attached.")
+
+
 class FloatingIpNotFoundForAddress(NotFound):
     _msg_fmt = _("Floating IP not found for address %(address)s.")
 

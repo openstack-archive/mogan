@@ -147,6 +147,9 @@ server_policies = [
     policy.RuleDefault('mogan:flavor_extra_specs:get_all',
                        'rule:allow',
                        description='Retrieve flavor extra specs'),
+    policy.RuleDefault('mogan:server:detach_interface',
+                       'rule:default',
+                       description='Detach a network interface'),
 ]
 
 
