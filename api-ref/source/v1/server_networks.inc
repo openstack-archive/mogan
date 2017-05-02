@@ -126,3 +126,29 @@ Response
 --------
 
 If successful, this method does not return content in the response body.
+
+
+Detach a network interface.
+=================================
+
+.. rest_method:: DELETE /v1/servers/{servers_uuid}/networks/interfaces/{port_id}
+
+Detach a network interface from a server.
+
+Normal response codes: 204
+
+Error response codes: badRequest(400), unauthorized(401), forbidden(403),
+itemNotFound(404), conflict(409)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+    - server_uuid: server_ident
+    - port_id: port_ident
+
+Response
+--------
+
+If successful, this method does not return content in the response body.

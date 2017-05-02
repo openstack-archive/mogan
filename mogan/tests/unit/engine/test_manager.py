@@ -148,6 +148,25 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
         self.assertEqual('localhost', console['host'])
         self.assertIn('token', console)
 
+    @mock.patch.object(manager.EngineManager, 'change_server_nw_info')
+    @mock.patch.object(network_api.API, 'remove_neutron_port')
+    @mock.patch.object(IronicDriver, 'unplug_vifs')
+    def test_detach_interface(self, unplug_vifs_mock, remove_neutron_port_mock,
+                              change_server_nw_info_mock):
+        fake_node = mock.MagicMock()
+        fake_node.provision_state = ironic_states.ACTIVE
+        server = obj_utils.create_test_server(
+            self.context, status=states.ACTIVE, node_uuid=None)
+        port_id = server['nics'][0]['port_id']
+        self._start_service()
+        self.service.detach_interface(self.context, server, port_id)
+        self._stop_service()
+        unplug_vifs_mock.assert_called_once_with(self.context, server)
+        remove_neutron_port_mock.assert_called_once_with(self.context, server,
+                                                         port_id)
+        change_server_nw_info_mock.assert_called_once_with(self.context,
+                                                           server, port_id)
+
     def test_wrap_server_fault(self):
         server = {"uuid": uuidutils.generate_uuid()}
 
