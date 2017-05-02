@@ -271,18 +271,21 @@ class IronicDriver(base_driver.BaseEngineDriver):
         LOG.debug("unplug: server_uuid=%(uuid)s vif=%(server_nics)s",
                   {'uuid': server.uuid,
                    'server_nics': str(server.nics)})
-        patch = [{'op': 'remove',
-                  'path': '/extra/vif_port_id'}]
+        node = self._get_node(server.node_uuid)
+        self._unplug_vifs(node, server)
 
-        ports = self.get_ports_from_node(server.node_uuid)
-
-        for port in ports:
+    def _unplug_vifs(self, node, server):
+        if not server.nics:
+            return
+        for vif in server.nics:
+            port_id = vif['port_id']
             try:
-                if 'vif_port_id' in port.extra:
-                    self.ironicclient.call("port.update",
-                                           port.uuid, patch)
-            except client_e.BadRequest:
-                pass
+                self.ironicclient.call("node.vif_detach", node.uuid,
+                                       port_id)
+            except ironic.exc.BadRequest:
+                LOG.debug(
+                    "VIF %(vif)s isn't attached to Ironic node %(node)s",
+                    {'vif': port_id, 'node': node.uuid})
 
     def _cleanup_deploy(self, context, node, server):
         # NOTE(liusheng): here we may need to stop firewall if we have
