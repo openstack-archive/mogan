@@ -331,8 +331,44 @@ class FloatingIPController(ServerControllerBase):
                 msg, status_code=http_client.BAD_REQUEST)
 
 
+class InterfaceController(ServerControllerBase):
+
+    def __init__(self, *args, **kwargs):
+        super(InterfaceController, self).__init__(*args, **kwargs)
+        self.network_api = network.API()
+
+    @policy.authorize_wsgi("mogan:instance", "detach_interface", False)
+    @expose.expose(None, types.uuid, body=types.jsontype,
+                   status_code=http_client.NO_CONTENT)
+    def delete(self, server_uuid, port_id):
+        """Detach Interface
+
+        :param instance_uuid: UUID of a instance.
+        :param port_id: The Port ID within the request body.
+        """
+        server = self._resource or self._get_resource(server_uuid)
+        server_nics = server.nics
+        for nic in server_nics:
+            if nic.port_id == port_id:
+                try:
+                    self.network_api.detach_interface(pecan.request.context,
+                                                      server, port_id)
+                except exception.Forbidden as e:
+                    raise wsme.exc.ClientSideError(
+                        e.message, status_code=http_client.FORBIDDEN)
+                except exception.CannotDetachInterfaceByPortID as e:
+                    raise wsme.exc.ClientSideError(
+                        e.message, status_code=http_client.FORBIDDEN)
+                except exception.InterfaceNotAttached as e:
+                    raise wsme.exc.ClientSideError(
+                        e.message, status_code=http_client.BAD_REQUEST)
+            else:
+                raise exception.InterfaceNotFoundForServer(
+                    instance=server_uuid)
+
+
 class ServerNetworks(base.APIBase):
-    """API representation of the networks of a server."""
+    """API representation of the networks of an instance."""
 
     ports = {wtypes.text: types.jsontype}
     """The network information of the server"""
@@ -343,6 +379,8 @@ class ServerNetworksController(ServerControllerBase):
 
     floatingips = FloatingIPController()
     """Expose floatingip as a sub-element of networks"""
+    interfaces = InterfaceController()
+    """Expose interface as a sub-element of networks"""
 
     @policy.authorize_wsgi("mogan:server", "get_networks")
     @expose.expose(ServerNetworks, types.uuid)

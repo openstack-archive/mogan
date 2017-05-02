@@ -19,6 +19,7 @@ from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common import keystone
 from mogan.conf import CONF
+from mogan import objects
 
 LOG = logging.getLogger(__name__)
 
@@ -113,6 +114,74 @@ class API(object):
                     "Failed to delete port %s for server.",
                     port_id, exc_info=True)
                 raise e
+
+    def detach_interface(self, context, server, port_id):
+        """Detach network interface """
+        client = get_client(context.auth_token)
+        interface = self._get_interface_by_server(client, server,
+                                                  port_id)
+
+        self._unbind_ports(context, client, port_id=interface['id'])
+        # else:
+        # self.delete_port(context, port_id, server.uuid)
+        vifs = objects.ServerNics.get_by_server_uuid(context, server.uuid)
+        for vif in vifs:
+            if vif['port_id'] == port_id:
+                vif.destroy(port_id)
+            else:
+                LOG.debug('VirtualInterface not found for port: %s',
+                          port_id, server=server)
+
+    def _get_interface_by_server(self, client, server, port_id):
+        interfaces = self._safe_get_interfaces(client,
+                                               device_id=server.uuid)
+        if len(interfaces) == 0:
+            raise exception.InterfaceNotFoundForServer(
+                server=server.uuid)
+        else:
+            for index in range(len(interfaces)):
+                if interfaces[index]['id'] == port_id:
+                    return interfaces[index]
+            raise exception.InterfaceNotFoundForServer(
+                server=server.uuid)
+
+    def _safe_get_interfaces(self, client, **kwargs):
+        try:
+            return client.list_ports(**kwargs)['ports']
+        except neutron_exceptions.NotFound:
+            return []
+        except neutron_exceptions.NeutronClientException as e:
+            # bug/1513879 neutron client is currently using
+            # NeutronClientException when there is no L3 API
+            if e.status_code == 404:
+                return []
+            with excutils.save_and_reraise_exception():
+                LOG.exception('Unable to access interface for %s',
+                              ', '.join(['%s %s' % (k, v)
+                                         for k, v in kwargs.items()]))
+
+    def _unbind_ports(self, context, client, port_id):
+        #   if port_id is None:
+        #   continue
+        port_req_body = {'port': {'device_id': '', 'device_owner': '',
+                                  'binding:host_id': '',
+                                  'binding:profile': {}}}
+        try:
+            client.update_port(port_id, port_req_body)
+        except neutron_exceptions.PortNotFoundClient:
+            LOG.debug('Unable to unbind port %s as it no longer exists.',
+                      port_id)
+        except Exception:
+            msg = _('Unable to clear device ID for port '
+                    '%(port_id)') % ({'port_id': port_id})
+            LOG.exception(msg)
+
+    def _get_preexisting_port_ids(self, server):
+        """Retrieve the preexisting ports associated with the given instance.
+        These ports were not created by nova and hence should not be
+        deallocated upon instance deletion.
+        """
+        # net_info = compute_utils.get_nw_info_for_instance(instance)
 
     def _safe_get_floating_ips(self, client, **kwargs):
         """Get floating IP gracefully handling 404 from Neutron."""
