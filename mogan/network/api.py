@@ -20,6 +20,7 @@ from mogan.common.i18n import _
 from mogan.common import keystone
 from mogan.conf import CONF
 
+
 LOG = logging.getLogger(__name__)
 
 _NEUTRON_SESSION = None

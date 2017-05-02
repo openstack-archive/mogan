@@ -483,8 +483,8 @@ class EngineManager(base_manager.BaseEngineManager):
                 LOG.error("Destroy networks for server %(uuid)s failed. "
                           "Exception: %(exception)s",
                           {"uuid": server.uuid, "exception": e})
-
-        self.driver.unplug_vifs(context, server)
+        for vif in server.nics:
+            self.driver.unplug_vif(context, server, vif['port_id'])
         self.driver.destroy(context, server)
 
     @wrap_server_fault
@@ -615,3 +615,24 @@ class EngineManager(base_manager.BaseEngineManager):
             server.save()
         except Exception as e:
             raise exception.InterfaceAttachFailed(message=six.text_type(e))
+
+    def detach_interface(self, context, server, port_id):
+        LOG.info('Detaching interface...', server=server)
+        try:
+            self.driver.unplug_vif(context, server, port_id)
+        except exception.MoganException as e:
+            LOG.warning("Detach interface failed, port_id=%(port_id)s,"
+                        " reason: %(msg)s",
+                        {'port_id': port_id, 'msg': six.text_type(e)})
+            raise exception.InterfaceDetachFailed(server_uuid=server.uuid)
+        else:
+            try:
+                self.network_api.delete_port(context, port, server.uuid)
+            except Exception as e:
+                raise exception.RemoveNeutronPortFailed(message=six.text_type(e))
+
+        for nic in server.nics:
+            if nic.port_id == port_id:
+                nic.delete(context)
+
+        LOG.info('Interface was successfully detached')
