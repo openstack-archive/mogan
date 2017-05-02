@@ -512,3 +512,7 @@ class API(object):
     def get_key_pair(self, context, user_id, key_name):
         """Get a keypair by name."""
         return objects.KeyPair.get_by_name(context, user_id, key_name)
+
+    def detach_interface(self, context, server, port_id):
+        self.engine_rpcapi.detach_interface(context, server=server,
+                                            port_id=port_id)
