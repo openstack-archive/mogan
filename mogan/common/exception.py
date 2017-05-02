@@ -310,6 +310,24 @@ class InterfaceAttachFailed(Invalid):
                 "%(server_uuid)s")
 
 
+class InterfaceNotFoundForServer(NotFound):
+    _msg_fmt = _("Interface not found for server %(server)s.")
+
+
+class InterfaceNotAttached(Invalid):
+    _msg_fmt = _("Interface is not attached.")
+
+
+class RemoveNeutronPortFailed(Invalid):
+    _msg_fmt = _("Failed to remove the neutron port from "
+                 "%(server_uuid)s")
+
+
+class UnplugVifsFailed(Invalid):
+    msg_fmt = _("Failed to detach the server port for "
+                "%(server_uuid)s")
+
+
 class FloatingIpNotFoundForAddress(NotFound):
     _msg_fmt = _("Floating IP not found for address %(address)s.")
 
