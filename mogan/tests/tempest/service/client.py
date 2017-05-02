@@ -225,6 +225,15 @@ class BaremetalComputeClient(rest_client.RestClient):
             body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
+    def server_detach_interface(self, server_id, port_id):
+        uri = '%s/servers/%s/networks/interfaces/%s' % (self.uri_prefix,
+                                                        server_id, port_id)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
 
 class BaremetalNodeClient(rest_client.RestClient):
     version = '1'
