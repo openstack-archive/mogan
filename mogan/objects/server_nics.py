@@ -64,6 +64,9 @@ class ServerNic(base.MoganObject, object_base.VersionedObjectDictCompat):
         self.dbapi.server_nic_update_or_create(
             context, self.port_id, values)
 
+    def destroy(self, context):
+        self.dbapi.server_nic_delete(context, self.port_id)
+
 
 @base.MoganObjectRegistry.register
 class ServerNics(object_base.ObjectListBase, base.MoganObject,

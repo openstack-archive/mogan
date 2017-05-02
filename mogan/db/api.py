@@ -204,6 +204,12 @@ class Connection(object):
 
         This creates or updates a nic db entry.
         """
+
+    def server_nic_delete(self, context, port_id):
+        """Delete a nic db entry
+        This delete a virtual interface from server
+        """
+
     # Servers Faults
     @abc.abstractmethod
     def server_fault_create(self, context, values):
