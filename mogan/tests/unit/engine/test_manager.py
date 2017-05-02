@@ -53,7 +53,7 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
             self.context, server_port_id, server.uuid)
 
     @mock.patch.object(IronicDriver, 'destroy')
-    @mock.patch.object(IronicDriver, 'unplug_vifs')
+    @mock.patch.object(IronicDriver, 'unplug_vif')
     @mock.patch.object(manager.EngineManager, 'destroy_networks')
     def _test__delete_server(self, destroy_networks_mock, unplug_mock,
                              destroy_node_mock, state=None):
@@ -69,7 +69,7 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
         self._stop_service()
 
         destroy_networks_mock.assert_called_once_with(self.context, server)
-        unplug_mock.assert_called_once_with(self.context, server)
+        self.assertEqual(unplug_mock.call_count, len(server.nics))
         destroy_node_mock.assert_called_once_with(self.context, server)
 
     def test__delete_server_cleaning(self):
@@ -147,6 +147,20 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
             console['access_url'].startswith('http://127.0.0.1:8866/?token='))
         self.assertEqual('localhost', console['host'])
         self.assertIn('token', console)
+
+    @mock.patch.object(network_api.API, 'delete_port')
+    @mock.patch.object(IronicDriver, 'unplug_vif')
+    def test_detach_interface(self, unplug_vif_mock, delete_port_mock):
+        fake_node = mock.MagicMock()
+        fake_node.provision_state = ironic_states.ACTIVE
+        server = obj_utils.create_test_server(
+            self.context, status=states.ACTIVE, node_uuid=None)
+        port_id = server['nics'][0]['port_id']
+        self._start_service()
+        self.service.detach_interface(self.context, server, port_id)
+        self._stop_service()
+        unplug_vif_mock.assert_called_once_with(self.context, server, port_id)
+        delete_port_mock.assert_called_once_with(self.context, server, port_id)
 
     def test_wrap_server_fault(self):
         server = {"uuid": uuidutils.generate_uuid()}
