@@ -586,3 +586,33 @@ class EngineManager(base_manager.BaseEngineManager):
             server.save()
         except Exception as e:
             raise exception.InterfaceAttachFailed(message=e.message)
+
+    def change_server_nw_info(self, context, server, port_id):
+        vifs = objects.ServerNics.get_by_server_uuid(context, server.uuid)
+        if port_id not in [vif['port_id'] for vif in vifs]:
+            LOG.error('VirtualInterface not found for port: %s',
+                      port_id)
+        else:
+            for vif in vifs:
+                if port_id == vif['port_id']:
+                    vif.delete(port_id)
+                LOG.debug('Delete virtual interface successfully: '
+                          'port_id = %s', port_id)
+
+    def detach_interface(self, context, server, port_id):
+        LOG.debug('Detaching interface...', server=server)
+        try:
+            self.driver.unplug_vifs(context, server)
+        except Exception as e:
+            raise exception.UnplugVifsFailed(message=e.message)
+        try:
+            self.network_api.remove_neutron_port(context, server, port_id)
+        except Exception as e:
+            raise exception.RemoveNeutronPortFailed(message=e.message)
+        try:
+            self.change_server_nw_info(context, server, port_id)
+        except Exception:
+            LOG.exception('Update network info failed cause can not find the'
+                          'nic of server %s', server.uuid)
+
+        LOG.info('Interface was successfully detached')

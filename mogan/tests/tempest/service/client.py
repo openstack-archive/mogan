@@ -18,6 +18,7 @@ from tempest import config
 from tempest.lib.common import rest_client
 from tempest.lib.services.compute import networks_client as network_cli
 from tempest.lib.services.image.v2 import images_client as image_cli
+from tempest.lib.services.network import floating_ips_client as fip_cli
 from tempest import manager
 
 CONF = config.CONF
@@ -96,6 +97,205 @@ class BaremetalComputeClient(rest_client.RestClient):
             body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
+    def create_keypair(self, **kwargs):
+        uri = "%s/keypairs" % self.uri_prefix
+        body = self.serialize(kwargs)
+        resp, body = self.post(uri, body)
+        self.expected_success(201, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def show_keypair(self, key_name, user_id=None):
+        uri = "%s/keypairs/%s" % (self.uri_prefix, key_name)
+        if user_id:
+            uri = '%s?user_id=%s' % (uri, user_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def list_keypairs(self, user_id=None):
+        uri = '%s/keypairs' % self.uri_prefix
+        if user_id:
+            uri = '%s?user_id=%s' % (uri, user_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['keypairs']
+        return rest_client.ResponseBodyList(resp, body)
+
+    def delete_keypair(self, key_name, user_id=None):
+        uri = "%s/keypairs/%s" % (self.uri_prefix, key_name)
+        if user_id:
+            uri = '%s?user_id=%s' % (uri, user_id)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def server_get_state(self, server_id):
+        uri = '%s/servers/%s/states' % (self.uri_prefix, server_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def server_set_power_state(self, server_id, target):
+        uri = '%s/servers/%s/states/power' % (self.uri_prefix, server_id)
+        target_body = {'target': target}
+        target_body = self.serialize(target_body)
+        resp, body = self.put(uri, target_body)
+        self.expected_success(202, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def server_set_lock_state(self, server_id, target):
+        uri = '%s/servers/%s/states/lock' % (self.uri_prefix, server_id)
+        target_body = {'target': target}
+        target_body = self.serialize(target_body)
+        resp, body = self.put(uri, target_body)
+        self.expected_success(202, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def server_set_provision_state(self, server_id, target):
+        uri = '%s/servers/%s/states/provision' % (self.uri_prefix, server_id)
+        target_body = {'target': target}
+        target_body = self.serialize(target_body)
+        resp, body = self.put(uri, target_body)
+        if body:
+            body = self.deserialize(body)
+        self.expected_success(202, resp.status)
+        return rest_client.ResponseBody(resp, body)
+
+    def list_nodes(self):
+        uri = '%s/nodes' % self.uri_prefix
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['nodes']
+        return rest_client.ResponseBodyList(resp, body)
+
+    def server_get_serial_console(self, server_id):
+        uri = '%s/servers/%s/serial_console' % (self.uri_prefix, server_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['console']
+        return rest_client.ResponseBody(resp, body)
+
+    def server_get_networks(self, server_id):
+        uri = '%s/servers/%s/networks' % (self.uri_prefix, server_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['nics']
+        return rest_client.ResponseBodyList(resp, body)
+
+    def server_attach_interface(self, server_id, net_id):
+        uri = '%s/servers/%s/networks/interfaces' % (self.uri_prefix,
+                                                     server_id)
+        body = {"net_id": net_id}
+        body = self.serialize(body)
+        resp, body = self.post(uri, body)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def server_associate_floatingip(self, server_id, floatingip,
+                                    fixed_ip=None):
+        uri = '%s/servers/%s/networks/floatingips' % (
+            self.uri_prefix, server_id)
+        body = {"address": floatingip}
+        if fixed_ip:
+            body.update({'fixed_address': fixed_ip})
+        body = self.serialize(body)
+        resp, body = self.post(uri, body)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def server_disassociate_floatingip(self, server_id, floatingip):
+        uri = '%s/servers/%s/networks/floatingips/%s' % (
+            self.uri_prefix, server_id, floatingip)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def server_detach_interface(self, server_id, port_id):
+        uri = '%s/servers/%s/networks/interfaces/%s' % (self.uri_prefix,
+                                                        server_id, port_id)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+
+class BaremetalNodeClient(rest_client.RestClient):
+    version = '1'
+    uri_prefix = "v1"
+
+    def deserialize(self, body):
+        return json.loads(body.replace("\n", ""))
+
+    def serialize(self, body):
+        return json.dumps(body)
+
+    def list_bm_nodes(self):
+        uri = '%s/nodes' % self.uri_prefix
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['nodes']
+        return rest_client.ResponseBodyList(resp, body)
+
+    def show_bm_node(self, node_uuid=None, service_id=None):
+        if service_id:
+            uri = '%s/nodes/detail?instance_uuid=%s' % (self.uri_prefix,
+                                                        service_id)
+        else:
+            uri = '%s/nodes/%s' % (self.uri_prefix, node_uuid)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        if service_id:
+            body = body['nodes'][0]
+        return rest_client.ResponseBody(resp, body)
+
+    def set_node_console_state(self, node_id, enabled):
+        uri = '%s/nodes/%s/states/console' % (self.uri_prefix, node_id)
+        target_body = {'enabled': enabled}
+        target_body = self.serialize(target_body)
+        resp, body = self.put(uri, target_body)
+        self.expected_success(202, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def get_node_console(self, node_id):
+        uri = '%s/nodes/%s/states/console' % (self.uri_prefix, node_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def update_bm_node(self, node_id, updates):
+        uri = '%s/nodes/%s' % (self.uri_prefix, node_id)
+        target_body = self.serialize(updates)
+        resp, body = self.patch(uri, target_body)
+        self.expected_success(200, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def bm_node_set_console_port(self, node_id, port):
+        updates = [{"path": "/driver_info/ipmi_terminal_port",
+                    "value": port, "op": "add"}]
+        self.update_bm_node(node_id, updates)
+
 
 class Manager(manager.Manager):
 
@@ -103,6 +303,8 @@ class Manager(manager.Manager):
         'baremetal_compute_client',
         'compute_networks_client',
         'image_client_v2',
+        'baremetal_node_client',
+        'network_floatingip_client'
     ]
 
     default_params = {
@@ -137,6 +339,22 @@ class Manager(manager.Manager):
     }
     image_params.update(default_params)
 
+    network_params = {
+        'service': CONF.network.catalog_type,
+        'region': CONF.network.region or CONF.identity.region,
+        'endpoint_type': CONF.network.endpoint_type,
+        'build_interval': CONF.network.build_interval,
+        'build_timeout': CONF.network.build_timeout,
+    }
+    network_params.update(default_params)
+
+    baremetal_node_params = {
+        'service': CONF.baremetal_node_plugin.catalog_type,
+        'region': CONF.identity.region,
+        'endpoint_type': CONF.baremetal_node_plugin.endpoint_type,
+    }
+    baremetal_node_params.update(default_params)
+
     def __init__(self, credentials=None, service=None):
         super(Manager, self).__init__(credentials)
         for client in self.load_clients:
@@ -151,7 +369,17 @@ class Manager(manager.Manager):
             self.auth_provider,
             **self.compute_params)
 
+    def set_network_floatingip_client(self):
+        self.network_floatingip_client = fip_cli.FloatingIPsClient(
+            self.auth_provider,
+            **self.network_params)
+
     def set_image_client_v2(self):
         self.image_client_v2 = image_cli.ImagesClient(
             self.auth_provider,
             **self.image_params)
+
+    def set_baremetal_node_client(self):
+        self.baremetal_node_client = BaremetalNodeClient(
+            self.auth_provider,
+            **self.baremetal_node_params)

@@ -368,6 +368,34 @@ class InterfaceController(ServerControllerBase):
             raise wsme.exc.ClientSideError(
                 e.message, status_code=http_client.CONFLICT)
 
+    @policy.authorize_wsgi("mogan:server", "detach_interface", False)
+    @expose.expose(None, types.uuid, types.uuid,
+                   status_code=http_client.NO_CONTENT)
+    def delete(self, server_uuid, port_id):
+        """Detach Interface
+
+        :param server_uuid: UUID of a server.
+        :param port_id: The Port ID within the request body.
+        """
+        server = self._resource or self._get_resource(server_uuid)
+        server_nics = server.nics
+        if not server_nics:
+            raise exception.InterfaceNotFoundForServer(server=server_uuid)
+
+        server_ports = [nic.port_id for nic in server_nics]
+        if port_id not in server_ports:
+            raise exception.InterfaceNotFoundForServer(server=server_uuid)
+        try:
+            pecan.request.engine_api.detach_interface(pecan.request.context,
+                                                      server, port_id)
+        except exception.ServerIsLocked as e:
+            raise wsme.exc.ClientSideError(
+                e.message, status_code=http_client.BAD_REQUEST)
+        except (exception.RemoveNeutronPortFailed,
+                exception.UnplugVifsFailed) as e:
+            raise wsme.exc.ClientSideError(
+                e.message, status_code=http_client.CONFLICT)
+
 
 class ServerNetworks(base.APIBase):
     """API representation of the networks of a server."""
