@@ -406,6 +406,9 @@ class Server(base.APIBase):
     extra = {wtypes.text: types.jsontype}
     """The meta data of the server"""
 
+    fault_info = {wtypes.text: types.jsontype}
+    """The fault info of the server"""
+
     def __init__(self, **kwargs):
         super(Server, self).__init__(**kwargs)
         self.fields = []
@@ -419,6 +422,12 @@ class Server(base.APIBase):
                 else:
                     network_info = {}
                 setattr(self, 'network_info', network_info)
+            if field == 'fault':
+                if kwargs.get('status', None) == 'error':
+                    fault_info = kwargs.get(field, None)
+                    if fault_info is not None:
+                        fault_info = fault_info.return_dict()
+                        setattr(self, 'fault_info', fault_info)
             # Skip fields we do not expose.
             if not hasattr(self, field):
                 continue

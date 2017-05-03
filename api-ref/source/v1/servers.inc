@@ -245,6 +245,7 @@ Response
   - uuid: server_uuid
   - status: server_status
   - power_state: server_power_state
+  - fault_info: server_fault
   - project_id: project_id_body
   - user_id: user_id_body
   - updated_at: updated_at
@@ -255,6 +256,11 @@ Response
 **Example Server Details: JSON response**
 
 .. literalinclude:: samples/servers/server-detail-resp.json
+   :language: javascript
+
+**Example Server Details With Fault: JSON response**
+
+.. literalinclude:: samples/servers/server-detail-resp-when-error.json
    :language: javascript
 
 
