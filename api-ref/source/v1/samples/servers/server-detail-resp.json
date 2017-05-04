@@ -15,22 +15,25 @@
         }
     ],
     "name": "test_server",
-    "network_info": {
-        "12cffc4a-b845-409e-b589-7c84be4b10d9": {
+    "nics": [
+        {
+            "network_id": "f31af5a2-f14d-4007-b2e5-abeb82429b87",
+            "port_id": "43cb1111-63c5-45d2-8bcf-3443d94b34f3",
+            "floating_ip": null,
+            "port_type": null,
+            "mac_address": "52:54:00:d0:f9:2c",
             "fixed_ips": [
                 {
-                    "ip_address": "172.24.4.4",
-                    "subnet_id": "a9d47430-f90b-4513-af5f-6315af54de7d"
+                    "subnet_id": "5a324b29-9aca-43d8-a6c3-31986dda95b5",
+                    "ip_address": "11.0.0.10"
                 },
                 {
-                    "ip_address": "2001:db8::a",
-                    "subnet_id": "5e7b3e2d-f36f-4e30-874c-16c2d126fe53"
+                    "subnet_id": "9baceab1-40ec-4c53-ad83-530a625bddb1",
+                    "ip_address": "fdaa:67c7:e09e:0:5054:ff:fed0:f92c"
                 }
-            ],
-            "mac_address": "52:54:00:6c:c4:17",
-            "network": "ade2b658-929b-439f-9528-c47057960942"
+            ]
         }
-    },
+    ],
     "power_state": "power on",
     "project_id": "c18e8a1a870d4c08a0b51ced6e0b6459",
     "status": "building",

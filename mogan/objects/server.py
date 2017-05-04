@@ -115,9 +115,9 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
             nic_obj.save(context)
 
     def as_dict(self):
-        data = super(Server, self).as_dict()
+        data = dict(self.items())
         if 'nics' in data:
-            data.update(network_info=data['nics'].to_legacy_dict())
+            data.update(nics=data['nics'].as_list_of_dict())
         return data
 
     @classmethod

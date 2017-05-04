@@ -329,13 +329,6 @@ multi_server_name_body:
   in: body
   required: true
   type: string
-network_info:
-  description: |
-    The port info in the requested network for the server, with fixed_ip, mac_address, and
-    network uuid
-  in: body
-  required: true
-  type: dict
 network_port_type:
   description: |
     To provision the server server with a specified type of NIC(like 1GE or 10 GE) for a
@@ -359,6 +352,13 @@ networks:
   in: body
   required: true
   type: array
+nics:
+  description: |
+    The port info in the requested network for the server, with fixed_ip, mac_address, and
+    network uuid
+  in: body
+  required: true
+  type: dict
 personality:
   description: |
     The file path and contents, text only, to inject into the server at launch. The

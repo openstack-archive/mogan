@@ -54,3 +54,13 @@ def apply_jsonpatch(doc, patch):
                         ' the resource is not allowed')
                 raise wsme.exc.ClientSideError(msg % p['path'])
     return jsonpatch.apply_patch(doc, jsonpatch.JsonPatch(patch))
+
+
+def show_nics(nics):
+    show_keys = ['port_id', 'port_type', 'network_id', 'mac_address',
+                 'fixed_ips', 'floating_ip', 'extra']
+    ret_nics = []
+    for nic in nics:
+        ret_nics.append({key: value for key, value in nic.items() if key in
+                         show_keys})
+    return ret_nics

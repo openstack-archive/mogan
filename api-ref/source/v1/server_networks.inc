@@ -31,7 +31,7 @@ Response
 
 .. rest_parameters:: parameters.yaml
 
-  - ports: network_info
+  - nics: nics
 
 **Example server network:**
 
