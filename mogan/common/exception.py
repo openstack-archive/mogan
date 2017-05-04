@@ -240,15 +240,15 @@ class CatalogNotFound(MoganException):
 
 
 class SchedulerNodeFilterNotFound(NotFound):
-    message = _("Scheduler Node Filter %(filter_name)s could not be found.")
+    _msg_fmt = _("Scheduler Node Filter %(filter_name)s could not be found.")
 
 
 class SchedulerNodeWeigherNotFound(NotFound):
-    message = _("Scheduler Node Weigher %(weigher_name)s could not be found.")
+    _msg_fmt = _("Scheduler Node Weigher %(weigher_name)s could not be found.")
 
 
 class NoValidNode(MoganException):
-    message = _("No valid node was found. %(reason)s")
+    _msg_fmt = _("No valid node was found. %(reason)s")
 
 
 class FlavorExtraSpecUpdateCreateFailed(MoganException):
@@ -337,23 +337,23 @@ class ServerInMaintenance(Invalid):
 
 
 class InvalidReservationExpiration(Invalid):
-    message = _("Invalid reservation expiration %(expire)s.")
+    _msg_fmt = _("Invalid reservation expiration %(expire)s.")
 
 
 class QuotaNotFound(NotFound):
-    message = _("Quota %(quota_name)s could not be found.")
+    _msg_fmt = _("Quota %(quota_name)s could not be found.")
 
 
 class ProjectQuotaNotFound(QuotaNotFound):
-    message = _("Quota for project %(project_id)s could not be found.")
+    _msg_fmt = _("Quota for project %(project_id)s could not be found.")
 
 
 class QuotaResourceUnknown(QuotaNotFound):
-    message = _("Unknown quota resources %(unknown)s.")
+    _msg_fmt = _("Unknown quota resources %(unknown)s.")
 
 
 class OverQuota(MoganException):
-    message = _("Quota exceeded for resources: %(overs)s")
+    _msg_fmt = _("Quota exceeded for resources: %(overs)s")
 
 
 class PortLimitExceeded(OverQuota):
@@ -371,7 +371,7 @@ class ReservationAlreadyExists(MoganException):
 
 
 class ReservationNotFound(NotFound):
-    message = _("Reservation %(uuid)s could not be found.")
+    _msg_fmt = _("Reservation %(uuid)s could not be found.")
 
 
 class InvalidToken(Invalid):
