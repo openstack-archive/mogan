@@ -55,6 +55,8 @@ class TestFlavorObject(base.DbTestCase):
             mock_type_create.return_value = self.fake_type
             flavor = objects.Flavor(self.context, **self.fake_type)
             values = flavor.obj_get_changes()
+            values.pop('cpus', None)
+            values.pop('memory', None)
             flavor.create(self.context)
             mock_type_create.assert_called_once_with(self.context, values)
             self.assertEqual(self.fake_type['uuid'], flavor['uuid'])
@@ -77,6 +79,8 @@ class TestFlavorObject(base.DbTestCase):
             updates = flavor.obj_get_changes()
             flavor.save(self.context)
             updates.pop('extra_specs', None)
+            updates.pop('cpus', None)
+            updates.pop('memory', None)
             mock_flavor_update.return_value = self.fake_type
             mock_flavor_update.assert_called_once_with(
                 self.context, uuid, updates)

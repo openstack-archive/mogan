@@ -106,3 +106,35 @@ boolean = {
              False, 'False', 'FALSE', 'false', '0', 'OFF', 'Off', 'off',
              'NO', 'No', 'no'],
 }
+
+
+positive_integer = {
+    'type': ['integer', 'string'],
+    'pattern': '^[0-9]*$', 'minimum': 1
+}
+
+
+flavor_cpus = {
+    'type': 'object',
+    'patternProperties': {
+        'model': {
+            'type': 'string', 'maxLength': 255
+        }
+        'cores': positive_integer,
+    },
+    'required': ['model', 'cores'],
+    'additionalProperties': False
+}
+
+
+flavor_memory = {
+    'type': 'object',
+    'patternProperties': {
+        'type': {
+            'type': 'string', 'maxLength': 255
+        }
+        'size_mb': positive_integer,
+    },
+    'required': ['type', 'size_mb'],
+    'additionalProperties': False
+}

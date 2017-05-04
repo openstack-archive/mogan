@@ -41,6 +41,8 @@ class ComputeAPIUnitTest(base.DbTestCase):
     def _create_flavor(self):
         flavor = db_utils.get_test_flavor()
         flavor['extra'] = {}
+        flavor.pop('cpus', None)
+        flavor.pop('memory', None)
         type_obj = objects.Flavor(self.context, **flavor)
         type_obj.create(self.context)
         return type_obj
