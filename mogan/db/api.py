@@ -61,6 +61,14 @@ class Connection(object):
     def flavor_destroy(self, context, flavor_uuid):
         """Delete a server type."""
 
+    @abc.abstractmethod
+    def flavor_cpus_create(self, context, values):
+        """Create a flavor cpus."""
+
+    @abc.abstractmethod
+    def flavor_memory_create(self, context, values):
+        """Create a flavor memory."""
+
     # Servers
     @abc.abstractmethod
     def server_create(self, context, values):
