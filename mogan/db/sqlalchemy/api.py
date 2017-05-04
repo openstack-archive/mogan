@@ -96,12 +96,41 @@ def add_identity_filter(query, value):
         raise exception.InvalidParameterValue(identity=value)
 
 
-def _dict_with_extra_specs(flavor_query):
+def _dict_with_extra_fields(flavor_query):
     """Takes a server type query and returns it as a dictionary."""
     flavor_dict = dict(flavor_query)
+
+    # extra specs
     extra_specs = {x['key']: x['value']
                    for x in flavor_query['extra_specs']}
     flavor_dict['extra_specs'] = extra_specs
+
+    # cpus
+    cpus = {}
+    for c in flavor_query['cpus']:
+        cpus = {'model': c['model'], 'cores': c['cores']}
+    flavor_dict['cpus'] = cpus
+
+    # memory
+    memory = {}
+    for m in flavor_query['memory']:
+        memory = {'type': m['type'], 'size_mb': m['size_mb']}
+    flavor_dict['memory'] = memory
+
+    # nics
+    nics = []
+    for n in flavor_query['nics']:
+        nic = {'type': n['type'], 'speed': n['speed']}
+        nics.append(nic)
+    flavor_dict['nics'] = nics
+
+    # disks
+    disks = []
+    for d in flavor_query['disks']:
+        disk = {'type': d['type'], 'size_gb': d['size_gb']}
+        disks.append(disk)
+    flavor_dict['disks'] = disks
+
     return flavor_dict
 
 
@@ -119,16 +148,45 @@ class Connection(api.Connection):
         if not values.get('description'):
             values['description'] = ""
 
+        cpus = values.pop('cpus', None)
+        memory = values.pop('memory', None)
+        nics = values.pop('nics', [])
+        disks = values.pop('disks', [])
+
         flavor = models.Flavors()
         flavor.update(values)
 
         with _session_for_write() as session:
             try:
                 session.add(flavor)
+                # add flavor cpus
+                if cpus:
+                    flavor_cpus = models.FlavorCpus()
+                    cpus['flavor_uuid'] = values['uuid']
+                    flavor_cpus.update(cpus)
+                    session.add(flavor_cpus)
+                # add flavor memory
+                if memory:
+                    flavor_mem = models.FlavorMemory()
+                    memory['flavor_uuid'] = values['uuid']
+                    flavor_mem.update(memory)
+                    session.add(flavor_mem)
+                # add flavor nics
+                for nic in nics:
+                    flavor_nic = models.FlavorNics()
+                    nic['flavor_uuid'] = values['uuid']
+                    flavor_nic.update(nic)
+                    session.add(flavor_nic)
+                # add flavor disks
+                for disk in disks:
+                    flavor_disk = models.FlavorDisks()
+                    disk['flavor_uuid'] = values['uuid']
+                    flavor_disk.update(disk)
+                    session.add(flavor_disk)
                 session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.FlavorAlreadyExists(uuid=values['uuid'])
-            return _dict_with_extra_specs(flavor)
+            return _dict_with_extra_fields(flavor)
 
     def flavor_get(self, context, flavor_uuid):
         query = model_query(context, models.Flavors).filter_by(
@@ -142,7 +200,7 @@ class Connection(api.Connection):
             query = query.filter(or_(*the_filter))
 
         try:
-            return _dict_with_extra_specs(query.one())
+            return _dict_with_extra_fields(query.one())
         except NoResultFound:
             raise exception.FlavorNotFound(
                 type_id=flavor_uuid)
@@ -169,7 +227,7 @@ class Connection(api.Connection):
             ])
             query = query.filter(or_(*the_filter))
 
-        return [_dict_with_extra_specs(i) for i in query.all()]
+        return [_dict_with_extra_fields(i) for i in query.all()]
 
     def flavor_destroy(self, context, flavor_uuid):
         with _session_for_write():
@@ -180,6 +238,34 @@ class Connection(api.Connection):
                 models.FlavorExtraSpecs).filter_by(
                 flavor_uuid=type_id)
             extra_query.delete()
+
+            # Clean up cpus related to this flavor
+            cpus_query = model_query(
+                context,
+                models.FlavorCpus).filter_by(
+                flavor_uuid=type_id)
+            cpus_query.delete()
+
+            # Clean up memory related to this flavor
+            memory_query = model_query(
+                context,
+                models.FlavorMemory).filter_by(
+                flavor_uuid=type_id)
+            memory_query.delete()
+
+            # Clean up nics related to this flavor
+            nics_query = model_query(
+                context,
+                models.FlavorNics).filter_by(
+                flavor_uuid=type_id)
+            nics_query.delete()
+
+            # Clean up disks related to this flavor
+            disks_query = model_query(
+                context,
+                models.FlavorDisks).filter_by(
+                flavor_uuid=type_id)
+            disks_query.delete()
 
             # Clean up all access related to this flavor
             project_query = model_query(

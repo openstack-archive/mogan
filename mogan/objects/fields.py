@@ -84,6 +84,11 @@ class ListOfStringsField(object_fields.ListOfStringsField):
     pass
 
 
+class ListOfDictOfNullableStringsField(
+    object_fields.ListOfDictOfNullableStringsField):
+    pass
+
+
 class FlexibleDict(object_fields.FieldType):
     @staticmethod
     def coerce(obj, attr, value):
