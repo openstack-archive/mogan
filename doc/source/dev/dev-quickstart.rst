@@ -286,8 +286,6 @@ Create devstack/local.conf with minimal settings required to enable Mogan
 
     # Disable Horizon
     disable_service Horizon
-    # Disable Nova
-    disable_service nova n-api n-cpu n-cond n-sch n-novnc n-cauth
     # Disable Cinder
     disable_service cinder c-sch c-api c-vol
     # Disable Tempest
