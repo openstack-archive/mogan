@@ -199,6 +199,9 @@ def get_test_flavor(**kw):
         'uuid': kw.get('uuid', uuidutils.generate_uuid()),
         'name': kw.get('name', 'test'),
         'description': kw.get('description', 'test'),
+        'cpus': kw.get('cpus', {'model': 'Dual Intel Xeon E5-2650 2.00GHz',
+                                'cores': '16'}),
+        'memory': kw.get('memory', {'type': 'DDR3', 'size_mb': '8192'}),
         'is_public': kw.get('is_public', 1),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),
@@ -216,6 +219,8 @@ def create_test_flavor(context={}, **kw):
 
     """
     flavor = get_test_flavor(**kw)
+    flavor.pop('cpus', None)
+    flavor.pop('memory', None)
     dbapi = db_api.get_instance()
 
     return dbapi.flavor_create(context, flavor)
