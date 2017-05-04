@@ -96,12 +96,27 @@ def add_identity_filter(query, value):
         raise exception.InvalidParameterValue(identity=value)
 
 
-def _dict_with_extra_specs(flavor_query):
+def _dict_with_extra_fields(flavor_query):
     """Takes a server type query and returns it as a dictionary."""
     flavor_dict = dict(flavor_query)
+
+    # extra specs
     extra_specs = {x['key']: x['value']
                    for x in flavor_query['extra_specs']}
     flavor_dict['extra_specs'] = extra_specs
+
+    # cpus
+    cpus = {}
+    for c in flavor_query['cpus']:
+        cpus = {'model': c['model'], 'cores': c['cores']}
+    flavor_dict['cpus'] = cpus
+
+    # memory
+    memory = {}
+    for m in flavor_query['memory']:
+        memory = {'type': m['type'], 'size_mb': m['size_mb']}
+    flavor_dict['memory'] = memory
+
     return flavor_dict
 
 
@@ -128,7 +143,7 @@ class Connection(api.Connection):
                 session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.FlavorAlreadyExists(uuid=values['uuid'])
-            return _dict_with_extra_specs(flavor)
+            return _dict_with_extra_fields(flavor)
 
     def flavor_get(self, context, flavor_uuid):
         query = model_query(context, models.Flavors).filter_by(
@@ -142,7 +157,7 @@ class Connection(api.Connection):
             query = query.filter(or_(*the_filter))
 
         try:
-            return _dict_with_extra_specs(query.one())
+            return _dict_with_extra_fields(query.one())
         except NoResultFound:
             raise exception.FlavorNotFound(
                 type_id=flavor_uuid)
@@ -169,7 +184,7 @@ class Connection(api.Connection):
             ])
             query = query.filter(or_(*the_filter))
 
-        return [_dict_with_extra_specs(i) for i in query.all()]
+        return [_dict_with_extra_fields(i) for i in query.all()]
 
     def flavor_destroy(self, context, flavor_uuid):
         with _session_for_write():
