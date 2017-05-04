@@ -35,6 +35,8 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         'uuid': object_fields.UUIDField(nullable=True),
         'name': object_fields.StringField(nullable=True),
         'description': object_fields.StringField(nullable=True),
+        'cpus': object_fields.FlexibleDictField(),
+        'memory': object_fields.FlexibleDictField(),
         'is_public': object_fields.BooleanField(),
         'extra_specs': object_fields.FlexibleDictField(),
         'projects': object_fields.ListOfStringsField(),
