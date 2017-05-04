@@ -391,7 +391,7 @@ expected_object_fingerprints = {
     'ComputeDiskList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'ServerFault': '1.0-74349ff701259e4834b4e9dc2dac1b12',
     'ServerFaultList': '1.0-43e8aad0258652921f929934e9e048fd',
-    'Flavor': '1.0-d1cf232312ff8101aa5a19908b476d67',
+    'Flavor': '1.0-7cc125bfe2dda6e5ffa07651d58047cd',
     'MyObj': '1.1-aad62eedc5a5cc8bcaf2982c285e753f',
     'ServerNic': '1.0-ebbd767c2f6a7f14bd524c6067f2b382',
     'ServerNics': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
