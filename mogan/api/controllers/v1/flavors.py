@@ -56,6 +56,12 @@ class Flavor(base.APIBase):
     description = wtypes.text
     """The description of the flavor"""
 
+    cpus = {wtypes.text: types.jsontype}
+    """The cpus of the flavor"""
+
+    memory = {wtypes.text: types.jsontype}
+    """The memory of the flavor"""
+
     is_public = types.boolean
     """Indicates whether the flavor is public."""
 

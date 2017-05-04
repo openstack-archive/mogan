@@ -231,6 +231,74 @@ class FlavorExtraSpecs(Base):
                     '== Flavors.uuid')
 
 
+class FlavorCpus(Base):
+    """Represents the flavor cpus."""
+
+    __tablename__ = 'flavor_cpus'
+    id = Column(Integer, primary_key=True)
+    model = Column(String(255), nullable=False)
+    cores = Column(Integer, nullable=False)
+    flavor_uuid = Column(String(36), ForeignKey('flavors.uuid'),
+                         nullable=False)
+    flavor = orm.relationship(
+        Flavors,
+        backref='cpus',
+        foreign_keys=flavor_uuid,
+        primaryjoin='FlavorCpus.flavor_uuid '
+                    '== Flavors.uuid')
+
+
+class FlavorMemory(Base):
+    """Represents the flavor memory."""
+
+    __tablename__ = 'flavor_memory'
+    id = Column(Integer, primary_key=True)
+    type = Column(String(255), nullable=False)
+    size_mb = Column(Integer, nullable=False)
+    flavor_uuid = Column(String(36), ForeignKey('flavors.uuid'),
+                         nullable=False)
+    flavor = orm.relationship(
+        Flavors,
+        backref='memory',
+        foreign_keys=flavor_uuid,
+        primaryjoin='FlavorMemory.flavor_uuid '
+                    '== Flavors.uuid')
+
+
+class FlavorDisks(Base):
+    """Represents the flavor disks."""
+
+    __tablename__ = 'flavor_disks'
+    id = Column(Integer, primary_key=True)
+    type = Column(String(255), nullable=False)
+    size_gb = Column(Integer, nullable=False)
+    flavor_uuid = Column(String(36), ForeignKey('flavors.uuid'),
+                         nullable=False)
+    flavor = orm.relationship(
+        Flavors,
+        backref='disks',
+        foreign_keys=flavor_uuid,
+        primaryjoin='FlavorDisks.flavor_uuid '
+                    '== Flavors.uuid')
+
+
+class FlavorNics(Base):
+    """Represents the flavor nics."""
+
+    __tablename__ = 'flavor_nics'
+    id = Column(Integer, primary_key=True)
+    type = Column(String(255), nullable=False)
+    speed = Column(Integer, nullable=False)
+    flavor_uuid = Column(String(36), ForeignKey('flavors.uuid'),
+                         nullable=False)
+    flavor = orm.relationship(
+        Flavors,
+        backref='nics',
+        foreign_keys=flavor_uuid,
+        primaryjoin='FlavorNics.flavor_uuid '
+                    '== Flavors.uuid')
+
+
 class ServerFault(Base):
     """Represents fault info for server"""
 
