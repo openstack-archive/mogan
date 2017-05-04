@@ -20,6 +20,7 @@ Request Body validating middleware.
 import jsonschema
 
 from mogan.common import exception
+from mogan.common.i18n import _
 
 
 def check_schema(body, schema):
