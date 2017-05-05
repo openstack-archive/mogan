@@ -269,6 +269,9 @@ Create devstack/local.conf with minimal settings required to enable Mogan
     # Enable Mogan plugin
     enable_plugin mogan git://git.openstack.org/openstack/mogan
 
+    # Enable Mogan UI plugin
+    enable_plugin mogan-ui git://git.openstack.org/openstack/mogan-ui
+
     # Enable Neutron which is required by Ironic and disable nova-network.
     disable_service n-net
     enable_service q-svc
@@ -284,8 +287,6 @@ Create devstack/local.conf with minimal settings required to enable Mogan
     enable_service s-container
     enable_service s-account
 
-    # Disable Horizon
-    disable_service Horizon
     # Disable Cinder
     disable_service cinder c-sch c-api c-vol
     # Disable Tempest
