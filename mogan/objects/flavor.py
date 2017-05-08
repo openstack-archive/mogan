@@ -97,7 +97,7 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
         return [Flavor._from_db_object(context, cls(context), obj,
-                                       expected_attrs=['extra_specs'])
+                expected_attrs=['extra_specs', 'projects'])
                 for obj in db_objects]
 
     @classmethod

@@ -58,6 +58,9 @@ class Flavor(base.APIBase):
     is_public = types.boolean
     """Indicates whether the flavor is public."""
 
+    access_projects = [wtypes.text]
+    """The access projects of the flavor."""
+
     extra_specs = {wtypes.text: types.jsontype}
     """The extra specs of the flavor"""
 
@@ -67,6 +70,11 @@ class Flavor(base.APIBase):
     def __init__(self, **kwargs):
         self.fields = []
         for field in objects.Flavor.fields:
+            if field == 'projects':
+                setattr(self, 'access_projects',
+                        kwargs.get('projects', wtypes.Unset))
+                self.fields.append('access_projects')
+                continue
             # Skip fields we do not expose.
             if not hasattr(self, field):
                 continue

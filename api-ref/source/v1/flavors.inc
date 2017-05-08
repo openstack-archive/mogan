@@ -35,6 +35,7 @@ Response
    - links: links
    - description: flavor_description
    - uuid: flavor_uuid
+   - access_projects: flavor_access
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
@@ -84,6 +85,7 @@ Response
    - links: links
    - description: flavor_description
    - uuid: flavor_uuid
+   - access_projects: flavor_access
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
@@ -133,6 +135,7 @@ Response
    - links: links
    - description: flavor_description
    - uuid: flavor_uuid
+   - access_projects: flavor_access
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
@@ -170,6 +173,7 @@ Response
    - links: links
    - description: flavor_description
    - uuid: flavor_uuid
+   - access_projects: flavor_access
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
