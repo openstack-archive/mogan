@@ -1,0 +1,4 @@
+---
+features:
+  - Add a lock and unlock API to change server's 'locked' status to
+    True or Flase. This will disallow deleting server after locking.
