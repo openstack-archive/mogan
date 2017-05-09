@@ -249,7 +249,7 @@ class API(object):
     def _create_server(self, context, flavor, image_uuid,
                        name, description, availability_zone, extra,
                        requested_networks, user_data, injected_files,
-                       key_name, min_count, max_count):
+                       key_name, min_count, max_count, scheduler_hints):
         """Verify all the input parameters"""
 
         # Verify the specified image exists
@@ -291,6 +291,7 @@ class API(object):
             },
             'flavor': dict(flavor),
             'availability_zone': availability_zone,
+            'scheduler_hints': scheduler_hints
         }
 
         self.engine_rpcapi.schedule_and_create_servers(context, servers,
@@ -306,7 +307,7 @@ class API(object):
                name=None, description=None, availability_zone=None,
                extra=None, requested_networks=None, user_data=None,
                injected_files=None, key_name=None, min_count=None,
-               max_count=None):
+               max_count=None, scheduler_hints=None):
         """Provision servers
 
         Sending server information to the engine and will handle
@@ -326,7 +327,7 @@ class API(object):
                                    availability_zone, extra,
                                    requested_networks, user_data,
                                    injected_files, key_name,
-                                   min_count, max_count)
+                                   min_count, max_count, scheduler_hints)
 
     def _delete_server(self, context, server):
 
