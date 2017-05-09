@@ -148,12 +148,15 @@ class IronicDriver(base_driver.BaseEngineDriver):
             'cpus': cpus,
             'memory_mb': memory_mb,
             'hypervisor_type': self._get_hypervisor_type(),
-            'availability_zone': str(availability_zone),
             'node_type': str(node_type),
             'extra_specs': nodes_extra_specs,
             'node_uuid': str(node.uuid),
             'ports': node.ports,
         }
+
+        if availability_zone is not None:
+            dic['availability_zone'] = str(availability_zone)
+
         return dic
 
     def _port_resource(self, port):

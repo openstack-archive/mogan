@@ -38,7 +38,7 @@ opts = [
                help=_("Availability zone to use for scheduling when user "
                       "doesn't specify one.")),
     cfg.StrOpt('default_availability_zone',
-               default='nova',
+               default='mogan',
                help=_("Default bare metal node availability zone.")),
     cfg.IntOpt('sync_power_state_pool_size',
                default=1000,
