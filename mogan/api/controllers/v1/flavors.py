@@ -21,6 +21,7 @@ from wsme import types as wtypes
 
 from mogan.api.controllers import base
 from mogan.api.controllers import link
+from mogan.api.controllers.v1.schemas import flavor as flavor_schema
 from mogan.api.controllers.v1.schemas import flavor_access
 from mogan.api.controllers.v1 import types
 from mogan.api import expose
@@ -227,15 +228,15 @@ class FlavorsController(rest.RestController):
         return Flavor.convert_with_links(rpc_flavor)
 
     @policy.authorize_wsgi("mogan:flavor", "create")
-    @expose.expose(Flavor, body=Flavor,
+    @expose.expose(Flavor, body=types.jsontype,
                    status_code=http_client.CREATED)
     def post(self, flavor):
         """Create an new flavor.
 
         :param flavor: a flavor within the request body.
         """
-        new_flavor = objects.Flavor(pecan.request.context,
-                                    **flavor.as_dict())
+        validation.check_schema(flavor, flavor_schema.create_flavor)
+        new_flavor = objects.Flavor(pecan.request.context, **flavor)
         new_flavor.create()
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('flavors',
