@@ -80,7 +80,7 @@ def create_test_server(context={}, **kw):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
         del server['id']
-    dbapi = db_api.get_server()
+    dbapi = db_api.get_instance()
 
     return dbapi.server_create(context, server)
 
@@ -121,7 +121,7 @@ def create_test_compute_node(context={}, **kw):
     # specified explicitly just delete it.
     if 'ports' not in kw:
         del node['ports']
-    dbapi = db_api.get_server()
+    dbapi = db_api.get_instance()
 
     return dbapi.compute_node_create(context, node)
 
@@ -155,7 +155,7 @@ def create_test_compute_port(context={}, **kw):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
         del port['id']
-    dbapi = db_api.get_server()
+    dbapi = db_api.get_instance()
 
     return dbapi.compute_port_create(context, port)
 
@@ -189,7 +189,7 @@ def create_test_compute_disk(context={}, **kw):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
         del disk['id']
-    dbapi = db_api.get_server()
+    dbapi = db_api.get_instance()
 
     return dbapi.compute_disk_create(context, disk)
 
@@ -216,7 +216,7 @@ def create_test_flavor(context={}, **kw):
 
     """
     flavor = get_test_flavor(**kw)
-    dbapi = db_api.get_server()
+    dbapi = db_api.get_instance()
 
     return dbapi.flavor_create(context, flavor)
 
@@ -243,7 +243,7 @@ def create_test_server_fault(context={}, **kw):
 
     """
     server_fault = get_test_server_fault(**kw)
-    dbapi = db_api.get_server()
+    dbapi = db_api.get_instance()
 
     return dbapi.server_fault_create(context, server_fault)
 
@@ -275,6 +275,6 @@ def create_test_quota(context={}, **kw):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kw:
         del quota['id']
-    dbapi = db_api.get_server()
+    dbapi = db_api.get_instance()
 
     return dbapi.quota_create(context, quota)

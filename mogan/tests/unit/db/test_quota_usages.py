@@ -40,7 +40,7 @@ class DbQuotaUsageTestCase(base.DbTestCase):
 
     def test_quota_usage_reserve(self):
         utils.create_test_quota()
-        dbapi = db_api.get_server()
+        dbapi = db_api.get_instance()
         r = dbapi.quota_reserve(self.context, self.resources,
                                 {'servers': 10},
                                 {'servers': 1},
@@ -51,7 +51,7 @@ class DbQuotaUsageTestCase(base.DbTestCase):
 
     def test_reserve_commit(self):
         utils.create_test_quota()
-        dbapi = db_api.get_server()
+        dbapi = db_api.get_instance()
         rs = dbapi.quota_reserve(self.context, self.resources,
                                  {'servers': 10},
                                  {'servers': 1},
@@ -67,7 +67,7 @@ class DbQuotaUsageTestCase(base.DbTestCase):
 
     def test_reserve_rollback(self):
         utils.create_test_quota()
-        dbapi = db_api.get_server()
+        dbapi = db_api.get_instance()
         rs = dbapi.quota_reserve(self.context, self.resources,
                                  {'servers': 10},
                                  {'servers': 1},

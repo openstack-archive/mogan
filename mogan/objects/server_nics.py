@@ -27,7 +27,7 @@ class ServerNic(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
-    dbapi = dbapi.get_server()
+    dbapi = dbapi.get_instance()
 
     fields = {
         'port_id': object_fields.UUIDField(nullable=False),
@@ -72,7 +72,7 @@ class ServerNics(object_base.ObjectListBase, base.MoganObject,
 
     VERSION = '1.0'
 
-    dbapi = dbapi.get_server()
+    dbapi = dbapi.get_instance()
 
     fields = {
         'objects': object_fields.ListOfObjectsField('ServerNic')}

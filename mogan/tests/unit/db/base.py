@@ -66,7 +66,7 @@ class DbTestCase(base.TestCase):
     def setUp(self):
         super(DbTestCase, self).setUp()
 
-        self.dbapi = dbapi.get_server()
+        self.dbapi = dbapi.get_instance()
 
         global _DB_CACHE
         if not _DB_CACHE:

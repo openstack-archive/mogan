@@ -54,7 +54,7 @@ class BaseEngineManager(periodic_task.PeriodicTasks):
             raise RuntimeError(_('Attempt to start an already running '
                                  'engine manager'))
 
-        self.dbapi = dbapi.get_server()
+        self.dbapi = dbapi.get_instance()
 
         self._worker_pool = greenpool.GreenPool(
             size=CONF.engine.workers_pool_size)
