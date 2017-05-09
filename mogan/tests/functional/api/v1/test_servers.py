@@ -129,14 +129,16 @@ class TestServers(v1_test.APITestV1):
         headers = self.gen_headers(self.context)
         for i in six.moves.xrange(amount):
             test_body = {
-                "name": "test_server_" + str(i),
-                "description": "just test server " + str(i),
-                'flavor_uuid': 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b',
-                'image_uuid': 'b8f82429-3a13-4ffe-9398-4d1abdc256a8',
-                'networks': [
-                    {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31',
-                     'port_type': 'Ethernet'}],
-                'extra': {'fake_key': 'fake_value'}
+                "server": {
+                    "name": "test_server_" + str(i),
+                    "description": "just test server " + str(i),
+                    'flavor_uuid': 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b',
+                    'image_uuid': 'b8f82429-3a13-4ffe-9398-4d1abdc256a8',
+                    'networks': [
+                        {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31',
+                         'port_type': 'Ethernet'}],
+                    'extra': {'fake_key': 'fake_value'}
+                }
             }
             responses.append(
                 self.post_json('/servers', test_body, headers=headers,
