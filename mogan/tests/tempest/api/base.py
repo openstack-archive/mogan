@@ -81,11 +81,12 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
 
     @classmethod
     def create_server(cls, wait_until_active=True):
-        body = {'name': data_utils.rand_name('mogan_server'),
-                'description': "mogan tempest server",
-                'flavor_uuid': cls.flavor,
-                'image_uuid': cls.image_id,
-                "networks": [{"net_id": cls.net_id}]
+        body = {"server": {'name': data_utils.rand_name('mogan_server'),
+                           'description': "mogan tempest server",
+                           'flavor_uuid': cls.flavor,
+                           'image_uuid': cls.image_id,
+                           "networks": [{"net_id": cls.net_id}]
+                           }
                 }
         resp = cls.baremetal_compute_client.create_server(**body)
         cls.server_ids.append(resp['uuid'])

@@ -667,6 +667,8 @@ class ServerController(ServerControllerBase):
         :param server: a server within the request body.
         """
         validation.check_schema(server, server_schemas.create_server)
+        server = server.get('server')
+        scheduler_hints = server.get('scheduler_hints', {})
 
         min_count = server.get('min_count', 1)
         max_count = server.get('max_count', min_count)
@@ -703,8 +705,8 @@ class ServerController(ServerControllerBase):
             injected_files=injected_files,
             key_name=key_name,
             min_count=min_count,
-            max_count=max_count)
-
+            max_count=max_count,
+            scheduler_hints=scheduler_hints)
         # Set the HTTP Location Header for the first server.
         pecan.response.location = link.build_url('server', servers[0].uuid)
         return Server.convert_with_links(servers[0])
