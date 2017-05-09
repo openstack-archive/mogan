@@ -21,6 +21,7 @@ from wsme import types as wtypes
 
 from mogan.api.controllers import base
 from mogan.api.controllers import link
+from mogan.api.controllers.v1.schemas import flavor
 from mogan.api.controllers.v1.schemas import flavor_access
 from mogan.api.controllers.v1 import types
 from mogan.api import expose
@@ -234,6 +235,7 @@ class FlavorsController(rest.RestController):
 
         :param flavor: a flavor within the request body.
         """
+        validation.check_schema(tenant, flavor.create_flavor)
         new_flavor = objects.Flavor(pecan.request.context,
                                     **flavor.as_dict())
         new_flavor.create()
