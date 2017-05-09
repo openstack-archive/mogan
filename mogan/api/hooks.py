@@ -35,7 +35,7 @@ class DBHook(hooks.PecanHook):
     """Attach the dbapi object to the request so controllers can get to it."""
 
     def before(self, state):
-        state.request.dbapi = dbapi.get_server()
+        state.request.dbapi = dbapi.get_instance()
 
 
 class EngineAPIHook(hooks.PecanHook):

@@ -38,7 +38,7 @@ class Quota(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
-    dbapi = dbapi.get_server()
+    dbapi = dbapi.get_instance()
 
     fields = {
         'id': object_fields.IntegerField(),
@@ -164,7 +164,7 @@ class DbQuotaDriver(object):
     The default driver utilizes the local database.
     """
 
-    dbapi = dbapi.get_server()
+    dbapi = dbapi.get_instance()
 
     def get_project_quotas(self, context, resources, project_id, usages=True):
         """Retrieve quotas for a project.

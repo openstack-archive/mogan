@@ -33,7 +33,7 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
-    dbapi = dbapi.get_server()
+    dbapi = dbapi.get_instance()
 
     fields = {
         'id': object_fields.IntegerField(),
