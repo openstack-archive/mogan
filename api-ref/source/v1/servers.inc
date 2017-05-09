@@ -30,6 +30,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
+  - server: server
   - name: server_name
   - description: server_description
   - flavor_uuid: flavorRef
@@ -41,6 +42,7 @@ Request
   - user_data: user_data
   - personality: personality
   - key_name: key_name
+  - server: scheduler_hints
 
 **Example Create Server: JSON request**
 
