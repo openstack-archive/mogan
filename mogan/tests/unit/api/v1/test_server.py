@@ -34,13 +34,15 @@ def gen_post_body(**kw):
         }
     ]
     return {
-        "name": kw.get("name", "test_server"),
-        "description": kw.get("description", "this is a test server"),
-        "flavor_uuid": kw.get(
-            "flavor_uuid", "0607b5f3-6111-424d-ba46-f5de39a6fa69"),
-        "image_uuid": kw.get(
-            "image_uuid", "efe0a06f-ca95-4808-b41e-9f55b9c5eb98"),
-        "networks": kw.get("networks", fake_networks)
+        "server": {
+            "name": kw.get("name", "test_server"),
+            "description": kw.get("description", "this is a test server"),
+            "flavor_uuid": kw.get(
+                "flavor_uuid", "0607b5f3-6111-424d-ba46-f5de39a6fa69"),
+            "image_uuid": kw.get(
+                "image_uuid", "efe0a06f-ca95-4808-b41e-9f55b9c5eb98"),
+            "networks": kw.get("networks", fake_networks)
+        }
     }
 
 
