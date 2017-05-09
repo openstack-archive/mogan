@@ -129,14 +129,16 @@ class TestServers(v1_test.APITestV1):
         headers = self.gen_headers(self.context)
         for i in six.moves.xrange(amount):
             test_body = {
-                "name": "test_server_" + str(i),
-                "description": "just test server " + str(i),
-                'flavor_uuid': 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b',
-                'image_uuid': 'b8f82429-3a13-4ffe-9398-4d1abdc256a8',
-                'networks': [
-                    {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31'}
-                ],
-                'metadata': {'fake_key': 'fake_value'}
+                "server": {
+                    "name": "test_server_" + str(i),
+                    "description": "just test server " + str(i),
+                    'flavor_uuid': 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b',
+                    'image_uuid': 'b8f82429-3a13-4ffe-9398-4d1abdc256a8',
+                    'networks': [
+                        {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31'}
+                    ],
+                    'metadata': {'fake_key': 'fake_value'}
+                }
             }
             responses.append(
                 self.post_json('/servers', test_body, headers=headers,
@@ -161,6 +163,31 @@ class TestServers(v1_test.APITestV1):
         self.assertIn('nics', resp)
         self.assertIn('project_id', resp)
         self.assertIn('launched_at', resp)
+
+    @mock.patch('mogan.engine.rpcapi.EngineAPI.schedule_and_create_servers')
+    @mock.patch('oslo_utils.uuidutils.generate_uuid')
+    def test_server_post_with_scheduler_hints(self, mocked_uuid,
+                                              mock_create):
+        mocked_uuid.return_value = self.SERVER_UUIDS[0]
+        mock_create.return_value = mock.MagicMock()
+        body = {
+            "server": {
+                "name": "test_server_with_hints",
+                "description": "just test server with hints",
+                'flavor_uuid': 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b',
+                'image_uuid': 'b8f82429-3a13-4ffe-9398-4d1abdc256a8',
+                'networks': [
+                    {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31',
+                     'port_type': 'Ethernet'}],
+                'extra': {'fake_key': 'fake_value'}
+            },
+            "scheduler_hints": {"server_group": 10}
+        }
+        headers = self.gen_headers(self.context)
+        response = self.post_json('/servers', body, headers=headers,
+                                  status=201)
+        server = response.json
+        self.assertEqual('test_server_with_hints', server['name'])
 
     def test_server_show(self):
         self._prepare_server(1)
