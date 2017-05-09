@@ -447,6 +447,20 @@ provision_state:
   in: body
   required: true
   type: string
+scheduler_hints:
+  description: |
+    The dictionary of data to send to the scheduler, it represent scheduling
+     options will be passed to scheduler.  Alternatively, you can specify
+    ``scheduler_hints`` as a string.
+  in: body
+  required: false
+  type: object
+server:
+  description: |
+    The dictionary of data represent a server creation request.
+  in: body
+  required: true
+  type: object
 server_description:
   description: |
     A free form description of the server. Limited to 255 characters
