@@ -68,7 +68,6 @@ Request
    - name: flavor_name
    - description: flavor_description
    - is_public: flavor_is_public_not_required
-   - uuid: flavor_uuid_not_required
 
 **Example Create Flavor**
 

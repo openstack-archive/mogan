@@ -173,7 +173,7 @@ flavor_is_public_not_required:
     Whether the flavor is public (available to all projects) or scoped
     to a set of projects. Default is True if not specified.
   in: body
-  required: true
+  required: false
   type: boolean
 flavor_name:
   description: |
@@ -186,12 +186,6 @@ flavor_uuid:
     The UUID of the flavor.
   in: body
   required: true
-  type: string
-flavor_uuid_not_required:
-  description: |
-    The UUID of the flavor.
-  in: body
-  required: false
   type: string
 flavorRef:
   description: |
