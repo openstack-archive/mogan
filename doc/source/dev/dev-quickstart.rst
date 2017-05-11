@@ -272,6 +272,9 @@ Create devstack/local.conf with minimal settings required to enable Mogan
     # Enable Mogan UI plugin
     enable_plugin mogan-ui git://git.openstack.org/openstack/mogan-ui
 
+    # Enable Ironic UI plugin
+    enable_plugin ironic-ui git://git.openstack.org/openstack/ironic-ui
+
     # Enable Neutron which is required by Ironic and disable nova-network.
     disable_service n-net
     enable_service q-svc
