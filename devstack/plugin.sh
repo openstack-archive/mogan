@@ -93,6 +93,11 @@ function configure_mogan {
     # Setup keystone section
     iniset ${MOGAN_CONF_FILE} keystone region_name ${REGION_NAME}
 
+    # Set shellinbox console url.
+    if is_service_enabled mogan-shellinaboxproxy; then
+        iniset ${MOGAN_CONF_FILE} shellinabox_console shellinabox_base_url_opt "http://$SERVICE_HOST:8866/"
+    fi
+
     # Path of policy.json file.
     iniset ${MOGAN_CONF_FILE} oslo_policy policy_file ${MOGAN_POLICY_FILE}
 
