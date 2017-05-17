@@ -59,16 +59,9 @@ class ConsoleAuthManager(object):
 
     @property
     def cache(self):
-        """The recommended config example:
-        [cache]
-        backend_argument = url:127.0.0.1:11211
-        expiration_time = 600
-        backend = dogpile.cache.memcached
-        enabled = True
-        """
-        # TODO(liusheng)may need to define config options [consoleauth]
-        # section and then override to the [cache] section
         if self._cache is None:
+            CONF.set_override('backend', 'dogpile.cache.memcached', 'cache')
+            CONF.set_override('enabled', True, 'cache')
             cache_region = oslo_cache.create_region()
             self._cache = oslo_cache.configure_cache_region(CONF, cache_region)
         return self._cache
