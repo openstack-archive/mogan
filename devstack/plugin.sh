@@ -95,7 +95,7 @@ function configure_mogan {
 
     # Set shellinbox console url.
     if is_service_enabled mogan-shellinaboxproxy; then
-        iniset ${MOGAN_CONF_FILE} shellinabox_console shellinabox_base_url_opt "http://$SERVICE_HOST:8866/"
+        iniset ${MOGAN_CONF_FILE} shellinabox_console shellinabox_base_url "http://$SERVICE_HOST:8866/"
     fi
 
     # Path of policy.json file.
