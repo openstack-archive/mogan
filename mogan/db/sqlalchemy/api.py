@@ -519,6 +519,13 @@ class Connection(api.Connection):
             raise exception.FlavorAccessNotFound(flavor_id=flavor_id,
                                                  project_id=project_id)
 
+    def server_nic_delete(self, context, port_id):
+        query = model_query(context, models.ServerNic).filter_by(
+            port_id=port_id)
+        count = query.delete()
+        if count != 1:
+            raise exception.PortNotFound()
+
     def server_nic_update_or_create(self, context, port_id, values):
         with _session_for_write() as session:
             query = model_query(context, models.ServerNic).filter_by(

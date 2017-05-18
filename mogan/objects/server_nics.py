@@ -64,6 +64,10 @@ class ServerNic(base.MoganObject, object_base.VersionedObjectDictCompat):
         self.dbapi.server_nic_update_or_create(
             context, self.port_id, values)
 
+    def delete(self, context):
+        self.dbapi.server_nic_delete(
+            context, self.port_id)
+
 
 @base.MoganObjectRegistry.register
 class ServerNics(object_base.ObjectListBase, base.MoganObject,
@@ -97,3 +101,7 @@ class ServerNics(object_base.ObjectListBase, base.MoganObject,
 
     def get_port_ids(self):
         return [x.port_id for x in self]
+
+    def delete(self, context):
+        for nic_obj in self:
+            nic_obj.delete(context)
