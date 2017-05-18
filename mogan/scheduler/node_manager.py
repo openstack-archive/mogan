@@ -45,6 +45,9 @@ class NodeState(object):
         """Consume the compute node."""
         objects.ComputeNode.consume_node(context, self.node_uuid)
 
+    def __repr__(self):
+        return "<Node:%s node_type:%s>" % (self.node_uuid, self.flavor)
+
 
 class NodeManager(object):
     """Base NodeManager class."""
