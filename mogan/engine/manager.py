@@ -331,6 +331,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def destroy_networks(self, context, server):
         ports = server.nics.get_port_ids()
+        server.nics.delete(context)
         for port in ports:
             self.network_api.delete_port(context, port, server.uuid)
 
