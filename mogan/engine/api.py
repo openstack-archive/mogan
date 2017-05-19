@@ -512,3 +512,6 @@ class API(object):
     def get_key_pair(self, context, user_id, key_name):
         """Get a keypair by name."""
         return objects.KeyPair.get_by_name(context, user_id, key_name)
+
+    def attach_interface(self, context, server, net_id):
+        self.engine_rpcapi.attach_interface(context, server, net_id)
