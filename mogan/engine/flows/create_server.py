@@ -155,34 +155,33 @@ class BuildNetworkTask(flow_utils.MoganTask):
                    'pif_count': len(ports)})
 
         nics_obj = objects.ServerNics(context)
-        for vif in requested_networks:
-            for pif in ports:
-                # Match the specified port type with physical interface type
-                if vif.get('port_type', 'None') == pif.port_type:
-                    try:
-                        port = self.manager.network_api.create_port(
-                            context, vif['net_id'], pif.address, server.uuid)
-                        port_dict = port['port']
+        for vif, pif in zip(requested_networks, ports):
+            # Match the specified port type with physical interface type
+            if vif.get('port_type', 'None') == pif.port_type:
+                try:
+                    port = self.manager.network_api.create_port(
+                        context, vif['net_id'], pif.address, server.uuid)
+                    port_dict = port['port']
 
-                        self.manager.driver.plug_vif(pif.port_uuid,
-                                                     port_dict['id'])
-                        nic_dict = {'port_id': port_dict['id'],
-                                    'network_id': port_dict['network_id'],
-                                    'mac_address': port_dict['mac_address'],
-                                    'fixed_ips': port_dict['fixed_ips'],
-                                    'port_type': vif.get('port_type'),
-                                    'server_uuid': server.uuid}
-                        nics_obj.objects.append(objects.ServerNic(
-                            context, **nic_dict))
+                    self.manager.driver.plug_vif(pif.port_uuid,
+                                                 port_dict['id'])
+                    nic_dict = {'port_id': port_dict['id'],
+                                'network_id': port_dict['network_id'],
+                                'mac_address': port_dict['mac_address'],
+                                'fixed_ips': port_dict['fixed_ips'],
+                                'port_type': vif.get('port_type'),
+                                'server_uuid': server.uuid}
+                    nics_obj.objects.append(objects.ServerNic(
+                        context, **nic_dict))
 
-                    except Exception:
-                        # Set nics here, so we can clean up the
-                        # created networks during reverting.
-                        server.nics = nics_obj
-                        LOG.error("Server %s: create network failed",
-                                  server.uuid)
-                        raise exception.NetworkError(_(
-                            "Build network for server failed."))
+                except Exception:
+                    # Set nics here, so we can clean up the
+                    # created networks during reverting.
+                    server.nics = nics_obj
+                    LOG.error("Server %s: create network failed",
+                              server.uuid)
+                    raise exception.NetworkError(_(
+                        "Build network for server failed."))
         return nics_obj
 
     def execute(self, context, server, requested_networks, ports):
