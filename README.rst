@@ -13,6 +13,7 @@ Project Resources
 -----------------
 
 * Free software: Apache license
+* Documentation: http://111.20.68.219:7950/docs/
 * Source: http://git.openstack.org/cgit/openstack/mogan
 * Bugs: http://bugs.launchpad.net/mogan
 * Wiki: https://wiki.openstack.org/wiki/Mogan
