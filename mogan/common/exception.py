@@ -336,6 +336,9 @@ class NetworkRequiresSubnet(Invalid):
     _msg_fmt = _("Network %(network_uuid)s requires a subnet in order to boot"
                  " servers on.")
 
+class NetworksNotMatch(Invalid):
+    _msg_fmt = _("Networks don't match with the specified flavor.")
+
 
 class ServerIsLocked(Invalid):
     _msg_fmt = _("Server %(server_uuid)s is locked")
