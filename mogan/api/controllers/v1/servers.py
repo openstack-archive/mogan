@@ -610,6 +610,34 @@ class ServerController(ServerControllerBase):
             raise exception.NotFound()
         return self._get_server_collection(all_tenants=all_tenants)
 
+    def _find_port_type(self, nics, port_type):
+        index = 0
+        for nic in nics:
+            if port_type == nic.get('type'):
+                # return the index of the found nic
+                return index
+            index += 1
+
+        return -1
+
+    def _check_flavor_and_networks(self, flavor, networks):
+        if len(networks) > len(flavor.nics):
+            raise exception.NetworksNotMatch(
+                _("Requested networks require more nics than the "
+                  "selected flavor."))
+
+        nics = flavor.nics
+        for net in networks:
+            if 'port_type' in net:
+                index = self._find_port_type(nics, net.get('port_type')):
+                if index != -1:
+                    nics.pop(index)
+                else:
+                    raise exception.NetworksNotMatch(
+                        _("Requested networks require more specific nic "
+                          "type %s than the selected flavor."),
+                        net.get('port_type'))
+
     @policy.authorize_wsgi("mogan:server", "create", False)
     @expose.expose(Server, body=types.jsontype,
                    status_code=http_client.CREATED)
@@ -642,6 +670,7 @@ class ServerController(ServerControllerBase):
 
         try:
             flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
+            self._check_flavor_and_networks(flavor, requested_networks)
 
             servers = pecan.request.engine_api.create(
                 pecan.request.context,
@@ -682,7 +711,8 @@ class ServerController(ServerControllerBase):
                 exception.ServerUserDataTooLarge,
                 exception.Base64Exception,
                 exception.NetworkRequiresSubnet,
-                exception.NetworkNotFound) as e:
+                exception.NetworkNotFound,
+                exception.NetworksNotMatch) as e:
             raise wsme.exc.ClientSideError(
                 e.message, status_code=http_client.BAD_REQUEST)
 
