@@ -13,8 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import fixtures
 import mock
-from oslotest import mockpatch
 import six
 
 from mogan.tests.functional.api import v1 as v1_test
@@ -79,14 +79,14 @@ class TestServers(v1_test.APITestV1):
 
     def setUp(self):
         self.rpc_api = mock.Mock()
-        self.useFixture(mockpatch.Patch('mogan.engine.rpcapi.EngineAPI',
-                                        return_value=self.rpc_api))
+        self.useFixture(fixtures.MockPatch('mogan.engine.rpcapi.EngineAPI',
+                                           return_value=self.rpc_api))
         self.image_api = mock.Mock()
-        self.useFixture(mockpatch.Patch('mogan.image.api.API',
-                                        return_value=self.image_api))
+        self.useFixture(fixtures.MockPatch('mogan.image.api.API',
+                                           return_value=self.image_api))
         self.network_api = mock.Mock()
-        self.useFixture(mockpatch.Patch('mogan.network.api.API',
-                                        return_value=self.network_api))
+        self.useFixture(fixtures.MockPatch('mogan.network.api.API',
+                                           return_value=self.network_api))
         self.image_api.get.return_value = _get_fake_image()
         self.network_api.validate_networks.return_value = 100
         super(TestServers, self).setUp()
