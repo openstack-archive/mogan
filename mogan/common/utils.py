@@ -25,7 +25,6 @@ import re
 import shutil
 import tempfile
 import traceback
-import webob
 
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives import hashes
@@ -410,22 +409,3 @@ def generate_key_pair(bits=2048):
         key.get_name(), key.get_base64())
     fingerprint = generate_fingerprint(public_key)
     return (private_key, public_key, fingerprint)
-
-
-def raise_http_conflict_for_server_invalid_state(exc, action, server_id):
-    """Raises a webob.exc.HTTPConflict instance containing a message
-    appropriate to return via the API based on the original
-    ServerInvalidState exception.
-    """
-    attr = exc.kwargs.get('attr')
-    state = exc.kwargs.get('state')
-    if attr is not None and state is not None:
-        msg = _("Cannot '%(action)s' server %(server_id)s while it is in "
-                "%(attr)s %(state)s") % {'action': action, 'attr': attr,
-                                         'state': state,
-                                         'server_id': server_id}
-    else:
-        # At least give some meaningful message
-        msg = _("Server %(server_id)s is in an invalid state for "
-                "'%(action)s'") % {'action': action, 'server_id': server_id}
-    raise webob.exc.HTTPConflict(explanation=msg)

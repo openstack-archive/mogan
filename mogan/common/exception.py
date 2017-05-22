@@ -190,8 +190,8 @@ class ComputePortNotFound(NotFound):
     _msg_fmt = _("ComputePort %(port)s could not be found.")
 
 
-class ComputePortInUse(Invalid):
-    _msg_fmt = _("ComputePort id %(port)s is in use.")
+class ComputePortNotAvailable(NotFound):
+    _msg_fmt = _("No available compute ports.")
 
 
 class ComputeDiskAlreadyExists(MoganException):

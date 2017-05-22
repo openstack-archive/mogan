@@ -37,7 +37,6 @@ from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common import policy
 from mogan.common import states
-from mogan.common import utils
 from mogan import network
 from mogan import objects
 
@@ -361,13 +360,13 @@ class InterfaceController(ServerControllerBase):
                 pecan.request.context,
                 server, net_id)
         except (exception.ServerIsLocked,
-                exception.ComputePortInUse,
+                exception.ComputePortNotAvailable,
                 exception.NetworkNotFound) as e:
             raise wsme.exc.ClientSideError(
                 e.message, status_code=http_client.BAD_REQUEST)
-        except exception.InterfaceAttachFailed as state_error:
-            utils.raise_http_conflict_for_server_invalid_state(
-                state_error, 'attach_interface', server_uuid)
+        except exception.InterfaceAttachFailed as e:
+            raise wsme.exc.ClientSideError(
+                e.message, status_code=http_client.CONFLICT)
 
 
 class ServerNetworks(base.APIBase):
