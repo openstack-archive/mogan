@@ -71,6 +71,11 @@ class DbServerTestCase(base.DbTestCase):
         res_uuids = [r.uuid for r in res]
         six.assertCountEqual(self, uuids_project_all, res_uuids)
 
+        res = self.dbapi.server_get_all(self.context, project_only=False,
+                                        filters={"name": "1"})
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0].name, "1")
+
         # Set project_only to True
         # get servers from current project (project_1)
         self.context.tenant = 'project_1'
