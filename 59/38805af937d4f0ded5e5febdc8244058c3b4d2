@@ -1,0 +1,10 @@
+Code-Review+2: ShaoHe Feng <shaohe.feng@intel.com>
+Code-Review+2: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Workflow+1: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Code-Review+1: ShangXiao <shangxiaobj@inspur.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Sat, 27 May 2017 01:33:06 +0000
+Reviewed-on: https://review.openstack.org/466694
+Project: openstack/mogan
+Branch: refs/heads/master
