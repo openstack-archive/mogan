@@ -256,6 +256,9 @@ class API(object):
         if image_uuid:
             self._get_image(context, image_uuid)
 
+        if not availability_zone:
+            availability_zone = CONF.engine.default_availability_zone
+
         base_options, max_net_count, key_pair = \
             self._validate_and_build_base_options(
                 context, flavor, image_uuid, name, description,
@@ -280,9 +283,6 @@ class API(object):
 
         servers = self._provision_servers(context, base_options,
                                           min_count, max_count)
-
-        if not availability_zone:
-            availability_zone = CONF.engine.default_schedule_zone
         request_spec = {
             'server_id': servers[0].uuid,
             'server_properties': {
