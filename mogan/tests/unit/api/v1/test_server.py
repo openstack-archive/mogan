@@ -26,11 +26,12 @@ from mogan.tests.unit.db import utils
 def gen_post_body(**kw):
     fake_networks = [
         {
-            "net_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31"
+            "net_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31",
+            "port_type": "Ethernet"
         },
         {
             "net_id": "8e8ceb07-4641-4188-9b22-840755e92ee2",
-            "port_type": "10GE"
+            "port_type": "Ethernet"
         }
     ]
     return {
@@ -59,7 +60,10 @@ class TestServerAuthorization(v1_test.APITestV1):
     @mock.patch('mogan.engine.api.API.create')
     @mock.patch('mogan.objects.Flavor.get')
     def test_server_post(self, mock_get, mock_engine_create):
-        mock_get.side_effect = None
+        flavor = mock.MagicMock()
+        flavor.nics = [{"type": "Ethernet", "speed": "10GE"},
+                       {"type": "Ethernet", "speed": "10GE"}]
+        mock_get.return_value = flavor
         mock_engine_create.side_effect = None
         mock_engine_create.return_value = [self.server1]
         body = gen_post_body()
@@ -69,6 +73,33 @@ class TestServerAuthorization(v1_test.APITestV1):
         self.context.tenant = self.evil_project
         headers = self.gen_headers(self.context)
         self.post_json('/servers', body, headers=headers, status=201)
+
+    @mock.patch('mogan.objects.Flavor.get')
+    def test_server_post_with_no_enough_nics(self, mock_get):
+        flavor = mock.MagicMock()
+        flavor.nics = [{"type": "Ethernet", "speed": "10GE"}]
+        mock_get.return_value = flavor
+        body = gen_post_body()
+        self.context.roles = "no-admin"
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context)
+        ret = self.post_json(
+            '/servers', body, headers=headers, expect_errors=True)
+        self.assertTrue(ret.json['error_message'])
+
+    @mock.patch('mogan.objects.Flavor.get')
+    def test_server_post_with_no_enough_nic_types(self, mock_get):
+        flavor = mock.MagicMock()
+        flavor.nics = [{"type": "Ethernet", "speed": "10GE"},
+                       {"type": "Infiniband", "speed": "100GE"}]
+        mock_get.return_value = flavor
+        body = gen_post_body()
+        self.context.roles = "no-admin"
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context)
+        ret = self.post_json(
+            '/servers', body, headers=headers, expect_errors=True)
+        self.assertTrue(ret.json['error_message'])
 
     def test_server_get_one_by_owner(self):
         # not admin but the owner
