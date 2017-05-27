@@ -40,6 +40,8 @@ from mogan.common import states
 from mogan import network
 from mogan import objects
 
+import re
+
 _DEFAULT_SERVER_RETURN_FIELDS = ('uuid', 'name', 'description',
                                  'status', 'power_state')
 
@@ -557,18 +559,67 @@ class ServerController(ServerControllerBase):
         'detail': ['GET']
     }
 
-    def _get_server_collection(self, fields=None, all_tenants=False):
+    def _get_server_collection(self, search_opts=None, all_tenants=None,
+                               fields=None):
         context = pecan.request.context
         project_only = True
         if context.is_admin and all_tenants:
             project_only = False
+        if not search_opts:
+            servers = objects.Server.list(pecan.request.context,
+                                          project_only=project_only,
+                                          filters=None)
+        else:
+            if 'server_uuid' in search_opts:
+                server_uuid = search_opts.get("server_uuid", None)
+                servers = [objects.Server.get(pecan.request.context,
+                                              server_uuid)]
+            else:
+                filters = {}
+                if 'name' in search_opts:
+                    filters['name'] = search_opts.get("name")
+                if 'status' in search_opts:
+                    filters['status'] = search_opts.get("status")
+                if 'flavor_name' in search_opts:
+                    filters['flavor_name'] = search_opts.get("flavor_name")
+                if 'flavor_uuid' in search_opts:
+                    filters['flavor_uuid'] = search_opts.get("flavor_uuid")
+                if 'image_uuid' in search_opts:
+                    filters['image_uuid'] = search_opts.get("image_uuid")
 
-        servers = objects.Server.list(pecan.request.context,
-                                      project_only=project_only)
+                servers = objects.Server.list(pecan.request.context,
+                                              project_only=project_only,
+                                              filters=filters)
+                ip = search_opts.get("ip", None)
+                if ip:
+                    filters['ip'] = ip
+                    servers = self._ip_filter(servers, filters)
+
         servers_data = [server.as_dict() for server in servers]
 
         return ServerCollection.convert_with_links(servers_data,
                                                    fields=fields)
+
+    @staticmethod
+    def _ip_filter(servers, filters):
+        ip_obj = re.compile(str(filters.get('ip')))
+
+        def _match_server(server):
+            nw_info = server.nics
+            for vif in nw_info:
+                for fixed_ip in vif.fixed_ips:
+                    address = fixed_ip.get('ip_address')
+                    if not address:
+                        continue
+                    if ip_obj.match(address):
+                        return True
+            return False
+
+        result_objs = []
+        for server in servers:
+            if _match_server(server):
+                result_objs.append(server)
+        return result_objs
 
     @expose.expose(ServerCollection, types.listtype, types.boolean)
     def get_all(self, fields=None, all_tenants=None):
@@ -583,8 +634,9 @@ class ServerController(ServerControllerBase):
         """
         if fields is None:
             fields = _DEFAULT_SERVER_RETURN_FIELDS
-        return self._get_server_collection(fields=fields,
-                                           all_tenants=all_tenants)
+        return self._get_server_collection(search_opts=None,
+                                           all_tenants=all_tenants,
+                                           fields=fields)
 
     @policy.authorize_wsgi("mogan:server", "get")
     @expose.expose(Server, types.uuid, types.listtype)
@@ -600,14 +652,16 @@ class ServerController(ServerControllerBase):
 
         return Server.convert_with_links(server_data, fields=fields)
 
-    @expose.expose(ServerCollection, types.boolean)
-    def detail(self, all_tenants=None):
+    @expose.expose(ServerCollection, body=types.jsontype)
+    def detail(self, search_opts=None):
         """Retrieve detail of a list of servers."""
         # /detail should only work against collections
+        cdict = pecan.request.context.to_policy_values()
+        policy.authorize('mogan:server:get', cdict, cdict)
         parent = pecan.request.path.split('/')[:-1][-1]
         if parent != "servers":
             raise exception.NotFound()
-        return self._get_server_collection(all_tenants=all_tenants)
+        return self._get_server_collection(search_opts)
 
     @policy.authorize_wsgi("mogan:server", "create", False)
     @expose.expose(Server, body=types.jsontype,
