@@ -70,7 +70,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertEqual(flavor.uuid, base_opts['flavor_uuid'])
         self.assertEqual({'k1', 'v1'}, base_opts['extra'])
         self.assertEqual('test_az', base_opts['availability_zone'])
-        self.assertEqual(None, key_pair)
+        self.assertIsNone(key_pair)
 
     @mock.patch.object(objects.Server, 'create')
     def test__provision_servers(self, mock_server_create):
@@ -224,7 +224,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         fake_server_obj = self._create_fake_server_obj(fake_server)
         self.engine_api.unlock(self.context, fake_server_obj)
         self.assertFalse(fake_server_obj.locked)
-        self.assertEqual(None, fake_server_obj.locked_by)
+        self.assertIsNone(fake_server_obj.locked_by)
 
     def test_lock_by_admin(self):
         fake_server = db_utils.get_test_server(
@@ -243,7 +243,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         admin_context = context.get_admin_context()
         self.engine_api.unlock(admin_context, fake_server_obj)
         self.assertFalse(fake_server_obj.locked)
-        self.assertEqual(None, fake_server_obj.locked_by)
+        self.assertIsNone(fake_server_obj.locked_by)
 
     @mock.patch('mogan.engine.api.API._delete_server')
     def test_delete_locked_server_with_non_admin(self, mock_deleted):
