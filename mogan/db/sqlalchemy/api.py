@@ -68,7 +68,6 @@ def model_query(context, model, *args, **kwargs):
       project_id.
     :type project_only: bool
     """
-
     if kwargs.pop("project_only", False):
         kwargs["project_id"] = context.tenant
 
@@ -140,6 +139,20 @@ class Connection(api.Connection):
     def __init__(self):
         self.QUOTA_SYNC_FUNCTIONS = {'_sync_servers': self._sync_servers}
         pass
+
+    def _add_servers_filters(self, query, filters):
+        if filters is None:
+            filters = []
+
+        if 'name' in filters:
+            query = query.filter_by(name=filters['name'])
+        if 'status' in filters:
+            query = query.filter_by(status=filters['status'])
+        if 'flavor_uuid' in filters:
+            query = query.filter_by(flavor_uuid=filters['flavor_uuid'])
+        if 'image_uuid' in filters:
+            query = query.filter_by(image_uuid=filters['image_uuid'])
+        return query
 
     def flavor_create(self, context, values):
         if not values.get('uuid'):
@@ -315,9 +328,11 @@ class Connection(api.Connection):
         except NoResultFound:
             raise exception.ServerNotFound(server=server_id)
 
-    def server_get_all(self, context, project_only):
-        return model_query(context, models.Server,
-                           server=True, project_only=project_only)
+    def server_get_all(self, context, project_only, filters=None):
+        query = model_query(context, models.Server, server=True,
+                            project_only=project_only)
+        query = self._add_servers_filters(query, filters)
+        return query.all()
 
     def server_destroy(self, context, server_id):
         with _session_for_write():

@@ -168,7 +168,8 @@ List Servers Detailed
 
 .. rest_method:: GET /servers/detail
 
-Return a list of bare metal Servers with complete details.
+Return a list of bare metal Servers with complete details. We can also apply
+filters to show more precisely the servers.
 
 Normal response codes: 200
 
@@ -180,7 +181,14 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
+  - server_uuid: server_uuid
+  - name: server_name
+  - status: server_status
+  - flavor_uuid: flavorRef
+  - image_uuid: imageRef
+  - floating_ip: address
   - all_tenants: all_tenants
+
 
 Response
 --------
