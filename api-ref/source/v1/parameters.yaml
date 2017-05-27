@@ -67,6 +67,48 @@ fields:
   in: query
   required: false
   type: array
+fixed_ip_query:
+  description: |
+    Filters the server list result by fixed ip.
+  in: query
+  required: false
+  type: string
+flavor_name_query:
+  description: |
+    Filters the server list by flavor's name.
+  in: query
+  required: false
+  type: string
+flavor_query:
+  description: |
+    Filters the server list by flavor's UUID.
+  in: query
+  required: false
+  type: string
+image_query:
+  description: |
+    Filters the server list by image's UUID.
+  in: query
+  required: false
+  type: string
+server_name_query:
+  description: |
+    Filters the server list by name.
+  in: query
+  required: false
+  type: string
+server_query:
+  description: |
+    Filters the server list by UUID.
+  in: query
+  required: false
+  type: string
+status_query:
+  description: |
+    Filters the server list by the server's status.
+  in: query
+  required: false
+  type: string
 user_id:
   description: |
     Filters the response by a user, by ID.

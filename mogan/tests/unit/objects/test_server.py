@@ -45,12 +45,11 @@ class TestServerObject(base.DbTestCase):
         with mock.patch.object(self.dbapi, 'server_get_all',
                                autospec=True) as mock_server_get_all:
             mock_server_get_all.return_value = [self.fake_server]
-
             project_only = False
-            servers = objects.Server.list(self.context, project_only)
-
+            filters = None
+            servers = objects.Server.list(self.context, project_only, filters)
             mock_server_get_all.assert_called_once_with(
-                self.context, project_only)
+                self.context, project_only, filters)
             self.assertIsInstance(servers[0], objects.Server)
             self.assertEqual(self.context, servers[0]._context)
 
