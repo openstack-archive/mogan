@@ -208,6 +208,32 @@ class TestServers(v1_test.APITestV1):
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resps[0]['image_uuid'])
 
+        # Test with filters
+        # Filter with server name
+        resps = self.get_json('/servers/detail?name=test_server_0',
+                              headers=headers)['servers']
+        self.assertEqual(1, len(resps))
+        resps = self.get_json('/servers/detail?name=test',
+                              headers=headers)['servers']
+        self.assertEqual(4, len(resps))
+        # Filter with server status
+        resps = self.get_json('/servers/detail?status=building',
+                              headers=headers)['servers']
+        self.assertEqual(4, len(resps))
+        resps = self.get_json('/servers/detail?status=active',
+                              headers=headers)['servers']
+        self.assertEqual(0, len(resps))
+        # Filter with flavor uuid
+        search_opt = "flavor_uuid=ff28b5a2-73e5-431c-b4b7-1b96b74bca7b"
+        resps = self.get_json('/servers/detail?' + search_opt,
+                              headers=headers)['servers']
+        self.assertEqual(4, len(resps))
+        # Filter with image uuid
+        search_opt = "image_uuid=b8f82429-3a13-4ffe-9398-4d1abdc256a8"
+        resps = self.get_json('/servers/detail?' + search_opt,
+                              headers=headers)['servers']
+        self.assertEqual(4, len(resps))
+
     def test_server_delete(self):
         self._prepare_server(4)
         headers = self.gen_headers(self.context)
