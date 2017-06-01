@@ -120,7 +120,6 @@ class ComputePort(Base):
     )
     id = Column(Integer, primary_key=True)
     address = Column(String(18), nullable=False)
-    port_type = Column(String(255), nullable=False)
     port_uuid = Column(String(36), nullable=False)
     node_uuid = Column(String(36), nullable=False)
     extra_specs = Column(db_types.JsonEncodedDict)
@@ -140,7 +139,6 @@ class ServerNic(Base):
     mac_address = Column(String(32), nullable=False)
     network_id = Column(String(36), nullable=True)
     fixed_ips = Column(db_types.JsonEncodedList)
-    port_type = Column(String(64), nullable=True)
     floating_ip = Column(String(64), nullable=True)
     _server = orm.relationship(
         Server,

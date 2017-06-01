@@ -161,7 +161,6 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         self.assertIn('network_id', nic)
         self.assertIn('port_id', nic)
         self.assertIn('floating_ip', nic)
-        self.assertIn('port_type', nic)
         self.assertIn('mac_address', nic)
         self.assertIsInstance(nic['fixed_ips'], list)
         fixed_ip = nic['fixed_ips'][0]
@@ -181,7 +180,6 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
             self.assertIn('network_id', nic)
             self.assertIn('port_id', nic)
             self.assertIn('floating_ip', nic)
-            self.assertIn('port_type', nic)
             self.assertIn('mac_address', nic)
             self.assertIsInstance(nic['fixed_ips'], list)
             fixed_ip = nic['fixed_ips'][0]

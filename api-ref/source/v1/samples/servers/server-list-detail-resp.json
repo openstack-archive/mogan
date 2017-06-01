@@ -22,7 +22,6 @@
                     "network_id": "f31af5a2-f14d-4007-b2e5-abeb82429b87",
                     "port_id": "43cb1111-63c5-45d2-8bcf-3443d94b34f3",
                     "floating_ip": null,
-                    "port_type": null,
                     "mac_address": "52:54:00:d0:f9:2c",
                     "fixed_ips": [
                         {

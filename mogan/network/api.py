@@ -62,14 +62,13 @@ def get_client(token=None):
 class API(object):
     """API for interacting with the neutron 2.x API."""
 
-    def create_port(self, context, network_uuid, mac, server_uuid):
+    def create_port(self, context, network_uuid, server_uuid):
         """Create neutron port."""
 
         client = get_client(context.auth_token)
         body = {
             'port': {
                 'network_id': network_uuid,
-                'mac_address': mac,
                 'device_id': server_uuid,
             }
         }

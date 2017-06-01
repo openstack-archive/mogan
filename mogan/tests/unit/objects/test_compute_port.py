@@ -90,5 +90,4 @@ class TestComputePortObject(base.DbTestCase):
         db_port = utils.create_test_compute_port(context=self.ctxt)
         port = objects.ComputePort.get(self.context, db_port.port_uuid)
         port.refresh(self.context)
-        port.port_type = 'refresh'
         port.save(self.context)
