@@ -604,8 +604,7 @@ class EngineManager(base_manager.BaseEngineManager):
             context, net_id, pif.address, server.uuid)
         vif_port = vif['port']
         try:
-            self.driver.plug_vif(pif.uuid, vif_port['id'])
-
+            self.driver.plug_vif(server.node_uuid, vif_port['id'])
             nics_obj = objects.ServerNics(context)
             nic_dict = {'port_id': vif_port['id'],
                         'network_id': vif_port['network_id'],

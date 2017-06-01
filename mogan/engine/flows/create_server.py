@@ -164,7 +164,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                         context, vif['net_id'], pif.address, server.uuid)
                     port_dict = port['port']
 
-                    self.manager.driver.plug_vif(pif.port_uuid,
+                    self.manager.driver.plug_vif(pif.node_uuid,
                                                  port_dict['id'])
                     nic_dict = {'port_id': port_dict['id'],
                                 'network_id': port_dict['network_id'],
