@@ -35,7 +35,6 @@ def get_test_server(**kw):
                 "ip_address": "2001:db8:8000:0:5054:ff:fe6a:b7cc"
             }
         ],
-        'port_type': 'test_type',
         'floating_ip': '',
     }, ]
 
@@ -130,7 +129,6 @@ def get_test_compute_port(**kw):
     return {
         'id': kw.get('id', 123),
         'address': kw.get('address', '52:54:00:cf:2d:31'),
-        'port_type': kw.get('port_type', '1GE'),
         'port_uuid': kw.get('port_uuid',
                             'f978ef48-d4af-4dad-beec-e6174309bc72'),
         'node_uuid': kw.get('node_uuid',

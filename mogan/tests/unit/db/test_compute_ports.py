@@ -74,5 +74,5 @@ class DbComputePortTestCase(base.DbTestCase):
         port = utils.create_test_compute_port()
         res = self.dbapi.compute_port_update(self.context,
                                              port.port_uuid,
-                                             {'port_type': 'foo'})
-        self.assertEqual('foo', res.port_type)
+                                             {'address': 'aa:bb:cc:dd:ee:ff'})
+        self.assertEqual('aa:bb:cc:dd:ee:ff', res.address)

@@ -37,7 +37,6 @@ Request
   - availability_zone: availability_zone
   - networks: networks
   - networks.net_id: network_uuid
-  - networks.port_type: network_port_type
   - networks.port_id: port_uuid
   - metadata: metadata
   - user_data: user_data

@@ -134,8 +134,8 @@ class TestServers(v1_test.APITestV1):
                 'flavor_uuid': 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b',
                 'image_uuid': 'b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                 'networks': [
-                    {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31',
-                     'port_type': 'Ethernet'}],
+                    {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31'}
+                ],
                 'metadata': {'fake_key': 'fake_value'}
             }
             responses.append(

@@ -23,15 +23,6 @@ LOG = logging.getLogger(__name__)
 class PortsFilter(filters.BaseNodeFilter):
     """NodeFilter to work with resource server type records."""
 
-    def _find_port_type(self, ports, port_type):
-        """Check if ports has the specified port type."""
-
-        for port in ports:
-            if port_type == port.port_type:
-                return True
-
-        return False
-
     def _satisfies_networks(self, ports, networks):
         """Check if ports satisfy networks requirements.
 
@@ -44,11 +35,6 @@ class PortsFilter(filters.BaseNodeFilter):
 
         if len(ports) < len(networks):
             return False
-
-        for net in networks:
-            if 'port_type' in net:
-                if not self._find_port_type(ports, net.get('port_type')):
-                    return False
 
         return True
 

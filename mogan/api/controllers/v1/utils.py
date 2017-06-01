@@ -57,7 +57,7 @@ def apply_jsonpatch(doc, patch):
 
 
 def show_nics(nics):
-    show_keys = ['port_id', 'port_type', 'network_id', 'mac_address',
+    show_keys = ['port_id', 'network_id', 'mac_address',
                  'fixed_ips', 'floating_ip', 'extra']
     ret_nics = []
     for nic in nics:
