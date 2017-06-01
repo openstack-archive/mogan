@@ -263,11 +263,8 @@ class IronicDriver(base_driver.BaseEngineDriver):
                                             detail=detail)
         return ports + portgroups
 
-    def plug_vif(self, ironic_port_id, port_id):
-        patch = [{'op': 'add',
-                  'path': '/extra/vif_port_id',
-                  'value': port_id}]
-        self.ironicclient.call("port.update", ironic_port_id, patch)
+    def plug_vif(self, node_uuid, port_id):
+        self.ironicclient.call("node.vif_attach", node_uuid, port_id)
 
     def unplug_vifs(self, context, server):
         LOG.debug("unplug: server_uuid=%(uuid)s vif=%(server_nics)s",
