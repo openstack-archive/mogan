@@ -36,7 +36,6 @@ class ServerNic(base.MoganObject, object_base.VersionedObjectDictCompat):
         'network_id': object_fields.UUIDField(nullable=True),
         'fixed_ips': object_fields.ListOfDictOfNullableStringsField(
             nullable=True),
-        'port_type': object_fields.StringField(nullable=True),
         'floating_ip': object_fields.StringField(nullable=True),
     }
 
