@@ -54,11 +54,6 @@ network_port_id = {
 }
 
 
-port_type = {
-    'type': 'string', 'minLength': 1, 'maxLength': 255,
-}
-
-
 flavor_id = {
     'type': 'string', 'format': 'uuid'
 }

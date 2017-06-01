@@ -337,13 +337,6 @@ multi_server_name_body:
   in: body
   required: true
   type: string
-network_port_type:
-  description: |
-    To provision the server with a specified type of NIC(like 1GE or 10 GE) for a
-    network, specify the type of the NIC in the ``port_type`` key in a dict in ``networks`` list.
-  in: body
-  required: false
-  type: string
 network_uuid:
   description: |
     To provision the server with a NIC for a network, specify the UUID of
