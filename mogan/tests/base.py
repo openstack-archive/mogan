@@ -81,7 +81,7 @@ class TestCase(base.BaseTestCase):
         """Override config options for a test."""
         group = kw.pop('group', None)
         for k, v in kw.items():
-            CONF.set_override(k, v, group, enforce_type=True)
+            CONF.set_override(k, v, group)
 
     def stub_out(self, old, new):
         """Replace a function for the duration of the test.
