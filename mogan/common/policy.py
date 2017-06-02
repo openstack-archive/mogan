@@ -150,6 +150,9 @@ server_policies = [
     policy.RuleDefault('mogan:flavor_extra_specs:get_all',
                        'rule:allow',
                        description='Retrieve flavor extra specs'),
+    policy.RuleDefault('mogan:node:get_all',
+                       'rule:admin_api',
+                       description='Retrieve all compute nodes'),
 ]
 
 
