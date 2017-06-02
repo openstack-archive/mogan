@@ -1,0 +1,8 @@
+Code-Review+2: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Workflow+1: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 02 Jun 2017 01:46:48 +0000
+Reviewed-on: https://review.openstack.org/469573
+Project: openstack/mogan
+Branch: refs/heads/master
