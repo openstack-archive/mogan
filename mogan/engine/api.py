@@ -293,15 +293,13 @@ class API(object):
             'availability_zone': availability_zone,
         }
 
-        for server in servers:
-            self.engine_rpcapi.create_server(context, server,
-                                             requested_networks,
-                                             user_data,
-                                             decoded_files,
-                                             key_pair,
-                                             request_spec,
-                                             filter_properties=None)
-
+        self.engine_rpcapi.schedule_and_create_servers(context, servers,
+                                                       requested_networks,
+                                                       user_data,
+                                                       decoded_files,
+                                                       key_pair,
+                                                       request_spec,
+                                                       filter_properties=None)
         return servers
 
     def create(self, context, flavor, image_uuid,
