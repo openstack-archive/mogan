@@ -72,6 +72,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertEqual('test_az', base_opts['availability_zone'])
         self.assertIsNone(key_pair)
 
+<<<<<<< HEAD
     def test__validate_and_build_base_options_flavor_disabled(self):
         flavor = self._create_flavor()
         flavor.disabled = True
@@ -91,6 +92,28 @@ class ComputeAPIUnitTest(base.DbTestCase):
             None,
             None,
             1)
+=======
+    @mock.patch('mogan.network.api.get_client')
+    def test__check_requested_networks(self, mock_get_client):
+        mock_get_client.return_value = mock.MagicMock()
+        mock_get_client.return_value.list_networks.return_value = \
+            {'networks': [{'id': '1', 'subnets': {'id': '2'}},
+                          {'id': '3', 'subnets': {'id': '4'}}]}
+        mock_get_client.return_value.list_ports.return_value = \
+            {'ports': [{'id': '5',
+                        'fixed_ips': [{'ip_address': '192.168.1.1'}]},
+                       {'id': '6',
+                        'fixed_ips': [{'ip_address': '192.168.1.2'}]}]}
+        mock_get_client.return_value.show_quota.return_value = \
+            {'quota': {'port': 10}}
+
+        requested_networks = [{'net_id': '1'}, {'net_id': '3'},
+                              {'port_id': '5'}, {'port_id': '6'}]
+        max_network_count = self.engine_api._check_requested_networks(
+            self.context, requested_networks=requested_networks, max_count=2)
+
+        self.assertEqual(2, max_network_count)
+>>>>>>> Specify neutron port when creating servers
 
     @mock.patch.object(objects.Server, 'create')
     def test__provision_servers(self, mock_server_create):

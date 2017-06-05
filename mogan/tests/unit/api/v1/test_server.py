@@ -70,6 +70,65 @@ class TestServerAuthorization(v1_test.APITestV1):
         headers = self.gen_headers(self.context)
         self.post_json('/servers', body, headers=headers, status=201)
 
+    @mock.patch('mogan.engine.api.API.create')
+    @mock.patch('mogan.objects.Flavor.get')
+    def test_server_post_with_port_ids(self, mock_get, mock_engine_create):
+        flavor = mock.MagicMock()
+        flavor.nics = [{"type": "Ethernet", "speed": "10GE"},
+                       {"type": "Ethernet", "speed": "10GE"}]
+        mock_get.return_value = flavor
+        mock_engine_create.side_effect = None
+        mock_engine_create.return_value = [self.server1]
+        fake_networks = [
+            {
+                "port_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31",
+                "port_type": "Ethernet"
+            },
+            {
+                "port_id": "8e8ceb07-4641-4188-9b22-840755e92ee2",
+                "port_type": "Ethernet"
+            }
+        ]
+        body = gen_post_body(**{'networks': fake_networks})
+        self.context.roles = "no-admin"
+        # we can not prevent the evil tenant, quota will limite him.
+        # Note(Shaohe): quota is in plan
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context)
+        self.post_json('/servers', body, headers=headers, status=201)
+
+    @mock.patch('mogan.engine.api.API.create')
+    @mock.patch('mogan.objects.Flavor.get')
+    def test_server_post_with_port_ids_and_networks(self, mock_get,
+                                                    mock_engine_create):
+        flavor = mock.MagicMock()
+        flavor.nics = [{"type": "Ethernet", "speed": "10GE"},
+                       {"type": "Ethernet", "speed": "10GE"}]
+        mock_get.return_value = flavor
+        mock_engine_create.side_effect = None
+        mock_engine_create.return_value = [self.server1]
+        fake_networks = [
+            {
+                "port_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31",
+                "net_id": "c1940655-8b8e-4370-b8f9-03ba1daeca32",
+                "port_type": "Ethernet"
+            },
+            {
+                "port_id": "8e8ceb07-4641-4188-9b22-840755e92ee2",
+                "net_id": "8e8ceb07-4641-4188-9b22-840755e92ee3",
+                "port_type": "Ethernet"
+            }
+        ]
+        body = gen_post_body(**{'networks': fake_networks})
+        self.context.roles = "no-admin"
+        # we can not prevent the evil tenant, quota will limite him.
+        # Note(Shaohe): quota is in plan
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context)
+        ret = self.post_json('/servers', body, headers=headers,
+                             expect_errors=True)
+        self.assertTrue(ret.json['error_message'])
+
     def test_server_get_one_by_owner(self):
         # not admin but the owner
         self.context.tenant = self.server1.project_id
