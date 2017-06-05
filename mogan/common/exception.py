@@ -305,6 +305,14 @@ class PortNotFound(NotFound):
     _msg_fmt = _("Port id %(port_id)s could not be found.")
 
 
+class PortRequiresFixedIP(Invalid):
+    msg_fmt = _("Port %(port_id)s requires a FixedIP in order to be used.")
+
+
+class PortInUse(Conflict):
+    msg_fmt = _("Port %(port_id)s is still in use.")
+
+
 class InterfaceAttachFailed(Invalid):
     msg_fmt = _("Failed to attach network adapter device to "
                 "%(server_uuid)s")
