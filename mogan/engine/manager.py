@@ -158,6 +158,8 @@ class EngineManager(base_manager.BaseEngineManager):
 
         # Record compute nodes to db
         for uuid, node in nodes.items():
+            if node.get('resource_class') is None:
+                continue
             # initialize the compute node object, creating it
             # if it does not already exist.
             self._init_compute_node(context, node)
