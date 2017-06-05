@@ -91,7 +91,7 @@ def get_test_compute_node(**kw):
         'cpus': kw.get('cpus', 16),
         'memory_mb': kw.get('memory_mb', 10240),
         'hypervisor_type': kw.get('hypervisor_type', 'ironic'),
-        'node_type': kw.get('node_type', 'gold'),
+        'resource_class': kw.get('resource_class', 'gold'),
         'availability_zone': kw.get('availability_zone', 'test_az'),
         'node_uuid': kw.get('node_uuid',
                             'f978ef48-d4af-4dad-beec-e6174309bc71'),

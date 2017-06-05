@@ -115,7 +115,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
         properties['capabilities'] = node.properties.get('capabilities')
         properties['availability_zone'] = \
             node.properties.get('availability_zone')
-        properties['node_type'] = node.properties.get('node_type')
         return properties
 
     def _node_resource(self, node):
@@ -125,7 +124,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
         cpus = properties['cpus']
         memory_mb = properties['memory_mb']
         availability_zone = properties['availability_zone']
-        node_type = properties['node_type']
 
         nodes_extra_specs = {}
 
@@ -148,7 +146,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             'cpus': cpus,
             'memory_mb': memory_mb,
             'hypervisor_type': self._get_hypervisor_type(),
-            'node_type': str(node_type),
+            'resource_class': str(node.resource_class),
             'extra_specs': nodes_extra_specs,
             'node_uuid': str(node.uuid),
             'ports': node.ports,
