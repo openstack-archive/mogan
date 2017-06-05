@@ -34,9 +34,6 @@ opts = [
                default=60,
                help=_('Interval between syncing the resources from underlying '
                       'hypervisor, in seconds.')),
-    cfg.StrOpt('default_schedule_zone',
-               help=_("Availability zone to use for scheduling when user "
-                      "doesn't specify one.")),
     cfg.StrOpt('default_availability_zone',
                default='mogan',
                help=_("Default bare metal node availability zone.")),
