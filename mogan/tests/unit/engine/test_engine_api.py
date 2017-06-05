@@ -72,6 +72,27 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertEqual('test_az', base_opts['availability_zone'])
         self.assertIsNone(key_pair)
 
+    @mock.patch('neutronclient.v2_0.client.list_ports')
+    @mock.patch('neutronclient.v2_0.client.show_quota')
+    @mock.patch('neutronclient.v2_0.client.list_ports')
+    @mock.patch('neutronclient.v2_0.client.list_networks')
+    def test__check_requested_networks(self, mock_list_networks,
+                                       mock_list_prots, mock_show_quota,
+                                       mock_list_ports2):
+        mock_list_networks.return_value = {'networks':
+                                           [{'id': 1, 'subnets': {'id': 2}},
+                                            {'id': 2, 'subnets': {'id': 3}}]}
+        mock_list_prots.return_value = {'ports': [{'id': 3}, {'id': 4}]}
+        mock_show_quota.return_value = {'port': 10}
+        mock_list_ports2.return_value = {'ports': [{'id': 5}, {'id': 6}]}
+
+        requested_networks = [{'net_id': 1}, {'net_id': 2}, {'port_id': 3},
+                              {'port_id': 4}]
+        max_network_count = self.engine_api._check_requested_networks(
+            self.context, requested_networks=requested_networks, max_count=2)
+
+        self.assertEqual(2, max_network_count)
+
     @mock.patch.object(objects.Server, 'create')
     def test__provision_servers(self, mock_server_create):
         mock_server_create.return_value = mock.MagicMock()
