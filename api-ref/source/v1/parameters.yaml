@@ -333,16 +333,18 @@ network_port_type:
 network_uuid:
   description: |
     To provision the server with a NIC for a network, specify the UUID of
-    the network in the ``net_id`` key in a dict in ``networks`` list.
+    the network with the ``net_id`` key in a dict in ``networks`` list.
   in: body
-  required: true
+  required: false
   type: string
 networks:
   description: |
     A list of networks of the tenant. Optionally, you can create one or more NICs on the server.
     To provision the server with a NIC for a network, specify the UUID of the network
-    in the ``net_id`` key in a dict in ``networks`` list. To provision the server with a
+    with the ``net_id`` key in a dict in ``networks`` list. To provision the server with a
     specified type of NIC, specify the port-type key in a dict in a ``networks`` list.
+    To provision the server with a NIC for an already existing port, specify the port_id in
+    a ``networks`` list. Now net_id and port_id are exclusive, so you should use only one of them at one time.
   in: body
   required: true
   type: array
@@ -364,6 +366,13 @@ personality:
     The file path and contents, text only, to inject into the server at launch. The
     maximum size of the file path data is 255 bytes. The maximum limit is the number
     of allowed bytes in the decoded, rather than encoded, data.
+  in: body
+  required: false
+  type: string
+port_uuid:
+  description: |
+    To provision the server with a NIC for an already existing port,
+    specify the port_id in a ``networks`` list.
   in: body
   required: false
   type: string
