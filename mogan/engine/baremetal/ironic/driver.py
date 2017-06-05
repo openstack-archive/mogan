@@ -499,7 +499,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             node_list = []
         return node_list
 
-    def get_node_power_states(self):
+    def get_nodes_power_state(self):
         """Helper function to return the node power states.
 
         If unable to connect ironic server, an empty list is returned.
