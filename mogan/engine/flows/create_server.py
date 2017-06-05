@@ -160,9 +160,14 @@ class BuildNetworkTask(flow_utils.MoganTask):
             # Match the specified port type with physical interface type
             if vif.get('port_type', 'None') == pif.port_type:
                 try:
-                    port = self.manager.network_api.create_port(
-                        context, vif['net_id'], pif.address, server.uuid)
-                    port_dict = port['port']
+                    if vif.get('net_id'):
+                        port = self.manager.network_api.create_port(
+                            context, vif['net_id'], pif.address, server.uuid)
+                        port_dict = port['port']
+                    if vif.get('port_id'):
+                        port = self.manager.network_api.show_port(
+                            context, vif.get('port_id'))
+                        port_dict = port
 
                     self.manager.driver.plug_vif(pif.port_uuid,
                                                  port_dict['id'])
@@ -179,8 +184,8 @@ class BuildNetworkTask(flow_utils.MoganTask):
                     # Set nics here, so we can clean up the
                     # created networks during reverting.
                     server.nics = nics_obj
-                    LOG.error("Server %(server)s: create network failed. "
-                              "The reason is %(reason)s",
+                    LOG.error("Server %(server)s: create or get network "
+                              "failed. The reason is %(reason)s",
                               {"server": server.uuid, "reason": e})
                     raise exception.NetworkError(_(
                         "Build network for server failed."))
