@@ -84,6 +84,10 @@ class API(object):
             raise exception.NetworkError(msg)
         return port
 
+    def show_port(self, context, port_uuid):
+        client = get_client(context.auth_token)
+        return self._show_port(client, port_uuid)
+
     def _show_port(self, client, port_id):
         """Return the port for the client given the port id."""
 
@@ -202,13 +206,31 @@ class API(object):
 
         return nets
 
+    def _get_available_ports(self, context, project_id, port_ids, client):
+        """Return a network list available for the tenant."""
+
+        # This search will also include 'shared' networks.
+        search_opts = {'id': port_ids}
+        ports = client.list_ports(**search_opts).get('ports', [])
+
+        _ensure_requested_network_ordering(
+            lambda x: x['id'],
+            ports,
+            port_ids)
+
+        return ports
+
     def _ports_needed_per_server(self, context, client, requested_networks):
 
         ports_needed_per_server = 0
         net_ids_requested = []
+        port_ids_requested = []
         for request in requested_networks:
             ports_needed_per_server += 1
-            net_ids_requested.append(request['net_id'])
+            if request.get('net_id'):
+                net_ids_requested.append(request.get('net_id'))
+            if request.get('port_id'):
+                port_ids_requested.append(request.get('port_id'))
 
         # Now check to see if all requested networks exist
         if net_ids_requested:
@@ -230,6 +252,21 @@ class API(object):
                     for _id in lostid_set:
                         id_str = id_str and id_str + ', ' + _id or _id
                     raise exception.NetworkNotFound(network_id=id_str)
+
+        # Now check to see if all requested ports exist
+        if port_ids_requested:
+            ports = self._get_available_ports(context, context.project_id,
+                                              port_ids_requested, client)
+
+            if len(ports) != len(port_ids_requested):
+                requested_portid_set = set(port_ids_requested)
+                returned_portid_set = set([port['id'] for port in ports])
+                lostid_set = requested_portid_set - returned_portid_set
+                if lostid_set:
+                    id_str = ''
+                    for _id in lostid_set:
+                        id_str = id_str and id_str + ', ' + _id or _id
+                    raise exception.PortNotFound(port_id=id_str)
 
         return ports_needed_per_server
 
