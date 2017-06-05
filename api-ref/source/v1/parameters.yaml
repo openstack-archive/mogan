@@ -335,7 +335,14 @@ network_uuid:
     To provision the server server with a NIC for a network, specify the UUID of
     the network in the ``uuid`` key in a dict in ``networks`` list.
   in: body
-  required: true
+  required: false
+  type: string
+port_uuid:
+  description: |
+    To provision the server with a NIC for a network, specify the UUID of
+    the port in the ``port_id`` key in a dict in ``networks`` list.
+  in: body
+  required: false
   type: string
 networks:
   description: |
@@ -343,6 +350,8 @@ networks:
     To provision the server server with a NIC for a network, specify the UUID of the network
     in the ``uuid`` key in a dict in ``networks`` list. To provision the server server with a
     specified type of NIC, specify the port-type key in a dict in a ``networks`` list.
+    To provision the server with a NIC for a network, specify the UUID of the port in the
+    ``port_id`` key in a dict in ``networks`` list.
   in: body
   required: true
   type: array
