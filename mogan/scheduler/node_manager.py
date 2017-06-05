@@ -38,7 +38,7 @@ class NodeState(object):
         self.capabilities = node.extra_specs
         self.availability_zone = node.availability_zone \
             or CONF.engine.default_availability_zone
-        self.flavor = node.node_type
+        self.flavor = node.resource_class
         self.ports = node.ports
 
     def consume_from_request(self, context):
@@ -46,7 +46,7 @@ class NodeState(object):
         objects.ComputeNode.consume_node(context, self.node_uuid)
 
     def __repr__(self):
-        return "<Node:%s node_type:%s>" % (self.node_uuid, self.flavor)
+        return "<Node:%s resource_class:%s>" % (self.node_uuid, self.flavor)
 
 
 class NodeManager(object):
