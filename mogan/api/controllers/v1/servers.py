@@ -702,9 +702,13 @@ class ServerController(ServerControllerBase):
                 exception.Base64Exception,
                 exception.NetworkRequiresSubnet,
                 exception.NetworkNotFound,
-                exception.NetworksNotMatch) as e:
+                exception.NetworksNotMatch,
+                exception.PortRequiresFixedIP) as e:
             raise wsme.exc.ClientSideError(
                 e.message, status_code=http_client.BAD_REQUEST)
+        except exception.PortInUse as e:
+            raise wsme.exc.ClientSideError(
+                e.message, status_code=http_client.CONFLICT)
 
         # Set the HTTP Location Header for the first server.
         pecan.response.location = link.build_url('server', servers[0].uuid)
