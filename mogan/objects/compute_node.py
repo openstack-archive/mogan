@@ -34,7 +34,7 @@ class ComputeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
         'cpus': object_fields.IntegerField(),
         'memory_mb': object_fields.IntegerField(),
         'hypervisor_type': object_fields.StringField(),
-        'node_type': object_fields.StringField(),
+        'resource_class': object_fields.StringField(),
         'availability_zone': object_fields.StringField(nullable=True),
         'node_uuid': object_fields.UUIDField(read_only=True),
         'ports': object_fields.ObjectField('ComputePortList', nullable=True),
@@ -81,7 +81,7 @@ class ComputeNode(base.MoganObject, object_base.VersionedObjectDictCompat):
         self.obj_reset_changes()
 
     def update_from_driver(self, node):
-        keys = ["cpus", "memory_mb", "hypervisor_type", "node_type",
+        keys = ["cpus", "memory_mb", "hypervisor_type", "resource_class",
                 "availability_zone", "node_uuid", "extra_specs"]
         for key in keys:
             if key in node:

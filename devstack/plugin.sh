@@ -173,10 +173,10 @@ function create_flavor {
 }
 
 
-function update_ironic_node_type {
+function update_ironic_node_resource_class {
     ironic_nodes=$(openstack baremetal node list -c UUID -f value)
     for node in ${ironic_nodes};do
-        openstack baremetal node set --property node_type=${MOGAN_DEFAULT_FLAVOR} ${node}
+        openstack --os-baremetal-api-version latest baremetal node set --resource-class ${MOGAN_DEFAULT_FLAVOR} ${node}
     done
 }
 
@@ -200,8 +200,8 @@ if is_service_enabled mogan; then
         start_mogan
         echo_summary "Creating flavor"
         create_flavor
-        echo_summary "Updating ironic node properties"
-        update_ironic_node_type
+        echo_summary "Updating ironic node resource class"
+        update_ironic_node_resource_class
     fi
 
     if [[ "$1" == "unstack" ]]; then

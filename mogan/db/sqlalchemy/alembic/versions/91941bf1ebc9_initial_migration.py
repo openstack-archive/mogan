@@ -156,7 +156,7 @@ def upgrade():
         sa.Column('cpus', sa.Integer(), nullable=False),
         sa.Column('memory_mb', sa.Integer(), nullable=False),
         sa.Column('hypervisor_type', sa.String(length=255), nullable=False),
-        sa.Column('node_type', sa.String(length=255), nullable=False),
+        sa.Column('resource_class', sa.String(length=80), nullable=False),
         sa.Column('availability_zone', sa.String(length=255), nullable=True),
         sa.Column('node_uuid', sa.String(length=36), nullable=False),
         sa.Column('extra_specs', sa.Text(), nullable=True),

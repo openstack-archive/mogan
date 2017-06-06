@@ -102,7 +102,7 @@ class ComputeNode(Base):
     cpus = Column(Integer, nullable=False)
     memory_mb = Column(Integer, nullable=False)
     hypervisor_type = Column(String(255), nullable=False)
-    node_type = Column(String(255), nullable=False)
+    resource_class = Column(String(80), nullable=False)
     availability_zone = Column(String(255), nullable=True)
     node_uuid = Column(String(36), nullable=False)
     extra_specs = Column(db_types.JsonEncodedDict)
