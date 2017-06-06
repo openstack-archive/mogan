@@ -36,6 +36,13 @@ project.
   Developer Contribution Guide <dev/code-contribution-guide>
   Setting Up Your Development Environment <dev/dev-quickstart>
 
+The following pages describe the architecture of the service.
+
+.. toctree::
+  :maxdepth: 1
+
+  States and Transitions <states>
+
 
 Administrator's Guide
 =====================
