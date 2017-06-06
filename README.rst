@@ -14,16 +14,16 @@ Project Resources
 
 * Free software: Apache license
 * Documentation: http://111.20.68.219:7950/docs/
-* Source: http://git.openstack.org/cgit/openstack/mogan
-* Bugs: http://bugs.launchpad.net/mogan
+* Source: https://git.openstack.org/cgit/openstack/mogan
+* Bugs: https://bugs.launchpad.net/mogan
 * Wiki: https://wiki.openstack.org/wiki/Mogan
 * APIs: http://111.20.68.219:7950/v1/
 
 Project status, bugs and BPs are tracked on Launchpad:
 
-  http://launchpad.net/mogan
+  https://launchpad.net/mogan
 
 Anyone wishing to contribute to an OpenStack project should
 find a good reference here:
 
-  http://docs.openstack.org/infra/manual/developers.html
+  https://docs.openstack.org/infra/manual/developers.html
