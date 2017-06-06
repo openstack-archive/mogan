@@ -24,6 +24,7 @@ extensions = [
     'openstackdocstheme',
     'oslo_config.sphinxconfiggen',
     'oslo_policy.sphinxpolicygen',
+    'sphinx.ext.graphviz',
 ]
 
 # openstackdocstheme options
