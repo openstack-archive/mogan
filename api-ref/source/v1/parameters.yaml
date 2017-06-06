@@ -325,23 +325,23 @@ multi_server_name_body:
   type: string
 network_port_type:
   description: |
-    To provision the server server with a specified type of NIC(like 1GE or 10 GE) for a
+    To provision the server with a specified type of NIC(like 1GE or 10 GE) for a
     network, specify the type of the NIC in the ``port_type`` key in a dict in ``networks`` list.
   in: body
   required: false
   type: string
 network_uuid:
   description: |
-    To provision the server server with a NIC for a network, specify the UUID of
-    the network in the ``uuid`` key in a dict in ``networks`` list.
+    To provision the server with a NIC for a network, specify the UUID of
+    the network in the ``net_id`` key in a dict in ``networks`` list.
   in: body
   required: true
   type: string
 networks:
   description: |
     A list of networks of the tenant. Optionally, you can create one or more NICs on the server.
-    To provision the server server with a NIC for a network, specify the UUID of the network
-    in the ``uuid`` key in a dict in ``networks`` list. To provision the server server with a
+    To provision the server with a NIC for a network, specify the UUID of the network
+    in the ``net_id`` key in a dict in ``networks`` list. To provision the server with a
     specified type of NIC, specify the port-type key in a dict in a ``networks`` list.
   in: body
   required: true
