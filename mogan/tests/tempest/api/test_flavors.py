@@ -47,7 +47,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
                          ', '.join(str(t) for t in missing_flavors))
 
     @decorators.idempotent_id('f6ad64af-abc9-456c-9109-bc27cd9af635')
-    def test_flavor_create_show_delete(self):
+    def test_flavor_create(self):
         # Create a flavor
         body = {"name": 'mogan_flavor_create',
                 "description": "mogan flavor description",
@@ -60,15 +60,23 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
         self.assertIn('uuid', resp)
         self.assertIn('extra_specs', resp)
         self.assertIn('links', resp)
-        resp = self.baremetal_compute_client.show_flavor(resp['uuid'])
-        self.assertEqual('mogan_flavor_create', resp['name'])
+        self.flavor_ids.append(resp['uuid'])
+
+    @decorators.idempotent_id('ab1a5147-0e3e-4a29-8c28-505d29fac8dd')
+    def test_flavor_show(self):
+        resp = self.baremetal_compute_client.show_flavor(self.flavor_ids[0])
+        self.assertIn('name', resp)
         self.assertEqual('mogan flavor description',
                          resp['description'])
         self.assertEqual(True, resp['is_public'])
         self.assertIn('uuid', resp)
         self.assertIn('extra_specs', resp)
         self.assertIn('links', resp)
-        self.baremetal_compute_client.delete_flavor(resp['uuid'])
+
+    @decorators.idempotent_id('f787f8e4-aa20-4c19-a9ec-44bff85d8634')
+    def test_flavor_delete(self):
+        flavor_id = self.flavor_ids.pop(-1)
+        self.baremetal_compute_client.delete_flavor(flavor_id)
         self.assertRaises(lib_exc.NotFound,
                           self.baremetal_compute_client.show_flavor,
-                          resp['uuid'])
+                          flavor_id)

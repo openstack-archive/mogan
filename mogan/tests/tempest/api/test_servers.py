@@ -16,14 +16,19 @@ from mogan.tests.tempest.api import base
 
 
 class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
-    def test_server_all_cases(self):
+    @classmethod
+    def resource_setup(cls):
+        super(BaremetalComputeAPIServersTest, cls).resource_setup()
         # NOTE(liusheng) Since the moga server deployment is a
         # time-consuming operation and the ironic resource cleanup
         # will be performed after a server deleted, we'd better to
-        # put all test cases in a test
+        # put all test cases in a test. Additionally, since the the tests
+        # can be run parallelly, this pre-created server should only be used
+        # in the test cases which don't change this server.
+        cls.creation_resp = cls.create_server()
 
-        # Test post
-        resp = self.create_server()
+    def test_server_create(self):
+        resp = self.creation_resp
         self.assertEqual(self.server_ids[0], resp['uuid'])
         self.assertEqual('building', resp['status'])
         self.assertEqual(self.small_flavor, resp['flavor_uuid'])
@@ -39,7 +44,7 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         self.assertIn('nics', resp)
         self.assertIn('name', resp)
 
-        # Test show
+    def test_server_show(self):
         resp = self.baremetal_compute_client.show_server(
             self.server_ids[0])
         self.assertEqual('active', resp['status'])
@@ -57,7 +62,7 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         self.assertIn('nics', resp)
         self.assertIn('name', resp)
 
-        # Test list
+    def test_server_list(self):
         resp = self.baremetal_compute_client.list_servers()
         self.assertEqual(1, len(resp))
         self.assertEqual(self.server_ids[0], resp[0]['uuid'])
@@ -66,8 +71,6 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         self.assertEqual('mogan tempest server', resp[0]['description'])
         self.assertIn('links', resp[0])
 
-        # Test delete
-        self.baremetal_compute_client.delete_server(
-            self.server_ids[0])
-        self._wait_for_servers_status(self.server_ids[0], 'deleted', 10, 900)
-        self.server_ids.remove(self.server_ids[0])
+    def test_server_delete(self):
+        """server deletion will be tested by cleanUp method"""
+        pass
