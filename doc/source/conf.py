@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -22,9 +21,16 @@ sys.path.insert(0, os.path.abspath('../..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
-    #'sphinx.ext.intersphinx',
-    'oslosphinx'
+    'oslosphinx',
+    'oslo_config.sphinxconfiggen',
+    'oslo_policy.sphinxpolicygen',
 ]
+
+config_generator_config_file = '../../tools/config/mogan-config-generator.conf'
+sample_config_basename = '_static/mogan'
+
+policy_generator_config_file = '../../tools/config/mogan-policy-generator.conf'
+sample_policy_basename = '_static/mogan'
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
