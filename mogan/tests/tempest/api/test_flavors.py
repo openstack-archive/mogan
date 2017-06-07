@@ -68,7 +68,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
         self.assertIn('name', resp)
         self.assertEqual('mogan flavor description',
                          resp['description'])
-        self.assertEqual(True, resp['is_public'])
+        self.assertIn(resp['is_public'], (True, False))
         self.assertIn('uuid', resp)
         self.assertIn('extra_specs', resp)
         self.assertIn('links', resp)
