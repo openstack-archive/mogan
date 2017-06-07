@@ -27,15 +27,15 @@ class TestUtils(base.TestCase):
     @mock.patch.object(messaging, 'Notifier', autospec=True)
     @mock.patch.object(messaging, 'JsonPayloadSerializer', autospec=True)
     @mock.patch.object(messaging, 'get_notification_transport', autospec=True)
-    @mock.patch.object(messaging, 'get_transport', autospec=True)
-    def test_init_globals_notifications(self, mock_get_transport,
+    @mock.patch.object(messaging, 'get_rpc_transport', autospec=True)
+    def test_init_globals_notifications(self, mock_get_rpc_transport,
                                         mock_get_notification,
                                         mock_json_serializer,
                                         mock_notifier):
-        self._test_init_globals(mock_get_transport, mock_get_notification,
+        self._test_init_globals(mock_get_rpc_transport, mock_get_notification,
                                 mock_json_serializer, mock_notifier)
 
-    def _test_init_globals(self, mock_get_transport, mock_get_notification,
+    def _test_init_globals(self, mock_get_rpc_transport, mock_get_notification,
                            mock_json_serializer, mock_notifier):
         rpc.TRANSPORT = None
         rpc.NOTIFICATION_TRANSPORT = None
@@ -50,7 +50,7 @@ class TestUtils(base.TestCase):
 
         rpc.init(CONF)
 
-        self.assertEqual(mock_get_transport.return_value, rpc.TRANSPORT)
+        self.assertEqual(mock_get_rpc_transport.return_value, rpc.TRANSPORT)
         self.assertEqual(mock_get_notification.return_value,
                          rpc.NOTIFICATION_TRANSPORT)
         self.assertTrue(mock_json_serializer.called)
