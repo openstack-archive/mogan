@@ -26,10 +26,11 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
     @classmethod
     def resource_setup(cls):
         super(BaremetalComputeAPITest, cls).resource_setup()
-        for i in six.moves.xrange(3):
-            body = {"name": data_utils.rand_name('mogan_flavor'),
+        public_values = []
+        for i in six.moves.xrange(2):
+            body = {"name": "mogan_flavor_" + {0: 'public', 1: 'private'}[i],
                     "description": "mogan flavor description",
-                    'is_public': bool(data_utils.rand_int_id(0, 1))}
+                    'is_public': not bool(i)}
             resp = cls.baremetal_compute_client.create_flavor(**body)
             cls.flavor_ids.append(resp['uuid'])
 
@@ -65,7 +66,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
     @decorators.idempotent_id('ab1a5147-0e3e-4a29-8c28-505d29fac8dd')
     def test_flavor_show(self):
         resp = self.baremetal_compute_client.show_flavor(self.flavor_ids[0])
-        self.assertIn('name', resp)
+        self.assertIn('mogan_flavor_public', resp['name'])
         self.assertEqual('mogan flavor description',
                          resp['description'])
         self.assertEqual(True, resp['is_public'])
