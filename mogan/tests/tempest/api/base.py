@@ -87,21 +87,35 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         resp = cls.baremetal_compute_client.create_server(**body)
         cls.server_ids.append(resp['uuid'])
         if wait_until_active:
-            cls._wait_for_servers_status(resp['uuid'], 'active', 15, 900)
+            cls._wait_for_servers_status(resp['uuid'], 15, 900, 'active')
         return resp
 
     @classmethod
-    def _wait_for_servers_status(cls, server_id, status,
-                                 wait_interval, wait_timeout):
-        """Waits for a Server to reach a given status."""
+    def _wait_for_servers_status(cls, server_id, wait_interval, wait_timeout,
+                                 status=None, power_state=None,
+                                 locked=None):
+        """Waits for a Server to reach the given status, power_state,
+        lock state.
+        """
+
         server_status = None
+        server_power_state = None
+        server_locked = None
         start = int(time.time())
 
-        while server_status != status:
+        def _condition():
+            compare_pairs = ((status, server_status),
+                             (power_state, server_power_state),
+                             (locked, server_locked))
+            return all([r == a for r, a in compare_pairs if r is not None])
+
+        while not _condition():
             time.sleep(wait_interval)
             try:
-                body = cls.baremetal_compute_client.show_server(server_id)
+                body = cls.baremetal_compute_client.server_get_state(server_id)
                 server_status = body['status']
+                server_power_state = body['power_state']
+                server_locked = body['locked']
             except lib_exc.NotFound:
                 if status == 'deleted':
                     break
@@ -135,5 +149,5 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         # NOTE(liusheng): need to ensure servers have been completely
         # deleted in Mogan's db
         for server_id in cls.server_ids:
-            cls._wait_for_servers_status(server_id, 'deleted', 1, 60)
+            cls._wait_for_servers_status(server_id, 1, 60, 'deleted')
         super(BaseBaremetalComputeTest, cls).resource_cleanup()
