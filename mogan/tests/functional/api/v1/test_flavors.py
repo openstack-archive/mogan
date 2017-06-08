@@ -15,8 +15,6 @@
 import mock
 import six
 
-from oslo_serialization import jsonutils
-
 from mogan.tests.functional.api import v1 as v1_test
 
 
@@ -77,90 +75,13 @@ class TestFlavor(v1_test.APITestV1):
         resp = self.get_json('/flavors/' + self.FLAVOR_UUIDS[0],
                              headers=self.headers)
         self.assertEqual('test0', resp['name'])
-        self.assertEqual('just test0', resp['description'])
-        values = {"name": "update_name", "description": "updated_description",
-                  "is_public": False}
-        self.put_json('/flavors/' + self.FLAVOR_UUIDS[0], values,
-                      headers=self.headers, status=200)
+        self.patch_json('/flavors/' + self.FLAVOR_UUIDS[0],
+                        [{'path': '/name', 'value': 'updated_name',
+                          'op': 'replace'},
+                         {'path': '/extra_specs/k1', 'value': 'v1',
+                          'op': 'add'}],
+                        headers=self.headers, status=200)
         resp = self.get_json('/flavors/' + self.FLAVOR_UUIDS[0],
                              headers=self.headers)
-        self.assertEqual('update_name', resp['name'])
-        self.assertEqual('updated_description', resp['description'])
-        self.assertEqual(False, resp['is_public'])
-
-
-class TestFlavorExtra(v1_test.APITestV1):
-    FLAVOR_UUID = 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b'
-
-    def setUp(self):
-        super(TestFlavorExtra, self).setUp()
-        self.headers = self.gen_headers(self.context, roles="admin")
-        self._prepare_flavor()
-
-    @mock.patch('oslo_utils.uuidutils.generate_uuid')
-    def _prepare_flavor(self, mocked):
-        mocked.return_value = self.FLAVOR_UUID
-        body = {"name": "test_flavor_extra",
-                "description": "just test flavor extra"}
-        self.post_json('/flavors', body, headers=self.headers, status=201)
-
-    def test_list_extra_empty(self):
-        resp = self.get_json('/flavors/%s/extraspecs' % self.FLAVOR_UUID,
-                             headers=self.headers)
-        self.assertEqual({}, resp['extra_specs'])
-
-    def test_add_extra(self):
-        resp = self.patch_json('/flavors/%s/extraspecs' % self.FLAVOR_UUID,
-                               {'test_key': 'test_value'},
-                               headers=self.headers)
-        resp = resp.json
-        self.assertEqual({'extra_specs': {'test_key': 'test_value'}}, resp)
-
-    def test_update_extra(self):
-        resp = self.patch_json('/flavors/%s/extraspecs' % self.FLAVOR_UUID,
-                               {'test_key': 'test_value1'},
-                               headers=self.headers)
-        resp = resp.json
-        self.assertEqual({'extra_specs': {'test_key': 'test_value1'}}, resp)
-
-        resp = self.patch_json('/flavors/%s/extraspecs' % self.FLAVOR_UUID,
-                               {'test_key': 'test_value2'},
-                               headers=self.headers)
-        resp = resp.json
-        self.assertEqual({'extra_specs': {'test_key': 'test_value2'}}, resp)
-
-    def test_list_extra(self):
-        resp = self.patch_json('/flavors/%s/extraspecs' % self.FLAVOR_UUID,
-                               {'test_key1': 'test_value1',
-                                'test_key2': 'test_value2'},
-                               headers=self.headers)
-        resp = resp.json
-        self.assertEqual(
-            '{"test_key1": "test_value1", "test_key2": "test_value2"}',
-            jsonutils.dumps(resp['extra_specs'], sort_keys=True))
-
-        self.patch_json('/flavors/%s/extraspecs' % self.FLAVOR_UUID,
-                        {'test_key3': 'test_value3'},
-                        headers=self.headers)
-        resp = self.get_json('/flavors/%s/extraspecs' % self.FLAVOR_UUID,
-                             headers=self.headers)
-        self.assertEqual(
-            '{"test_key1": "test_value1", "test_key2": "test_value2", '
-            '"test_key3": "test_value3"}',
-            jsonutils.dumps(resp['extra_specs'], sort_keys=True))
-
-    def test_delete_extra(self):
-        resp = self.patch_json('/flavors/%s/extraspecs' % self.FLAVOR_UUID,
-                               {'test_key1': 'test_value1',
-                                'test_key2': 'test_value2'},
-                               headers=self.headers)
-        resp = resp.json
-        self.assertEqual(
-            '{"test_key1": "test_value1", "test_key2": "test_value2"}',
-            jsonutils.dumps(resp['extra_specs'], sort_keys=True))
-
-        self.delete('/flavors/%s/extraspecs/test_key1' % self.FLAVOR_UUID,
-                    headers=self.headers)
-        resp = self.get_json('/flavors/%s/extraspecs' % self.FLAVOR_UUID,
-                             headers=self.headers)
-        self.assertEqual({'test_key2': 'test_value2'}, resp['extra_specs'])
+        self.assertEqual('updated_name', resp['name'])
+        self.assertEqual({'k1': 'v1'}, resp['extra_specs'])

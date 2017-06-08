@@ -96,7 +96,7 @@ Response
 Update Flavor
 =============
 
-.. rest_method:: PUT /flavors/{flavor_uuid}
+.. rest_method:: PATCH /flavors/{flavor_uuid}
 
 Updates a flavor.
 
@@ -111,14 +111,14 @@ conflict(409)
 Request
 -------
 
+The BODY of the PATCH request must be a JSON PATCH document, adhering to
+`RFC 6902 <https://tools.ietf.org/html/rfc6902>`_.
+
 .. rest_parameters:: parameters.yaml
 
   - flavor_uuid: flavor_uuid_path
-  - name: flavor_name
-  - description: flavor_description
-  - is_public: flavor_is_public_not_required
 
-**Example Update Flavor**
+**Example Update Flavor: JSON request**
 
 .. literalinclude:: samples/flavors/flavor-update-put-req.json
    :language: javascript
@@ -206,97 +206,3 @@ Response
 --------
 
 No body content is returned on a successful DELETE.
-
-
-List Extra Specs
-================
-
-.. rest_method:: GET /flavors/{flavor_uuid}/extraspecs
-
-Lists all extra specs related to the given flavor.
-
-Normal response codes: 200
-
-Error response codes: unauthorized(401), forbidden(403)
-
-Request
--------
-
-.. rest_parameters:: parameters.yaml
-
-    - flavor_uuid: flavor_uuid_path
-
-Response
---------
-
-.. rest_parameters:: parameters.yaml
-
-   - extra_specs: flavor_extra_specs
-
-**Example List Extra Specs**
-
-.. literalinclude:: samples/flavors/flavor-extra-specs-list-resp.json
-   :language: javascript
-
-
-Create/Update Extra Spec
-========================
-
-.. rest_method:: PATCH /flavors/{flavor_uuid}/extraspecs
-
-Create/update extra specs to the given flavor.
-
-Normal response codes: 201
-
-Error response codes: unauthorized(401), forbidden(403)
-
-Request
--------
-
-.. rest_parameters:: parameters.yaml
-
-    - flavor_uuid: flavor_uuid_path
-    - extra_specs: flavor_extra_specs
-
-**Example Create Extra Specs**
-
-.. literalinclude:: samples/flavors/flavor-extra-specs-patch-req.json
-   :language: javascript
-
-Response
---------
-
-.. rest_parameters:: parameters.yaml
-
-    - extra_specs: flavor_extra_specs
-
-**Example Create Extra Specs**
-
-.. literalinclude:: samples/flavors/flavor-extra-specs-patch-resp.json
-   :language: javascript
-
-
-Delete Extra Spec
-=================
-
-.. rest_method:: DELETE /flavors/{flavor_uuid}/extraspecs/key
-
-Deletes an extra spec related to the specific flavor.
-
-Normal response codes: 204
-
-Error response codes: unauthorized(401), forbidden(403), itemNotFound(404)
-
-Request
--------
-
-.. rest_parameters:: parameters.yaml
-
-  - flavor_uuid: flavor_uuid_path
-  - key: spec_key_path
-
-Response
---------
-
-No body content is returned on a successful DELETE.
-
