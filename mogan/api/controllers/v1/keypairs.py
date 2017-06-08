@@ -71,12 +71,12 @@ class KeyPair(base.APIBase):
             setattr(self, field, kwargs.get(field, wtypes.Unset))
 
     @classmethod
-    def convert_with_links(cls, rpc_keypair):
-        if hasattr(rpc_keypair, 'private_key') and rpc_keypair.private_key:
-            keypair = KeyPair(private_key=rpc_keypair.private_key,
-                              **rpc_keypair.as_dict())
+    def convert_with_links(cls, db_keypair):
+        if hasattr(db_keypair, 'private_key') and db_keypair.private_key:
+            keypair = KeyPair(private_key=db_keypair.private_key,
+                              **db_keypair.as_dict())
         else:
-            keypair = KeyPair(**rpc_keypair.as_dict())
+            keypair = KeyPair(**db_keypair.as_dict())
         url = pecan.request.public_url
         keypair.links = [link.Link.make_link('self', url,
                                              'keypairs',

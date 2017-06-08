@@ -87,8 +87,8 @@ class Flavor(base.APIBase):
             setattr(self, field, kwargs.get(field, wtypes.Unset))
 
     @classmethod
-    def convert_with_links(cls, rpc_flavor):
-        flavor = Flavor(**rpc_flavor.as_dict())
+    def convert_with_links(cls, db_flavor):
+        flavor = Flavor(**db_flavor.as_dict())
         url = pecan.request.public_url
         flavor.links = [link.Link.make_link('self', url,
                                             'flavors',
@@ -236,8 +236,8 @@ class FlavorsController(rest.RestController):
 
         :param flavor_uuid: UUID of a flavor.
         """
-        rpc_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
-        return Flavor.convert_with_links(rpc_flavor)
+        db_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
+        return Flavor.convert_with_links(db_flavor)
 
     @policy.authorize_wsgi("mogan:flavor", "create")
     @expose.expose(Flavor, body=types.jsontype,
@@ -291,5 +291,5 @@ class FlavorsController(rest.RestController):
 
         :param flavor_uuid: UUID of a flavor.
         """
-        rpc_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
-        rpc_flavor.destroy()
+        db_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
+        db_flavor.destroy()
