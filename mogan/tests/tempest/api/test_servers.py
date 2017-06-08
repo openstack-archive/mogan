@@ -12,6 +12,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
 from mogan.tests.tempest.api import base
 
 
@@ -74,3 +75,61 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
     def test_server_delete(self):
         """server deletion will be tested by cleanUp method"""
         pass
+
+    def test_get_server_power_status(self):
+        resp = self.baremetal_compute_client.show_server(
+            self.server_ids[0])
+        self.assertEqual('active', resp['status'])
+        resp = self.baremetal_compute_client.server_get_state(
+            self.server_ids[0])
+        self.assertEqual('active', resp['status'])
+        self.assertEqual(False, resp['locked'])
+        self.assertEqual('power on', resp['power_state'])
+
+    def test_server_stop_start(self):
+        resp = self.baremetal_compute_client.show_server(
+            self.server_ids[0])
+        self.assertEqual('active', resp['status'])
+        self.baremetal_compute_client.server_set_power_state(
+            self.server_ids[0], 'off')
+        self._wait_for_servers_status(resp['uuid'], 15, 900, 'stopped',
+                                      'power off')
+        self.baremetal_compute_client.server_set_power_state(
+            self.server_ids[0], 'on')
+        self._wait_for_servers_status(resp['uuid'], 15, 900, 'active',
+                                      'power on')
+
+    def test_server_reboot(self):
+        resp = self.baremetal_compute_client.show_server(
+            self.server_ids[0])
+        self.assertEqual('active', resp['status'])
+        self.baremetal_compute_client.server_set_power_state(
+            self.server_ids[0], 'reboot')
+        self._wait_for_servers_status(resp['uuid'], 15, 900, 'active',
+                                      'power on')
+
+    def test_server_lock_unlock(self):
+        resp = self.baremetal_compute_client.server_get_state(
+            self.server_ids[0])
+        self.assertEqual('active', resp['status'])
+        self.assertEqual(False, resp['locked'])
+        self.baremetal_compute_client.server_set_lock_state(
+            self.server_ids[0], True)
+        self._wait_for_servers_status(self.server_ids[0], 15, 900, 'active',
+                                      'power on', True)
+        self.baremetal_compute_client.server_set_lock_state(
+            self.server_ids[0], False)
+
+        self._wait_for_servers_status(self.server_ids[0], 15, 900, 'active',
+                                      'power on', False)
+
+    def test_server_rebuild(self):
+        resp = self.baremetal_compute_client.server_get_state(
+            self.server_ids[0])
+        self.assertEqual('active', resp['status'])
+        self.assertEqual(False, resp['locked'])
+        self.assertEqual('power on', resp['power_state'])
+        self.baremetal_compute_client.server_set_provision_state(
+            self.server_ids[0], 'rebuild')
+        self._wait_for_servers_status(self.server_ids[0], 15, 900, 'active',
+                                      'power on')
