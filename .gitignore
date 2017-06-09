@@ -42,8 +42,12 @@ nosetests.xml
 output/*.html
 output/*/index.html
 
+etc/mogan/mogan.conf.sample
+
 # Sphinx
 doc/build
+doc/source/_static/mogan.conf.sample
+doc/source/_static/mogan.policy.yaml.sample
 
 # pbr generates these
 AUTHORS

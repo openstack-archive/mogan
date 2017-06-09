@@ -53,18 +53,33 @@ project.
   Developer Contribution Guide <dev/code-contribution-guide>
   Setting Up Your Development Environment <dev/dev-quickstart>
 
+Advanced testing and guides
+----------------------------
+
+.. toctree::
+    :maxdepth: 1
+
+   dev/gmr
+
 
 Administrator's Guide
 =====================
 
-Configuration
--------------
+Sample Configuration File
+-------------------------
 
-There are many aspects of the Bare Metal Compute service which are environment
-specific. The following pages will be helpful in configuring specific aspects
-of mogan that may or may not be suitable to every situation.
+.. toctree::
+    :maxdepth: 1
 
-You can use `tox -egenconfig` to generate the sample config file.
+    sample_config
+
+Sample Policy file
+------------------
+
+.. toctree::
+    :maxdepth: 1
+
+    sample_policy
 
 Command References
 ==================
@@ -75,14 +90,6 @@ Here are references for commands not elsewhere documented.
   :maxdepth: 1
 
   cmds/mogan-dbsync
-
-Advanced testing and guides
-----------------------------
-
-.. toctree::
-    :maxdepth: 1
-
-   dev/gmr
 
 Indices and tables
 ==================
