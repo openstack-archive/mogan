@@ -13,7 +13,7 @@
             "port_type": "10GE"
         }
     ],
-    "extra" : {
+    "metadata" : {
         "My Server Name" : "Apache1"
     },
     "personality": [

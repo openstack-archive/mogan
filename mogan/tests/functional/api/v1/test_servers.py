@@ -136,7 +136,7 @@ class TestServers(v1_test.APITestV1):
                 'networks': [
                     {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31',
                      'port_type': 'Ethernet'}],
-                'extra': {'fake_key': 'fake_value'}
+                'metadata': {'fake_key': 'fake_value'}
             }
             responses.append(
                 self.post_json('/servers', test_body, headers=headers,
@@ -154,7 +154,7 @@ class TestServers(v1_test.APITestV1):
                          resp['image_uuid'])
         self.assertEqual('mogan', resp['availability_zone'])
         self.assertEqual([], resp['nics'])
-        self.assertEqual({'fake_key': 'fake_value'}, resp['extra'])
+        self.assertEqual({'fake_key': 'fake_value'}, resp['metadata'])
         self.assertIn('links', resp)
         self.assertIn('created_at', resp)
         self.assertIn('updated_at', resp)
@@ -176,7 +176,7 @@ class TestServers(v1_test.APITestV1):
                          resp['image_uuid'])
         self.assertEqual('mogan', resp['availability_zone'])
         self.assertEqual([], resp['nics'])
-        self.assertEqual({'fake_key': 'fake_value'}, resp['extra'])
+        self.assertEqual({'fake_key': 'fake_value'}, resp['metadata'])
         self.assertIn('links', resp)
         self.assertIn('created_at', resp)
         self.assertIn('updated_at', resp)

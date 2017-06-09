@@ -446,7 +446,7 @@ class Server(base.APIBase):
     launched_at = datetime.datetime
     """The UTC date and time of the server launched"""
 
-    extra = {wtypes.text: types.jsontype}
+    metadata = {wtypes.text: types.jsontype}
     """The meta data of the server"""
 
     fault_info = {wtypes.text: types.jsontype}
@@ -467,6 +467,13 @@ class Server(base.APIBase):
                     if fault_info is not None:
                         fault_info = fault_info.return_dict()
                         setattr(self, 'fault_info', fault_info)
+            if field == 'extra':
+                if kwargs.get('metadata'):
+                    setattr(self, 'metadata',
+                            kwargs.get('metadata', wtypes.Unset))
+                else:
+                    setattr(self, 'metadata',
+                            kwargs.get('extra', wtypes.Unset))
             # Skip fields we do not expose.
             if not hasattr(self, field):
                 continue
@@ -669,7 +676,7 @@ class ServerController(ServerControllerBase):
                 name=server.get('name'),
                 description=server.get('description'),
                 availability_zone=server.get('availability_zone'),
-                extra=server.get('extra'),
+                extra=server.get('metadata'),
                 requested_networks=requested_networks,
                 user_data=user_data,
                 injected_files=injected_files,
@@ -720,9 +727,14 @@ class ServerController(ServerControllerBase):
         :param patch: a json PATCH document to apply to this server.
         """
         rpc_server = self._resource or self._get_resource(server_uuid)
+
+        # workaround to change server.extra to server.metadata
+        server_dict = rpc_server.as_dict()
+        metadata = server_dict.pop('extra', {})
+        server_dict['metadata'] = metadata
         try:
             server = Server(
-                **api_utils.apply_jsonpatch(rpc_server.as_dict(), patch))
+                **api_utils.apply_jsonpatch(server_dict, patch))
 
         except api_utils.JSONPATCH_EXCEPTIONS as e:
             raise exception.PatchError(patch=patch, reason=e)
@@ -732,7 +744,10 @@ class ServerController(ServerControllerBase):
             if field == 'nics':
                 continue
             try:
-                patch_val = getattr(server, field)
+                if field == 'extra':
+                    patch_val = getattr(server, 'metadata')
+                else:
+                    patch_val = getattr(server, field)
             except AttributeError:
                 # Ignore fields that aren't exposed in the API
                 continue
