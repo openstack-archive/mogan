@@ -133,6 +133,8 @@ class FlavorExtraSpecsController(rest.RestController):
     def patch(self, flavor_uuid, extra_spec):
         """Create/update extra specs for the given flavor."""
 
+        validation.check_schema(extra_spec,
+                                flavor_schema.create_flavor_extra_specs)
         flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         flavor.extra_specs = dict(flavor.extra_specs, **extra_spec)
         flavor.save()

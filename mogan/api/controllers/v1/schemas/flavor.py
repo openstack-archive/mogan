@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+import copy
 from mogan.api.validation import parameter_types
 
 
@@ -30,4 +30,15 @@ create_flavor = {
     },
     'required': ['name', 'description'],
     'additionalProperties': False,
+}
+
+metadata = copy.deepcopy(parameter_types.extra)
+metadata['patternProperties']['^[a-zA-Z0-9-_:. ]{1,255}$']['type'] = \
+    ['string', 'number']
+
+create_flavor_extra_specs = {
+    'type': 'object',
+    'properties': metadata,
+    'required': [],
+    'additionalProperties': True,
 }
