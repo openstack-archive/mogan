@@ -37,7 +37,7 @@ class Node(base.APIBase):
     availability_zone = wtypes.text
     """The availability zone of the node"""
 
-    node_type = wtypes.text
+    resource_class = wtypes.text
     """The type of the node"""
 
     hypervisor_type = wtypes.text
