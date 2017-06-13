@@ -135,7 +135,7 @@ class TestPatch(v1_test.APITestV1):
     def test_update_not_found(self):
         uuid = uuidutils.generate_uuid()
         response = self.patch_json('/servers/%s' % uuid,
-                                   [{'path': '/extra/a', 'value': 'b',
+                                   [{'path': '/metadata/a', 'value': 'b',
                                      'op': 'add'}],
                                    headers=self.headers,
                                    expect_errors=True)
@@ -169,7 +169,7 @@ class TestPatch(v1_test.APITestV1):
                                           extra=extra)
         new_value = 'new value'
         response = self.patch_json('/servers/%s' % server.uuid,
-                                   [{'path': '/extra/foo2',
+                                   [{'path': '/metadata/foo2',
                                      'value': new_value, 'op': 'replace'}],
                                    headers=self.headers)
         self.assertEqual('application/json', response.content_type)
@@ -178,7 +178,7 @@ class TestPatch(v1_test.APITestV1):
                                headers=self.headers)
 
         extra["foo2"] = new_value
-        self.assertEqual(extra, result['extra'])
+        self.assertEqual(extra, result['metadata'])
 
     def test_remove_singular(self):
         uuid = uuidutils.generate_uuid()
@@ -195,7 +195,7 @@ class TestPatch(v1_test.APITestV1):
 
         # Assert nothing else was changed
         self.assertEqual(server.uuid, result['uuid'])
-        self.assertEqual(server.extra, result['extra'])
+        self.assertEqual(server.extra, result['metadata'])
 
     def test_remove_multi(self):
         extra = {"foo1": "bar1", "foo2": "bar2", "foo3": "bar3"}
@@ -204,24 +204,25 @@ class TestPatch(v1_test.APITestV1):
                                           uuid=uuid, description="foobar")
 
         # Removing one item from the collection
-        response = self.patch_json('/servers/%s' % server.uuid,
-                                   [{'path': '/extra/foo2', 'op': 'remove'}],
-                                   headers=self.headers)
+        response = self.patch_json(
+            '/servers/%s' % server.uuid,
+            [{'path': '/metadata/foo2', 'op': 'remove'}],
+            headers=self.headers)
         self.assertEqual('application/json', response.content_type)
         self.assertEqual(http_client.OK, response.status_code)
         result = self.get_json('/servers/%s' % server.uuid,
                                headers=self.headers)
         extra.pop("foo2")
-        self.assertEqual(extra, result['extra'])
+        self.assertEqual(extra, result['metadata'])
 
         # Removing the collection
         response = self.patch_json('/servers/%s' % server.uuid,
-                                   [{'path': '/extra', 'op': 'remove'}],
+                                   [{'path': '/metadata', 'op': 'remove'}],
                                    headers=self.headers)
         self.assertEqual(http_client.OK, response.status_code)
         result = self.get_json('/servers/%s' % server.uuid,
                                headers=self.headers)
-        self.assertEqual({}, result['extra'])
+        self.assertEqual({}, result['metadata'])
 
         # Assert nothing else was changed
         self.assertEqual(server.uuid, result['uuid'])
@@ -230,7 +231,7 @@ class TestPatch(v1_test.APITestV1):
     def test_remove_non_existent_property_fail(self):
         response = self.patch_json(
             '/servers/%s' % self.server.uuid,
-            [{'path': '/extra/non-existent', 'op': 'remove'}],
+            [{'path': '/metadata/non-existent', 'op': 'remove'}],
             headers=self.headers,
             expect_errors=True)
         self.assertEqual(http_client.BAD_REQUEST, response.status_code)
@@ -256,9 +257,9 @@ class TestPatch(v1_test.APITestV1):
 
     def test_add_multi(self):
         response = self.patch_json('/servers/%s' % self.server.uuid,
-                                   [{'path': '/extra/foo1', 'value': 'bar1',
+                                   [{'path': '/metadata/foo1', 'value': 'bar1',
                                      'op': 'add'},
-                                    {'path': '/extra/foo2', 'value': 'bar2',
+                                    {'path': '/metadata/foo2', 'value': 'bar2',
                                      'op': 'add'}],
                                    headers=self.headers)
         self.assertEqual('application/json', response.content_type)
@@ -266,7 +267,7 @@ class TestPatch(v1_test.APITestV1):
         result = self.get_json('/servers/%s' % self.server.uuid,
                                headers=self.headers)
         expected = {"foo1": "bar1", "foo2": "bar2"}
-        self.assertEqual(expected, result['extra'])
+        self.assertEqual(expected, result['metadata'])
 
     def test_remove_uuid(self):
         response = self.patch_json('/servers/%s' % self.server.uuid,

@@ -66,7 +66,7 @@ Response
   - user_id: user_id_body
   - updated_at: updated_at
   - created_at: created_at
-  - extra: extra
+  - metadata: metadata
 
 **Example Create Server: JSON response**
 
@@ -202,7 +202,7 @@ Response
   - updated_at: updated_at
   - created_at: created_at
   - launched_at: launched_at
-  - extra: extra
+  - metadata: metadata
 
 **Example Detailed list of Servers: JSON response**
 
@@ -253,7 +253,7 @@ Response
   - updated_at: updated_at
   - created_at: created_at
   - launched_at: launched_at
-  - extra: extra
+  - metadata: metadata
 
 **Example Server Details: JSON response**
 
@@ -312,7 +312,7 @@ Response
   - user_id: user_id_body
   - updated_at: updated_at
   - created_at: created_at
-  - extra: extra
+  - metadata: metadata
 
 **Example Update Server: JSON response**
 

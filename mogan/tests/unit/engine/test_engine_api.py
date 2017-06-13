@@ -58,7 +58,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
                 name='fake-name',
                 description='fake-descritpion',
                 availability_zone='test_az',
-                extra={'k1', 'v1'},
+                metadata={'k1', 'v1'},
                 requested_networks=None,
                 user_data=None,
                 key_name=None,
@@ -68,7 +68,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertEqual('fake-project', base_opts['project_id'])
         self.assertEqual(states.BUILDING, base_opts['status'])
         self.assertEqual(flavor.uuid, base_opts['flavor_uuid'])
-        self.assertEqual({'k1', 'v1'}, base_opts['extra'])
+        self.assertEqual({'k1', 'v1'}, base_opts['metadata'])
         self.assertEqual('test_az', base_opts['availability_zone'])
         self.assertIsNone(key_pair)
 
@@ -131,7 +131,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
             name='fake-name',
             description='fake-descritpion',
             availability_zone='test_az',
-            extra={'k1', 'v1'},
+            metadata={'k1', 'v1'},
             requested_networks=requested_networks,
             min_count=min_count,
             max_count=max_count)
