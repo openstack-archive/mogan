@@ -95,3 +95,11 @@ Indices and tables
 ==================
 
 * :ref:`search`
+
+Running tests of Mogan
+======================
+
+.. toctree::
+   :maxdepth: 1
+
+   dev/testing
