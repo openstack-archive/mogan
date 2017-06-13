@@ -24,6 +24,7 @@ from mogan.api.controllers import link
 from mogan.api.controllers.v1.schemas import flavor as flavor_schema
 from mogan.api.controllers.v1.schemas import flavor_access
 from mogan.api.controllers.v1 import types
+from mogan.api.controllers.v1 import utils as api_utils
 from mogan.api import expose
 from mogan.api import validation
 from mogan.common import exception
@@ -102,6 +103,16 @@ class Flavor(base.APIBase):
         return flavor
 
 
+class FlavorPatchType(types.JsonPatchType):
+
+    _api_base = Flavor
+
+    @staticmethod
+    def internal_attrs():
+        defaults = types.JsonPatchType.internal_attrs()
+        return defaults + ['/cpus', '/memory', '/nics', '/disks']
+
+
 class FlavorCollection(base.APIBase):
     """API representation of a collection of flavor."""
 
@@ -114,39 +125,6 @@ class FlavorCollection(base.APIBase):
         collection.flavors = [Flavor.convert_with_links(flavor)
                               for flavor in flavors]
         return collection
-
-
-class FlavorExtraSpecsController(rest.RestController):
-    """REST controller for flavor extra specs."""
-
-    @policy.authorize_wsgi("mogan:flavor_extra_specs", "get_all")
-    @expose.expose(wtypes.text, types.uuid)
-    def get_all(self, flavor_uuid):
-        """Retrieve a list of extra specs of the queried flavor."""
-
-        flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
-        return dict(extra_specs=flavor.extra_specs)
-
-    @policy.authorize_wsgi("mogan:flavor_extra_specs", "patch")
-    @expose.expose(types.jsontype, types.uuid, body=types.jsontype,
-                   status_code=http_client.ACCEPTED)
-    def patch(self, flavor_uuid, extra_spec):
-        """Create/update extra specs for the given flavor."""
-
-        flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
-        flavor.extra_specs = dict(flavor.extra_specs, **extra_spec)
-        flavor.save()
-        return dict(extra_specs=flavor.extra_specs)
-
-    @policy.authorize_wsgi("mogan:flavor_extra_specs", "delete")
-    @expose.expose(None, types.uuid, wtypes.text,
-                   status_code=http_client.NO_CONTENT)
-    def delete(self, flavor_uuid, spec_name):
-        """Delete an extra specs for the given flavor."""
-
-        flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
-        del flavor.extra_specs[spec_name]
-        flavor.save()
 
 
 class FlavorAccessController(rest.RestController):
@@ -218,7 +196,6 @@ class FlavorAccessController(rest.RestController):
 class FlavorsController(rest.RestController):
     """REST controller for Flavors."""
 
-    extraspecs = FlavorExtraSpecsController()
     access = FlavorAccessController()
 
     @policy.authorize_wsgi("mogan:flavor", "get_all")
@@ -256,33 +233,45 @@ class FlavorsController(rest.RestController):
         return Flavor.convert_with_links(new_flavor)
 
     @policy.authorize_wsgi("mogan:flavor", "update")
-    @expose.expose(Flavor, types.uuid, body=Flavor)
-    def put(self, flavor_uuid, flavor):
+    @wsme.validate(types.uuid, [FlavorPatchType])
+    @expose.expose(Flavor, types.uuid, body=[FlavorPatchType])
+    def patch(self, flavor_uuid, patch):
         """Update a flavor.
 
         :param flavor_uuid: the uuid of the flavor to be updated.
-        :param flavor: a flavor within the request body.
+        :param flavor: a json PATCH document to apply to this flavor.
         """
         try:
-            flavor_in_db = objects.Flavor.get(
+            db_flavor = objects.Flavor.get(
                 pecan.request.context, flavor_uuid)
         except exception.FlavorTypeNotFound:
             msg = (_("Flavor %s could not be found") %
                    flavor_uuid)
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
-        need_to_update = False
-        for attr in ('name', 'description', 'is_public'):
-            if getattr(flavor, attr) != wtypes.Unset:
-                need_to_update = True
-                setattr(flavor_in_db, attr, getattr(flavor, attr))
-        # don't need to call db_api if no update
-        if need_to_update:
-            flavor_in_db.save()
-        # Set the HTTP Location Header
-        pecan.response.location = link.build_url('flavor',
-                                                 flavor_in_db.uuid)
-        return Flavor.convert_with_links(flavor_in_db)
+
+        try:
+            flavor = Flavor(
+                **api_utils.apply_jsonpatch(db_flavor.as_dict(), patch))
+
+        except api_utils.JSONPATCH_EXCEPTIONS as e:
+            raise exception.PatchError(patch=patch, reason=e)
+
+        # Update only the fields that have changed
+        for field in objects.Flavor.fields:
+            try:
+                patch_val = getattr(flavor, field)
+            except AttributeError:
+                # Ignore fields that aren't exposed in the API
+                continue
+            if patch_val == wtypes.Unset:
+                patch_val = None
+            if db_flavor[field] != patch_val:
+                db_flavor[field] = patch_val
+
+        db_flavor.save()
+
+        return Flavor.convert_with_links(db_flavor)
 
     @policy.authorize_wsgi("mogan:flavor", "delete")
     @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)
