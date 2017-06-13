@@ -58,7 +58,7 @@ flavor_id = {
 }
 
 
-extra = {
+metadata = {
     'type': 'object',
     'patternProperties': {
         '^[a-zA-Z0-9-_:. ]{1,255}$': {

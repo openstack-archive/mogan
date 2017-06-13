@@ -61,11 +61,11 @@ class TestServerObject(base.DbTestCase):
                                autospec=True) as mock_server_create:
             mock_server_create.return_value = self.fake_server
             server = objects.Server(self.context, **self.fake_server)
-            server.obj_get_changes()
             server.create(self.context)
             expected_called = copy.deepcopy(self.fake_server)
             expected_called['nics'][0].update(
                 server_uuid=self.fake_server['uuid'])
+            expected_called.pop('extra', None)
             mock_server_create.assert_called_once_with(self.context,
                                                        expected_called)
             self.assertEqual(self.fake_server['uuid'], server['uuid'])
