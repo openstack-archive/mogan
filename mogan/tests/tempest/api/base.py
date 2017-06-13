@@ -132,4 +132,8 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
             cls.baremetal_compute_client.delete_flavor, cls.flavor_ids)
         cls.cleanup_resources(cls.baremetal_compute_client.delete_server,
                               cls.server_ids)
+        # NOTE(liusheng): need to ensure servers have been completely
+        # deleted in Mogan's db
+        for server_id in cls.server_ids:
+            cls._wait_for_servers_status(server_id, 'deleted', 1, 60)
         super(BaseBaremetalComputeTest, cls).resource_cleanup()
