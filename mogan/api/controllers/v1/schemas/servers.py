@@ -42,7 +42,7 @@ create_server = {
         'key_name': parameter_types.name,
         'min_count': {'type': 'integer', 'minimum': 1},
         'max_count': {'type': 'integer', 'minimum': 1},
-        'extra': parameter_types.extra,
+        'metadata': parameter_types.metadata,
     },
     'required': ['name', 'image_uuid', 'flavor_uuid', 'networks'],
     'additionalProperties': False,

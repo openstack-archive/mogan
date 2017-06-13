@@ -446,7 +446,7 @@ class Server(base.APIBase):
     launched_at = datetime.datetime
     """The UTC date and time of the server launched"""
 
-    extra = {wtypes.text: types.jsontype}
+    metadata = {wtypes.text: types.jsontype}
     """The meta data of the server"""
 
     fault_info = {wtypes.text: types.jsontype}
@@ -669,7 +669,7 @@ class ServerController(ServerControllerBase):
                 name=server.get('name'),
                 description=server.get('description'),
                 availability_zone=server.get('availability_zone'),
-                extra=server.get('extra'),
+                metadata=server.get('metadata'),
                 requested_networks=requested_networks,
                 user_data=user_data,
                 injected_files=injected_files,

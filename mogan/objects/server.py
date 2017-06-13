@@ -51,7 +51,7 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
         'fault': object_fields.ObjectField('ServerFault', nullable=True),
         'node_uuid': object_fields.UUIDField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
-        'extra': object_fields.FlexibleDictField(nullable=True),
+        'metadata': object_fields.FlexibleDictField(nullable=True),
         'locked': object_fields.BooleanField(default=False),
         'locked_by': object_fields.StringField(nullable=True),
     }
@@ -78,7 +78,10 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
         :return: The object of the class with the database entity added
         """
         for field in set(server.fields) - set(OPTIONAL_ATTRS):
-            server[field] = db_server[field]
+            if field == 'metadata':
+                server[field] = db_server['extra']
+            else:
+                server[field] = db_server[field]
 
         if expected_attrs is None:
             expected_attrs = []
@@ -139,6 +142,9 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
     def create(self, context=None):
         """Create a Server record in the DB."""
         values = self.obj_get_changes()
+        metadata = values.pop('metadata', None)
+        if metadata is not None:
+            values['extra'] = metadata
         server_nics = values.pop('nics', None)
         if server_nics:
             values['nics'] = server_nics.as_list_of_dict()
@@ -170,6 +176,9 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
                         raise
                 updates.pop(field)
 
+        metadata = updates.pop('metadata', None)
+        if metadata is not None:
+            updates['extra'] = metadata
         self.dbapi.server_update(context, self.uuid, updates)
         self.obj_reset_changes()
 

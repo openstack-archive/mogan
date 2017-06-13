@@ -130,13 +130,6 @@ created_at:
   in: body
   required: true
   type: string
-extra:
-  description: |
-    Metadata key and value pairs. The maximum size of the metadata key and value is
-    255 bytes each.
-  in: body
-  required: false
-  type: object
 fixed_address:
   description: |
     The fixed IP address with which you want to associate the floating IP address.
@@ -303,6 +296,13 @@ lock_state:
   in: body
   required: true
   type: boolean
+metadata:
+  description: |
+    Metadata key and value pairs. The maximum size of the metadata key and value is
+    255 bytes each.
+  in: body
+  required: false
+  type: object
 max_count_body:
   description: |
       The max number of servers to be created. Defaults to the value of ``min_count``.
