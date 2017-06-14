@@ -96,6 +96,42 @@ class BaremetalComputeClient(rest_client.RestClient):
             body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
+    def create_keypair(self, **kwargs):
+        uri = "%s/keypairs" % self.uri_prefix
+        body = self.serialize(kwargs)
+        resp, body = self.post(uri, body)
+        self.expected_success(201, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def show_keypair(self, key_name, user_id=None):
+        uri = "%s/keypairs/%s" % (self.uri_prefix, key_name)
+        if user_id:
+            uri = '%s?user_id=%s' % (uri, user_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def list_keypairs(self, user_id=None):
+        uri = '%s/keypairs' % self.uri_prefix
+        if user_id:
+            uri = '%s?user_id=%s' % (uri, user_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['keypairs']
+        return rest_client.ResponseBodyList(resp, body)
+
+    def delete_keypair(self, key_name, user_id=None):
+        uri = "%s/keypairs/%s" % (self.uri_prefix, key_name)
+        if user_id:
+            uri = '%s?user_id=%s' % (uri, user_id)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
 
 class Manager(manager.Manager):
 
