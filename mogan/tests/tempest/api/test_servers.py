@@ -12,7 +12,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import time
+
 from tempest.lib import decorators
+from tempest.lib import exceptions as lib_exc
 
 from mogan.tests.tempest.api import base
 
@@ -124,3 +127,28 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
             self.server_ids[0], 'rebuild')
         self._wait_for_servers_status(self.server_ids[0], 15, 900, 'active',
                                       'power on')
+
+    def _wait_for_console(self, node, console_enabled):
+        enabled = None
+        wait_interval = 3
+        wait_timeout = 0
+        while enabled != console_enabled:
+            time.sleep(wait_interval)
+            console = self.baremetal_node_client.get_node_console(node)
+            enabled = console['console_enabled']
+            wait_timeout += wait_interval
+            if wait_timeout >= 30:
+                raise lib_exc.TimeoutException(
+                    'Failed to acquire console information for  node: %s' %
+                    node)
+
+    def test_server_get_console(self):
+        self._ensure_states_before_test()
+        node = self.baremetal_node_client.show_bm_node(
+            service_id=self.server_ids[0])
+        self.baremetal_node_client.bm_node_set_console_port(node['uuid'], 4321)
+        self.baremetal_node_client.set_node_console_state(node['uuid'], True)
+        self._wait_for_console(node['uuid'], True)
+        console = self.baremetal_compute_client.server_get_serial_console(
+            self.server_ids[0])
+        self.assertIn('url', console)

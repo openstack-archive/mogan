@@ -176,6 +176,75 @@ class BaremetalComputeClient(rest_client.RestClient):
         body = self.deserialize(body)['nodes']
         return rest_client.ResponseBodyList(resp, body)
 
+    def server_get_serial_console(self, server_id):
+        uri = '%s/servers/%s/serial_console' % (self.uri_prefix, server_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['console']
+        return rest_client.ResponseBody(resp, body)
+
+
+class BaremetalNodeClient(rest_client.RestClient):
+    version = '1'
+    uri_prefix = "v1"
+
+    def deserialize(self, body):
+        return json.loads(body.replace("\n", ""))
+
+    def serialize(self, body):
+        return json.dumps(body)
+
+    def list_bm_nodes(self):
+        uri = '%s/nodes' % self.uri_prefix
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['nodes']
+        return rest_client.ResponseBodyList(resp, body)
+
+    def show_bm_node(self, node_uuid=None, service_id=None):
+        if service_id:
+            uri = '%s/nodes/detail?instance_uuid=%s' % (self.uri_prefix,
+                                                        service_id)
+        else:
+            uri = '%s/nodes/%s' % (self.uri_prefix, node_uuid)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        if service_id:
+            body = body['nodes'][0]
+        return rest_client.ResponseBody(resp, body)
+
+    def set_node_console_state(self, node_id, enabled):
+        uri = '%s/nodes/%s/states/console' % (self.uri_prefix, node_id)
+        target_body = {'enabled': enabled}
+        target_body = self.serialize(target_body)
+        resp, body = self.put(uri, target_body)
+        self.expected_success(202, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def get_node_console(self, node_id):
+        uri = '%s/nodes/%s/states/console' % (self.uri_prefix, node_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def update_bm_node(self, node_id, updates):
+        uri = '%s/nodes/%s' % (self.uri_prefix, node_id)
+        target_body = self.serialize(updates)
+        resp, body = self.patch(uri, target_body)
+        self.expected_success(200, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def bm_node_set_console_port(self, node_id, port):
+        updates = [{"path": "/driver_info/ipmi_terminal_port",
+                    "value": port, "op": "add"}]
+        self.update_bm_node(node_id, updates)
+
 
 class Manager(manager.Manager):
 
@@ -183,6 +252,7 @@ class Manager(manager.Manager):
         'baremetal_compute_client',
         'compute_networks_client',
         'image_client_v2',
+        'baremetal_node_client'
     ]
 
     default_params = {
@@ -217,6 +287,13 @@ class Manager(manager.Manager):
     }
     image_params.update(default_params)
 
+    baremetal_node_params = {
+        'service': CONF.baremetal_node_plugin.catalog_type,
+        'region': CONF.identity.region,
+        'endpoint_type': CONF.baremetal_node_plugin.endpoint_type,
+    }
+    baremetal_node_params.update(default_params)
+
     def __init__(self, credentials=None, service=None):
         super(Manager, self).__init__(credentials)
         for client in self.load_clients:
@@ -235,3 +312,8 @@ class Manager(manager.Manager):
         self.image_client_v2 = image_cli.ImagesClient(
             self.auth_provider,
             **self.image_params)
+
+    def set_baremetal_node_client(self):
+        self.baremetal_node_client = BaremetalNodeClient(
+            self.auth_provider,
+            **self.baremetal_node_params)
