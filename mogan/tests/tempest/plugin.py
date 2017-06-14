@@ -38,6 +38,12 @@ class MoganTempestPlugin(plugins.TempestPlugin):
                                   tempest_config.baremetal_compute_group,
                                   tempest_config.BaremetalComputeGroup)
 
+        config.register_opt_group(conf,
+                                  tempest_config.baremetal_node_group,
+                                  tempest_config.BaremetalNodeGroup)
+
     def get_opt_lists(self):
         return [(tempest_config.baremetal_compute_group.name,
-                 tempest_config.BaremetalComputeGroup)]
+                 tempest_config.BaremetalComputeGroup),
+                (tempest_config.baremetal_node_group.name,
+                 tempest_config.BaremetalNodeGroup),]
