@@ -21,7 +21,7 @@ from mogan.objects import base
 from mogan.objects import fields as object_fields
 
 
-OPTIONAL_FIELDS = ['extra_specs', 'projects']
+OPTIONAL_FIELDS = ['projects']
 
 
 @base.MoganObjectRegistry.register
@@ -40,13 +40,12 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         'nics': object_fields.ListOfDictOfNullableStringsField(),
         'disks': object_fields.ListOfDictOfNullableStringsField(),
         'is_public': object_fields.BooleanField(),
-        'extra_specs': object_fields.FlexibleDictField(),
+        'extra_specs': object_fields.FlexibleDictField(nullable=True),
         'projects': object_fields.ListOfStringsField(),
     }
 
     def __init__(self, *args, **kwargs):
         super(Flavor, self).__init__(*args, **kwargs)
-        self._orig_extra_specs = {}
         self._orig_projects = {}
 
     @staticmethod
@@ -62,9 +61,6 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
                 value = value if value is not None else 0
             flavor[name] = value
 
-        if 'extra_specs' in expected_attrs:
-            flavor.extra_specs = db_flavor['extra_specs']
-
         if 'projects' in expected_attrs:
             flavor._load_projects(context)
 
@@ -79,10 +75,6 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
     def obj_reset_changes(self, fields=None, recursive=False):
         super(Flavor, self).obj_reset_changes(fields=fields,
                                               recursive=recursive)
-        if fields is None or 'extra_specs' in fields:
-            self._orig_extra_specs = (dict(self.extra_specs)
-                                      if self.obj_attr_is_set('extra_specs')
-                                      else {})
         if fields is None or 'projects' in fields:
             self._orig_projects = (list(self.projects)
                                    if self.obj_attr_is_set('projects')
@@ -90,9 +82,6 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
 
     def obj_what_changed(self):
         changes = super(Flavor, self).obj_what_changed()
-        if ('extra_specs' in self and
-                self.extra_specs != self._orig_extra_specs):
-            changes.add('extra_specs')
         if 'projects' in self and self.projects != self._orig_projects:
             changes.add('projects')
         return changes
@@ -100,8 +89,7 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [Flavor._from_db_object(context, cls(context), obj,
-                                       expected_attrs=['extra_specs'])
+        return [Flavor._from_db_object(context, cls(context), obj)
                 for obj in db_objects]
 
     @classmethod
@@ -116,15 +104,14 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         db_flavor = cls.dbapi.flavor_get(context, flavor_uuid)
         flavor = Flavor._from_db_object(
             context, cls(context), db_flavor,
-            expected_attrs=['extra_specs', 'projects'])
+            expected_attrs=['projects'])
         return flavor
 
     def create(self, context=None):
         """Create a Flavor record in the DB."""
         values = self.obj_get_changes()
         db_flavor = self.dbapi.flavor_create(context, values)
-        self._from_db_object(context, self, db_flavor,
-                             expected_attrs=['extra_specs'])
+        self._from_db_object(context, self, db_flavor)
 
     def destroy(self, context=None):
         """Delete the Flavor from the DB."""
@@ -134,22 +121,10 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
     def save(self, context=None):
         updates = self.obj_get_changes()
         projects = updates.pop('projects', None)
-        extra_specs = updates.pop('extra_specs', None)
         updates.pop('cpus', None)
         updates.pop('memory', None)
         updates.pop('nics', None)
         updates.pop('disks', None)
-
-        # extra specs
-        if extra_specs is not None:
-            deleted_keys = (set(self._orig_extra_specs.keys()) -
-                            set(extra_specs.keys()))
-            added_keys = self.extra_specs
-        else:
-            added_keys = deleted_keys = None
-
-        if added_keys or deleted_keys:
-            self.save_extra_specs(context, self.extra_specs, deleted_keys)
 
         # access projects
         if projects is not None:
@@ -162,24 +137,6 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
             self.save_projects(context, added_projects, deleted_projects)
 
         self.dbapi.flavor_update(context, self.uuid, updates)
-
-    def save_extra_specs(self, context, to_add=None, to_delete=None):
-        """Add or delete extra_specs.
-
-        :param:to_add: A dict of new keys to add/update
-        :param:to_delete: A list of keys to remove
-        """
-        ident = self.uuid
-
-        to_add = to_add if to_add is not None else {}
-        to_delete = to_delete if to_delete is not None else []
-
-        if to_add:
-            self.dbapi.extra_specs_update_or_create(context, ident, to_add)
-
-        for key in to_delete:
-            self.dbapi.type_extra_specs_delete(context, ident, key)
-        self.obj_reset_changes(['extra_specs'])
 
     def save_projects(self, context, to_add=None, to_delete=None):
         """Add or delete projects.

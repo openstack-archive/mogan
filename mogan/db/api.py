@@ -157,28 +157,6 @@ class Connection(object):
     def compute_disk_update(self, context, disk_uuid, values):
         """Update a compute disk."""
 
-    # Flavor extra specs
-    @abc.abstractmethod
-    def extra_specs_update_or_create(self, context,
-                                     flavor_uuid, extra_specs):
-        """Create or update server type extra specs.
-
-        This adds or modifies the key/value pairs specified in the
-        extra specs dict argument
-        """
-
-    @abc.abstractmethod
-    def flavor_extra_specs_get(self, context, type_id):
-        """Get server type extra specs"""
-
-    @abc.abstractmethod
-    def type_extra_specs_delete(self, context, flavor_uuid, key):
-        """Delete server type extra specs.
-
-        This deletes the key/value pairs specified in the
-        extra specs dict argument
-        """
-
     # Flavor access
     @abc.abstractmethod
     def flavor_access_add(self, context, flavor_id, project_id):

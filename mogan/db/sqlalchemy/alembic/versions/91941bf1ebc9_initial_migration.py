@@ -35,22 +35,9 @@ def upgrade():
         sa.Column('uuid', sa.String(length=36), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('description', sa.String(length=255), nullable=True),
+        sa.Column('extra_specs', sa.Text(), nullable=True),
         sa.Column('is_public', sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint('uuid'),
-        mysql_ENGINE='InnoDB',
-        mysql_DEFAULT_CHARSET='UTF8'
-    )
-    op.create_table(
-        'flavor_extra_specs',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('flavor_uuid', sa.String(length=36), nullable=False),
-        sa.Column('key', sa.String(length=255), nullable=False),
-        sa.Column('value', sa.String(length=255), nullable=False),
-        sa.ForeignKeyConstraint(['flavor_uuid'],
-                                ['flavors.uuid']),
-        sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )

@@ -100,11 +100,6 @@ def _dict_with_extra_fields(flavor_query):
     """Takes a server type query and returns it as a dictionary."""
     flavor_dict = dict(flavor_query)
 
-    # extra specs
-    extra_specs = {x['key']: x['value']
-                   for x in flavor_query['extra_specs']}
-    flavor_dict['extra_specs'] = extra_specs
-
     # cpus
     cpus = {}
     for c in flavor_query['cpus']:
@@ -190,7 +185,7 @@ class Connection(api.Connection):
 
     def flavor_get(self, context, flavor_uuid):
         query = model_query(context, models.Flavors).filter_by(
-            uuid=flavor_uuid).options(joinedload('extra_specs'))
+            uuid=flavor_uuid)
 
         if not context.is_admin:
             the_filter = [models.Flavors.is_public == true()]
@@ -231,13 +226,7 @@ class Connection(api.Connection):
 
     def flavor_destroy(self, context, flavor_uuid):
         with _session_for_write():
-            # First clean up all extra specs related to this type
             type_id = _type_get_id_from_type(context, flavor_uuid)
-            extra_query = model_query(
-                context,
-                models.FlavorExtraSpecs).filter_by(
-                flavor_uuid=type_id)
-            extra_query.delete()
 
             # Clean up cpus related to this flavor
             cpus_query = model_query(
@@ -524,61 +513,6 @@ class Connection(api.Connection):
 
             ref.update(values)
         return ref
-
-    def extra_specs_update_or_create(self, context,
-                                     flavor_uuid, specs,
-                                     max_retries=10):
-        """Create or update server type extra specs.
-
-        This adds or modifies the key/value pairs specified in the
-        extra specs dict argument
-        """
-        for attempt in range(max_retries):
-            with _session_for_write() as session:
-                try:
-                    spec_refs = model_query(
-                        context, models.FlavorExtraSpecs). \
-                        filter_by(flavor_uuid=flavor_uuid). \
-                        filter(models.FlavorExtraSpecs.key.in_(
-                            specs.keys())).with_lockmode('update').all()
-
-                    existing_keys = set()
-                    for spec_ref in spec_refs:
-                        key = spec_ref["key"]
-                        existing_keys.add(key)
-                        spec_ref.update({"value": specs[key]})
-
-                    for key, value in specs.items():
-                        if key in existing_keys:
-                            continue
-                        spec_ref = models.FlavorExtraSpecs()
-                        spec_ref.update(
-                            {"key": key, "value": value,
-                             "flavor_uuid": flavor_uuid})
-
-                        session.add(spec_ref)
-                        session.flush()
-
-                    return specs
-                except db_exc.DBDuplicateEntry:
-                    # a concurrent transaction has been committed,
-                    # try again unless this was the last attempt
-                    if attempt == max_retries - 1:
-                        raise exception.FlavorExtraSpecUpdateCreateFailed(
-                            id=flavor_uuid, retries=max_retries)
-
-    def flavor_extra_specs_get(self, context, type_id):
-        rows = _type_extra_specs_get_query(context, type_id).all()
-        return {row['key']: row['value'] for row in rows}
-
-    def type_extra_specs_delete(self, context, type_id, key):
-        result = _type_extra_specs_get_query(context, type_id). \
-            filter(models.FlavorExtraSpecs.key == key). \
-            delete(synchronize_session=False)
-        # did not find the extra spec
-        if result == 0:
-            raise exception.FlavorExtraSpecsNotFound(
-                extra_specs_key=key, flavor_id=type_id)
 
     def flavor_access_get(self, context, flavor_id):
         return _flavor_access_query(context, flavor_id)
@@ -1021,11 +955,6 @@ def _type_get_id_from_type(context, type_id):
     if not result:
         raise exception.FlavorNotFound(type_id=type_id)
     return result.uuid
-
-
-def _type_extra_specs_get_query(context, type_id):
-    return model_query(context, models.FlavorExtraSpecs). \
-        filter_by(flavor_uuid=type_id)
 
 
 def _flavor_access_query(context, flavor_id):
