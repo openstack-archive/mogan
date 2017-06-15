@@ -76,10 +76,6 @@ class TestFlavorObject(base.DbTestCase):
             flavor.name = 'changed_name'
             updates = flavor.obj_get_changes()
             flavor.save(self.context)
-            updates.pop('cpus', None)
-            updates.pop('memory', None)
-            updates.pop('disks', None)
-            updates.pop('nics', None)
             mock_flavor_update.return_value = self.fake_type
             mock_flavor_update.assert_called_once_with(
                 self.context, uuid, updates)
