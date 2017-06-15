@@ -113,8 +113,7 @@ class TestServers(v1_test.APITestV1):
         mocked.side_effect = [self.INSTANCE_TYPE_UUID]
         headers = self.gen_headers(self.context, roles="admin")
         body = {"name": "type_for_server_testing",
-                "description": "type for server testing",
-                "nics": [{"type": "Ethernet", "speed": "10GE"}]}
+                "description": "type for server testing"}
         self.post_json('/flavors', body, headers=headers, status=201)
 
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
@@ -132,8 +131,7 @@ class TestServers(v1_test.APITestV1):
                 'flavor_uuid': 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b',
                 'image_uuid': 'b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                 'networks': [
-                    {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31',
-                     'port_type': 'Ethernet'}],
+                    {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31'}],
                 'extra': {'fake_key': 'fake_value'}
             }
             responses.append(
