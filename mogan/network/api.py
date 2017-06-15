@@ -187,8 +187,7 @@ class API(object):
         fip = self._get_floating_ip_by_address(client, address)
         client.update_floatingip(fip['id'], {'floatingip': {'port_id': None}})
 
-    def _get_available_networks(self, context, project_id,
-                                net_ids, client):
+    def _get_available_networks(self, net_ids, client):
         """Return a network list available for the tenant."""
 
         # This search will also include 'shared' networks.
@@ -202,7 +201,7 @@ class API(object):
 
         return nets
 
-    def _ports_needed_per_server(self, context, client, requested_networks):
+    def _ports_needed_per_server(self, client, requested_networks):
 
         ports_needed_per_server = 0
         net_ids_requested = []
@@ -212,9 +211,7 @@ class API(object):
 
         # Now check to see if all requested networks exist
         if net_ids_requested:
-            nets = self._get_available_networks(
-                context, context.project_id, net_ids_requested,
-                client)
+            nets = self._get_available_networks(net_ids_requested, client)
 
             for net in nets:
                 if not net.get('subnets'):
@@ -243,7 +240,7 @@ class API(object):
 
         client = get_client(context.auth_token)
         ports_needed_per_server = self._ports_needed_per_server(
-            context, client, requested_networks)
+            client, requested_networks)
 
         # Check the quota and return how many of the requested number of
         # servers can be created
