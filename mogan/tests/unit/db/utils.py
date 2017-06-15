@@ -207,6 +207,7 @@ def get_test_flavor(**kw):
         'disks': kw.get('disks', [{'type': 'SSD', 'size_gb': 1024},
                                   {'type': 'HDD', 'size_gb': 1024}]),
         'is_public': kw.get('is_public', 1),
+        'disabled': kw.get('disabled', 0),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),
     }

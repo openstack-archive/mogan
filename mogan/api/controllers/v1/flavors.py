@@ -72,6 +72,9 @@ class Flavor(base.APIBase):
     is_public = types.boolean
     """Indicates whether the flavor is public."""
 
+    disabled = types.boolean
+    """Indicates whether the flavor is disabled."""
+
     extra_specs = {wtypes.text: types.jsontype}
     """The extra specs of the flavor"""
 
