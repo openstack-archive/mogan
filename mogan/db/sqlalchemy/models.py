@@ -179,6 +179,7 @@ class Flavors(Base):
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=True)
     is_public = Column(Boolean, default=True)
+    disabled = Column(Boolean, default=False)
     servers = orm.relationship(
         Server,
         backref=orm.backref('flavor', uselist=False),

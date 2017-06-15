@@ -23,6 +23,7 @@ create_flavor = {
         'name': parameter_types.name,
         'description': parameter_types.description,
         'is_public': parameter_types.boolean,
+        'disabled': parameter_types.boolean,
         'cpus': parameter_types.flavor_cpus,
         'memory': parameter_types.flavor_memory,
         'nics': parameter_types.flavor_nics,
