@@ -23,6 +23,7 @@ create_flavor = {
         'name': parameter_types.name,
         'description': parameter_types.description,
         'is_public': parameter_types.boolean,
+        'disabled': parameter_types.boolean,
     },
     'required': ['name', 'description'],
     'additionalProperties': False,

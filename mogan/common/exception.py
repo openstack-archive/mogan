@@ -153,7 +153,7 @@ class FlavorAlreadyExists(MoganException):
 
 
 class FlavorNotFound(NotFound):
-    _msg_fmt = _("Flavor %(type_id)s could not be found.")
+    _msg_fmt = _("Flavor %(flavor_id)s could not be found.")
 
 
 class ServerAlreadyExists(MoganException):

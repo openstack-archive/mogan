@@ -81,6 +81,8 @@ class API(object):
                                          requested_networks, user_data,
                                          key_name, max_count):
         """Verify all the input parameters"""
+        if flavor['disabled']:
+            raise exception.FlavorNotFound(flavor_id=flavor['uuid'])
 
         if user_data:
             l = len(user_data)

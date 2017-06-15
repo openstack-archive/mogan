@@ -36,6 +36,7 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         'name': object_fields.StringField(nullable=True),
         'description': object_fields.StringField(nullable=True),
         'is_public': object_fields.BooleanField(),
+        'disabled': object_fields.BooleanField(),
         'extra_specs': object_fields.FlexibleDictField(nullable=True),
         'projects': object_fields.ListOfStringsField(),
     }
