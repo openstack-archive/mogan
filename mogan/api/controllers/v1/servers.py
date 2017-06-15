@@ -89,11 +89,11 @@ class ServerStatesController(ServerControllerBase):
 
         :param server_uuid: the UUID of a server.
         """
-        rpc_server = self._resource or self._get_resource(server_uuid)
+        db_server = self._resource or self._get_resource(server_uuid)
 
-        return ServerStates(power_state=rpc_server.power_state,
-                            status=rpc_server.status,
-                            locked=rpc_server.locked)
+        return ServerStates(power_state=db_server.power_state,
+                            status=db_server.status,
+                            locked=db_server.locked)
 
     @policy.authorize_wsgi("mogan:server", "set_power_state")
     @expose.expose(None, types.uuid, wtypes.text,
@@ -116,9 +116,9 @@ class ServerStatesController(ServerControllerBase):
                 value=target, action="power",
                 server=server_uuid)
 
-        rpc_server = self._resource or self._get_resource(server_uuid)
+        db_server = self._resource or self._get_resource(server_uuid)
         pecan.request.engine_api.power(
-            pecan.request.context, rpc_server, target)
+            pecan.request.context, db_server, target)
         # At present we do not catch the Exception from ironicclient.
         # Such as Conflict and BadRequest.
         # varify provision_state, if server is being cleaned,
@@ -139,20 +139,20 @@ class ServerStatesController(ServerControllerBase):
         :param target: the desired target to change lock state,
                        true or false
         """
-        rpc_server = self._resource or self._get_resource(server_uuid)
+        db_server = self._resource or self._get_resource(server_uuid)
         context = pecan.request.context
 
         # Target is True, means lock a server
         if target:
-            pecan.request.engine_api.lock(context, rpc_server)
+            pecan.request.engine_api.lock(context, db_server)
 
         # Else, unlock the server
         else:
             # Try to unlock a server with non-admin or non-owner
             if not pecan.request.engine_api.is_expected_locked_by(
-                    context, rpc_server):
+                    context, db_server):
                 raise exception.Forbidden()
-            pecan.request.engine_api.unlock(context, rpc_server)
+            pecan.request.engine_api.unlock(context, db_server)
 
     @policy.authorize_wsgi("mogan:server", "set_provision_state")
     @expose.expose(None, types.uuid, wtypes.text,
@@ -177,11 +177,11 @@ class ServerStatesController(ServerControllerBase):
                 value=target, action="provision",
                 server=server_uuid)
 
-        rpc_server = self._resource or self._get_resource(server_uuid)
+        db_server = self._resource or self._get_resource(server_uuid)
         if target == states.REBUILD:
             try:
                 pecan.request.engine_api.rebuild(pecan.request.context,
-                                                 rpc_server)
+                                                 db_server)
             except exception.ServerNotFound:
                 msg = (_("Server %s could not be found") %
                        server_uuid)
@@ -396,8 +396,8 @@ class ServerNetworksController(ServerControllerBase):
 
         :param server_uuid: the UUID of a server.
         """
-        rpc_server = self._resource or self._get_resource(server_uuid)
-        return ServerNetworks(nics=rpc_server.nics.as_list_of_dict())
+        db_server = self._resource or self._get_resource(server_uuid)
+        return ServerNetworks(nics=db_server.nics.as_list_of_dict())
 
 
 class Server(base.APIBase):
@@ -595,8 +595,8 @@ class ServerController(ServerControllerBase):
         :param fields: Optional, a list with a specified set of fields
                        of the resource to be returned.
         """
-        rpc_server = self._resource or self._get_resource(server_uuid)
-        server_data = rpc_server.as_dict()
+        db_server = self._resource or self._get_resource(server_uuid)
+        server_data = db_server.as_dict()
 
         return Server.convert_with_links(server_data, fields=fields)
 
@@ -719,10 +719,10 @@ class ServerController(ServerControllerBase):
         :param server_uuid: UUID of a server.
         :param patch: a json PATCH document to apply to this server.
         """
-        rpc_server = self._resource or self._get_resource(server_uuid)
+        db_server = self._resource or self._get_resource(server_uuid)
         try:
             server = Server(
-                **api_utils.apply_jsonpatch(rpc_server.as_dict(), patch))
+                **api_utils.apply_jsonpatch(db_server.as_dict(), patch))
 
         except api_utils.JSONPATCH_EXCEPTIONS as e:
             raise exception.PatchError(patch=patch, reason=e)
@@ -738,12 +738,12 @@ class ServerController(ServerControllerBase):
                 continue
             if patch_val == wtypes.Unset:
                 patch_val = None
-            if rpc_server[field] != patch_val:
-                rpc_server[field] = patch_val
+            if db_server[field] != patch_val:
+                db_server[field] = patch_val
 
-        rpc_server.save()
+        db_server.save()
 
-        return Server.convert_with_links(rpc_server.as_dict())
+        return Server.convert_with_links(db_server.as_dict())
 
     @policy.authorize_wsgi("mogan:server", "delete")
     @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)
@@ -752,5 +752,5 @@ class ServerController(ServerControllerBase):
 
         :param server_uuid: UUID of a server.
         """
-        rpc_server = self._resource or self._get_resource(server_uuid)
-        pecan.request.engine_api.delete(pecan.request.context, rpc_server)
+        db_server = self._resource or self._get_resource(server_uuid)
+        pecan.request.engine_api.delete(pecan.request.context, db_server)
