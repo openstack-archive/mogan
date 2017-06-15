@@ -169,7 +169,7 @@ function cleanup_mogan {
 
 
 function create_flavor {
-    openstack baremetal flavor create ${MOGAN_DEFAULT_FLAVOR} --cpus 1 --cpu-model 'Intel(R) Xeon(R) E5620 2.40GHz' --ram 1280 --ram-type 'DDR3' --nic speed='10 Gbps',type='Ethernet' --disk size_gb=10,type='SSD'
+    openstack baremetal flavor create ${MOGAN_DEFAULT_FLAVOR} --description 'Mogan default flavor'
 }
 
 
