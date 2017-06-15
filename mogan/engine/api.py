@@ -77,7 +77,7 @@ class API(object):
 
     def _validate_and_build_base_options(self, context, flavor,
                                          image_uuid, name, description,
-                                         availability_zone, extra,
+                                         availability_zone, metadata,
                                          requested_networks, user_data,
                                          key_name, max_count):
         """Verify all the input parameters"""
@@ -117,7 +117,7 @@ class API(object):
             'name': name,
             'description': description,
             'locked': False,
-            'extra': extra or {},
+            'metadata': metadata or {},
             'availability_zone': availability_zone}
 
         # return the validated options
@@ -247,7 +247,7 @@ class API(object):
                                                   max_count)
 
     def _create_server(self, context, flavor, image_uuid,
-                       name, description, availability_zone, extra,
+                       name, description, availability_zone, metadata,
                        requested_networks, user_data, injected_files,
                        key_name, min_count, max_count):
         """Verify all the input parameters"""
@@ -262,7 +262,7 @@ class API(object):
         base_options, max_net_count, key_pair = \
             self._validate_and_build_base_options(
                 context, flavor, image_uuid, name, description,
-                availability_zone, extra, requested_networks, user_data,
+                availability_zone, metadata, requested_networks, user_data,
                 key_name, max_count)
 
         # max_net_count is the maximum number of servers requested by the
@@ -304,7 +304,7 @@ class API(object):
 
     def create(self, context, flavor, image_uuid,
                name=None, description=None, availability_zone=None,
-               extra=None, requested_networks=None, user_data=None,
+               metadata=None, requested_networks=None, user_data=None,
                injected_files=None, key_name=None, min_count=None,
                max_count=None):
         """Provision servers
@@ -323,7 +323,7 @@ class API(object):
 
         return self._create_server(context, flavor,
                                    image_uuid, name, description,
-                                   availability_zone, extra,
+                                   availability_zone, metadata,
                                    requested_networks, user_data,
                                    injected_files, key_name,
                                    min_count, max_count)
