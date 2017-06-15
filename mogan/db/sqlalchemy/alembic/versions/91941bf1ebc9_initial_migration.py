@@ -68,62 +68,6 @@ def upgrade():
         mysql_DEFAULT_CHARSET='UTF8'
     )
     op.create_table(
-        'flavor_cpus',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('model', sa.String(length=255), nullable=True),
-        sa.Column('cores', sa.Integer(), nullable=False),
-        sa.Column('flavor_uuid', sa.String(length=36), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['flavor_uuid'],
-                                ['flavors.uuid']),
-        mysql_ENGINE='InnoDB',
-        mysql_DEFAULT_CHARSET='UTF8'
-    )
-    op.create_table(
-        'flavor_memory',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('type', sa.String(length=255), nullable=True),
-        sa.Column('size_mb', sa.Integer(), nullable=False),
-        sa.Column('flavor_uuid', sa.String(length=36), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['flavor_uuid'],
-                                ['flavors.uuid']),
-        mysql_ENGINE='InnoDB',
-        mysql_DEFAULT_CHARSET='UTF8'
-    )
-    op.create_table(
-        'flavor_disks',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('type', sa.String(length=255), nullable=True),
-        sa.Column('size_gb', sa.Integer(), nullable=False),
-        sa.Column('flavor_uuid', sa.String(length=36), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['flavor_uuid'],
-                                ['flavors.uuid']),
-        mysql_ENGINE='InnoDB',
-        mysql_DEFAULT_CHARSET='UTF8'
-    )
-    op.create_table(
-        'flavor_nics',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('type', sa.String(length=255), nullable=True),
-        sa.Column('speed', sa.String(length=255), nullable=False),
-        sa.Column('flavor_uuid', sa.String(length=36), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['flavor_uuid'],
-                                ['flavors.uuid']),
-        mysql_ENGINE='InnoDB',
-        mysql_DEFAULT_CHARSET='UTF8'
-    )
-    op.create_table(
         'servers',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),

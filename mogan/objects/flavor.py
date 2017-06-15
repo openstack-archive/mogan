@@ -35,10 +35,6 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         'uuid': object_fields.UUIDField(nullable=True),
         'name': object_fields.StringField(nullable=True),
         'description': object_fields.StringField(nullable=True),
-        'cpus': object_fields.FlexibleDictField(),
-        'memory': object_fields.FlexibleDictField(),
-        'nics': object_fields.ListOfDictOfNullableStringsField(),
-        'disks': object_fields.ListOfDictOfNullableStringsField(),
         'is_public': object_fields.BooleanField(),
         'extra_specs': object_fields.FlexibleDictField(),
         'projects': object_fields.ListOfStringsField(),
@@ -135,12 +131,6 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         updates = self.obj_get_changes()
         projects = updates.pop('projects', None)
         extra_specs = updates.pop('extra_specs', None)
-        updates.pop('cpus', None)
-        updates.pop('memory', None)
-        updates.pop('nics', None)
-        updates.pop('disks', None)
-
-        # extra specs
         if extra_specs is not None:
             deleted_keys = (set(self._orig_extra_specs.keys()) -
                             set(extra_specs.keys()))
@@ -148,15 +138,14 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         else:
             added_keys = deleted_keys = None
 
-        if added_keys or deleted_keys:
-            self.save_extra_specs(context, self.extra_specs, deleted_keys)
-
-        # access projects
         if projects is not None:
             deleted_projects = set(self._orig_projects) - set(projects)
             added_projects = set(projects) - set(self._orig_projects)
         else:
             added_projects = deleted_projects = None
+
+        if added_keys or deleted_keys:
+            self.save_extra_specs(context, self.extra_specs, deleted_keys)
 
         if added_projects or deleted_projects:
             self.save_projects(context, added_projects, deleted_projects)
