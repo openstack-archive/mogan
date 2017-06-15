@@ -76,7 +76,6 @@ class TestFlavorObject(base.DbTestCase):
             flavor.name = 'changed_name'
             updates = flavor.obj_get_changes()
             flavor.save(self.context)
-            updates.pop('extra_specs', None)
             updates.pop('cpus', None)
             updates.pop('memory', None)
             updates.pop('disks', None)

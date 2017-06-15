@@ -255,16 +255,6 @@ class NoValidNode(MoganException):
     _msg_fmt = _("No valid node was found. %(reason)s")
 
 
-class FlavorExtraSpecUpdateCreateFailed(MoganException):
-    _msg_fmt = _("Flavor %(id)s extra spec cannot be updated or"
-                 "created after %(retries)d retries.")
-
-
-class FlavorExtraSpecsNotFound(NotFound):
-    _msg_fmt = _("Flavor %(flavor_id)s has no extra specs with "
-                 "key %(extra_specs_key)s.")
-
-
 class InterfacePlugException(MoganException):
     _msg_fmt = _("Interface plugin failed")
 

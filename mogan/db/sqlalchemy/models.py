@@ -178,6 +178,7 @@ class Flavors(Base):
     uuid = Column(String(36), primary_key=True)
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=True)
+    extra_specs = Column(db_types.JsonEncodedDict)
     is_public = Column(Boolean, default=True)
     servers = orm.relationship(
         Server,
@@ -206,29 +207,6 @@ class FlavorProjects(Base):
         foreign_keys=flavor_uuid,
         primaryjoin='FlavorProjects.flavor_uuid'
                     ' == Flavors.uuid')
-
-
-class FlavorExtraSpecs(Base):
-    """Represents additional specs as key/value pairs for an flavor."""
-    __tablename__ = 'flavor_extra_specs'
-    __table_args__ = (
-        schema.UniqueConstraint(
-            "flavor_uuid", "key",
-            name=("uniq_flavor_extra_specs0"
-                  "flavor_uuid")
-        ),
-        {'mysql_collate': 'utf8_bin'},
-    )
-    id = Column(Integer, primary_key=True)
-    key = Column(String(255))
-    value = Column(String(255))
-    flavor_uuid = Column(String(36), ForeignKey('flavors.uuid'),
-                         nullable=False)
-    flavor = orm.relationship(
-        Flavors, backref="extra_specs",
-        foreign_keys=flavor_uuid,
-        primaryjoin='FlavorExtraSpecs.flavor_uuid '
-                    '== Flavors.uuid')
 
 
 class FlavorCpus(Base):
