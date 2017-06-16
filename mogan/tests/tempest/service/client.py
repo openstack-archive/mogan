@@ -183,6 +183,13 @@ class BaremetalComputeClient(rest_client.RestClient):
         body = self.deserialize(body)['console']
         return rest_client.ResponseBody(resp, body)
 
+    def server_get_networks(self, server_id):
+        uri = '%s/servers/%s/networks' % (self.uri_prefix, server_id)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['nics']
+        return rest_client.ResponseBody(resp, body)
+
 
 class BaremetalNodeClient(rest_client.RestClient):
     version = '1'
