@@ -113,8 +113,7 @@ class TestServers(v1_test.APITestV1):
         mocked.side_effect = [self.INSTANCE_TYPE_UUID]
         headers = self.gen_headers(self.context, roles="admin")
         body = {"name": "type_for_server_testing",
-                "description": "type for server testing",
-                "nics": [{"type": "Ethernet", "speed": "10GE"}]}
+                "description": "type for server testing"}
         self.post_json('/flavors', body, headers=headers, status=201)
 
     @mock.patch('mogan.scheduler.rpcapi.SchedulerAPI.select_destinations')
