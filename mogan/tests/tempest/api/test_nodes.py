@@ -27,10 +27,10 @@ class BaremetalComputeAPINodesTest(base.BaseBaremetalComputeTest):
     def test_nodes_list(self):
         nodes = self.baremetal_compute_client.list_nodes()
         self.assertIsInstance(nodes, list)
-        node = nodes[0]
-        self.assertIn('node_uuid', node)
-        self.assertIn('hypervisor_type', node)
-        self.assertIn('extra_specs', node)
-        self.assertIn('availability_zone', node)
-        self.assertIn('availability_zone', node)
-        self.assertIn('resource_class', node)
+        if nodes:
+            node = nodes[0]
+            self.assertIn('node_uuid', node)
+            self.assertIn('hypervisor_type', node)
+            self.assertIn('extra_specs', node)
+            self.assertIn('availability_zone', node)
+            self.assertIn('resource_class', node)
