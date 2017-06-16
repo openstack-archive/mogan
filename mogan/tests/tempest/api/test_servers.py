@@ -152,3 +152,18 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         console = self.baremetal_compute_client.server_get_serial_console(
             self.server_ids[0])
         self.assertIn('url', console)
+
+    def test_server_get_nics(self):
+        nics = self.baremetal_compute_client.server_get_networks(
+            self.server_ids[0])
+        self.assertIsInstance(nics, list)
+        nic = nics[0]
+        self.assertIn('network_id', nic)
+        self.assertIn('port_id', nic)
+        self.assertIn('floating_ip', nic)
+        self.assertIn('port_type', nic)
+        self.assertIn('mac_address', nic)
+        self.assertIsInstance(nic['fixed_ips'], list)
+        fixed_ip = nic['fixed_ips'][0]
+        self.assertIn('subnet_id', fixed_ip)
+        self.assertIn('ip_address', fixed_ip)
