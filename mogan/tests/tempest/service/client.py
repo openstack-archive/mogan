@@ -169,6 +169,13 @@ class BaremetalComputeClient(rest_client.RestClient):
         self.expected_success(202, resp.status)
         return rest_client.ResponseBody(resp, body)
 
+    def list_nodes(self):
+        uri = '%s/nodes' % self.uri_prefix
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['nodes']
+        return rest_client.ResponseBodyList(resp, body)
+
 
 class Manager(manager.Manager):
 
