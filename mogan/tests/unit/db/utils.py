@@ -166,6 +166,7 @@ def get_test_flavor(**kw):
         'name': kw.get('name', 'test'),
         'description': kw.get('description', 'test'),
         'is_public': kw.get('is_public', 1),
+        'disabled': kw.get('disabled', 0),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),
     }

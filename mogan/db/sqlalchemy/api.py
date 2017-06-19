@@ -136,7 +136,7 @@ class Connection(api.Connection):
             return query.one()
         except NoResultFound:
             raise exception.FlavorNotFound(
-                type_id=flavor_uuid)
+                flavor_id=flavor_uuid)
 
     def flavor_update(self, context, flavor_id, values):
         with _session_for_write():
@@ -146,7 +146,7 @@ class Connection(api.Connection):
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
                 raise exception.FlavorNotFound(
-                    type_id=flavor_id)
+                    flavor_id=flavor_id)
 
             ref.update(values)
             return ref
@@ -180,7 +180,7 @@ class Connection(api.Connection):
             count = query.delete()
             if count != 1:
                 raise exception.FlavorNotFound(
-                    type_id=flavor_uuid)
+                    flavor_id=flavor_uuid)
 
     def server_create(self, context, values):
         if not values.get('uuid'):
@@ -808,7 +808,7 @@ def _type_get_id_from_type_query(context, type_id):
 def _type_get_id_from_type(context, type_id):
     result = _type_get_id_from_type_query(context, type_id).first()
     if not result:
-        raise exception.FlavorNotFound(type_id=type_id)
+        raise exception.FlavorNotFound(flavor_id=type_id)
     return result.uuid
 
 

@@ -37,6 +37,7 @@ def upgrade():
         sa.Column('description', sa.String(length=255), nullable=True),
         sa.Column('extra_specs', sa.Text(), nullable=True),
         sa.Column('is_public', sa.Boolean(), nullable=False),
+        sa.Column('disabled', sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint('uuid'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'

@@ -158,6 +158,7 @@ class Flavors(Base):
     description = Column(String(255), nullable=True)
     extra_specs = Column(db_types.JsonEncodedDict)
     is_public = Column(Boolean, default=True)
+    disabled = Column(Boolean, default=False)
     servers = orm.relationship(
         Server,
         backref=orm.backref('flavor', uselist=False),
