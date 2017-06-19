@@ -47,6 +47,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         super(BaseBaremetalComputeTest, cls).setup_clients()
         cls.baremetal_compute_client = cls.os_admin.baremetal_compute_client
         cls.compute_networks_client = cls.os_admin.compute_networks_client
+        cls.baremetal_node_client = cls.os_admin.baremetal_node_client
 
     @classmethod
     def _get_small_flavor(cls):

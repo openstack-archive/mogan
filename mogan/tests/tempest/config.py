@@ -22,6 +22,9 @@ ServiceAvailableGroup = [
     cfg.BoolOpt("mogan_plugin",
                 default=True,
                 help="Whether or not Mogan is expected to be available"),
+    cfg.BoolOpt("ironic_plugin",
+                default=True,
+                help="Whether or not Ironic is expected to be available")
 ]
 
 baremetal_compute_group = cfg.OptGroup(
@@ -37,4 +40,18 @@ BaremetalComputeGroup = [
                         'publicURL', 'adminURL', 'internalURL'],
                help="The endpoint type to use for the baremetal_compute"
                     " service."),
+]
+
+baremetal_node_group = cfg.OptGroup(
+    name='baremetal_node_plugin', title='Baremetal Service Options')
+
+BaremetalNodeGroup = [
+    cfg.StrOpt('catalog_type',
+               default='baremetal',
+               help="Catalog type of the baremetal service."),
+    cfg.StrOpt('endpoint_type',
+               default='publicURL',
+               choices=['public', 'admin', 'internal',
+                        'publicURL', 'adminURL', 'internalURL'],
+               help="The endpoint type to use for the baremetal service."),
 ]
