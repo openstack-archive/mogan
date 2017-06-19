@@ -175,3 +175,23 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         nics = self.baremetal_compute_client.server_get_networks(
             self.server_ids[0])
         self.assertEqual(2, len(nics))
+
+    def test_floatingip_association_disassociation(self):
+        self._ensure_states_before_test()
+        resp = self.network_flaotiingip_client.create_floatingip(
+            floating_network_id=self.ext_net_id)
+        floatingip = resp['floatingip']
+        self.baremetal_compute_client.server_associate_floatingip(
+            self.server_ids[0], floatingip['floating_ip_address'])
+        # server_nics = self.baremetal_compute_client.server_get_networks(
+        #    self.server_ids[0])
+        # need to improve the api
+        # server_floatingip = server_nics[0]['floating_ip']
+        # self.assertEqual(floatingip['floating_ip_address'],
+        # server_floatingip)
+        self.baremetal_compute_client.server_disassociate_floatingip(
+            self.server_ids[0], floatingip['floating_ip_address'])
+        # server_nics = self.baremetal_compute_client.server_get_networks(
+        #     self.server_ids[0])
+        # server_floatingip = server_nics[0]['floating_ip']
+        # self.assertEqual(None, server_floatingip)
