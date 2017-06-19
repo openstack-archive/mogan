@@ -420,4 +420,19 @@ class KeypairNotFound(NotFound):
 class InvalidKeypair(Invalid):
     _msg_fmt = _("Keypair data is invalid: %(reason)s")
 
+
+class InvalidInventory(Invalid):
+    msg_fmt = _("Inventory for '%(resource_class)s' on "
+                "resource provider '%(resource_provider)s' invalid.")
+
+
+class InvalidResourceClass(Invalid):
+    msg_fmt = _("Resource class '%(resource_class)s' invalid.")
+
+
+class InventoryInUse(InvalidInventory):
+    msg_fmt = _("Inventory for '%(resource_classes)s' on "
+                "resource provider '%(resource_provider)s' in use.")
+
+
 ObjectActionError = obj_exc.ObjectActionError
