@@ -131,28 +131,6 @@ class ComputePort(Base):
         primaryjoin='ComputeNode.node_uuid == ComputePort.node_uuid')
 
 
-class ComputeDisk(Base):
-    """Represents the compute disks."""
-
-    __tablename__ = 'compute_disks'
-    __table_args__ = (
-        schema.UniqueConstraint('disk_uuid',
-                                name='uniq_compute_disks0disk_uuid'),
-        table_args()
-    )
-    id = Column(Integer, primary_key=True)
-    disk_type = Column(String(255), nullable=False)
-    size_gb = Column(Integer, nullable=False)
-    disk_uuid = Column(String(36), nullable=False)
-    node_uuid = Column(String(36), nullable=False)
-    extra_specs = Column(db_types.JsonEncodedDict)
-    _node = orm.relationship(
-        "ComputeNode",
-        backref='disks',
-        foreign_keys=node_uuid,
-        primaryjoin='ComputeNode.node_uuid == ComputeDisk.node_uuid')
-
-
 class InstanceNic(Base):
     """Represents the NIC info for instances."""
 

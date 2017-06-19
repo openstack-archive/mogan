@@ -160,40 +160,6 @@ def create_test_compute_port(context={}, **kw):
     return dbapi.compute_port_create(context, port)
 
 
-def get_test_compute_disk(**kw):
-    return {
-        'id': kw.get('id', 123),
-        'disk_type': kw.get('disk_type', 'SSD'),
-        'size_gb': kw.get('size_gb', 100),
-        'disk_uuid': kw.get('disk_uuid',
-                            'f978ef48-d4af-4dad-beec-e6174309bc73'),
-        'node_uuid': kw.get('node_uuid',
-                            'f978ef48-d4af-4dad-beec-e6174309bc71'),
-        'extra_specs': kw.get('extra_specs', {}),
-        'updated_at': kw.get('updated_at'),
-        'created_at': kw.get('created_at'),
-    }
-
-
-def create_test_compute_disk(context={}, **kw):
-    """Create test compute disk entry in DB and return ComputeDisk DB object.
-
-    Function to be used to create test ComputeDisk objects in the database.
-
-    :param context: The request context, for access checks.
-    :param kw: kwargs with overriding values for port's attributes.
-    :returns: Test ComputeDisk DB object.
-
-    """
-    disk = get_test_compute_disk(**kw)
-    # Let DB generate ID if it isn't specified explicitly
-    if 'id' not in kw:
-        del disk['id']
-    dbapi = db_api.get_instance()
-
-    return dbapi.compute_disk_create(context, disk)
-
-
 def get_test_instance_type(**kw):
     return {
         'uuid': kw.get('uuid', uuidutils.generate_uuid()),

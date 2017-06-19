@@ -180,14 +180,6 @@ class ComputePortNotFound(NotFound):
     msg_fmt = _("ComputePort %(port)s could not be found.")
 
 
-class ComputeDiskAlreadyExists(MoganException):
-    _msg_fmt = _("ComputeDisk with disk_uuid %(disk)s already exists.")
-
-
-class ComputeDiskNotFound(NotFound):
-    msg_fmt = _("ComputeDisk %(disk)s could not be found.")
-
-
 class NodeNotFound(NotFound):
     msg_fmt = _("Node associated with instance %(instance)s "
                 "could not be found.")
