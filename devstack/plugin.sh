@@ -84,6 +84,16 @@ function configure_mogan {
     iniset ${MOGAN_CONF_FILE} ironic auth_type "password"
     iniset ${MOGAN_CONF_FILE} ironic api_endpoint "${KEYSTONE_AUTH_PROTOCOL}://${SERVICE_HOST}:${IRONIC_SERVICE_PORT}"
 
+    # Setup placement section
+    iniset ${MOGAN_CONF_FILE} placement project_domain_name ${SERVICE_DOMAIN_NAME}
+    iniset ${MOGAN_CONF_FILE} placement project_name ${SERVICE_PROJECT_NAME}
+    iniset ${MOGAN_CONF_FILE} placement user_domain_name ${SERVICE_DOMAIN_NAME}
+    iniset ${MOGAN_CONF_FILE} placement username "placement"
+    iniset ${MOGAN_CONF_FILE} placement password ${SERVICE_PASSWORD}
+    iniset ${MOGAN_CONF_FILE} placement auth_url ${KEYSTONE_AUTH_URI}
+    iniset ${MOGAN_CONF_FILE} placement auth_type "password"
+    iniset ${MOGAN_CONF_FILE} placement api_endpoint "${KEYSTONE_AUTH_PROTOCOL}://${SERVICE_HOST}:${IRONIC_SERVICE_PORT}"
+
     # Setup neutron section
     iniset ${MOGAN_CONF_FILE} neutron url "${NEUTRON_SERVICE_PROTOCOL}://${SERVICE_HOST}:${NEUTRON_SERVICE_PORT}"
 
@@ -187,6 +197,9 @@ function update_ironic_node_resource_class {
 
 
 if is_service_enabled mogan; then
+    if ! is_service_enabled placement; then
+        die "placement service is required for Mogan"
+    fi
     if is_service_enabled tempest; then
         iniset $TEMPEST_CONFIG compute fixed_network_name $PRIVATE_NETWORK_NAME
     fi

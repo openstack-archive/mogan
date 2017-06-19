@@ -33,13 +33,6 @@ class BaseEngineDriver(object):
         """Add init staff here.
         """
 
-    def get_available_resources(self):
-        """Retrieve resource information.
-
-        :returns: Dictionary describing resources
-        """
-        raise NotImplementedError()
-
     def get_maintenance_node_list(self):
         """Return maintenance nodes.
 
@@ -118,6 +111,21 @@ class BaseEngineDriver(object):
         """Get console info by server.
 
         :param server: server to get its console info.
+        """
+        raise NotImplementedError()
+
+    def get_available_resources(self):
+        """Retrieve all nodes information.
+
+        :returns: Dictionary describing nodes
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def get_node_inventory(node):
+        """Get the inventory of a node.
+
+        :param node: node to get its inventory data.
         """
         raise NotImplementedError()
 

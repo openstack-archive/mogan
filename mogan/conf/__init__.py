@@ -25,6 +25,7 @@ from mogan.conf import glance
 from mogan.conf import ironic
 from mogan.conf import keystone
 from mogan.conf import neutron
+from mogan.conf import placement
 from mogan.conf import quota
 from mogan.conf import scheduler
 from mogan.conf import shellinabox
@@ -44,3 +45,4 @@ quota.register_opts(CONF)
 scheduler.register_opts(CONF)
 shellinabox.register_opts(CONF)
 cache.register_opts(CONF)
+placement.register_opts(CONF)
