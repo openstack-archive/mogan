@@ -121,6 +121,21 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
+    def get_available_nodes(self):
+        """Retrieve all nodes information.
+
+        :returns: Dictionary describing nodes
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def get_node_inventory(node):
+        """Get the inventory of a node.
+
+        :param node: node to get its inventory data.
+        """
+        raise NotImplementedError()
+
 
 def load_engine_driver(engine_driver):
     """Load a engine driver module.
