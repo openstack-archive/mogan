@@ -37,6 +37,8 @@ from mogan.notifications import base as notifications
 from mogan import objects
 from mogan.objects import fields
 from mogan.objects import quota
+from mogan.scheduler import client
+from mogan.scheduler import utils as sched_utils
 
 LOG = log.getLogger(__name__)
 
@@ -77,6 +79,7 @@ class EngineManager(base_manager.BaseEngineManager):
         super(EngineManager, self).__init__(*args, **kwargs)
         self.quota = quota.Quota()
         self.quota.register_resource(objects.quota.ServerResource())
+        self.scheduler_client = client.SchedulerClient()
 
     def _get_compute_port(self, context, port_uuid):
         """Gets compute port by the uuid."""
@@ -160,6 +163,7 @@ class EngineManager(base_manager.BaseEngineManager):
         for uuid, node in nodes.items():
             if node.get('resource_class') is None:
                 continue
+
             # initialize the compute node object, creating it
             # if it does not already exist.
             self._init_compute_node(context, node)
@@ -170,6 +174,31 @@ class EngineManager(base_manager.BaseEngineManager):
                 LOG.info("Deleting orphan compute node %(id)s)",
                          {'id': cn.node_uuid})
                 cn.destroy()
+
+        all_nodes = self.driver.get_all_nodes()
+
+        all_rps = self.scheduler_client.reportclient\
+            .get_filtered_resource_providers({})
+        node_uuids = [node.uuid for node in all_nodes]
+
+        # Clean orphan resource providers in placement
+        for rp in all_rps:
+            if rp['uuid'] not in node_uuids:
+                self.scheduler_client.reportclient.delete_resource_provider(
+                    rp['uuid'])
+
+        for node in all_nodes:
+            if self.driver.is_node_unavailable(node):
+                self.scheduler_client.reportclient.delete_resource_provider(
+                    node.uuid)
+            else:
+                resource_class = sched_utils.ensure_resource_class_name(
+                    node.resource_class)
+                inventory = self.driver.get_node_inventory(node)
+                inventory_data = {resource_class: inventory}
+                self.scheduler_client.set_inventory_for_provider(
+                    node.uuid, node.name, inventory_data,
+                    resource_class)
 
     @periodic_task.periodic_task(spacing=CONF.engine.sync_power_state_interval,
                                  run_immediately=True)

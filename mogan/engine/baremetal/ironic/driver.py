@@ -653,3 +653,56 @@ class IronicDriver(base_driver.BaseEngineDriver):
         else:
             LOG.debug('Console is disabled for node %s', node_uuid)
             raise exception.ConsoleNotAvailable()
+
+    def get_all_nodes(self):
+        """Helper function to return the list of all nodes.
+
+        If unable to connect ironic server, an empty list is returned.
+
+        :returns: a list of raw node from ironic
+
+        """
+        params = {
+            'detail': True,
+            'limit': 0
+        }
+        try:
+            node_list = self.ironicclient.call("node.list", **params)
+        except client_e.ClientException as e:
+            LOG.exception("Could not get nodes from ironic. Reason: "
+                          "%(detail)s", {'detail': e.message})
+            node_list = []
+
+        return node_list
+
+    def is_node_unavailable(self, node_obj):
+        """Determine whether the node's resources are in an acceptable state.
+
+        Determines whether the node's resources should be presented
+        to Mogan for use based on the current power, provision and maintenance
+        state.
+
+        :param node_obj: node object to check if it is unavailable.
+        """
+        bad_power_states = [ironic_states.ERROR, ironic_states.NOSTATE]
+        # keep NOSTATE around for compatibility
+        good_provision_states = [
+            ironic_states.AVAILABLE, ironic_states.NOSTATE]
+        return ((node_obj.resource_class is None) or
+                node_obj.maintenance or
+                node_obj.power_state in bad_power_states or
+                (node_obj.provision_state in good_provision_states and
+                 node_obj.instance_uuid is not None))
+
+    def get_node_inventory(self, node):
+        """Get the inventory of a node.
+
+        :param node: server to get its inventory data.
+        """
+        return {'total': 1,
+                'reserved': 0,
+                'min_unit': 1,
+                'max_unit': 1,
+                'step_size': 1,
+                'allocation_ratio': 1.0,
+                }
