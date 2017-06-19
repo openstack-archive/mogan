@@ -18,6 +18,7 @@ from tempest import config
 from tempest.lib.common import rest_client
 from tempest.lib.services.compute import networks_client as network_cli
 from tempest.lib.services.image.v2 import images_client as image_cli
+from tempest.lib.services.network import floating_ips_client as fip_cli
 from tempest import manager
 
 CONF = config.CONF
@@ -201,6 +202,29 @@ class BaremetalComputeClient(rest_client.RestClient):
             body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
+    def server_associate_floatingip(self, server_id, floatingip,
+                                    fixed_ip=None):
+        uri = '%s/servers/%s/networks/floatingips' % (
+            self.uri_prefix, server_id)
+        body = {"address": floatingip}
+        if fixed_ip:
+            body.update({'fixed_address': fixed_ip})
+        body = self.serialize(body)
+        resp, body = self.post(uri, body)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def server_disassociate_floatingip(self, server_id, floatingip):
+        uri = '%s/servers/%s/networks/floatingips/%s' % (
+            self.uri_prefix, server_id, floatingip)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
 
 class BaremetalNodeClient(rest_client.RestClient):
     version = '1'
@@ -270,7 +294,8 @@ class Manager(manager.Manager):
         'baremetal_compute_client',
         'compute_networks_client',
         'image_client_v2',
-        'baremetal_node_client'
+        'baremetal_node_client',
+        'network_floatingip_client'
     ]
 
     default_params = {
@@ -305,6 +330,15 @@ class Manager(manager.Manager):
     }
     image_params.update(default_params)
 
+    network_params = {
+        'service': CONF.network.catalog_type,
+        'region': CONF.network.region or CONF.identity.region,
+        'endpoint_type': CONF.network.endpoint_type,
+        'build_interval': CONF.network.build_interval,
+        'build_timeout': CONF.network.build_timeout,
+    }
+    network_params.update(default_params)
+
     baremetal_node_params = {
         'service': CONF.baremetal_node_plugin.catalog_type,
         'region': CONF.identity.region,
@@ -325,6 +359,11 @@ class Manager(manager.Manager):
         self.compute_networks_client = network_cli.NetworksClient(
             self.auth_provider,
             **self.compute_params)
+
+    def set_network_floatingip_client(self):
+        self.network_floatingip_client = fip_cli.FloatingIPsClient(
+            self.auth_provider,
+            **self.network_params)
 
     def set_image_client_v2(self):
         self.image_client_v2 = image_cli.ImagesClient(
