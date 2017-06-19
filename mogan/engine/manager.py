@@ -37,6 +37,7 @@ from mogan.notifications import base as notifications
 from mogan import objects
 from mogan.objects import fields
 from mogan.objects import quota
+from mogan.scheduler import client
 
 LOG = log.getLogger(__name__)
 
@@ -77,6 +78,8 @@ class EngineManager(base_manager.BaseEngineManager):
         super(EngineManager, self).__init__(*args, **kwargs)
         self.quota = quota.Quota()
         self.quota.register_resource(objects.quota.ServerResource())
+        self.scheduler_client = client.SchedulerClient()
+        self.reportclient = self.scheduler_client.reportclient
 
     def _get_compute_port(self, context, port_uuid):
         """Gets compute port by the uuid."""
@@ -160,6 +163,13 @@ class EngineManager(base_manager.BaseEngineManager):
         for uuid, node in nodes.items():
             if node.get('resource_class') is None:
                 continue
+            # for testing
+            inventory_data = {'node': {'total': 1,
+                                       'min_unit': 1,
+                                       'max_unit': 1,
+                                       'step_size': 1,
+                                       }}
+            self.scheduler_client.set_inventory_for_provider()
             # initialize the compute node object, creating it
             # if it does not already exist.
             self._init_compute_node(context, node)
