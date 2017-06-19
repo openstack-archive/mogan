@@ -653,3 +653,51 @@ class IronicDriver(base_driver.BaseEngineDriver):
         else:
             LOG.debug('Console is disabled for node %s', node_uuid)
             raise exception.ConsoleNotAvailable()
+
+    def get_available_nodes(self):
+        """Helper function to return the list of all nodes.
+
+        If unable to connect ironic server, an empty list is returned.
+
+        :returns: a list of normal nodes from ironic
+
+        """
+        normal_nodes = []
+        params = {
+            'detail': True,
+            'limit': 0,
+            'maintenance': False
+        }
+        try:
+            node_list = self.ironicclient.call("node.list", **params)
+        except client_e.ClientException as e:
+            LOG.exception("Could not get nodes from ironic. Reason: "
+                          "%(detail)s", {'detail': e.message})
+            return []
+
+        bad_power_states = [ironic_states.ERROR, ironic_states.NOSTATE]
+        # keep NOSTATE around for compatibility
+        good_provision_states = [
+            ironic_states.AVAILABLE, ironic_states.NOSTATE]
+        for node_obj in node_list:
+            if ((node_obj.resource_class is None) or
+                node_obj.power_state in bad_power_states or
+                (node_obj.provision_state in good_provision_states and
+                    node_obj.instance_uuid is not None)):
+                continue
+            normal_nodes.append(node_obj)
+        return normal_nodes
+
+    @staticmethod
+    def get_node_inventory(node):
+        """Get the inventory of a node.
+
+        :param node: server to get its inventory data.
+        """
+        return {'total': 1,
+                'reserved': 0,
+                'min_unit': 1,
+                'max_unit': 1,
+                'step_size': 1,
+                'allocation_ratio': 1.0,
+                }
