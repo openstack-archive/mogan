@@ -16,7 +16,6 @@ import time
 
 from tempest.lib import decorators
 from tempest.lib import exceptions as lib_exc
-
 from mogan.tests.tempest.api import base
 
 
@@ -175,3 +174,24 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         nics = self.baremetal_compute_client.server_get_networks(
             self.server_ids[0])
         self.assertEqual(2, len(nics))
+
+    def test_floatingip_association(self):
+        self._ensure_states_before_test()
+        server_nics = self.baremetal_compute_client.server_get_networks(
+            self.server_ids[0])
+        resp = self.network_flaotiingip_client.create_floatingip(
+            floating_network_id=self.ext_net_id)
+        fixed_ipaddress = server_nics[0]['fixed_ips'][0]['ip_address']
+        floatingip = resp['floatingip']
+        self.baremetal_compute_client.server_associate_floatingip(
+            self.server_ids[0], floatingip['id'], fixed_ipaddress)
+        server_nics = self.baremetal_compute_client.server_get_networks(
+            self.server_ids[0])
+        server_floatingip = server_nics[0]['floating_ip']
+        self.assertEqual(floatingip['id'], server_floatingip)
+        self.baremetal_compute_client.server_disassociate_floatingip(
+            self.server_ids[0], floatingip['id'])
+        server_nics = self.baremetal_compute_client.server_get_networks(
+            self.server_ids[0])
+        server_floatingip = server_nics[0]['floating_ip']
+        self.assertEqual('', server_floatingip)
