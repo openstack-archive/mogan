@@ -162,3 +162,41 @@ class NotificationActionField(object_fields.BaseEnumField):
 
 class NotificationPriorityField(object_fields.BaseEnumField):
     AUTO_TYPE = NotificationPriority()
+
+
+class ResourceClass(StringField):
+    """Classes of resources provided to consumers."""
+
+    VCPU = 'VCPU'
+    MEMORY_MB = 'MEMORY_MB'
+    DISK_GB = 'DISK_GB'
+    PCI_DEVICE = 'PCI_DEVICE'
+    SRIOV_NET_VF = 'SRIOV_NET_VF'
+    NUMA_SOCKET = 'NUMA_SOCKET'
+    NUMA_CORE = 'NUMA_CORE'
+    NUMA_THREAD = 'NUMA_THREAD'
+    NUMA_MEMORY_MB = 'NUMA_MEMORY_MB'
+    IPV4_ADDRESS = 'IPV4_ADDRESS'
+
+    # The ordering here is relevant. If you must add a value, only
+    # append.
+    STANDARD = (VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF,
+                NUMA_SOCKET, NUMA_CORE, NUMA_THREAD, NUMA_MEMORY_MB,
+                IPV4_ADDRESS)
+
+    # This is the set of standard resource classes that existed before
+    # we opened up for custom resource classes in version 1.1 of various
+    # objects in nova/objects/resource_provider.py
+    V1_0 = (VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF, NUMA_SOCKET,
+            NUMA_CORE, NUMA_THREAD, NUMA_MEMORY_MB, IPV4_ADDRESS)
+
+    # @staticmethod
+    # def normalize_name(rc_name):
+    #     if rc_name is None:
+    #         return None
+    #     norm_name = rc_name.upper()
+    #     cust_prefix = objects.ResourceClass.CUSTOM_NAMESPACE
+    #     norm_name = cust_prefix + norm_name
+    #     # Replace some punctuation characters with underscores
+    #     norm_name = re.sub('[^0-9A-Z]+', '_', norm_name)
+    #     return norm_name
