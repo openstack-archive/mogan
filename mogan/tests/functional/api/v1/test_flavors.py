@@ -34,7 +34,8 @@ class TestFlavor(v1_test.APITestV1):
         mocked.side_effect = self.FLAVOR_UUIDS
         for i in six.moves.xrange(4):
             body = {"name": "test" + str(i),
-                    "description": "just test" + str(i)}
+                    "description": "just test" + str(i),
+                    "extra_specs": {"k1": "v1"}}
             self.post_json('/flavors', body, headers=self.headers, status=201)
 
     def test_flavor_post(self):
@@ -45,8 +46,8 @@ class TestFlavor(v1_test.APITestV1):
         self.assertEqual('test', resp['name'])
         self.assertEqual('just test', resp['description'])
         self.assertEqual(True, resp['is_public'])
+        self.assertEqual({'k', 'foo'}, resp['extra_specs'])
         self.assertIn('uuid', resp)
-        self.assertIn('extra_specs', resp)
         self.assertIn('links', resp)
 
     def test_flavor_get_all(self):
