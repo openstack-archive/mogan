@@ -148,6 +148,12 @@ flavor_description:
   in: body
   required: true
   type: string
+flavor_disabled:
+  description: |
+    Whether or not the flavor has been administratively disabled.
+  in: body
+  required: false
+  type: boolean
 flavor_extra_specs:
   description: |
     Extra spec key and value pairs associate with the flavor.

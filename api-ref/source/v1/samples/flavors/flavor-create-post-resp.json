@@ -15,5 +15,6 @@
   "updated_at": null,
   "extra_specs": {},
   "is_public": true,
+  "disabled": true,
   "name": "test_flavor"
 }

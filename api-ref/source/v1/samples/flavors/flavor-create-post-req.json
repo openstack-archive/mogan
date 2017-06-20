@@ -1,5 +1,9 @@
 {
     "name": "test_flavor",
     "description": "this is a test flavor",
-    "is_public": true
+    "extra_specs": {
+        "capabilities": "boot_mode:bios"
+    },
+    "is_public": true,
+    "disabled": true
 }

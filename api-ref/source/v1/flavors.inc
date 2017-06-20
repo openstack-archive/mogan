@@ -38,6 +38,7 @@ Response
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
+   - disabled: flavor_disabled
    - extra_specs: flavor_extra_specs
 
 **Example List flavors**
@@ -67,7 +68,9 @@ Request
 
    - name: flavor_name
    - description: flavor_description
+   - extra_specs: flavor_extra_specs
    - is_public: flavor_is_public_not_required
+   - disabled: flavor_disabled
 
 **Example Create Flavor**
 
@@ -86,6 +89,7 @@ Response
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
+   - disabled: flavor_disabled
    - extra_specs: flavor_extra_specs
 
 **Example Create flavor**
@@ -135,6 +139,7 @@ Response
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
+   - disabled: flavor_disabled
    - extra_specs: flavor_extra_specs
 
 **Example Update flavor**
@@ -172,6 +177,7 @@ Response
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
+   - disabled: flavor_disabled
    - extra_specs: flavor_extra_specs
 
 **Example Show Flavor Details**

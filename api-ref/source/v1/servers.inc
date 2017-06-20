@@ -39,6 +39,7 @@ Request
   - networks.net_id: network_uuid
   - networks.port_type: network_port_type
   - networks.port_id: port_uuid
+  - metadata: metadata
   - user_data: user_data
   - personality: personality
   - key_name: key_name

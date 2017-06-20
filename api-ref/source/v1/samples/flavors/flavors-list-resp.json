@@ -19,6 +19,7 @@
         "key": "value"
       },
       "is_public": true,
+      "disabled": false,
       "name": "new_test1"
     },
     {
@@ -38,6 +39,7 @@
       "updated_at": null,
       "extra_specs": {},
       "is_public": true,
+      "disabled": false,
       "name": "new_test2"
     }
   ]
