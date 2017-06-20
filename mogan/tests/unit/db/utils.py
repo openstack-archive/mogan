@@ -165,6 +165,7 @@ def get_test_flavor(**kw):
         'uuid': kw.get('uuid', uuidutils.generate_uuid()),
         'name': kw.get('name', 'test'),
         'description': kw.get('description', 'test'),
+        'resources': kw.get('resources', {}),
         'extra_specs': kw.get('extra_specs', {}),
         'is_public': kw.get('is_public', 1),
         'disabled': kw.get('disabled', 0),
