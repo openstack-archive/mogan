@@ -69,6 +69,17 @@ metadata = {
 }
 
 
+resources = {
+    'type': 'object',
+    'patternProperties': {
+        '^[a-zA-Z0-9-_:.]{1,255}$': {
+            'type': 'integer', 'minimum': 1
+        }
+    },
+    'additionalProperties': False
+}
+
+
 mac_address = {
     'type': 'string',
     'pattern': '^([0-9a-fA-F]{2})(:[0-9a-fA-F]{2}){5}$'

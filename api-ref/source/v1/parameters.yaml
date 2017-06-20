@@ -180,6 +180,13 @@ flavor_name:
   in: body
   required: true
   type: string
+flavor_resources:
+  description: |
+    A dict of key and value pairs associate with the flavor including the resource
+    name and the quantity.
+  in: body
+  required: true
+  type: string
 flavor_uuid:
   description: |
     The UUID of the flavor.

@@ -1,6 +1,9 @@
 {
     "name": "test_flavor",
     "description": "this is a test flavor",
+    "resources": {
+        "CUSTOM_BAREMETAL_GOLD": 1
+    },
     "extra_specs": {
         "capabilities": "boot_mode:bios"
     },
