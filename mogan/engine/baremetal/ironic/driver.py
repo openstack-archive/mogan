@@ -451,7 +451,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             node_list = self.ironicclient.call("node.list", **params)
         except client_e.ClientException as e:
             LOG.exception("Could not get nodes from ironic. Reason: "
-                          "%(detail)s", {'detail': e.message})
+                          "%(detail)s", {'detail': e})
             node_list = []
 
         # Retrive ports
@@ -464,7 +464,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             port_list = self.ironicclient.call("port.list", **params)
         except client_e.ClientException as e:
             LOG.exception("Could not get ports from ironic. Reason: "
-                          "%(detail)s", {'detail': e.message})
+                          "%(detail)s", {'detail': e})
             port_list = []
 
         # TODO(zhenguo): Add portgroups resources
@@ -493,7 +493,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             node_list = self.ironicclient.call("node.list", **params)
         except client_e.ClientException as e:
             LOG.exception("Could not get nodes from ironic. Reason: "
-                          "%(detail)s", {'detail': e.message})
+                          "%(detail)s", {'detail': e})
             node_list = []
         return node_list
 
@@ -515,7 +515,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             node_list = self.ironicclient.call("node.list", **params)
         except client_e.ClientException as e:
             LOG.exception("Could not get nodes from ironic. Reason: "
-                          "%(detail)s", {'detail': e.message})
+                          "%(detail)s", {'detail': e})
             node_list = []
         return node_list
 

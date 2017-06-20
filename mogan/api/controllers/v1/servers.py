@@ -262,10 +262,10 @@ class FloatingIPController(ServerControllerBase):
                 port_id=nic.port_id, fixed_address=fixed_address)
         except exception.FloatingIpNotFoundForAddress as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
+                e, status_code=http_client.NOT_FOUND)
         except exception.Forbidden as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.FORBIDDEN)
+                e, status_code=http_client.FORBIDDEN)
         except Exception as e:
             msg = _('Unable to associate floating IP %(address)s to '
                     'fixed IP %(fixed_address)s for server %(id)s. '
@@ -305,10 +305,10 @@ class FloatingIPController(ServerControllerBase):
                     pecan.request.context, address)
         except exception.FloatingIpNotFoundForAddress as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
+                e, status_code=http_client.NOT_FOUND)
         except exception.FloatingIpMultipleFoundForAddress as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.CONFLICT)
+                e, status_code=http_client.CONFLICT)
 
         # disassociate if associated
         if (floating_ip.get('port_id') and server_id == server_uuid):
@@ -317,7 +317,7 @@ class FloatingIPController(ServerControllerBase):
                     pecan.request.context, address)
             except exception.Forbidden as e:
                 raise wsme.exc.ClientSideError(
-                    e.message, status_code=http_client.FORBIDDEN)
+                    e, status_code=http_client.FORBIDDEN)
             except exception.CannotDisassociateAutoAssignedFloatingIP:
                 msg = _('Cannot disassociate auto assigned floating IP')
                 raise wsme.exc.ClientSideError(
@@ -363,10 +363,10 @@ class InterfaceController(ServerControllerBase):
                 exception.ComputePortNotAvailable,
                 exception.NetworkNotFound) as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.BAD_REQUEST)
+                e, status_code=http_client.BAD_REQUEST)
         except exception.InterfaceAttachFailed as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.CONFLICT)
+                e, status_code=http_client.CONFLICT)
 
 
 class ServerNetworks(base.APIBase):
@@ -671,7 +671,7 @@ class ServerController(ServerControllerBase):
                 msg, status_code=http_client.BAD_REQUEST)
         except exception.PortLimitExceeded as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.FORBIDDEN)
+                e, status_code=http_client.FORBIDDEN)
         except exception.AZNotFound:
             msg = _('The requested availability zone is not available')
             raise wsme.exc.ClientSideError(
@@ -683,7 +683,7 @@ class ServerController(ServerControllerBase):
                 exception.NetworkRequiresSubnet,
                 exception.NetworkNotFound) as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.BAD_REQUEST)
+                e, status_code=http_client.BAD_REQUEST)
 
         # Set the HTTP Location Header for the first server.
         pecan.response.location = link.build_url('server', servers[0].uuid)

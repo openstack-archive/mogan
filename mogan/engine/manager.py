@@ -594,7 +594,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 return pif
 
         # if no available compute ports, raise exception
-        message = "Node %s has no available pysical ports." % node
+        message = "Node %s has no available physical ports." % node
         LOG.error(message)
         raise exception.ComputePortNotAvailable(message=message)
 
@@ -618,4 +618,4 @@ class EngineManager(base_manager.BaseEngineManager):
             server.nics = nics_obj
             server.save()
         except Exception as e:
-            raise exception.InterfaceAttachFailed(message=e.message)
+            raise exception.InterfaceAttachFailed(message=e)
