@@ -22,6 +22,7 @@ create_flavor = {
     "properties": {
         'name': parameter_types.name,
         'description': parameter_types.description,
+        'resources': parameter_types.resources,
         'extra_specs': parameter_types.metadata,
         'is_public': parameter_types.boolean,
         'disabled': parameter_types.boolean,

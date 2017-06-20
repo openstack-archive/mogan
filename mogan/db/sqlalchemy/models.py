@@ -156,6 +156,7 @@ class Flavors(Base):
     uuid = Column(String(36), primary_key=True)
     name = Column(String(255), nullable=False)
     description = Column(String(255), nullable=True)
+    resources = Column(db_types.JsonEncodedDict)
     extra_specs = Column(db_types.JsonEncodedDict)
     is_public = Column(Boolean, default=True)
     disabled = Column(Boolean, default=False)
