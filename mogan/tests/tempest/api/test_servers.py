@@ -193,10 +193,19 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         resp = self.network_floatingip_client.create_floatingip(
             floating_network_id=self.ext_net_id)
         floatingip = resp['floatingip']
+        nics = self.baremetal_compute_client.server_get_networks(
+            self.server_ids[0])
+        for nic in nics:
+            self.assertIsNone(nic['floating_ip'])
         self.baremetal_compute_client.server_associate_floatingip(
             self.server_ids[0], floatingip['floating_ip_address'])
-        # TODO(liusheng) for now we cannot query the server info including
-        # floatingip, that maybe a bug and the future fix need also to
-        # update this test.
+        nics = self.baremetal_compute_client.server_get_networks(
+            self.server_ids[0])
+        server_floatingips = [nic['floating_ip'] for nic in nics]
+        self.assertIn(floatingip['floating_ip_address'], server_floatingips)
         self.baremetal_compute_client.server_disassociate_floatingip(
             self.server_ids[0], floatingip['floating_ip_address'])
+        nics = self.baremetal_compute_client.server_get_networks(
+            self.server_ids[0])
+        for nic in nics:
+            self.assertIsNone(nic['floating_ip'])
