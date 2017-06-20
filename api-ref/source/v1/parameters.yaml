@@ -180,6 +180,12 @@ flavor_name:
   in: body
   required: true
   type: string
+flavor_resources:
+  description: |
+    The resources that the flavor reference.
+  in: body
+  required: true
+  type: string
 flavor_uuid:
   description: |
     The UUID of the flavor.

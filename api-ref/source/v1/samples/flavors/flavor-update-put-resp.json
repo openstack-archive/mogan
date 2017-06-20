@@ -1,20 +1,23 @@
 {
-  "description": "this is a flavor to be updated",
-  "links": [
-    {
-      "href": "http://10.3.150.17:6688/v1/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
-      "rel": "self"
+    "description": "this is a flavor to be updated",
+    "links": [
+        {
+            "href": "http://10.3.150.17:6688/v1/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+            "rel": "self"
+        },
+        {
+            "href": "http://10.3.150.17:6688/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+            "rel": "bookmark"
+        }
+    ],
+    "resources": {
+        "CUSTOM_BAREMETAL_GOLD": 1
     },
-    {
-      "href": "http://10.3.150.17:6688/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
-      "rel": "bookmark"
-    }
-  ],
-  "created_at": "2016-09-27T02:37:21.966342+00:00",
-  "uuid": "7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
-  "updated_at": null,
-  "extra_specs": {},
-  "is_public": false,
-  "disabled": false,
-  "name": "updated_flavor"
+    "created_at": "2016-09-27T02:37:21.966342+00:00",
+    "uuid": "7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+    "updated_at": null,
+    "extra_specs": {},
+    "is_public": false,
+    "disabled": false,
+    "name": "updated_flavor"
 }
