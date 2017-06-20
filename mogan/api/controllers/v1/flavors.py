@@ -16,6 +16,7 @@
 import pecan
 from pecan import rest
 from six.moves import http_client
+import six
 import wsme
 from wsme import types as wtypes
 
@@ -154,10 +155,10 @@ class FlavorAccessController(rest.RestController):
             flavor.save()
         except exception.FlavorNotFound as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
+                six.text_type(e), status_code=http_client.NOT_FOUND)
         except exception.FlavorAccessExists as err:
             raise wsme.exc.ClientSideError(
-                err.message, status_code=http_client.CONFLICT)
+                six.text_type(err), status_code=http_client.CONFLICT)
 
     @policy.authorize_wsgi("mogan:flavor_access", "remove_tenant_access")
     @expose.expose(None, types.uuid, types.uuid,
@@ -178,7 +179,7 @@ class FlavorAccessController(rest.RestController):
         except (exception.FlavorAccessNotFound,
                 exception.FlavorNotFound) as e:
             raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
+                six.text_type(e), status_code=http_client.NOT_FOUND)
 
 
 class FlavorsController(rest.RestController):
