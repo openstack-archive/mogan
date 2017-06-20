@@ -296,6 +296,12 @@ lock_state:
   in: body
   required: true
   type: boolean
+max_count_body:
+  description: |
+      The max number of servers to be created. Defaults to the value of ``min_count``.
+  in: body
+  required: false
+  type: integer
 metadata:
   description: |
     Metadata key and value pairs. The maximum size of the metadata key and value is
@@ -303,12 +309,6 @@ metadata:
   in: body
   required: false
   type: object
-max_count_body:
-  description: |
-      The max number of servers to be created. Defaults to the value of ``min_count``.
-  in: body
-  required: false
-  type: integer
 min_count_body:
   description: |
     The min number of servers to be created. Defaults to 1.
