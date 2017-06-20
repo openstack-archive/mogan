@@ -50,15 +50,16 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
         # Create a flavor
         body = {"name": 'mogan_flavor_create',
                 "description": "mogan flavor description",
-                'is_public': True}
+                'is_public': True, 'resources': {'gold': 1}}
         resp = self.baremetal_compute_client.create_flavor(**body)
         self.assertEqual('mogan_flavor_create', resp['name'])
         self.assertEqual('mogan flavor description',
                          resp['description'])
         self.assertEqual(True, resp['is_public'])
         self.assertEqual(False, resp['disabled'])
+        self.assertEqual({'gold': 1}, resp['resources'])
+        self.assertEqual({}, resp['extra_specs'])
         self.assertIn('uuid', resp)
-        self.assertIn('extra_specs', resp)
         self.assertIn('links', resp)
         self.flavor_ids.append(resp['uuid'])
 
@@ -70,8 +71,9 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
                          resp['description'])
         self.assertEqual(True, resp['is_public'])
         self.assertEqual(False, resp['disabled'])
+        self.assertEqual({}, resp['resources'])
+        self.assertEqual({}, resp['extra_specs'])
         self.assertIn('uuid', resp)
-        self.assertIn('extra_specs', resp)
         self.assertIn('links', resp)
 
     @decorators.idempotent_id('f787f8e4-aa20-4c19-a9ec-44bff85d8634')
