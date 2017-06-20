@@ -221,11 +221,13 @@ class FloatingIPController(ServerControllerBase):
                 msg, status_code=http_client.BAD_REQUEST)
 
         fixed_address = None
+        nic_to_associate = None
         if 'fixed_address' in floatingip:
             fixed_address = floatingip['fixed_address']
             for nic in server_nics:
                 for port_address in nic.fixed_ips:
                     if port_address['ip_address'] == fixed_address:
+                        nic_to_associate = nic
                         break
                 else:
                     continue
@@ -234,12 +236,19 @@ class FloatingIPController(ServerControllerBase):
                 msg = _('Specified fixed address not assigned to server')
                 raise wsme.exc.ClientSideError(
                     msg, status_code=http_client.BAD_REQUEST)
-
+        if nic_to_associate and nic_to_associate.floating_ip:
+            msg = _('The specified fixed ip has already been associated with '
+                    'a floating ip.')
+            raise wsme.exc.ClientSideError(
+                msg, status_code=http_client.CONFLICT)
         if not fixed_address:
             for nic in server_nics:
+                if nic.floating_ip:
+                    continue
                 for port_address in nic.fixed_ips:
                     if netutils.is_valid_ipv4(port_address['ip_address']):
                         fixed_address = port_address['ip_address']
+                        nic_to_associate = nic
                         break
                 else:
                     continue
@@ -248,14 +257,14 @@ class FloatingIPController(ServerControllerBase):
                 msg = _('Unable to associate floating IP %(address)s '
                         'to any fixed IPs for server %(id)s. '
                         'Server has no fixed IPv4 addresses to '
-                        'associate.') % ({'address': address,
-                                          'id': server.uuid})
+                        'associate or all fixed ips have already been '
+                        'associated with floating ips.') % (
+                    {'address': address, 'id': server.uuid})
                 raise wsme.exc.ClientSideError(
                     msg, status_code=http_client.BAD_REQUEST)
             if len(server_nics) > 1:
                 LOG.warning('multiple ports exist, using the first '
                             'IPv4 fixed_ip: %s', fixed_address)
-
         try:
             self.network_api.associate_floating_ip(
                 pecan.request.context, floating_address=address,
@@ -275,6 +284,8 @@ class FloatingIPController(ServerControllerBase):
             LOG.exception(msg)
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
+        nic_to_associate.floating_ip = address
+        nic_to_associate.save(pecan.request.context)
 
     @policy.authorize_wsgi("mogan:server", "disassociate_floatingip")
     @expose.expose(None, types.uuid, wtypes.text,
@@ -326,6 +337,11 @@ class FloatingIPController(ServerControllerBase):
                 msg = _('Floating IP is not associated')
                 raise wsme.exc.ClientSideError(
                     msg, status_code=http_client.BAD_REQUEST)
+            server = self._resource or self._get_resource(server_uuid)
+            for nic in server.nics:
+                if nic.floating_ip == address:
+                    nic.floating_ip = None
+                    nic.save(pecan.request.context)
         else:
             msg = _("Floating IP %(address)s is not associated with server "
                     "%(id)s.") % {'address': address, 'id': server_uuid}
