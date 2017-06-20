@@ -190,6 +190,17 @@ class BaremetalComputeClient(rest_client.RestClient):
         body = self.deserialize(body)['nics']
         return rest_client.ResponseBodyList(resp, body)
 
+    def server_attach_interface(self, server_id, net_id):
+        uri = '%s/servers/%s/networks/interfaces' % (self.uri_prefix,
+                                                     server_id)
+        body = {"net_id": net_id}
+        body = self.serialize(body)
+        resp, body = self.post(uri, body)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
 
 class BaremetalNodeClient(rest_client.RestClient):
     version = '1'
