@@ -63,6 +63,9 @@ class Flavor(base.APIBase):
     disabled = types.boolean
     """Indicates whether the flavor is disabled."""
 
+    resources = {wtypes.text: types.jsontype}
+    """The resources of the flavor"""
+
     extra_specs = {wtypes.text: types.jsontype}
     """The extra specs of the flavor"""
 

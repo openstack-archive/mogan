@@ -18,6 +18,12 @@ Common parameter types for validating request Body.
 """
 
 
+positive_integer = {
+    'type': ['integer', 'string'],
+    'pattern': '^[0-9]*$', 'minimum': 1
+}
+
+
 name = {
     'type': 'string', 'minLength': 1, 'maxLength': 255,
 }
@@ -64,6 +70,15 @@ metadata = {
         '^[a-zA-Z0-9-_:. ]{1,255}$': {
             'type': 'string', 'maxLength': 255
         }
+    },
+    'additionalProperties': False
+}
+
+
+resources = {
+    'type': 'object',
+    'patternProperties': {
+        '^[a-zA-Z0-9-_:.]{1,255}$': positive_integer
     },
     'additionalProperties': False
 }
