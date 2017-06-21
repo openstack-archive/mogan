@@ -148,7 +148,7 @@ class InvalidUUID(Invalid):
     _msg_fmt = _("Expected a uuid but received %(uuid)s.")
 
 
-class FlavorAlreadyExists(MoganException):
+class FlavorAlreadyExists(Conflict):
     _msg_fmt = _("Flavor with uuid %(uuid)s already exists.")
 
 
@@ -156,7 +156,7 @@ class FlavorNotFound(NotFound):
     _msg_fmt = _("Flavor %(flavor_id)s could not be found.")
 
 
-class ServerAlreadyExists(MoganException):
+class ServerAlreadyExists(Conflict):
     _msg_fmt = _("Server with name %(name)s already exists.")
 
 
@@ -164,7 +164,7 @@ class ServerNotFound(NotFound):
     _msg_fmt = _("Server %(server)s could not be found.")
 
 
-class FlavorAccessExists(MoganException):
+class FlavorAccessExists(Conflict):
     _msg_fmt = _("Flavor access already exists for flavor %(flavor_id)s "
                  "and project %(project_id)s combination.")
 
@@ -174,7 +174,7 @@ class FlavorAccessNotFound(NotFound):
                  "%(project_id)s combination.")
 
 
-class ComputeNodeAlreadyExists(MoganException):
+class ComputeNodeAlreadyExists(Conflict):
     _msg_fmt = _("ComputeNode with node_uuid %(node)s already exists.")
 
 
@@ -182,7 +182,7 @@ class ComputeNodeNotFound(NotFound):
     _msg_fmt = _("ComputeNode %(node)s could not be found.")
 
 
-class ComputePortAlreadyExists(MoganException):
+class ComputePortAlreadyExists(Conflict):
     _msg_fmt = _("ComputePort with port_uuid %(port)s already exists.")
 
 
@@ -222,7 +222,7 @@ class DuplicateName(Conflict):
     _msg_fmt = _("A server with name %(name)s already exists.")
 
 
-class KeystoneUnauthorized(MoganException):
+class KeystoneUnauthorized(NotAuthorized):
     _msg_fmt = _("Not authorized in Keystone.")
 
 
@@ -230,7 +230,7 @@ class KeystoneFailure(MoganException):
     pass
 
 
-class CatalogNotFound(MoganException):
+class CatalogNotFound(NotFound):
     _msg_fmt = _("Service type %(service_type)s with endpoint type "
                  "%(endpoint_type)s not found in keystone service catalog.")
 
@@ -243,7 +243,7 @@ class SchedulerNodeWeigherNotFound(NotFound):
     _msg_fmt = _("Scheduler Node Weigher %(weigher_name)s could not be found.")
 
 
-class NoValidNode(MoganException):
+class NoValidNode(NotFound):
     _msg_fmt = _("No valid node was found. %(reason)s")
 
 
@@ -259,7 +259,7 @@ class ValidationError(Invalid):
     _msg_fmt = "%(detail)s"
 
 
-class ImageNotAuthorized(MoganException):
+class ImageNotAuthorized(NotAuthorized):
     _msg_fmt = _("Not authorized for image %(image_id)s.")
 
 
@@ -272,7 +272,7 @@ class ImageNotFound(NotFound):
     _msg_fmt = _("Image %(image_id)s could not be found.")
 
 
-class GlanceConnectionFailed(MoganException):
+class GlanceConnectionFailed(Invalid):
     _msg_fmt = _("Connection to glance host %(server)s failed: "
                  "%(reason)s")
 
@@ -305,7 +305,7 @@ class PortInUse(Conflict):
     msg_fmt = _("Port %(port_id)s is still in use.")
 
 
-class InterfaceAttachFailed(Invalid):
+class InterfaceAttachFailed(Conflict):
     msg_fmt = _("Failed to attach network adapter device to "
                 "%(server_uuid)s")
 
@@ -314,7 +314,7 @@ class FloatingIpNotFoundForAddress(NotFound):
     _msg_fmt = _("Floating IP not found for address %(address)s.")
 
 
-class FloatingIpMultipleFoundForAddress(MoganException):
+class FloatingIpMultipleFoundForAddress(Conflict):
     _msg_fmt = _("Multiple floating IPs are found for address %(address)s.")
 
 
@@ -351,7 +351,7 @@ class QuotaResourceUnknown(QuotaNotFound):
     _msg_fmt = _("Unknown quota resources %(unknown)s.")
 
 
-class OverQuota(MoganException):
+class OverQuota(Forbidden):
     _msg_fmt = _("Quota exceeded for resources: %(overs)s")
 
 
@@ -359,12 +359,12 @@ class PortLimitExceeded(OverQuota):
     _msg_fmt = _("Maximum number of ports exceeded")
 
 
-class QuotaAlreadyExists(MoganException):
+class QuotaAlreadyExists(Conflict):
     _msg_fmt = _("Quota with name %(name)s and project %(project_id)s already"
                  " exists.")
 
 
-class ReservationAlreadyExists(MoganException):
+class ReservationAlreadyExists(Conflict):
     _msg_fmt = _("Reservation with name %(name)s and project %(project_id)s "
                  "already exists.")
 
@@ -390,27 +390,27 @@ class ConfigDriveMountFailed(MoganException):
                  "Error: %(error)s")
 
 
-class ConfigDriveUnknownFormat(MoganException):
+class ConfigDriveUnknownFormat(Invalid):
     _msg_fmt = _("Unknown config drive format %(format)s. Select one of "
                  "iso9660 or vfat.")
 
 
-class ServerUserDataTooLarge(MoganException):
+class ServerUserDataTooLarge(Invalid):
     _msg_fmt = _("User data too large. User data must be no larger than "
                  "%(maxsize)s bytes once base64 encoded. Your data is "
                  "%(length)d bytes")
 
 
-class ServerUserDataMalformed(MoganException):
+class ServerUserDataMalformed(Invalid):
     _msg_fmt = _("User data needs to be valid base 64.")
 
 
-class Base64Exception(MoganException):
+class Base64Exception(Invalid):
     _msg_fmt = _("Invalid Base 64 data for file %(path)s")
 
 
-class KeypairExists(MoganException):
-    _msg_fmt = _("Keypair with key name %(key_name)s already exists.")
+class KeyPairExists(Conflict):
+    _msg_fmt = _("KeyPaire with key name %(key_name)s already exists.")
 
 
 class KeypairNotFound(NotFound):
@@ -434,5 +434,13 @@ class InventoryInUse(InvalidInventory):
     _msg_fmt = _("Inventory for '%(resource_classes)s' on "
                  "resource provider '%(resource_provider)s' in use.")
 
+
+class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
+    _msg_fmt = _("Cannot disassociate auto assigned floating "
+                 "IP: %(floatingip)s")
+
+
+class FloatingIpNotAssociated(Invalid):
+    _msg_fmt = _("Floating IP: %(floatingip)s is not associated")
 
 ObjectActionError = obj_exc.ObjectActionError

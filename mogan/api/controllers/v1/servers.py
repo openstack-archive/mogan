@@ -180,14 +180,7 @@ class ServerStatesController(ServerControllerBase):
 
         db_server = self._resource or self._get_resource(server_uuid)
         if target == states.REBUILD:
-            try:
-                pecan.request.engine_api.rebuild(pecan.request.context,
-                                                 db_server)
-            except exception.ServerNotFound:
-                msg = (_("Server %s could not be found") %
-                       server_uuid)
-                raise wsme.exc.ClientSideError(
-                    msg, status_code=http_client.NOT_FOUND)
+            pecan.request.engine_api.rebuild(pecan.request.context, db_server)
 
         # Set the HTTP Location Header
         url_args = '/'.join([server_uuid, 'states'])
@@ -270,12 +263,9 @@ class FloatingIPController(ServerControllerBase):
             self.network_api.associate_floating_ip(
                 pecan.request.context, floating_address=address,
                 port_id=nic.port_id, fixed_address=fixed_address)
-        except exception.FloatingIpNotFoundForAddress as e:
-            raise wsme.exc.ClientSideError(
-                six.text_type(e), status_code=http_client.NOT_FOUND)
-        except exception.Forbidden as e:
-            raise wsme.exc.ClientSideError(
-                six.text_type(e), status_code=http_client.FORBIDDEN)
+        except (exception.FloatingIpNotFoundForAddress,
+                exception.Forbidden) as e:
+            six.reraise(type(e), e)
         except Exception as e:
             msg = _('Unable to associate floating IP %(address)s to '
                     'fixed IP %(fixed_address)s for server %(id)s. '
@@ -302,42 +292,22 @@ class FloatingIPController(ServerControllerBase):
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.BAD_REQUEST)
         # get the floating ip object
-        try:
-            floating_ip = self.network_api.get_floating_ip_by_address(
-                pecan.request.context, address)
-        except exception.FloatingIpNotFoundForAddress:
-            msg = _("floating IP not found")
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.NOT_FOUND)
+        floating_ip = self.network_api.get_floating_ip_by_address(
+            pecan.request.context, address)
 
         # get the associated server object (if any)
         try:
             server_id =\
                 self.network_api.get_server_id_by_floating_address(
                     pecan.request.context, address)
-        except exception.FloatingIpNotFoundForAddress as e:
-            raise wsme.exc.ClientSideError(
-                six.text_type(e), status_code=http_client.NOT_FOUND)
-        except exception.FloatingIpMultipleFoundForAddress as e:
-            raise wsme.exc.ClientSideError(
-                six.text_type(e), status_code=http_client.CONFLICT)
+        except (exception.FloatingIpNotFoundForAddress,
+                exception.FloatingIpMultipleFoundForAddress) as e:
+            six.reraise(type(e), e)
 
         # disassociate if associated
         if (floating_ip.get('port_id') and server_id == server_uuid):
-            try:
-                self.network_api.disassociate_floating_ip(
-                    pecan.request.context, address)
-            except exception.Forbidden as e:
-                raise wsme.exc.ClientSideError(
-                    six.text_type(e), status_code=http_client.FORBIDDEN)
-            except exception.CannotDisassociateAutoAssignedFloatingIP:
-                msg = _('Cannot disassociate auto assigned floating IP')
-                raise wsme.exc.ClientSideError(
-                    msg, status_code=http_client.FORBIDDEN)
-            except exception.FloatingIpNotAssociated:
-                msg = _('Floating IP is not associated')
-                raise wsme.exc.ClientSideError(
-                    msg, status_code=http_client.BAD_REQUEST)
+            self.network_api.disassociate_floating_ip(pecan.request.context,
+                                                      address)
             server = self._resource or self._get_resource(server_uuid)
             for nic in server.nics:
                 if nic.floating_ip == address:
@@ -372,18 +342,8 @@ class InterfaceController(ServerControllerBase):
             raise exc.HTTPBadRequest(explanation=msg)
 
         server = self._resource or self._get_resource(server_uuid)
-        try:
-            pecan.request.engine_api.attach_interface(
-                pecan.request.context,
-                server, net_id)
-        except (exception.ServerIsLocked,
-                exception.ComputePortNotAvailable,
-                exception.NetworkNotFound) as e:
-            raise wsme.exc.ClientSideError(
-                six.text_type(e), status_code=http_client.BAD_REQUEST)
-        except exception.InterfaceAttachFailed as e:
-            raise wsme.exc.ClientSideError(
-                six.text_type(e), status_code=http_client.CONFLICT)
+        pecan.request.engine_api.attach_interface(pecan.request.context,
+                                                  server, net_id)
 
 
 class ServerNetworks(base.APIBase):
@@ -656,55 +616,22 @@ class ServerController(ServerControllerBase):
             for item in personality:
                 injected_files.append((item['path'], item['contents']))
 
-        try:
-            flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
+        flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
 
-            servers = pecan.request.engine_api.create(
-                pecan.request.context,
-                flavor,
-                image_uuid=image_uuid,
-                name=server.get('name'),
-                description=server.get('description'),
-                availability_zone=server.get('availability_zone'),
-                metadata=server.get('metadata'),
-                requested_networks=requested_networks,
-                user_data=user_data,
-                injected_files=injected_files,
-                key_name=key_name,
-                min_count=min_count,
-                max_count=max_count)
-        except exception.FlavorNotFound:
-            msg = (_("Flavor %s could not be found") %
-                   flavor_uuid)
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
-        except exception.ImageNotFound:
-            msg = (_("Requested image %s could not be found") % image_uuid)
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
-        except exception.KeypairNotFound:
-            msg = (_("Invalid key_name %s provided.") % key_name)
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
-        except exception.PortLimitExceeded as e:
-            raise wsme.exc.ClientSideError(
-                six.text_type(e), status_code=http_client.FORBIDDEN)
-        except exception.AZNotFound:
-            msg = _('The requested availability zone is not available')
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
-        except (exception.GlanceConnectionFailed,
-                exception.ServerUserDataMalformed,
-                exception.ServerUserDataTooLarge,
-                exception.Base64Exception,
-                exception.NetworkRequiresSubnet,
-                exception.NetworkNotFound,
-                exception.PortRequiresFixedIP) as e:
-            raise wsme.exc.ClientSideError(
-                six.text_type(e), status_code=http_client.BAD_REQUEST)
-        except exception.PortInUse as e:
-            raise wsme.exc.ClientSideError(
-                six.text_type(e), status_code=http_client.CONFLICT)
+        servers = pecan.request.engine_api.create(
+            pecan.request.context,
+            flavor,
+            image_uuid=image_uuid,
+            name=server.get('name'),
+            description=server.get('description'),
+            availability_zone=server.get('availability_zone'),
+            metadata=server.get('metadata'),
+            requested_networks=requested_networks,
+            user_data=user_data,
+            injected_files=injected_files,
+            key_name=key_name,
+            min_count=min_count,
+            max_count=max_count)
 
         # Set the HTTP Location Header for the first server.
         pecan.response.location = link.build_url('server', servers[0].uuid)
