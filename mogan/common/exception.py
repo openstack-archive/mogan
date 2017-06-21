@@ -164,7 +164,7 @@ class ServerNotFound(NotFound):
     _msg_fmt = _("Server %(server)s could not be found.")
 
 
-class FlavorAccessExists(MoganException):
+class FlavorAccessExists(Conflict):
     _msg_fmt = _("Flavor access already exists for flavor %(flavor_id)s "
                  "and project %(project_id)s combination.")
 
@@ -272,7 +272,7 @@ class ImageNotFound(NotFound):
     _msg_fmt = _("Image %(image_id)s could not be found.")
 
 
-class GlanceConnectionFailed(MoganException):
+class GlanceConnectionFailed(Invalid):
     _msg_fmt = _("Connection to glance host %(server)s failed: "
                  "%(reason)s")
 
@@ -395,17 +395,17 @@ class ConfigDriveUnknownFormat(MoganException):
                  "iso9660 or vfat.")
 
 
-class ServerUserDataTooLarge(MoganException):
+class ServerUserDataTooLarge(Invalid):
     _msg_fmt = _("User data too large. User data must be no larger than "
                  "%(maxsize)s bytes once base64 encoded. Your data is "
                  "%(length)d bytes")
 
 
-class ServerUserDataMalformed(MoganException):
+class ServerUserDataMalformed(Invalid):
     _msg_fmt = _("User data needs to be valid base 64.")
 
 
-class Base64Exception(MoganException):
+class Base64Exception(Invalid):
     _msg_fmt = _("Invalid Base 64 data for file %(path)s")
 
 
@@ -419,5 +419,14 @@ class KeypairNotFound(NotFound):
 
 class InvalidKeypair(Invalid):
     _msg_fmt = _("Keypair data is invalid: %(reason)s")
+
+
+class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
+    _msg_fmt = _("Cannot disassociate auto assigned floating "
+                 "IP: %(floatingip)s")
+
+
+class FloatingIpNotAssociated(Invalid):
+    _msg_fmt = _("Floating IP: %(floatingip)s is not associated")
 
 ObjectActionError = obj_exc.ObjectActionError
