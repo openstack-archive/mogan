@@ -19,6 +19,7 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from six.moves import http_client
 
+from mogan.common import exception
 from mogan.tests.functional.api import v1 as v1_test
 from mogan.tests.unit.db import utils
 
@@ -145,6 +146,35 @@ class TestServerAuthorization(v1_test.APITestV1):
         error = self.parser_error_body(resp)
         self.assertEqual(error['faultstring'],
                          self.DENY_MESSAGE % 'server:get')
+
+    @mock.patch('mogan.engine.api.API.create')
+    @mock.patch('mogan.objects.Flavor.get')
+    def test_server_post_with_flavor_not_found(self, mock_get,
+                                               mock_engine_create):
+        mock_get.side_effect = exception.FlavorNotFound(flavor_id="fake_id")
+        mock_engine_create.side_effect = None
+        mock_engine_create.return_value = [self.server1]
+        body = gen_post_body()
+        self.context.roles = "no-admin"
+        # we can not prevent the evil tenant, quota will limite him.
+        # Note(Shaohe): quota is in plan
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context)
+        self.post_json('/servers', body, headers=headers, status=404)
+
+    @mock.patch('mogan.engine.api.API.create')
+    @mock.patch('mogan.objects.Flavor.get')
+    def test_server_post_with_port_limit_exceeded(self, mock_get,
+                                                  mock_engine_create):
+        mock_get.side_effect = None
+        mock_engine_create.side_effect = exception.PortLimitExceeded()
+        body = gen_post_body()
+        self.context.roles = "no-admin"
+        # we can not prevent the evil tenant, quota will limite him.
+        # Note(Shaohe): quota is in plan
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context)
+        self.post_json('/servers', body, headers=headers, status=403)
 
 
 class TestPatch(v1_test.APITestV1):
