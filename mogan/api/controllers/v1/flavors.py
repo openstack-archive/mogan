@@ -152,15 +152,8 @@ class FlavorAccessController(rest.RestController):
             raise wsme.exc.ClientSideError(
                 msg, status_code=http_client.CONFLICT)
 
-        try:
-            flavor.projects.append(tenant['tenant_id'])
-            flavor.save()
-        except exception.FlavorNotFound as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
-        except exception.FlavorAccessExists as err:
-            raise wsme.exc.ClientSideError(
-                err.message, status_code=http_client.CONFLICT)
+        flavor.projects.append(tenant['tenant_id'])
+        flavor.save()
 
     @policy.authorize_wsgi("mogan:flavor_access", "remove_tenant_access")
     @expose.expose(None, types.uuid, types.uuid,
@@ -170,18 +163,13 @@ class FlavorAccessController(rest.RestController):
 
         flavor = objects.Flavor.get(pecan.request.context,
                                     flavor_uuid)
-        try:
-            # TODO(zhenguo): this should be synchronized.
-            if tenant_id in flavor.projects:
-                flavor.projects.remove(tenant_id)
-                flavor.save()
-            else:
-                raise exception.FlavorAccessNotFound(flavor_id=flavor.uuid,
-                                                     project_id=tenant_id)
-        except (exception.FlavorAccessNotFound,
-                exception.FlavorNotFound) as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
+        # TODO(zhenguo): this should be synchronized.
+        if tenant_id in flavor.projects:
+            flavor.projects.remove(tenant_id)
+            flavor.save()
+        else:
+            raise exception.FlavorAccessNotFound(flavor_id=flavor.uuid,
+                                                 project_id=tenant_id)
 
 
 class FlavorsController(rest.RestController):
@@ -232,14 +220,8 @@ class FlavorsController(rest.RestController):
         :param flavor_uuid: the uuid of the flavor to be updated.
         :param flavor: a json PATCH document to apply to this flavor.
         """
-        try:
-            db_flavor = objects.Flavor.get(
-                pecan.request.context, flavor_uuid)
-        except exception.FlavorTypeNotFound:
-            msg = (_("Flavor %s could not be found") %
-                   flavor_uuid)
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
+
+        db_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
 
         try:
             flavor = Flavor(

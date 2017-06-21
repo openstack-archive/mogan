@@ -164,7 +164,7 @@ class ServerNotFound(NotFound):
     _msg_fmt = _("Server %(server)s could not be found.")
 
 
-class FlavorAccessExists(MoganException):
+class FlavorAccessExists(Conflict):
     _msg_fmt = _("Flavor access already exists for flavor %(flavor_id)s "
                  "and project %(project_id)s combination.")
 
@@ -419,5 +419,13 @@ class KeypairNotFound(NotFound):
 
 class InvalidKeypair(Invalid):
     _msg_fmt = _("Keypair data is invalid: %(reason)s")
+
+
+class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
+    _msg_fmt = _("Cannot disassociate auto assigned floating IP")
+
+
+class FloatingIpNotAssociated(Invalid):
+    _msg_fmt = _("Floating IP is not associated")
 
 ObjectActionError = obj_exc.ObjectActionError
