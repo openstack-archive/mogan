@@ -19,6 +19,7 @@ from oslo_log import log
 from oslo_utils import netutils
 import pecan
 from pecan import rest
+import six
 from six.moves import http_client
 from webob import exc
 import wsme
@@ -182,11 +183,8 @@ class ServerStatesController(ServerControllerBase):
             try:
                 pecan.request.engine_api.rebuild(pecan.request.context,
                                                  db_server)
-            except exception.ServerNotFound:
-                msg = (_("Server %s could not be found") %
-                       server_uuid)
-                raise wsme.exc.ClientSideError(
-                    msg, status_code=http_client.NOT_FOUND)
+            except exception.ServerNotFound as e:
+                six.reraise(type(e), e)
 
         # Set the HTTP Location Header
         url_args = '/'.join([server_uuid, 'states'])
@@ -260,12 +258,9 @@ class FloatingIPController(ServerControllerBase):
             self.network_api.associate_floating_ip(
                 pecan.request.context, floating_address=address,
                 port_id=nic.port_id, fixed_address=fixed_address)
-        except exception.FloatingIpNotFoundForAddress as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
-        except exception.Forbidden as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.FORBIDDEN)
+        except (exception.FloatingIpNotFoundForAddress,
+                exception.Forbidden) as e:
+            six.reraise(type(e), e)
         except Exception as e:
             msg = _('Unable to associate floating IP %(address)s to '
                     'fixed IP %(fixed_address)s for server %(id)s. '
@@ -293,39 +288,27 @@ class FloatingIPController(ServerControllerBase):
         try:
             floating_ip = self.network_api.get_floating_ip_by_address(
                 pecan.request.context, address)
-        except exception.FloatingIpNotFoundForAddress:
-            msg = _("floating IP not found")
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.NOT_FOUND)
+        except exception.FloatingIpNotFoundForAddress as e:
+            six.reraise(type(e), e)
 
         # get the associated server object (if any)
         try:
             server_id =\
                 self.network_api.get_server_id_by_floating_address(
                     pecan.request.context, address)
-        except exception.FloatingIpNotFoundForAddress as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
-        except exception.FloatingIpMultipleFoundForAddress as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.CONFLICT)
+        except (exception.FloatingIpNotFoundForAddress,
+                exception.FloatingIpMultipleFoundForAddress) as e:
+            six.reraise(type(e), e)
 
         # disassociate if associated
         if (floating_ip.get('port_id') and server_id == server_uuid):
             try:
                 self.network_api.disassociate_floating_ip(
                     pecan.request.context, address)
-            except exception.Forbidden as e:
-                raise wsme.exc.ClientSideError(
-                    e.message, status_code=http_client.FORBIDDEN)
-            except exception.CannotDisassociateAutoAssignedFloatingIP:
-                msg = _('Cannot disassociate auto assigned floating IP')
-                raise wsme.exc.ClientSideError(
-                    msg, status_code=http_client.FORBIDDEN)
-            except exception.FloatingIpNotAssociated:
-                msg = _('Floating IP is not associated')
-                raise wsme.exc.ClientSideError(
-                    msg, status_code=http_client.BAD_REQUEST)
+            except (exception.Forbidden,
+                    exception.CannotDisassociateAutoAssignedFloatingIP,
+                    exception.FloatingIpNotAssociated) as e:
+                six.reraise(type(e), e)
         else:
             msg = _("Floating IP %(address)s is not associated with server "
                     "%(id)s.") % {'address': address, 'id': server_uuid}
@@ -361,12 +344,9 @@ class InterfaceController(ServerControllerBase):
                 server, net_id)
         except (exception.ServerIsLocked,
                 exception.ComputePortNotAvailable,
-                exception.NetworkNotFound) as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.BAD_REQUEST)
-        except exception.InterfaceAttachFailed as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.CONFLICT)
+                exception.NetworkNotFound,
+                exception.InterfaceAttachFailed) as e:
+            six.reraise(type(e), e)
 
 
 class ServerNetworks(base.APIBase):
@@ -656,35 +636,19 @@ class ServerController(ServerControllerBase):
                 key_name=key_name,
                 min_count=min_count,
                 max_count=max_count)
-        except exception.FlavorNotFound:
-            msg = (_("Flavor %s could not be found") %
-                   flavor_uuid)
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
-        except exception.ImageNotFound:
-            msg = (_("Requested image %s could not be found") % image_uuid)
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
-        except exception.KeypairNotFound:
-            msg = (_("Invalid key_name %s provided.") % key_name)
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
-        except exception.PortLimitExceeded as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.FORBIDDEN)
-        except exception.AZNotFound:
-            msg = _('The requested availability zone is not available')
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
-        except (exception.GlanceConnectionFailed,
+        except (exception.FlavorNotFound,
+                exception.ImageNotFound,
+                exception.KeypairNotFound,
+                exception.PortLimitExceeded,
+                exception.AZNotFound,
+                exception.GlanceConnectionFailed,
                 exception.ServerUserDataMalformed,
                 exception.ServerUserDataTooLarge,
                 exception.Base64Exception,
                 exception.NetworkRequiresSubnet,
                 exception.NetworkNotFound,
                 exception.PortRequiresFixedIP) as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.BAD_REQUEST)
+            six.reraise(type(e), e)
         except exception.PortInUse as e:
             raise wsme.exc.ClientSideError(
                 e.message, status_code=http_client.CONFLICT)

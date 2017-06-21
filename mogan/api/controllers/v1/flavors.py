@@ -15,6 +15,7 @@
 
 import pecan
 from pecan import rest
+import six
 from six.moves import http_client
 import wsme
 from wsme import types as wtypes
@@ -156,11 +157,9 @@ class FlavorAccessController(rest.RestController):
             flavor.projects.append(tenant['tenant_id'])
             flavor.save()
         except exception.FlavorNotFound as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
+            six.reraise(type(e), e)
         except exception.FlavorAccessExists as err:
-            raise wsme.exc.ClientSideError(
-                err.message, status_code=http_client.CONFLICT)
+            six.reraise(type(err), err)
 
     @policy.authorize_wsgi("mogan:flavor_access", "remove_tenant_access")
     @expose.expose(None, types.uuid, types.uuid,
@@ -180,8 +179,7 @@ class FlavorAccessController(rest.RestController):
                                                      project_id=tenant_id)
         except (exception.FlavorAccessNotFound,
                 exception.FlavorNotFound) as e:
-            raise wsme.exc.ClientSideError(
-                e.message, status_code=http_client.NOT_FOUND)
+            six.reraise(type(e), e)
 
 
 class FlavorsController(rest.RestController):
@@ -235,11 +233,8 @@ class FlavorsController(rest.RestController):
         try:
             db_flavor = objects.Flavor.get(
                 pecan.request.context, flavor_uuid)
-        except exception.FlavorTypeNotFound:
-            msg = (_("Flavor %s could not be found") %
-                   flavor_uuid)
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.BAD_REQUEST)
+        except exception.FlavorTypeNotFound as e:
+            six.reraise(type(e), e)
 
         try:
             flavor = Flavor(
