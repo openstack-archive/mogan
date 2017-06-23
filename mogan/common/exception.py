@@ -420,4 +420,9 @@ class KeypairNotFound(NotFound):
 class InvalidKeypair(Invalid):
     _msg_fmt = _("Keypair data is invalid: %(reason)s")
 
+
+class UnsupportedOperation(Invalid):
+    _msg_fmt = _("Action %(action)s for %(server_uuid)s is not supported. The "
+                 "reason is %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError
