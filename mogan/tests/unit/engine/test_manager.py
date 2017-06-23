@@ -16,6 +16,7 @@
 """Test class for Mogan ManagerService."""
 
 import mock
+from ironicclient import exc as ironic_exc
 from oslo_config import cfg
 from oslo_utils import uuidutils
 
@@ -26,6 +27,8 @@ from mogan.common import ironic
 from mogan.common import states
 from mogan.engine import manager
 from mogan.network import api as network_api
+from mogan.notifications import base as notifications
+from mogan.objects import fields
 from mogan.tests.unit.db import base as tests_db_base
 from mogan.tests.unit.engine import mgr_utils
 from mogan.tests.unit.objects import utils as obj_utils
@@ -124,6 +127,54 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
                                                server,
                                                ironic_states.POWER_ON)
         get_power_mock.assert_called_once_with(self.context, server.uuid)
+
+    @mock.patch.object(notifications, 'notify_about_server_action')
+    @mock.patch.object(IronicDriver, 'get_power_state')
+    @mock.patch.object(IronicDriver, 'set_power_state')
+    def test_change_server_power_state_with_error_status(
+            self, set_power_mock, get_power_mock, notify_mock):
+        server = obj_utils.create_test_server(
+            self.context, status=states.REBOOTING)
+        get_power_mock.return_value = states.POWER_OFF
+        exception = ironic_exc.NotFound("The bare metal node is not found")
+        set_power_mock.side_effect = exception
+
+        self._start_service()
+        self.assertRaises(ironic_exc.NotFound,
+                          self.service.set_power_state,
+                          self.context,
+                          server, 'reboot')
+        set_power_mock.assert_called_once_with(self.context, server, 'reboot')
+        get_power_mock.assert_called_once_with(self.context, server.uuid)
+        notify_mock.assert_called_once_with(
+            self.context, server, 'test-host',
+            action=fields.NotificationAction.REBOOT,
+            phase=fields.NotificationPhase.ERROR, exception=exception)
+        self.assertEqual(server.status, states.ERROR)
+        self._stop_service()
+
+    @mock.patch.object(notifications, 'notify_about_server_action')
+    @mock.patch.object(IronicDriver, 'get_power_state')
+    @mock.patch.object(IronicDriver, 'set_power_state')
+    def test_change_server_power_state_with_rollback_status(
+            self, set_power_mock, get_power_mock, notify_mock):
+        server = obj_utils.create_test_server(
+            self.context, status=states.POWERING_OFF)
+        exception = ironic_exc.NotFound("The bare metal node is not found")
+        get_power_mock.return_value = states.POWER_ON
+        set_power_mock.side_effect = exception
+
+        self._start_service()
+        self.assertRaises(Exception, self.service.set_power_state,
+                          self.context, server, 'off')
+        set_power_mock.assert_called_once_with(self.context, server, 'off')
+        get_power_mock.assert_called_once_with(self.context, server.uuid)
+        notify_mock.assert_called_once_with(
+            self.context, server, 'test-host',
+            action=fields.NotificationAction.POWER_OFF,
+            phase=fields.NotificationPhase.ERROR, exception=exception)
+        self.assertEqual(server.status, states.ACTIVE)
+        self._stop_service()
 
     @mock.patch.object(ironic.IronicClientWrapper, 'call')
     def test_get_serial_console(self, mock_ironic_call):
