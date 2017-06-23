@@ -435,4 +435,8 @@ class InventoryInUse(InvalidInventory):
                  "resource provider '%(resource_provider)s' in use.")
 
 
+class UnsupportedOperation(Invalid):
+    _msg_fmt = _("Action %(action)s for %(server_uuid)s is not supported. The "
+                 "reason is %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError
