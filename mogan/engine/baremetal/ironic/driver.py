@@ -529,15 +529,24 @@ class IronicDriver(base_driver.BaseEngineDriver):
         :param server: The server object.
         """
         node = self._validate_server_and_node(server)
-        if state == "soft_off":
-            self.ironicclient.call("node.set_power_state",
-                                   node.uuid, "off", soft=True)
-        elif state == "soft_reboot":
-            self.ironicclient.call("node.set_power_state",
-                                   node.uuid, "reboot", soft=True)
-        else:
-            self.ironicclient.call("node.set_power_state",
-                                   node.uuid, state)
+        try:
+            if state == "soft_off":
+                self.ironicclient.call("node.set_power_state",
+                                       node.uuid, "off", soft=True)
+            elif state == "soft_reboot":
+                self.ironicclient.call("node.set_power_state",
+                                       node.uuid, "reboot", soft=True)
+            else:
+                self.ironicclient.call("node.set_power_state",
+                                       node.uuid, state)
+        except (ironic_exc.BadRequest,
+                ironic_exc.NotAcceptable) as e:
+            LOG.error("Set power state %(state)s failed for %(uuid)s",
+                      {"state": state, "uuid": server.uuid})
+            raise exception.UnsupportedOperation(
+                action=state, server_uuid=server.uuid,
+                reason=six.text_type(e.message))
+
         timer = loopingcall.FixedIntervalLoopingCall(
             self._wait_for_power_state, server, state)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
