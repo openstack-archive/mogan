@@ -455,4 +455,5 @@ class ServerGroupNotFound(NotFound):
 class ServerGroupExists(Conflict):
     _msg_fmt = _("Sever group %(group_uuid)s already exists.")
 
+
 ObjectActionError = obj_exc.ObjectActionError
