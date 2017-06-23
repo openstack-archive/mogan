@@ -8,10 +8,5 @@
       "op": "replace",
       "path": "/is_public",
       "value": false
-   },
-   {
-       "op": "add",
-       "path": "/extra_specs/k1",
-       "value": "v1"
    }
 ]
