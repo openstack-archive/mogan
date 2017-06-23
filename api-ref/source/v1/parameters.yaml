@@ -154,12 +154,6 @@ flavor_disabled:
   in: body
   required: false
   type: boolean
-flavor_extra_specs:
-  description: |
-    Extra spec key and value pairs associate with the flavor.
-  in: body
-  required: true
-  type: object
 flavor_is_public:
   description: |
     Whether the flavor is public (available to all projects) or scoped
@@ -180,6 +174,13 @@ flavor_name:
   in: body
   required: true
   type: string
+flavor_resource_traits:
+  description: |
+    A dict of key and value pairs associate with the flavor including the resource
+    name and the qualities.
+  in: body
+  required: false
+  type: object
 flavor_resources:
   description: |
     A dict of key and value pairs associate with the flavor including the resource
