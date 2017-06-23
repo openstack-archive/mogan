@@ -35,12 +35,12 @@ Response
    - links: links
    - description: flavor_description
    - resources: flavor_resources
+   - resource_traits: flavor_resource_traits
    - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
    - disabled: flavor_disabled
-   - extra_specs: flavor_extra_specs
 
 **Example List flavors**
 
@@ -70,7 +70,7 @@ Request
    - name: flavor_name
    - description: flavor_description
    - resources: flavor_resources
-   - extra_specs: flavor_extra_specs
+   - resource_traits: flavor_resource_traits
    - is_public: flavor_is_public_not_required
    - disabled: flavor_disabled
 
@@ -88,12 +88,12 @@ Response
    - links: links
    - description: flavor_description
    - resources: flavor_resources
+   - resource_traits: flavor_resource_traits
    - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
    - disabled: flavor_disabled
-   - extra_specs: flavor_extra_specs
 
 **Example Create flavor**
 
@@ -139,12 +139,12 @@ Response
    - links: links
    - description: flavor_description
    - resources: flavor_resources
+   - resource_traits: flavor_resource_traits
    - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
    - disabled: flavor_disabled
-   - extra_specs: flavor_extra_specs
 
 **Example Update flavor**
 
@@ -178,12 +178,12 @@ Response
    - links: links
    - description: flavor_description
    - resources: flavor_resources
+   - resource_traits: flavor_resource_traits
    - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
    - is_public: flavor_is_public
    - disabled: flavor_disabled
-   - extra_specs: flavor_extra_specs
 
 **Example Show Flavor Details**
 
