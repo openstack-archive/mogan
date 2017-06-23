@@ -420,6 +420,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         :param server: The server object.
         """
         node = self._validate_server_and_node(server)
+
         if state == "soft_off":
             self.ironicclient.call("node.set_power_state",
                                    node.uuid, "off", soft=True)
@@ -429,6 +430,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         else:
             self.ironicclient.call("node.set_power_state",
                                    node.uuid, state)
+
         timer = loopingcall.FixedIntervalLoopingCall(
             self._wait_for_power_state, server, state)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()

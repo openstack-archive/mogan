@@ -455,4 +455,5 @@ class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
 class FloatingIpNotAssociated(Invalid):
     _msg_fmt = _("Floating IP: %(floatingip)s is not associated")
 
+
 ObjectActionError = obj_exc.ObjectActionError
