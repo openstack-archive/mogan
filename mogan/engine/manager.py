@@ -470,6 +470,7 @@ class EngineManager(base_manager.BaseEngineManager):
         utils.process_event(fsm, server, event='done')
         server.destroy()
 
+    @wrap_server_fault
     def set_power_state(self, context, server, state):
         """Set power state for the specified server."""
 
@@ -482,9 +483,43 @@ class EngineManager(base_manager.BaseEngineManager):
                        'server': server})
             self.driver.set_power_state(context, server, state)
 
-        do_set_power_state()
-        server.power_state = self.driver.get_power_state(context,
-                                                         server.uuid)
+        try:
+            do_set_power_state()
+            server.power_state = self.driver.get_power_state(context,
+                                                             server.uuid)
+        except Exception as e:
+            with excutils.save_and_reraise_exception():
+                LOG.exception("%(state)s server faild, the reason: %(reason)s",
+                              {"state": state, "reason": six.text_type(e)})
+                server.power_state = self.driver.get_power_state(context,
+                                                                 server.uuid)
+                if state in ['reboot', 'soft_reboot'] \
+                        and server.power_state != states.POWER_ON:
+                    utils.process_event(fsm, server, event='error')
+                else:
+                    utils.process_event(fsm, server, event='fail')
+
+                action = None
+                if state == 'on':
+                    action = fields.NotificationAction.POWER_ON
+                elif state == 'off':
+                    action = fields.NotificationAction.POWER_OFF
+                elif state == 'soft_off':
+                    action = fields.NotificationAction.SOFT_POWER_OFF
+                elif state == "reboot":
+                    action = fields.NotificationAction.REBOOT
+                elif state == 'soft_reboot':
+                    action = fields.NotificationAction.SOFT_REBOOT
+                else:
+                    LOG.warning("Action %(state)s will not send notification",
+                                {'state': state})
+                if action:
+                    notifications.notify_about_server_action(
+                        context, server, self.host,
+                        action=action,
+                        phase=fields.NotificationPhase.ERROR,
+                        exception=e)
+
         utils.process_event(fsm, server, event='done')
         LOG.info('Successfully set node power state: %s',
                  state, server=server)

@@ -145,7 +145,9 @@ class NotificationAction(BaseMoganEnum):
     DELETE = 'delete'
     POWER_ON = 'power_on'
     POWER_OFF = 'power_off'
+    SOFT_POWER_OFF = 'soft_off'
     REBOOT = 'reboot'
+    SOFT_REBOOT = 'soft_reboot'
     SHUTDOWN = 'shutdown'
     CREATE = 'create'
 
