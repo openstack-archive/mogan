@@ -470,6 +470,7 @@ class EngineManager(base_manager.BaseEngineManager):
         utils.process_event(fsm, server, event='done')
         server.destroy()
 
+    @wrap_server_fault
     def set_power_state(self, context, server, state):
         """Set power state for the specified server."""
 
@@ -482,9 +483,33 @@ class EngineManager(base_manager.BaseEngineManager):
                        'server': server})
             self.driver.set_power_state(context, server, state)
 
-        do_set_power_state()
-        server.power_state = self.driver.get_power_state(context,
-                                                         server.uuid)
+        try:
+            do_set_power_state()
+            server.power_state = self.driver.get_power_state(context,
+                                                             server.uuid)
+        except Exception as e:
+            with excutils.save_and_reraise_exception():
+                LOG.exception("%(state)s server faild, the reason: %(reason)s",
+                              {"state": state, "reason": six.text_type(e)})
+                server.power_state = self.driver.get_power_state(context,
+                                                                 server.uuid)
+                if state in ['reboot', 'soft_reboot'] \
+                        and server.power_state != states.POWER_ON:
+                    utils.process_event(fsm, server, event='error')
+                else:
+                    utils.process_event(fsm, server, event='fail')
+
+                action = utils.get_notification_action(state)
+                if not action:
+                    LOG.warning("Action %(state)s will not send notification",
+                                {'state': state})
+                else:
+                    notifications.notify_about_server_action(
+                        context, server, self.host,
+                        action=action,
+                        phase=fields.NotificationPhase.ERROR,
+                        exception=e)
+
         utils.process_event(fsm, server, event='done')
         LOG.info('Successfully set node power state: %s',
                  state, server=server)

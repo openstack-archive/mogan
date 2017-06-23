@@ -45,11 +45,20 @@ from mogan.common.i18n import _
 from mogan.common import states
 from mogan.conf import CONF
 from mogan import objects
+from mogan.objects import fields
 
 LOG = logging.getLogger(__name__)
 
 synchronized = lockutils.synchronized_with_prefix('mogan-')
 profiler = importutils.try_import('osprofiler.profiler')
+
+POWER_NOTIFICATION_MAP = {
+    'on': fields.NotificationAction.POWER_ON,
+    'off': fields.NotificationAction.POWER_OFF,
+    'reboot': fields.NotificationAction.REBOOT,
+    'soft_off': fields.NotificationAction.SOFT_POWER_OFF,
+    'soft_reboot': fields.NotificationAction.SOFT_REBOOT
+}
 
 
 def safe_rstrip(value, chars=None):
@@ -455,3 +464,7 @@ def spawn_n(func, *args, **kwargs):
         func(*args, **kwargs)
 
     eventlet.spawn_n(context_wrapper, *args, **kwargs)
+
+
+def get_notification_action(power_action):
+    return POWER_NOTIFICATION_MAP.get(power_action)
