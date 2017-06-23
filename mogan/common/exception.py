@@ -455,4 +455,9 @@ class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
 class FloatingIpNotAssociated(Invalid):
     _msg_fmt = _("Floating IP: %(floatingip)s is not associated")
 
+
+class UnsupportedOperation(Invalid):
+    _msg_fmt = _("Action %(action)s for %(server_uuid)s is not supported. The "
+                 "reason is %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError
