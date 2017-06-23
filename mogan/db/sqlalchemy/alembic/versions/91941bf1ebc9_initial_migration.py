@@ -36,7 +36,7 @@ def upgrade():
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('resources', sa.Text(), nullable=True),
-        sa.Column('extra_specs', sa.Text(), nullable=True),
+        sa.Column('resource_traits', sa.Text(), nullable=True),
         sa.Column('is_public', sa.Boolean(), nullable=False),
         sa.Column('disabled', sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint('uuid'),

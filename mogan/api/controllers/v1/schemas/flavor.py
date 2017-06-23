@@ -23,7 +23,7 @@ create_flavor = {
         'name': parameter_types.name,
         'description': {'type': 'string', 'minLength': 1},
         'resources': parameter_types.resources,
-        'extra_specs': parameter_types.metadata,
+        'resource_traits': parameter_types.resource_traits,
         'is_public': parameter_types.boolean,
         'disabled': parameter_types.boolean,
     },

@@ -39,14 +39,16 @@ class TestFlavor(v1_test.APITestV1):
 
     def test_flavor_post(self):
         body = {"name": "test", "description": "just test",
-                "extra_specs": {"k1": "v1"}}
+                "resources": {"CUSTOM_GOLD": 1},
+                "resource_traits": {"CUSTOM_GOLD": "FPGA"}}
         resp = self.post_json(
             '/flavors', body, headers=self.headers, status=201)
         resp = resp.json
         self.assertEqual('test', resp['name'])
         self.assertEqual('just test', resp['description'])
         self.assertEqual(True, resp['is_public'])
-        self.assertEqual({'k1': 'v1'}, resp['extra_specs'])
+        self.assertEqual({'CUSTOM_GOLD': 1}, resp['resources'])
+        self.assertEqual({'CUSTOM_GOLD': 'FPGA'}, resp['resource_traits'])
         self.assertIn('uuid', resp)
         self.assertIn('links', resp)
 
@@ -78,11 +80,8 @@ class TestFlavor(v1_test.APITestV1):
         self.assertEqual('test0', resp['name'])
         self.patch_json('/flavors/' + self.FLAVOR_UUIDS[0],
                         [{'path': '/name', 'value': 'updated_name',
-                          'op': 'replace'},
-                         {'path': '/extra_specs/k1', 'value': 'v1',
-                          'op': 'add'}],
+                          'op': 'replace'}],
                         headers=self.headers, status=200)
         resp = self.get_json('/flavors/' + self.FLAVOR_UUIDS[0],
                              headers=self.headers)
         self.assertEqual('updated_name', resp['name'])
-        self.assertEqual({'k1': 'v1'}, resp['extra_specs'])
