@@ -195,6 +195,12 @@ machine.add_transition(SOFT_POWERING_OFF, STOPPED, 'done')
 machine.add_transition(REBOOTING, ACTIVE, 'done')
 machine.add_transition(SOFT_REBOOTING, ACTIVE, 'done')
 
+machine.add_transition(POWERING_ON, STOPPED, 'fail')
+machine.add_transition(POWERING_OFF, ACTIVE, 'fail')
+machine.add_transition(SOFT_POWERING_OFF, ACTIVE, 'fail')
+machine.add_transition(REBOOTING, ACTIVE, 'fail')
+machine.add_transition(SOFT_REBOOTING, ACTIVE, 'fail')
+
 # All unstable states are allowed to transition to ERROR and DELETING
 for state in UNSTABLE_STATES:
     machine.add_transition(state, ERROR, 'error')
