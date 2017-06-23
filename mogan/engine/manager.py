@@ -533,10 +533,17 @@ class EngineManager(base_manager.BaseEngineManager):
                        'server': server})
             self.driver.set_power_state(context, server, state)
 
-        do_set_power_state()
-        server.power_state = self.driver.get_power_state(context,
-                                                         server.uuid)
-        utils.process_event(fsm, server, event='done')
+        try:
+            do_set_power_state()
+            server.power_state = self.driver.get_power_state(context,
+                                                             server.uuid)
+        except Exception as e:
+            LOG.exception("%(state)s server faild, the reason: %(reason)s",
+                          {"state": state, "reason": e})
+            utils.process_event(fsm, server, event='error')
+        else:
+            utils.process_event(fsm, server, event='done')
+
         LOG.info('Successfully set node power state: %s',
                  state, server=server)
 
