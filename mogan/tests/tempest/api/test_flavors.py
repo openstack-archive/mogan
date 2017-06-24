@@ -28,6 +28,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
         for i in six.moves.xrange(2):
             body = {"name": "mogan_flavor_" + {0: 'public', 1: 'private'}[i],
                     "description": "mogan flavor description",
+                    "resources": {"CUSTOM_GOLD": 1},
                     'is_public': not bool(i)}
             resp = cls.baremetal_compute_client.create_flavor(**body)
             cls.flavor_ids.append(resp['uuid'])
@@ -72,7 +73,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
                          resp['description'])
         self.assertEqual(True, resp['is_public'])
         self.assertEqual(False, resp['disabled'])
-        self.assertEqual({}, resp['resources'])
+        self.assertEqual({'CUSTOM_GOLD': 1}, resp['resources'])
         self.assertEqual({}, resp['resource_traits'])
         self.assertIn('uuid', resp)
         self.assertIn('links', resp)
