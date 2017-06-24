@@ -169,7 +169,7 @@ function cleanup_mogan {
 
 
 function create_flavor {
-    openstack baremetal flavor create ${MOGAN_DEFAULT_FLAVOR} --description 'Mogan default flavor'
+    openstack baremetal flavor create ${MOGAN_DEFAULT_FLAVOR} --description 'Mogan default flavor' --resources ${MOGAN_DEFAULT_FLAVOR}=1
 }
 
 

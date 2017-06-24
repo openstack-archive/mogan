@@ -27,6 +27,6 @@ create_flavor = {
         'is_public': parameter_types.boolean,
         'disabled': parameter_types.boolean,
     },
-    'required': ['name', 'description'],
+    'required': ['name', 'description', 'resources'],
     'additionalProperties': False,
 }
