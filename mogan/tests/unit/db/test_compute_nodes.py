@@ -45,18 +45,6 @@ class DbComputeNodeTestCase(base.DbTestCase):
                           self.context,
                           '12345678-9999-0000-aaaa-123456789012')
 
-    def test_compute_node_get_all(self):
-        node_uuids = []
-        for i in range(0, 3):
-            node = utils.create_test_compute_node(
-                node_uuid=uuidutils.generate_uuid())
-            node_uuids.append(six.text_type(node['node_uuid']))
-
-        res = self.dbapi.compute_node_get_all(self.context)
-        res_uuids = [r.node_uuid for r in res]
-        for node_uuid in node_uuids:
-            self.assertIn(node_uuid, res_uuids)
-
     def test_compute_node_destroy(self):
         node = utils.create_test_compute_node()
         self.dbapi.compute_node_destroy(self.context, node.node_uuid)
