@@ -66,16 +66,16 @@ def _get_fake_node(**kwargs):
 
 
 class TestServers(v1_test.APITestV1):
-    INSTANCE_TYPE_UUID = 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b'
+    FLAVOR_UUID = 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b'
 
-    INSTANCE_UUIDS = ['59f1b681-6ca4-4a17-b784-297a7285004e',
-                      '2b32fc87-576c-481b-880e-bef8c7351746',
-                      '482decff-7561-41ad-9bfb-447265b26972',
-                      '427693e1-a820-4d7d-8a92-9f5fe2849399',
-                      '253b2878-ec60-4793-ad19-e65496ec7aab',
-                      'f26f181d-7891-4720-b022-b074ec1733ef',
-                      '02f53bd8-3514-485b-ba60-2722ef09c016',
-                      '8f7495fe-5e44-4f33-81af-4b28e9b2952f']
+    SERVER_UUIDS = ['59f1b681-6ca4-4a17-b784-297a7285004e',
+                    '2b32fc87-576c-481b-880e-bef8c7351746',
+                    '482decff-7561-41ad-9bfb-447265b26972',
+                    '427693e1-a820-4d7d-8a92-9f5fe2849399',
+                    '253b2878-ec60-4793-ad19-e65496ec7aab',
+                    'f26f181d-7891-4720-b022-b074ec1733ef',
+                    '02f53bd8-3514-485b-ba60-2722ef09c016',
+                    '8f7495fe-5e44-4f33-81af-4b28e9b2952f']
 
     def setUp(self):
         self.rpc_api = mock.Mock()
@@ -95,14 +95,14 @@ class TestServers(v1_test.APITestV1):
         self.addCleanup(self._clean_flavor)
 
     def _clean_servers(self):
-        for server_uuid in self.INSTANCE_UUIDS:
+        for server_uuid in self.SERVER_UUIDS:
             # TODO(liusheng) should catch the NotFound exception
             self.delete('/servers/' + server_uuid, status=204,
                         expect_errors=True)
 
     def _clean_flavor(self):
         headers = self.gen_headers(self.context, roles="admin")
-        self.delete('/flavors/' + self.INSTANCE_TYPE_UUID,
+        self.delete('/flavors/' + self.FLAVOR_UUID,
                     headers=headers, status=204)
 
     def _make_app(self):
@@ -110,10 +110,11 @@ class TestServers(v1_test.APITestV1):
 
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
     def _prepare_flavor(self, mocked):
-        mocked.side_effect = [self.INSTANCE_TYPE_UUID]
+        mocked.side_effect = [self.FLAVOR_UUID]
         headers = self.gen_headers(self.context, roles="admin")
         body = {"name": "type_for_server_testing",
-                "description": "type for server testing"}
+                "description": "type for server testing",
+                "resources": {"CUSTOM_GOLD": 1}}
         self.post_json('/flavors', body, headers=headers, status=201)
 
     @mock.patch('mogan.scheduler.rpcapi.SchedulerAPI.select_destinations')
@@ -122,7 +123,7 @@ class TestServers(v1_test.APITestV1):
         # NOTE(wanghao): Since we added quota reserve in creation option,
         # there is one more generate_uuid out of provision_servers, so
         # amount should *2 here.
-        mocked.side_effect = self.INSTANCE_UUIDS[:(amount * 2)]
+        mocked.side_effect = self.SERVER_UUIDS[:(amount * 2)]
         mock_select_dest.return_value = mock.MagicMock()
         responses = []
         headers = self.gen_headers(self.context)
@@ -146,9 +147,9 @@ class TestServers(v1_test.APITestV1):
         resp = self._prepare_server(1)[0].json
         self.assertEqual('test_server_0', resp['name'])
         self.assertEqual('building', resp['status'])
-        self.assertEqual(self.INSTANCE_UUIDS[1], resp['uuid'])
+        self.assertEqual(self.SERVER_UUIDS[1], resp['uuid'])
         self.assertEqual('just test server 0', resp['description'])
-        self.assertEqual(self.INSTANCE_TYPE_UUID, resp['flavor_uuid'])
+        self.assertEqual(self.FLAVOR_UUID, resp['flavor_uuid'])
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
         self.assertEqual('mogan', resp['availability_zone'])
@@ -164,13 +165,13 @@ class TestServers(v1_test.APITestV1):
     def test_server_show(self):
         self._prepare_server(1)
         headers = self.gen_headers(self.context)
-        resp = self.get_json('/servers/%s' % self.INSTANCE_UUIDS[1],
+        resp = self.get_json('/servers/%s' % self.SERVER_UUIDS[1],
                              headers=headers)
         self.assertEqual('test_server_0', resp['name'])
         self.assertEqual('building', resp['status'])
-        self.assertEqual(self.INSTANCE_UUIDS[1], resp['uuid'])
+        self.assertEqual(self.SERVER_UUIDS[1], resp['uuid'])
         self.assertEqual('just test server 0', resp['description'])
-        self.assertEqual(self.INSTANCE_TYPE_UUID, resp['flavor_uuid'])
+        self.assertEqual(self.FLAVOR_UUID, resp['flavor_uuid'])
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
         self.assertEqual('mogan', resp['availability_zone'])
@@ -210,8 +211,8 @@ class TestServers(v1_test.APITestV1):
     def test_server_delete(self):
         self._prepare_server(4)
         headers = self.gen_headers(self.context)
-        self.delete('/servers/' + self.INSTANCE_UUIDS[1], headers=headers,
+        self.delete('/servers/' + self.SERVER_UUIDS[1], headers=headers,
                     status=204)
-        resp = self.get_json('/servers/%s' % self.INSTANCE_UUIDS[1],
+        resp = self.get_json('/servers/%s' % self.SERVER_UUIDS[1],
                              headers=headers)
         self.assertEqual('deleting', resp['status'])
