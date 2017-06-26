@@ -15,16 +15,16 @@
 You can customize this scheduler by specifying your own node Filters and
 Weighing Functions.
 """
-
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_serialization import jsonutils
 
 from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common import utils
+from mogan import objects
+from mogan.scheduler import client
 from mogan.scheduler import driver
-from mogan.scheduler import scheduler_options
+from mogan.scheduler import utils as sched_utils
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -34,21 +34,8 @@ class FilterScheduler(driver.Scheduler):
     """Scheduler that can be used for filtering and weighing."""
     def __init__(self, *args, **kwargs):
         super(FilterScheduler, self).__init__(*args, **kwargs)
-        self.options = scheduler_options.SchedulerOptions()
         self.max_attempts = self._max_attempts()
-
-    def _get_configuration_options(self):
-        """Fetch options dictionary. Broken out for testing."""
-        return self.options.get_configuration()
-
-    def populate_filter_properties(self, request_spec, filter_properties):
-        """Stuff things into filter_properties.
-
-        Can be overridden in a subclass to add more data.
-        """
-        server = request_spec['server_properties']
-        filter_properties['availability_zone'] = \
-            server.get('availability_zone')
+        self.reportclient = client.SchedulerClient().reportclient
 
     def _max_attempts(self):
         max_attempts = CONF.scheduler.scheduler_max_attempts
@@ -97,54 +84,21 @@ class FilterScheduler(driver.Scheduler):
                 {'max_attempts': max_attempts,
                  'server_id': server_id})
 
-    def _get_weighted_candidates(self, context, request_spec,
-                                 filter_properties=None):
-        """Return a list of nodes that meet required specs.
+    @staticmethod
+    def _get_res_cls_filters(request_spec):
+        flavor_dict = request_spec['flavor']
+        resources = dict([(sched_utils.ensure_resource_class_name(res[0]),
+                           int(res[1]))
+                          for res in flavor_dict['resources'].items()])
+        return resources
 
-        Returned list is ordered by their fitness.
-        """
-        # Since Mogan is using mixed filters from Oslo and it's own, which
-        # takes 'resource_XX' and 'server_XX' as input respectively, copying
-        # 'flavor' to 'resource_type' will make both filters happy.
-        flavor = resource_type = request_spec.get("flavor")
-
-        config_options = self._get_configuration_options()
-
-        if filter_properties is None:
-            filter_properties = {}
-        self._populate_retry(filter_properties, request_spec)
-
-        request_spec_dict = jsonutils.to_primitive(request_spec)
-
-        filter_properties.update({'request_spec': request_spec_dict,
-                                  'config_options': config_options,
-                                  'flavor': flavor,
-                                  'resource_type': resource_type})
-
-        self.populate_filter_properties(request_spec,
-                                        filter_properties)
-
-        # Find our local list of acceptable nodes by filtering and
-        # weighing our options. we virtually consume resources on
-        # it so subsequent selections can adjust accordingly.
-
-        # Note: remember, we are using an iterator here. So only
-        # traverse this list once.
-        nodes = self.node_manager.get_all_node_states(context)
-
-        # Filter local nodes based on requirements ...
-        nodes = self.node_manager.get_filtered_nodes(nodes,
-                                                     filter_properties)
-        if not nodes:
+    def _get_filtered_nodes(self, request_spec):
+        query_filters = {'resources': self._get_res_cls_filters(request_spec)}
+        filtered_nodes = self.reportclient.get_filtered_resource_providers(
+            query_filters)
+        if not filtered_nodes:
             return []
-
-        LOG.debug("Filtered %(nodes)s", {'nodes': nodes})
-        # weighted_node = WeightedNode() ... the best
-        # node for the job.
-        weighed_nodes = self.node_manager.get_weighed_nodes(nodes,
-                                                            filter_properties)
-        LOG.debug("Weighed %(nodes)s", {'nodes': weighed_nodes})
-        return weighed_nodes
+        return [node['uuid'] for node in filtered_nodes]
 
     def schedule(self, context, request_spec, filter_properties=None):
 
@@ -155,20 +109,21 @@ class FilterScheduler(driver.Scheduler):
         # we need to improve this.
         @utils.synchronized('schedule')
         def _schedule(self, context, request_spec, filter_properties):
-            weighed_nodes = self._get_weighted_candidates(
-                context, request_spec, filter_properties)
-            if not weighed_nodes:
-                LOG.warning('No weighed nodes found for server '
+            self._populate_retry(filter_properties, request_spec)
+            filtered_nodes = self._get_filtered_nodes(request_spec)
+            if not filtered_nodes:
+                LOG.warning('No filtered nodes found for server '
                             'with properties: %s',
                             request_spec.get('flavor'))
-                raise exception.NoValidNode(_("No weighed nodes available"))
-
-            dest_nodes = []
-            nodes = self._choose_nodes(weighed_nodes, request_spec)
-            for node in nodes:
-                node.obj.consume_from_request(context)
-                dest_nodes.append(
-                    dict(node_uuid=node.obj.node_uuid, ports=node.obj.ports))
+                raise exception.NoValidNode(_("No filtered nodes available"))
+            dest_nodes = self._choose_nodes(filtered_nodes, request_spec)
+            for node in dest_nodes:
+                server_obj = objects.Server.get(
+                    context, request_spec['server_id'])
+                alloc_data = self._get_res_cls_filters(request_spec)
+                self.reportclient.update_server_allocation(
+                    node, server_obj.uuid, 1, server_obj.user_id,
+                    server_obj.project_id, alloc_data)
             return dest_nodes
 
         return _schedule(self, context, request_spec, filter_properties)
