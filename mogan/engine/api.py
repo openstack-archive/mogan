@@ -286,7 +286,6 @@ class API(object):
         servers = self._provision_servers(context, base_options,
                                           min_count, max_count)
         request_spec = {
-            'server_id': servers[0].uuid,
             'server_properties': {
                 'flavor_uuid': servers[0].flavor_uuid,
                 'networks': requested_networks,

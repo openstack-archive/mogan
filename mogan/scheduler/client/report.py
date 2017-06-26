@@ -98,7 +98,7 @@ class SchedulerReportClient(object):
     def __init__(self):
         # A dict, keyed by the resource provider UUID, of ResourceProvider
         # objects that will have their inventories and allocations tracked by
-        # the placement API for the compute host
+        # the placement API for the node
         self._resource_providers = {}
         # A dict, keyed by resource provider UUID, of sets of aggregate UUIDs
         # the provider is associated with
@@ -167,8 +167,6 @@ class SchedulerReportClient(object):
             url,
             endpoint_filter=self.ks_filter, raise_exc=False)
 
-    # TODO(sbauza): Change that poor interface into passing a rich versioned
-    # object that would provide the ResourceProvider requirements.
     @safe_connect
     def get_filtered_resource_providers(self, filters):
         """Returns a list of ResourceProviders matching the requirements
@@ -421,34 +419,6 @@ class SchedulerReportClient(object):
                      {'placement_req_id': get_placement_request_id(result),
                       'resource_provider_uuid': rp_uuid,
                       'generation_id': cur_rp_gen})
-            # NOTE(jaypipes): There may be cases when we try to set a
-            # provider's inventory that results in attempting to delete an
-            # inventory record for a resource class that has an active
-            # allocation. We need to catch this particular case and raise an
-            # exception here instead of returning False, since we should not
-            # re-try the operation in this case.
-            #
-            # A use case for where this can occur is the following:
-            #
-            # 1) Provider created for each Ironic baremetal node in Newton
-            # 2) Inventory records for baremetal node created for VCPU,
-            #    MEMORY_MB and DISK_GB
-            # 3) A Nova instance consumes the baremetal node and allocation
-            #    records are created for VCPU, MEMORY_MB and DISK_GB matching
-            #    the total amount of those resource on the baremetal node.
-            # 3) Upgrade to Ocata and now resource tracker wants to set the
-            #    provider's inventory to a single record of resource class
-            #    CUSTOM_IRON_SILVER (or whatever the Ironic node's
-            #    "resource_class" attribute is)
-            # 4) Scheduler report client sends the inventory list containing a
-            #    single CUSTOM_IRON_SILVER record and placement service
-            #    attempts to delete the inventory records for VCPU, MEMORY_MB
-            #    and DISK_GB. An exception is raised from the placement service
-            #    because allocation records exist for those resource classes,
-            #    and a 409 Conflict is returned to the compute node. We need to
-            #    trigger a delete of the old allocation records and then set
-            #    the new inventory, and then set the allocation record to the
-            #    new CUSTOM_IRON_SILVER record.
             match = _RE_INV_IN_USE.search(result.text)
             if match:
                 rc = match.group(1)
@@ -517,71 +487,6 @@ class SchedulerReportClient(object):
             time.sleep(1)
         return False
 
-    @safe_connect
-    def _delete_inventory(self, rp_uuid):
-        """Deletes all inventory records for a resource provider with the
-        supplied UUID.
-        """
-        curr = self._get_inventory_and_update_provider_generation(rp_uuid)
-
-        # Check to see if we need to update placement's view
-        if not curr.get('inventories', {}):
-            msg = "No inventory to delete from resource provider %s."
-            LOG.debug(msg, rp_uuid)
-            return
-
-        msg = ("Compute node %s reported no inventory but previous "
-               "inventory was detected. Deleting existing inventory "
-               "records.")
-        LOG.info(msg, rp_uuid)
-
-        url = '/resource_providers/%s/inventories' % rp_uuid
-        cur_rp_gen = self._resource_providers[rp_uuid]['generation']
-        payload = {
-            'resource_provider_generation': cur_rp_gen,
-            'inventories': {},
-        }
-        r = self.put(url, payload)
-        placement_req_id = get_placement_request_id(r)
-        if r.status_code == 200:
-            # Update our view of the generation for next time
-            updated_inv = r.json()
-            new_gen = updated_inv['resource_provider_generation']
-
-            self._resource_providers[rp_uuid]['generation'] = new_gen
-            msg_args = {
-                'rp_uuid': rp_uuid,
-                'generation': new_gen,
-                'placement_req_id': placement_req_id,
-            }
-            LOG.info(('[%(placement_req_id)s] Deleted all inventory for '
-                      'resource provider %(rp_uuid)s at generation '
-                      '%(generation)i'),
-                     msg_args)
-            return
-        elif r.status_code == 409:
-            rc_str = _extract_inventory_in_use(r.text)
-            if rc_str is not None:
-                msg = ("[%(placement_req_id)s] We cannot delete inventory "
-                       "%(rc_str)s for resource provider %(rp_uuid)s "
-                       "because the inventory is in use.")
-                msg_args = {
-                    'rp_uuid': rp_uuid,
-                    'rc_str': rc_str,
-                    'placement_req_id': placement_req_id,
-                }
-                LOG.warning(msg, msg_args)
-                return
-
-        msg = ("[%(placement_req_id)s] Failed to delete inventory for "
-               "resource provider %(rp_uuid)s. Got error response: %(err)s")
-        msg_args = {
-            'rp_uuid': rp_uuid,
-            'err': r.text,
-            'placement_req_id': placement_req_id,
-        }
-        LOG.error(msg, msg_args)
-
     def set_inventory_for_provider(self, rp_uuid, rp_name, inv_data,
                                    resource_class):
         """Given the UUID of a provider, set the inventory records for the
@@ -601,10 +506,7 @@ class SchedulerReportClient(object):
         # Auto-create custom resource classes coming from a virt driver
         self._ensure_resource_class(resource_class)
 
-        if inv_data:
-            self._update_inventory(rp_uuid, inv_data)
-        else:
-            self._delete_inventory(rp_uuid)
+        self._update_inventory(rp_uuid, inv_data)
 
     @safe_connect
     def _ensure_resource_class(self, name):
@@ -704,8 +606,26 @@ class SchedulerReportClient(object):
             raise exception.InvalidResourceClass(resource_class=name)
 
     @safe_connect
-    def put_allocations(self, rp_uuid, consumer_uuid, alloc_data):
-        """Creates allocation records for the supplied instance UUID against
+    def delete_allocation_for_server(self, uuid):
+        url = '/allocations/%s' % uuid
+        r = self.delete(url)
+        if r:
+            LOG.info('Deleted allocation for server %s', uuid)
+        else:
+            # Check for 404 since we don't need to log a warning if we tried to
+            # delete something which doesn't actually exist.
+            if r.status_code != 404:
+                LOG.warning(
+                    'Unable to delete allocation for server '
+                    '%(uuid)s: (%(code)i %(text)s)',
+                    {'uuid': uuid,
+                     'code': r.status_code,
+                     'text': r.text})
+
+    @safe_connect
+    def put_allocations(self, rp_uuid, consumer_uuid, alloc_data, project_id,
+                        user_id):
+        """Creates allocation records for the supplied server UUID against
         the supplied resource provider.
 
         :note Currently we only allocate against a single resource provider.
@@ -713,9 +633,11 @@ class SchedulerReportClient(object):
               reality, this will change to allocate against multiple providers.
 
         :param rp_uuid: The UUID of the resource provider to allocate against.
-        :param consumer_uuid: The instance's UUID.
+        :param consumer_uuid: The server's UUID.
         :param alloc_data: Dict, keyed by resource class, of amounts to
                            consume.
+        :param project_id: The project_id associated with the allocations.
+        :param user_id: The user_id associated with the allocations.
         :returns: True if the allocations were created, False otherwise.
         """
         payload = {
@@ -727,17 +649,50 @@ class SchedulerReportClient(object):
                     'resources': alloc_data,
                 },
             ],
+            'project_id': project_id,
+            'user_id': user_id,
         }
         url = '/allocations/%s' % consumer_uuid
-        r = self.put(url, payload)
+        r = self.put(url, payload, version='1.8')
+        if r.status_code == 406:
+            # microversion 1.8 not available so try the earlier way
+            # TODO(melwitt): Remove this when we can be sure all placement
+            # servers support version 1.8.
+            payload.pop('project_id')
+            payload.pop('user_id')
+            r = self.put(url, payload)
         if r.status_code != 204:
             LOG.warning(
-                'Unable to submit allocation for instance '
+                'Unable to submit allocation for server '
                 '%(uuid)s (%(code)i %(text)s)',
                 {'uuid': consumer_uuid,
                  'code': r.status_code,
                  'text': r.text})
         return r.status_code == 204
+
+    @safe_connect
+    def delete_resource_provider(self, rp_uuid):
+        """Deletes the ResourceProvider record for the compute_node.
+
+        :param rp_uuid: The uuid of resource provider being deleted.
+        """
+        url = "/resource_providers/%s" % rp_uuid
+        resp = self.delete(url)
+        if resp:
+            LOG.info("Deleted resource provider %s", rp_uuid)
+            # clean the caches
+            self._resource_providers.pop(rp_uuid, None)
+            self._provider_aggregate_map.pop(rp_uuid, None)
+        else:
+            # Check for 404 since we don't need to log a warning if we tried to
+            # delete something which doesn"t actually exist.
+            if resp.status_code != 404:
+                LOG.warning(
+                    "Unable to delete resource provider "
+                    "%(uuid)s: (%(code)i %(text)s)",
+                    {"uuid": rp_uuid,
+                     "code": resp.status_code,
+                     "text": resp.text})
 
     @safe_connect
     def get_allocations_for_resource_provider(self, rp_uuid):
@@ -747,3 +702,10 @@ class SchedulerReportClient(object):
             return {}
         else:
             return resp.json()['allocations']
+
+    def delete_allocations_for_resource_provider(self, rp_uuid):
+        allocations = self.get_allocations_for_resource_provider(rp_uuid)
+        if allocations:
+            LOG.info('Deleted allocation for resource provider %s', rp_uuid)
+        for consumer_id in allocations:
+            self.delete_allocation_for_server(consumer_id)
