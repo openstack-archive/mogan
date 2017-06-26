@@ -59,4 +59,11 @@ def retry_on_timeout(retries=1):
     return outer
 
 
+def ensure_resource_class(resource_class):
+    upper = resource_class.upper()
+    if not resource_class.startswith('CUSTOM_'):
+        return 'CUSTOM_' + upper
+    else:
+        return upper
+
 retry_select_destinations = retry_on_timeout(ATTEMPTS - 1)
