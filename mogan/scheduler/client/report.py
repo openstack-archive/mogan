@@ -704,7 +704,33 @@ class SchedulerReportClient(object):
             raise exception.InvalidResourceClass(resource_class=name)
 
     @safe_connect
-    def put_allocations(self, rp_uuid, consumer_uuid, alloc_data):
+    def delete_allocation_for_server(self, uuid):
+        url = '/allocations/%s' % uuid
+        r = self.delete(url)
+        if r:
+            LOG.info('Deleted allocation for instance %s', uuid)
+        else:
+            # Check for 404 since we don't need to log a warning if we tried to
+            # delete something which doesn't actually exist.
+            if r.status_code != 404:
+                LOG.warning(
+                    'Unable to delete allocation for instance '
+                    '%(uuid)s: (%(code)i %(text)s)',
+                    {'uuid': uuid,
+                     'code': r.status_code,
+                     'text': r.text})
+
+    def update_server_allocation(self, rp_uuid, server_uuid, sign,
+                                 user_id, project_id, alloc_data):
+        if sign > 0:
+            self.put_allocations(rp_uuid, server_uuid, alloc_data, user_id,
+                                 project_id)
+        else:
+            self.delete_allocation_for_server(server_uuid)
+
+    @safe_connect
+    def put_allocations(self, rp_uuid, consumer_uuid, alloc_data, project_id,
+                        user_id):
         """Creates allocation records for the supplied instance UUID against
         the supplied resource provider.
 
@@ -716,6 +742,8 @@ class SchedulerReportClient(object):
         :param consumer_uuid: The instance's UUID.
         :param alloc_data: Dict, keyed by resource class, of amounts to
                            consume.
+        :param project_id: The project_id associated with the allocations.
+        :param user_id: The user_id associated with the allocations.
         :returns: True if the allocations were created, False otherwise.
         """
         payload = {
@@ -727,9 +755,18 @@ class SchedulerReportClient(object):
                     'resources': alloc_data,
                 },
             ],
+            'project_id': project_id,
+            'user_id': user_id,
         }
         url = '/allocations/%s' % consumer_uuid
-        r = self.put(url, payload)
+        r = self.put(url, payload, version='1.8')
+        if r.status_code == 406:
+            # microversion 1.8 not available so try the earlier way
+            # TODO(melwitt): Remove this when we can be sure all placement
+            # servers support version 1.8.
+            payload.pop('project_id')
+            payload.pop('user_id')
+            r = self.put(url, payload)
         if r.status_code != 204:
             LOG.warning(
                 'Unable to submit allocation for instance '
@@ -747,3 +784,29 @@ class SchedulerReportClient(object):
             return {}
         else:
             return resp.json()['allocations']
+
+    @safe_connect
+    def delete_resource_provider(self, rp_uuid):
+        """Deletes the ResourceProvider record for the compute_node.
+
+        :param rp_uuid: The uuid of resource provider being deleted.
+        """
+
+        # TODO(liusheng) may need to deallocate firstly
+        url = "/resource_providers/%s" % rp_uuid
+        resp = self.delete(url)
+        if resp:
+            LOG.info("Deleted resource provider %s", rp_uuid)
+            # clean the caches
+            self._resource_providers.pop(rp_uuid, None)
+            self._provider_aggregate_map.pop(rp_uuid, None)
+        else:
+            # Check for 404 since we don't need to log a warning if we tried to
+            # delete something which doesn"t actually exist.
+            if resp.status_code != 404:
+                LOG.warning(
+                    "Unable to delete resource provider "
+                    "%(uuid)s: (%(code)i %(text)s)",
+                    {"uuid": rp_uuid,
+                     "code": resp.status_code,
+                     "text": resp.text})
