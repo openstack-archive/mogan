@@ -1,0 +1,28 @@
+Reporting nodes resource to placement service
+
+This change importing placement service, report nodes resources to
+placement and use it as unique nodes resource provider service for
+Mogan's scheduler.
+
+Change-Id: I1cb91a10cfc8139687ad44167f33f45fd3c08e5c
+Partially Implements: bp track-resources-using-placement
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Mon Jun 19 14:08:26 2017 +0800
+#
+# On branch bp/placement-import
+# Changes to be committed:
+#	modified:   devstack/plugin.sh
+#	modified:   mogan/common/exception.py
+#	modified:   mogan/conf/__init__.py
+#	new file:   mogan/conf/placement.py
+#	modified:   mogan/engine/baremetal/driver.py
+#	modified:   mogan/engine/baremetal/ironic/driver.py
+#	modified:   mogan/engine/manager.py
+#	new file:   mogan/scheduler/client/__init__.py
+#	new file:   mogan/scheduler/client/query.py
+#	new file:   mogan/scheduler/client/report.py
+#	new file:   mogan/scheduler/utils.py
+#
