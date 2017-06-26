@@ -399,7 +399,7 @@ class Connection(api.Connection):
             port_id=port_id)
         count = query.delete()
         if count != 1:
-            raise exception.PortNotFound()
+            raise exception.PortNotFound(port_id=port_id)
 
     def server_nic_update_or_create(self, context, port_id, values):
         with _session_for_write() as session:

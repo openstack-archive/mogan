@@ -168,8 +168,6 @@ class BuildNetworkTask(flow_utils.MoganTask):
                         port_dict = self.manager.network_api.show_port(
                             context, vif.get('port_id'))
 
-                    self.manager.driver.plug_vif(pif.port_uuid,
-                                                 port_dict['id'])
                     nic_dict = {'port_id': port_dict['id'],
                                 'network_id': port_dict['network_id'],
                                 'mac_address': port_dict['mac_address'],
@@ -179,6 +177,8 @@ class BuildNetworkTask(flow_utils.MoganTask):
                     nics_obj.objects.append(objects.ServerNic(
                         context, **nic_dict))
 
+                    self.manager.driver.plug_vif(pif.port_uuid,
+                                                 port_dict['id'])
                 except Exception as e:
                     # Set nics here, so we can clean up the
                     # created networks during reverting.

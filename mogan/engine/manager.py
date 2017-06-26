@@ -334,7 +334,14 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def destroy_networks(self, context, server):
         ports = server.nics.get_port_ids()
-        server.nics.delete(context)
+        try:
+            server.nics.delete(context)
+        except exception.PortNotFound as e:
+            LOG.warning("Some port of server %(uuid)s is not found. "
+                        "The reason is %(reason)s",
+                        {"uuid": server.uuid,
+                         "reason": six.text_type(e.message)})
+
         for port in ports:
             self.network_api.delete_port(context, port, server.uuid)
 
