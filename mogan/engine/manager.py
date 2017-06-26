@@ -392,9 +392,10 @@ class EngineManager(base_manager.BaseEngineManager):
                 }
             filter_properties['retry'] = retry
             request_spec['num_servers'] = len(servers)
+            request_spec['server_ids'] = [s.uuid for s in servers]
 
             try:
-                nodes = self.scheduler_rpcapi.select_destinations(
+                nodes = self.scheduler_client.select_destinations(
                     context, request_spec, filter_properties)
             except exception.NoValidNode as e:
                 # Here should reset the state of building servers to Error
@@ -413,11 +414,11 @@ class EngineManager(base_manager.BaseEngineManager):
                      {"nodes": nodes})
 
             for (server, node) in six.moves.zip(servers, nodes):
-                server.node_uuid = node['node_uuid']
+                server.node_uuid = node
                 server.save()
                 # Add a retry entry for the selected node
                 retry_nodes = retry['nodes']
-                retry_nodes.append(node['node_uuid'])
+                retry_nodes.append(node)
 
             for server in servers:
                 utils.spawn_n(self._create_server,
@@ -444,7 +445,6 @@ class EngineManager(base_manager.BaseEngineManager):
                                       target_state=states.ACTIVE)
 
         try:
-            node = objects.ComputeNode.get(context, server.node_uuid)
             flow_engine = create_server.get_flow(
                 context,
                 self,
@@ -453,7 +453,6 @@ class EngineManager(base_manager.BaseEngineManager):
                 user_data,
                 injected_files,
                 key_pair,
-                node['ports'],
                 request_spec,
                 filter_properties,
             )
@@ -544,6 +543,8 @@ class EngineManager(base_manager.BaseEngineManager):
 
         server.power_state = states.NOSTATE
         utils.process_event(fsm, server, event='done')
+        self.scheduler_client.reportclient.delete_allocation_for_server(
+            server.uuid)
         server.destroy()
 
     def set_power_state(self, context, server, state):
