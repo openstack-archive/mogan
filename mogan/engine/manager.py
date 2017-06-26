@@ -38,6 +38,7 @@ from mogan import objects
 from mogan.objects import fields
 from mogan.objects import quota
 from mogan.scheduler import client
+from mogan.scheduler import utils as sched_utils
 
 LOG = log.getLogger(__name__)
 
@@ -163,7 +164,8 @@ class EngineManager(base_manager.BaseEngineManager):
             if node.get('resource_class') is None:
                 continue
 
-            resource_class = 'CUSTOM_' + node['resource_class'].upper()
+            resource_class = sched_utils.ensure_resource_class(
+                node['resource_class'])
             inventory_data = {resource_class: {'total': 1,
                                                'min_unit': 1,
                                                'max_unit': 1,
@@ -400,11 +402,11 @@ class EngineManager(base_manager.BaseEngineManager):
                      {"nodes": nodes})
 
             for (server, node) in six.moves.zip(servers, nodes):
-                server.node_uuid = node['node_uuid']
+                server.node_uuid = node
                 server.save()
                 # Add a retry entry for the selected node
                 retry_nodes = retry['nodes']
-                retry_nodes.append(node['node_uuid'])
+                retry_nodes.append(node)
 
             for server in servers:
                 utils.spawn_n(self._create_server,
@@ -431,7 +433,6 @@ class EngineManager(base_manager.BaseEngineManager):
                                       target_state=states.ACTIVE)
 
         try:
-            node = objects.ComputeNode.get(context, server.node_uuid)
             flow_engine = create_server.get_flow(
                 context,
                 self,
@@ -440,7 +441,6 @@ class EngineManager(base_manager.BaseEngineManager):
                 user_data,
                 injected_files,
                 key_pair,
-                node['ports'],
                 request_spec,
                 filter_properties,
             )
