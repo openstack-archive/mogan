@@ -57,8 +57,8 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
         self.assertEqual('mogan_flavor_create', resp['name'])
         self.assertEqual('mogan flavor description',
                          resp['description'])
-        self.assertEqual(True, resp['is_public'])
-        self.assertEqual(False, resp['disabled'])
+        self.assertTrue(resp['is_public'])
+        self.assertFalse(resp['disabled'])
         self.assertEqual({'gold': 1}, resp['resources'])
         self.assertEqual({'gold': 'foo'}, resp['resource_traits'])
         self.assertIn('uuid', resp)
@@ -71,8 +71,8 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
         self.assertIn('mogan_flavor_public', resp['name'])
         self.assertEqual('mogan flavor description',
                          resp['description'])
-        self.assertEqual(True, resp['is_public'])
-        self.assertEqual(False, resp['disabled'])
+        self.assertTrue(resp['is_public'])
+        self.assertFalse(resp['disabled'])
         self.assertEqual({'CUSTOM_GOLD': 1}, resp['resources'])
         self.assertEqual({}, resp['resource_traits'])
         self.assertIn('uuid', resp)

@@ -47,7 +47,7 @@ class TestFlavor(v1_test.APITestV1):
         resp = resp.json
         self.assertEqual('test', resp['name'])
         self.assertEqual('just test', resp['description'])
-        self.assertEqual(True, resp['is_public'])
+        self.assertTrue(resp['is_public'])
         self.assertEqual({'CUSTOM_GOLD': 1}, resp['resources'])
         self.assertEqual({'CUSTOM_GOLD': 'FPGA'}, resp['resource_traits'])
         self.assertIn('uuid', resp)
