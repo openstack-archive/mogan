@@ -137,15 +137,16 @@ class BuildNetworkTask(flow_utils.MoganTask):
     """Build network for the server."""
 
     def __init__(self, manager):
-        requires = ['server', 'requested_networks', 'ports', 'context']
+        requires = ['server', 'requested_networks', 'context']
         super(BuildNetworkTask, self).__init__(addons=[ACTION],
                                                requires=requires)
         self.manager = manager
 
-    def _build_networks(self, context, server, requested_networks, ports):
+    def _build_networks(self, context, server, requested_networks):
 
         # TODO(zhenguo): This seems not needed as our scheduler has already
         # guaranteed this.
+        ports = self.manager.driver.get_ports_from_node(server.node_uuid)
         if len(requested_networks) > len(ports):
             raise exception.InterfacePlugException(_(
                 "Ironic node: %(id)s virtual to physical interface count"
@@ -158,7 +159,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
         nics_obj = objects.ServerNics(context)
         for vif, pif in zip(requested_networks, ports):
             # Match the specified port type with physical interface type
-            if vif.get('port_type', 'None') == pif.port_type:
+            if vif.get('port_type') == pif.extra.get('port_type'):
                 try:
                     if vif.get('net_id'):
                         port = self.manager.network_api.create_port(
@@ -168,7 +169,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                         port_dict = self.manager.network_api.show_port(
                             context, vif.get('port_id'))
 
-                    self.manager.driver.plug_vif(pif.port_uuid,
+                    self.manager.driver.plug_vif(pif.uuid,
                                                  port_dict['id'])
                     nic_dict = {'port_id': port_dict['id'],
                                 'network_id': port_dict['network_id'],
@@ -190,12 +191,11 @@ class BuildNetworkTask(flow_utils.MoganTask):
                         "Build network for server failed."))
         return nics_obj
 
-    def execute(self, context, server, requested_networks, ports):
+    def execute(self, context, server, requested_networks):
         server_nics = self._build_networks(
             context,
             server,
-            requested_networks,
-            ports)
+            requested_networks)
 
         server.nics = server_nics
         server.save()
@@ -292,7 +292,7 @@ class CreateServerTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, server, requested_networks, user_data,
-             injected_files, key_pair, ports, request_spec,
+             injected_files, key_pair, request_spec,
              filter_properties):
 
     """Constructs and returns the manager entrypoint flow
@@ -320,7 +320,6 @@ def get_flow(context, manager, server, requested_networks, user_data,
         'user_data': user_data,
         'injected_files': injected_files,
         'key_pair': key_pair,
-        'ports': ports,
         'configdrive': {}
     }
 

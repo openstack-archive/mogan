@@ -38,6 +38,7 @@ from mogan import objects
 from mogan.objects import fields
 from mogan.objects import quota
 from mogan.scheduler import client
+from mogan.scheduler import utils as sched_utils
 
 LOG = log.getLogger(__name__)
 
@@ -79,6 +80,7 @@ class EngineManager(base_manager.BaseEngineManager):
         self.quota = quota.Quota()
         self.quota.register_resource(objects.quota.ServerResource())
         self.scheduler_client = client.SchedulerClient()
+        self.reportclient = self.scheduler_client.reportclient
 
     def _get_compute_port(self, context, port_uuid):
         """Gets compute port by the uuid."""
@@ -155,15 +157,24 @@ class EngineManager(base_manager.BaseEngineManager):
 
         :param context: security context
         """
+        # TODO(liusheng) need to get "all states" than only "available"
+        # nodes in placement
         nodes = self.driver.get_available_resources()
         compute_nodes_in_db = objects.ComputeNodeList.get_all(context)
+
+        all_rps = self.reportclient.get_filtered_resource_providers({})
+        node_uuids = nodes.keys()
+        for rp in all_rps:
+            if rp['uuid'] not in node_uuids:
+                self.reportclient.delete_resource_provider(rp['uuid'])
 
         # Record compute nodes to db
         for uuid, node in nodes.items():
             if node.get('resource_class') is None:
                 continue
 
-            resource_class = 'CUSTOM_' + node['resource_class'].upper()
+            resource_class = sched_utils.ensure_resource_class(
+                node['resource_class'])
             inventory_data = {resource_class: {'total': 1,
                                                'min_unit': 1,
                                                'max_unit': 1,
@@ -400,11 +411,11 @@ class EngineManager(base_manager.BaseEngineManager):
                      {"nodes": nodes})
 
             for (server, node) in six.moves.zip(servers, nodes):
-                server.node_uuid = node['node_uuid']
+                server.node_uuid = node
                 server.save()
                 # Add a retry entry for the selected node
                 retry_nodes = retry['nodes']
-                retry_nodes.append(node['node_uuid'])
+                retry_nodes.append(node)
 
             for server in servers:
                 utils.spawn_n(self._create_server,
@@ -431,7 +442,6 @@ class EngineManager(base_manager.BaseEngineManager):
                                       target_state=states.ACTIVE)
 
         try:
-            node = objects.ComputeNode.get(context, server.node_uuid)
             flow_engine = create_server.get_flow(
                 context,
                 self,
@@ -440,7 +450,6 @@ class EngineManager(base_manager.BaseEngineManager):
                 user_data,
                 injected_files,
                 key_pair,
-                node['ports'],
                 request_spec,
                 filter_properties,
             )
