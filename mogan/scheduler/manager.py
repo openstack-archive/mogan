@@ -50,9 +50,3 @@ class SchedulerManager(periodic_task.PeriodicTasks):
         dests = self.driver.schedule(
             ctxt, request_spec, filter_properties)
         return dests
-
-    def del_host(self):
-        pass
-
-    def periodic_tasks(self, context, raise_on_error=False):
-        return self.run_periodic_tasks(context, raise_on_error=raise_on_error)
