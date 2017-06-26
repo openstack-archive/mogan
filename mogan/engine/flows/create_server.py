@@ -156,6 +156,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                    'pif_count': len(ports)})
 
         nics_obj = objects.ServerNics(context)
+
         for vif in requested_networks:
             try:
                 if vif.get('net_id'):
@@ -166,19 +167,23 @@ class BuildNetworkTask(flow_utils.MoganTask):
                     port_dict = self.manager.network_api.show_port(
                         context, vif.get('port_id'))
 
+                nic_dict = {'port_id': port_dict['id'],
+                            'network_id': port_dict['network_id'],
+                            'mac_address': port_dict['mac_address'],
+                            'fixed_ips': port_dict['fixed_ips'],
+                            'server_uuid': server.uuid}
+
+                server_nic = objects.ServerNic(context, **nic_dict)
+                nics_obj.objects.append(server_nic)
+
                 self.manager.driver.plug_vif(server.node_uuid,
                                              port_dict['id'])
                 # Get updated VIF info
                 port_dict = self.manager.network_api.show_port(
                     context, port_dict.get('id'))
 
-                nic_dict = {'port_id': port_dict['id'],
-                            'network_id': port_dict['network_id'],
-                            'mac_address': port_dict['mac_address'],
-                            'fixed_ips': port_dict['fixed_ips'],
-                            'server_uuid': server.uuid}
-                nics_obj.objects.append(objects.ServerNic(context, **nic_dict))
-
+                # Update the real physical mac address from ironic.
+                server_nic.mac_address = port_dict['mac_address']
             except Exception as e:
                 # Set nics here, so we can clean up the
                 # created networks during reverting.
@@ -188,6 +193,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                           {"server": server.uuid, "reason": e})
                 raise exception.NetworkError(_(
                     "Build network for server failed."))
+
         return nics_obj
 
     def execute(self, context, server, requested_networks, ports):

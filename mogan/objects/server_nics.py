@@ -14,12 +14,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import copy
+import six
 
+from oslo_log import log as logging
 from oslo_versionedobjects import base as object_base
 
+from mogan.common import exception
 from mogan.db import api as dbapi
 from mogan.objects import base
 from mogan.objects import fields as object_fields
+
+LOG = logging.getLogger(__name__)
 
 
 @base.MoganObjectRegistry.register
@@ -103,4 +108,9 @@ class ServerNics(object_base.ObjectListBase, base.MoganObject,
 
     def delete(self, context):
         for nic_obj in self:
-            nic_obj.delete(context)
+            try:
+                nic_obj.delete(context)
+            except exception.PortNotFound as e:
+                LOG.warning("For server %(uuid)s: %(reason)s",
+                            {"uuid": nic_obj.server_uuid,
+                             "reason": six.text_type(e.message)})
