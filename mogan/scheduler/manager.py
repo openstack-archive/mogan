@@ -15,14 +15,13 @@
 
 import eventlet
 import oslo_messaging as messaging
-from oslo_service import periodic_task
 from oslo_utils import importutils
 
 from mogan.common import exception
 from mogan.conf import CONF
 
 
-class SchedulerManager(periodic_task.PeriodicTasks):
+class SchedulerManager(object):
     """Mogan Scheduler manager main class."""
 
     RPC_API_VERSION = '1.0'
@@ -30,7 +29,7 @@ class SchedulerManager(periodic_task.PeriodicTasks):
     target = messaging.Target(version=RPC_API_VERSION)
 
     def __init__(self, topic, host=None):
-        super(SchedulerManager, self).__init__(CONF)
+        super(SchedulerManager, self).__init__()
         self.host = host or CONF.host
         self.topic = topic
         scheduler_driver = CONF.scheduler.scheduler_driver
@@ -53,6 +52,3 @@ class SchedulerManager(periodic_task.PeriodicTasks):
 
     def del_host(self):
         pass
-
-    def periodic_tasks(self, context, raise_on_error=False):
-        return self.run_periodic_tasks(context, raise_on_error=raise_on_error)
