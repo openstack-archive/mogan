@@ -15,6 +15,7 @@ from oslo_concurrency import processutils
 from oslo_context import context
 from oslo_log import log
 import oslo_messaging as messaging
+from oslo_service import periodic_task
 from oslo_service import service
 from oslo_service import wsgi
 from oslo_utils import importutils
@@ -53,10 +54,11 @@ class RPCService(service.Service):
         self.rpcserver.start()
 
         self.manager.init_host()
-        self.tg.add_dynamic_timer(
-            self.manager.periodic_tasks,
-            periodic_interval_max=CONF.periodic_interval,
-            context=admin_context)
+        if isinstance(self.manager, periodic_task.PeriodicTasks):
+            self.tg.add_dynamic_timer(
+                self.manager.periodic_tasks,
+                periodic_interval_max=CONF.periodic_interval,
+                context=admin_context)
 
         LOG.info('Created RPC server for service %(service)s on host '
                  '%(host)s.',
