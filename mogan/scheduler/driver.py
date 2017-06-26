@@ -20,7 +20,6 @@ Scheduler base class that all Schedulers should inherit from
 """
 
 from oslo_config import cfg
-from oslo_utils import importutils
 
 from mogan.common.i18n import _
 
@@ -30,10 +29,6 @@ CONF = cfg.CONF
 
 class Scheduler(object):
     """The base class that all Scheduler classes should inherit from."""
-
-    def __init__(self):
-        self.node_manager = importutils.import_object(
-            CONF.scheduler.scheduler_node_manager)
 
     def schedule(self, context, request_spec, filter_properties):
         """Must override schedule method for scheduler to work."""
