@@ -41,8 +41,15 @@ class SchedulerClient(object):
     """Client library for placing calls to the scheduler."""
 
     def __init__(self):
+        self.queryclient = LazyLoader(importutils.import_class(
+            'mogan.scheduler.client.query.SchedulerQueryClient'))
         self.reportclient = LazyLoader(importutils.import_class(
             'mogan.scheduler.client.report.SchedulerReportClient'))
+
+    @utils.retry_select_destinations
+    def select_destinations(self, context, spec_obj, instance_uuids):
+        return self.queryclient.select_destinations(context, spec_obj,
+                                                    instance_uuids)
 
     def set_inventory_for_provider(self, rp_uuid, rp_name, inv_data,
                                    res_class):
