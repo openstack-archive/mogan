@@ -88,7 +88,12 @@ function configure_mogan {
     iniset ${MOGAN_CONF_FILE} neutron url "${NEUTRON_SERVICE_PROTOCOL}://${SERVICE_HOST}:${NEUTRON_SERVICE_PORT}"
 
     # Setup glance section
-    iniset ${MOGAN_CONF_FILE} glance glance_api_servers "${GLANCE_SERVICE_PROTOCOL}://${SERVICE_HOST}:${GLANCE_SERVICE_PORT}"
+    if [[ "$WSGI_MODE" == "uwsgi" ]]; then
+        glance_url="$GLANCE_SERVICE_PROTOCOL://$GLANCE_SERVICE_HOST/image"
+    else
+        glance_url="$GLANCE_SERVICE_PROTOCOL://${SERVICE_HOST}:$GLANCE_HOSTPORT"
+	fi
+    iniset ${MOGAN_CONF_FILE} glance glance_api_servers ${glance_url}
 
     # Setup keystone section
     iniset ${MOGAN_CONF_FILE} keystone region_name ${REGION_NAME}
