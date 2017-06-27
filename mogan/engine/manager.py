@@ -12,7 +12,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
 import functools
 import sys
 
@@ -157,42 +156,35 @@ class EngineManager(base_manager.BaseEngineManager):
 
         :param context: security context
         """
-        # TODO(liusheng) need to get "all states" than only "available"
-        # nodes in placement
-        nodes = self.driver.get_available_resources()
-        compute_nodes_in_db = objects.ComputeNodeList.get_all(context)
+        all_nodes = self.driver.get_all_nodes()
 
         all_rps = self.reportclient.get_filtered_resource_providers({})
-        node_uuids = nodes.keys()
+        node_uuids = [node.uuid for node in all_nodes]
+
+        # Clean orphan resource providers in placement
         for rp in all_rps:
             if rp['uuid'] not in node_uuids:
                 self.reportclient.delete_resource_provider(rp['uuid'])
 
-        # Record compute nodes to db
-        for uuid, node in nodes.items():
-            if node.get('resource_class') is None:
+        inventory = {'total': 1,
+                     'reserved': 0,
+                     'min_unit': 1,
+                     'max_unit': 1,
+                     'step_size': 1,
+                     'allocation_ratio': 1.0,
+                     }
+        for node in all_nodes:
+            if node.resource_class is None:
                 continue
-
-            resource_class = sched_utils.ensure_resource_class(
-                node['resource_class'])
-            inventory_data = {resource_class: {'total': 1,
-                                               'min_unit': 1,
-                                               'max_unit': 1,
-                                               'step_size': 1,
-                                               }}
-            self.scheduler_client.set_inventory_for_provider(
-                node['node_uuid'], node['node_uuid'], inventory_data,
-                resource_class)
-            # initialize the compute node object, creating it
-            # if it does not already exist.
-            self._init_compute_node(context, node)
-
-        # Delete orphan compute node not reported by driver but still in db
-        for cn in compute_nodes_in_db:
-            if cn.node_uuid not in nodes:
-                LOG.info("Deleting orphan compute node %(id)s)",
-                         {'id': cn.node_uuid})
-                cn.destroy()
+            if self.driver.is_node_unavailable(node):
+                self.reportclient.delete_resource_provider(node.uuid)
+            else:
+                resource_class = sched_utils.ensure_resource_class(
+                    node.resource_class)
+                inventory_data = {resource_class: inventory}
+                self.scheduler_client.set_inventory_for_provider(
+                    node.uuid, node.uuid, inventory_data,
+                    resource_class)
 
     @periodic_task.periodic_task(spacing=CONF.engine.sync_power_state_interval,
                                  run_immediately=True)
@@ -540,6 +532,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
         server.power_state = states.NOSTATE
         utils.process_event(fsm, server, event='done')
+        self.reportclient.delete_allocation_for_server(server.uuid)
         server.destroy()
 
     def set_power_state(self, context, server, state):
