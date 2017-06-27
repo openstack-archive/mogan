@@ -21,6 +21,7 @@ from oslo_log import log as logging
 from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common import utils
+from mogan import objects
 from mogan.scheduler import client
 from mogan.scheduler import driver
 from mogan.scheduler import utils as sched_utils
@@ -34,7 +35,7 @@ class FilterScheduler(driver.Scheduler):
     def __init__(self, *args, **kwargs):
         super(FilterScheduler, self).__init__(*args, **kwargs)
         self.max_attempts = self._max_attempts()
-        self.scheduler_client = client.SchedulerClient()
+        self.reportclient = client.SchedulerClient().reportclient
 
     def _max_attempts(self):
         max_attempts = CONF.scheduler.scheduler_max_attempts
@@ -83,13 +84,17 @@ class FilterScheduler(driver.Scheduler):
                 {'max_attempts': max_attempts,
                  'server_id': server_id})
 
-    def _get_filtered_nodes(self, request_spec):
+    @staticmethod
+    def _get_res_cls_filters(request_spec):
         flavor_dict = request_spec['flavor']
-        resources = dict([(sched_utils.ensure_resource_class_name(
-            res[0]), res[1]) for res in flavor_dict['resources'].items()])
-        query_filters = {'resources': resources}
-        reportclient = self.scheduler_client.reportclient
-        filtered_nodes = reportclient.get_filtered_resource_providers(
+        resources = dict([(sched_utils.ensure_resource_class_name(res[0]),
+                           int(res[1]))
+                          for res in flavor_dict['resources'].items()])
+        return resources
+
+    def _get_filtered_nodes(self, request_spec):
+        query_filters = {'resources': self._get_res_cls_filters(request_spec)}
+        filtered_nodes = self.reportclient.get_filtered_resource_providers(
             query_filters)
         if not filtered_nodes:
             return []
@@ -112,6 +117,13 @@ class FilterScheduler(driver.Scheduler):
                             request_spec.get('flavor'))
                 raise exception.NoValidNode(_("No filtered nodes available"))
             dest_nodes = self._choose_nodes(filtered_nodes, request_spec)
+            for node in dest_nodes:
+                server_obj = objects.Server.get(
+                    context, request_spec['server_id'])
+                alloc_data = self._get_res_cls_filters(request_spec)
+                self.reportclient.update_server_allocation(
+                    node, server_obj.uuid, 1, server_obj.user_id,
+                    server_obj.project_id, alloc_data)
             return dest_nodes
 
         return _schedule(self, context, request_spec, filter_properties)
