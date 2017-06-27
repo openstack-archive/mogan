@@ -21,6 +21,7 @@ from oslo_log import log as logging
 from mogan.common import exception
 from mogan.common.i18n import _
 from mogan.common import utils
+from mogan import objects
 from mogan.scheduler import client
 from mogan.scheduler import driver
 from mogan.scheduler import utils as sched_utils
@@ -116,6 +117,13 @@ class FilterScheduler(driver.Scheduler):
                             request_spec.get('flavor'))
                 raise exception.NoValidNode(_("No filtered nodes available"))
             dest_nodes = self._choose_nodes(filtered_nodes, request_spec)
+            for node in dest_nodes:
+                server_obj = objects.Server.get(
+                    context, request_spec['server_id'])
+                alloc_data = self._get_res_cls_filters(request_spec)
+                self.reportclient.update_server_allocation(
+                    node, server_obj.uuid, 1, server_obj.user_id,
+                    server_obj.project_id, alloc_data)
             return dest_nodes
 
         return _schedule(self, context, request_spec, filter_properties)
