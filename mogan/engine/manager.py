@@ -157,13 +157,12 @@ class EngineManager(base_manager.BaseEngineManager):
 
         :param context: security context
         """
-        # TODO(liusheng) need to get "all states" than only "available"
-        # nodes in placement
-        nodes = self.driver.get_available_resources()
-        compute_nodes_in_db = objects.ComputeNodeList.get_all(context)
+        nodes = self.driver.get_available_nodes()
 
         all_rps = self.reportclient.get_filtered_resource_providers({})
         node_uuids = nodes.keys()
+        # delete the resource providers in case the nodes have been removed
+        # in driver.
         for rp in all_rps:
             if rp['uuid'] not in node_uuids:
                 self.reportclient.delete_resource_provider(rp['uuid'])
@@ -175,24 +174,11 @@ class EngineManager(base_manager.BaseEngineManager):
 
             resource_class = sched_utils.ensure_resource_class(
                 node['resource_class'])
-            inventory_data = {resource_class: {'total': 1,
-                                               'min_unit': 1,
-                                               'max_unit': 1,
-                                               'step_size': 1,
-                                               }}
+            inventory = self.driver.get_inventory(node)
+            inventory_data = {resource_class: inventory}
             self.scheduler_client.set_inventory_for_provider(
                 node['node_uuid'], node['node_uuid'], inventory_data,
                 resource_class)
-            # initialize the compute node object, creating it
-            # if it does not already exist.
-            self._init_compute_node(context, node)
-
-        # Delete orphan compute node not reported by driver but still in db
-        for cn in compute_nodes_in_db:
-            if cn.node_uuid not in nodes:
-                LOG.info("Deleting orphan compute node %(id)s)",
-                         {'id': cn.node_uuid})
-                cn.destroy()
 
     @periodic_task.periodic_task(spacing=CONF.engine.sync_power_state_interval,
                                  run_immediately=True)
@@ -540,6 +526,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
         server.power_state = states.NOSTATE
         utils.process_event(fsm, server, event='done')
+        self.reportclient.delete_allocation_for_server(server.uuid)
         server.destroy()
 
     def set_power_state(self, context, server, state):

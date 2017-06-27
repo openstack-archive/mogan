@@ -430,7 +430,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         LOG.info('Successfully unprovisioned Ironic node %s',
                  node.uuid, server=server)
 
-    def get_available_resources(self):
+    def get_available_nodes(self):
         """Helper function to return the list of resources.
 
         If unable to connect ironic server, an empty list is returned.
@@ -438,13 +438,8 @@ class IronicDriver(base_driver.BaseEngineDriver):
         :returns: a list of raw node from ironic
 
         """
-
-        # Retrieve nodes
         params = {
-            'maintenance': False,
             'detail': True,
-            'provision_state': ironic_states.AVAILABLE,
-            'associated': False,
             'limit': 0
         }
         try:
@@ -454,27 +449,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
                           "%(detail)s", {'detail': e.message})
             node_list = []
 
-        # Retrive ports
-        params = {
-            'limit': 0,
-            'fields': ('uuid', 'node_uuid', 'extra', 'address')
-        }
-
-        try:
-            port_list = self.ironicclient.call("port.list", **params)
-        except client_e.ClientException as e:
-            LOG.exception("Could not get ports from ironic. Reason: "
-                          "%(detail)s", {'detail': e.message})
-            port_list = []
-
-        # TODO(zhenguo): Add portgroups resources
-        node_resources = {}
-        for node in node_list:
-            # Add ports to the associated node
-            node.ports = [self._port_resource(port) for port in port_list
-                          if node.uuid == port.node_uuid]
-            node_resources[node.uuid] = self._node_resource(node)
-        return node_resources
+        return node_list
 
     def get_maintenance_node_list(self):
         """Helper function to return the list of maintenance nodes.
@@ -659,3 +634,71 @@ class IronicDriver(base_driver.BaseEngineDriver):
         else:
             LOG.debug('Console is disabled for node %s', node_uuid)
             raise exception.ConsoleNotAvailable()
+
+    @staticmethod
+    def _node_resources_unavailable(node_obj):
+        """Determine whether the node's resources are in an acceptable state.
+
+        Determines whether the node's resources should be presented
+        to Mogan for use based on the current power, provision and maintenance
+        state. This is called after _node_resources_used, so any node that
+        is not used and not in AVAILABLE should be considered in a 'bad' state,
+        and unavailable for scheduling. Returns True if unacceptable.
+        """
+        bad_power_states = [ironic_states.ERROR, ironic_states.NOSTATE]
+        # keep NOSTATE around for compatibility
+        good_provision_states = [
+            ironic_states.AVAILABLE, ironic_states.NOSTATE]
+        return (node_obj.maintenance or
+                node_obj.power_state in bad_power_states or
+                node_obj.provision_state not in good_provision_states or
+                (node_obj.provision_state in good_provision_states and
+                 node_obj.instance_uuid is not None))
+
+    @staticmethod
+    def _node_resources_used(node_obj):
+        """Determine whether the node's resources are currently used.
+
+        Determines whether the node's resources should be considered used
+        or not. A node is used when it is either in the process of putting
+        a new instance on the node, has an instance on the node, or is in
+        the process of cleaning up from a deleted instance. Returns True if
+        used.
+
+        If we report resources as consumed for a node that does not have an
+        instance on it, the resource tracker will notice there's no instances
+        consuming resources and try to correct us. So only nodes with an
+        instance attached should report as consumed here.
+        """
+        return node_obj.instance_uuid is not None
+
+    def get_inventory(self, node_obj):
+        """Get inventory data of a node.
+
+        :param node_obj: node object to get its inventory data.
+        """
+        inventory_data = {}
+        # if self._node_resources_used(node_obj):
+        #     inventory_data = {'total': 1,
+        #                       'reserved': 1,
+        #                       'min_unit': 1,
+        #                       'max_unit': 1,
+        #                       'step_size': 1,
+        #                       'allocation_ratio': 1.0,
+        #                       }
+        if self._node_resources_unavailable(node_obj):
+            inventory_data = {'total': 0,
+                              'reserved': 0,
+                              'min_unit': 1,
+                              'max_unit': 1,
+                              'step_size': 1,
+                              'allocation_ratio': 1.0,
+                              }
+        inventory_data = inventory_data or {'total': 1,
+                                            'reserved': 0,
+                                            'min_unit': 1,
+                                            'max_unit': 1,
+                                            'step_size': 1,
+                                            'allocation_ratio': 1.0,
+                                            }
+        return inventory_data
