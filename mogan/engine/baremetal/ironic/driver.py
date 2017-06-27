@@ -430,21 +430,16 @@ class IronicDriver(base_driver.BaseEngineDriver):
         LOG.info('Successfully unprovisioned Ironic node %s',
                  node.uuid, server=server)
 
-    def get_available_resources(self):
-        """Helper function to return the list of resources.
+    def get_all_nodes(self):
+        """Helper function to return the list of all nodes.
 
         If unable to connect ironic server, an empty list is returned.
 
         :returns: a list of raw node from ironic
 
         """
-
-        # Retrieve nodes
         params = {
-            'maintenance': False,
             'detail': True,
-            'provision_state': ironic_states.AVAILABLE,
-            'associated': False,
             'limit': 0
         }
         try:
@@ -454,27 +449,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
                           "%(detail)s", {'detail': e.message})
             node_list = []
 
-        # Retrive ports
-        params = {
-            'limit': 0,
-            'fields': ('uuid', 'node_uuid', 'extra', 'address')
-        }
-
-        try:
-            port_list = self.ironicclient.call("port.list", **params)
-        except client_e.ClientException as e:
-            LOG.exception("Could not get ports from ironic. Reason: "
-                          "%(detail)s", {'detail': e.message})
-            port_list = []
-
-        # TODO(zhenguo): Add portgroups resources
-        node_resources = {}
-        for node in node_list:
-            # Add ports to the associated node
-            node.ports = [self._port_resource(port) for port in port_list
-                          if node.uuid == port.node_uuid]
-            node_resources[node.uuid] = self._node_resource(node)
-        return node_resources
+        return node_list
 
     def get_maintenance_node_list(self):
         """Helper function to return the list of maintenance nodes.
@@ -659,3 +634,24 @@ class IronicDriver(base_driver.BaseEngineDriver):
         else:
             LOG.debug('Console is disabled for node %s', node_uuid)
             raise exception.ConsoleNotAvailable()
+
+    def is_node_unavailable(self, node_obj):
+        """Determine whether the node's resources are in an acceptable state.
+
+        Determines whether the node's resources should be presented
+        to Mogan for use based on the current power, provision and maintenance
+        state. This is called after _node_resources_used, so any node that
+        is not used and not in AVAILABLE should be considered in a 'bad' state,
+        and unavailable for scheduling. Returns True if unacceptable.
+
+        :param node_obj: node object to check if it is unavailable.
+        """
+        bad_power_states = [ironic_states.ERROR, ironic_states.NOSTATE]
+        # keep NOSTATE around for compatibility
+        good_provision_states = [
+            ironic_states.AVAILABLE, ironic_states.NOSTATE]
+        return (node_obj.maintenance or
+                node_obj.power_state in bad_power_states or
+                node_obj.provision_state not in good_provision_states or
+                (node_obj.provision_state in good_provision_states and
+                 node_obj.instance_uuid is not None))
