@@ -12,7 +12,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
 import functools
 import sys
 
@@ -546,6 +545,8 @@ class EngineManager(base_manager.BaseEngineManager):
 
         server.power_state = states.NOSTATE
         utils.process_event(fsm, server, event='done')
+        self.scheduler_client.reportclient.delete_allocation_for_server(
+            server.uuid)
         server.destroy()
 
     def set_power_state(self, context, server, state):
