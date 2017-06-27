@@ -33,10 +33,10 @@ class BaseEngineDriver(object):
         """Add init staff here.
         """
 
-    def get_available_resources(self):
-        """Retrieve resource information.
+    def get_all_nodes(self):
+        """Retrieve all nodes information.
 
-        :returns: Dictionary describing resources
+        :returns: Dictionary describing nodes
         """
         raise NotImplementedError()
 
@@ -118,6 +118,13 @@ class BaseEngineDriver(object):
         """Get console info by server.
 
         :param server: server to get its console info.
+        """
+        raise NotImplementedError()
+
+    def is_node_unavailable(self, node_obj):
+        """Check if specified node unavailable.
+
+        :param node_obj: node object to check if it is unavailable.
         """
         raise NotImplementedError()
 
