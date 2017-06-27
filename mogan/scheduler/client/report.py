@@ -799,13 +799,20 @@ class SchedulerReportClient(object):
             return resp.json()['allocations']
 
     @safe_connect
-    def delete_resource_provider(self, rp_uuid):
+    def delete_resource_provider(self, rp_uuid, serer_id=None, cascade=False):
         """Deletes the ResourceProvider record for the compute_node.
 
         :param rp_uuid: The uuid of resource provider being deleted.
+        :param serer_id: Required when cascade is True to delete the
+                         allocation.
+        :param cascade: Boolean value that, when True, will first delete any
+                        associated Allocation and Inventory records for the
+                        compute node
         """
-
-        # TODO(liusheng) may need to deallocate firstly
+        if cascade:
+            # TODO(liusheng) it is better to add delete allocation for
+            # provider interface in placement.
+            self.delete_allocation_for_server(serer_id)
         url = "/resource_providers/%s" % rp_uuid
         resp = self.delete(url)
         if resp:
