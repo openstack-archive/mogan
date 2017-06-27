@@ -34,6 +34,7 @@ from mogan.common import utils
 from mogan.engine import configdrive
 from mogan.engine import metadata as server_metadata
 from mogan import objects
+from mogan.scheduler import client as sched_client
 
 
 LOG = logging.getLogger(__name__)
@@ -64,6 +65,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             exception.ServerDeployAborted,
             exception.NetworkError,
         ]
+        self.reportclient = sched_client.SchedulerClient().reportclient
 
     def execute(self, **kwargs):
         pass
@@ -111,6 +113,8 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                 pass
             else:
                 cn.destroy()
+        # delete allocation in placement
+        self.reportclient.delete_allocation_for_server(server.uuid)
 
         # Check if we have a cause which can tell us not to reschedule and
         # set the server's status to error.
