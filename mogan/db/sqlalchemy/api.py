@@ -26,7 +26,6 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 from sqlalchemy.sql import true
 
@@ -253,117 +252,6 @@ class Connection(api.Connection):
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
                 raise exception.ServerNotFound(server=server_id)
-
-            ref.update(values)
-        return ref
-
-    def compute_node_create(self, context, values):
-        compute_node = models.ComputeNode()
-        compute_node.update(values)
-        with _session_for_write() as session:
-            try:
-                session.add(compute_node)
-                session.flush()
-            except db_exc.DBDuplicateEntry:
-                raise exception.ComputeNodeAlreadyExists(
-                    node=values['node_uuid'])
-            return compute_node
-
-    def compute_node_get(self, context, node_uuid):
-        query = model_query(
-            context,
-            models.ComputeNode).filter_by(node_uuid=node_uuid). \
-            options(joinedload('ports'))
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ComputeNodeNotFound(node=node_uuid)
-
-    def compute_node_get_all(self, context):
-        return model_query(
-            context,
-            models.ComputeNode).options(joinedload('ports'))
-
-    def compute_node_get_all_available(self, context):
-        return model_query(
-            context,
-            models.ComputeNode).filter_by(used=False). \
-            options(joinedload('ports'))
-
-    def compute_node_destroy(self, context, node_uuid):
-        with _session_for_write():
-            query = model_query(
-                context,
-                models.ComputeNode).filter_by(node_uuid=node_uuid)
-
-            port_query = model_query(context, models.ComputePort).filter_by(
-                node_uuid=node_uuid)
-            port_query.delete()
-
-            count = query.delete()
-            if count != 1:
-                raise exception.ComputeNodeNotFound(node=node_uuid)
-
-    def compute_node_update(self, context, node_uuid, values):
-        with _session_for_write():
-            query = model_query(
-                context,
-                models.ComputeNode).filter_by(node_uuid=node_uuid)
-            try:
-                ref = query.with_lockmode('update').one()
-            except NoResultFound:
-                raise exception.ComputeNodeNotFound(node=node_uuid)
-
-            ref.update(values)
-        return ref
-
-    def compute_port_create(self, context, values):
-        compute_port = models.ComputePort()
-        compute_port.update(values)
-        with _session_for_write() as session:
-            try:
-                session.add(compute_port)
-                session.flush()
-            except db_exc.DBDuplicateEntry:
-                raise exception.ComputePortAlreadyExists(
-                    port=values['port_uuid'])
-            return compute_port
-
-    def compute_port_get(self, context, port_uuid):
-        query = model_query(
-            context,
-            models.ComputePort).filter_by(port_uuid=port_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ComputePortNotFound(port=port_uuid)
-
-    def compute_port_get_all(self, context):
-        return model_query(context, models.ComputePort)
-
-    def compute_port_get_by_node_uuid(self, context, node_uuid):
-        return model_query(context, models.ComputePort).filter_by(
-            node_uuid=node_uuid).all()
-
-    def compute_port_destroy(self, context, port_uuid):
-        with _session_for_write():
-            query = model_query(
-                context,
-                models.ComputePort).filter_by(port_uuid=port_uuid)
-
-            count = query.delete()
-            if count != 1:
-                raise exception.ComputePortNotFound(port=port_uuid)
-
-    def compute_port_update(self, context, port_uuid, values):
-        with _session_for_write():
-            query = model_query(
-                context,
-                models.ComputePort).filter_by(port_uuid=port_uuid)
-            try:
-                ref = query.with_lockmode('update').one()
-            except NoResultFound:
-                raise exception.ComputePortNotFound(port=port_uuid)
 
             ref.update(values)
         return ref
