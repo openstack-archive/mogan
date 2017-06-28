@@ -383,10 +383,6 @@ class _TestObject(object):
 # The fingerprint values should only be changed if there is a version bump.
 expected_object_fingerprints = {
     'Server': '1.0-dc54162c0cc91fac43fed5304cd2c968',
-    'ComputeNode': '1.0-586e7eaadd4ec88a0506c4238ebdd7a5',
-    'ComputeNodeList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
-    'ComputePort': '1.0-ca4c1817ad7324286813f2cfcdcf802e',
-    'ComputePortList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'ServerFault': '1.0-74349ff701259e4834b4e9dc2dac1b12',
     'ServerFaultList': '1.0-43e8aad0258652921f929934e9e048fd',
     'Flavor': '1.0-f53b71bd4aaaadea0d9284b811a82bb5',
