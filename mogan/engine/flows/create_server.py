@@ -103,16 +103,6 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                              filter_properties=filter_properties)
 
     def revert(self, context, result, flow_failures, server, **kwargs):
-        # Cleanup associated server node uuid
-        if server.node_uuid:
-            # If the compute node is still in DB, release it.
-            try:
-                cn = objects.ComputeNode.get(context, server.node_uuid)
-            except exception.ComputeNodeNotFound:
-                pass
-            else:
-                cn.destroy()
-
         # delete allocation in placement
         self.reportclient.delete_allocation_for_server(server.uuid)
         # Check if we have a cause which can tell us not to reschedule and
