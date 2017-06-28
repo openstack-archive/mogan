@@ -28,7 +28,6 @@ from mogan.api.controllers import link
 from mogan.api.controllers.v1 import availability_zone
 from mogan.api.controllers.v1 import flavors
 from mogan.api.controllers.v1 import keypairs
-from mogan.api.controllers.v1 import nodes
 from mogan.api.controllers.v1 import servers
 from mogan.api import expose
 
@@ -50,9 +49,6 @@ class V1(base.APIBase):
 
     keypairs = [link.Link]
     """Links to the keypairs resource"""
-
-    nodes = [link.Link]
-    """Links to the nodes resource"""
 
     @staticmethod
     def convert():
@@ -88,14 +84,6 @@ class V1(base.APIBase):
                                            'keypairs', '',
                                            bookmark=True)
                        ]
-        v1.nodes = [link.Link.make_link('self',
-                                        pecan.request.public_url,
-                                        'nodes', ''),
-                    link.Link.make_link('bookmark',
-                                        pecan.request.public_url,
-                                        'nodes', '',
-                                        bookmark=True)
-                    ]
         return v1
 
 
@@ -106,7 +94,6 @@ class Controller(rest.RestController):
     servers = servers.ServerController()
     availability_zones = availability_zone.AvailabilityZoneController()
     keypairs = keypairs.KeyPairController()
-    nodes = nodes.NodeController()
 
     @expose.expose(V1)
     def get(self):
