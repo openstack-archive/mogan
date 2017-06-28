@@ -115,17 +115,6 @@ def get_test_compute_node(ctxt, **kw):
     return node
 
 
-def create_test_compute_node(ctxt, **kw):
-    """Create and return a test compute node object.
-
-    Create a compute node in the DB and return a ComputeNode object with
-    appropriate attributes.
-    """
-    node = get_test_compute_node(ctxt, **kw)
-    node.create()
-    return node
-
-
 def get_test_compute_port(ctxt, **kw):
     """Return a ComputePort object with appropriate attributes.
 

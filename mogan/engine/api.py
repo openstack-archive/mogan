@@ -384,16 +384,7 @@ class API(object):
 
     def list_availability_zones(self, context):
         """Get availability zone list."""
-        compute_nodes = objects.ComputeNodeList.get_all_available(context)
-
-        azs = set()
-        for node in compute_nodes:
-            az = node.availability_zone \
-                or CONF.engine.default_availability_zone
-            if az is not None:
-                azs.add(az)
-
-        return {'availability_zones': list(azs)}
+        return {'availability_zones': [CONF.engine.default_availability_zone]}
 
     def lock(self, context, server):
         """Lock the given server."""
