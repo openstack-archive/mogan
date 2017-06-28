@@ -101,30 +101,6 @@ def get_test_compute_node(**kw):
         'created_at': kw.get('created_at'),
     }
 
-
-def create_test_compute_node(context={}, **kw):
-    """Create test compute node entry in DB and return ComputeNode DB object.
-
-    Function to be used to create test ComputeNode objects in the database.
-
-    :param context: The request context, for access checks.
-    :param kw: kwargs with overriding values for node's attributes.
-    :returns: Test ComputeNode DB object.
-
-    """
-    node = get_test_compute_node(**kw)
-    # Let DB generate ID if it isn't specified explicitly
-    if 'id' not in kw:
-        del node['id']
-    # Create node with tags will raise an exception. If tags are not
-    # specified explicitly just delete it.
-    if 'ports' not in kw:
-        del node['ports']
-    dbapi = db_api.get_instance()
-
-    return dbapi.compute_node_create(context, node)
-
-
 def get_test_compute_port(**kw):
     return {
         'id': kw.get('id', 123),

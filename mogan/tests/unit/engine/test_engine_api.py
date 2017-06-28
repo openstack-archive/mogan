@@ -359,20 +359,6 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.engine_api.rebuild(self.context, fake_server_obj)
         self.assertTrue(mock_rebuild.called)
 
-    def test_list_availability_zone(self):
-        uuid1 = uuidutils.generate_uuid()
-        uuid2 = uuidutils.generate_uuid()
-        obj_utils.create_test_compute_node(
-            self.context, availability_zone='az1')
-        obj_utils.create_test_compute_node(
-            self.context, node_uuid=uuid1, availability_zone='az2')
-        obj_utils.create_test_compute_node(
-            self.context, node_uuid=uuid2, availability_zone='az1')
-
-        azs = self.engine_api.list_availability_zones(self.context)
-
-        self.assertItemsEqual(['az1', 'az2'], azs['availability_zones'])
-
     @mock.patch.object(engine_rpcapi.EngineAPI, 'detach_interface')
     def test_detach_interface(self, mock_detach_interface):
         fake_server = db_utils.get_test_server(
