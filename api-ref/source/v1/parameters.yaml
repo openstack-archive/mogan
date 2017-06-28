@@ -369,12 +369,6 @@ nics:
   in: body
   required: true
   type: dict
-nodes:
-  description: |
-    The compute node list information.
-  in: body
-  required: true
-  type: dict
 personality:
   description: |
     The file path and contents, text only, to inject into the server at launch. The
