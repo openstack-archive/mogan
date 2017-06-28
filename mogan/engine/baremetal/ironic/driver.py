@@ -99,76 +99,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
         except ironic_exc.NotFound:
             raise exception.ServerNotFound(server=server.uuid)
 
-    def _parse_node_properties(self, node):
-        """Helper method to parse the node's properties."""
-        properties = {}
-
-        for prop in ('cpus', 'memory_mb', 'local_gb'):
-            try:
-                properties[prop] = int(node.properties.get(prop, 0))
-            except (TypeError, ValueError):
-                LOG.warning('Node %(uuid)s has a malformed "%(prop)s". '
-                            'It should be an integer.',
-                            {'uuid': node.uuid, 'prop': prop})
-                properties[prop] = 0
-
-        properties['capabilities'] = node.properties.get('capabilities')
-        properties['availability_zone'] = \
-            node.properties.get('availability_zone')
-        return properties
-
-    def _node_resource(self, node):
-        """Helper method to create resource dict from node stats."""
-        properties = self._parse_node_properties(node)
-
-        cpus = properties['cpus']
-        memory_mb = properties['memory_mb']
-        availability_zone = properties['availability_zone']
-
-        nodes_extra_specs = {}
-
-        # NOTE(gilliard): To assist with more precise scheduling, if the
-        # node.properties contains a key 'capabilities', we expect the value
-        # to be of the form "k1:v1,k2:v2,etc.." which we add directly as
-        # key/value pairs into the node_extra_specs to be used by the
-        # ComputeCapabilitiesFilter
-        capabilities = properties['capabilities']
-        if capabilities:
-            for capability in str(capabilities).split(','):
-                parts = capability.split(':')
-                if len(parts) == 2 and parts[0] and parts[1]:
-                    nodes_extra_specs[parts[0].strip()] = parts[1]
-                else:
-                    LOG.warning("Ignoring malformed capability '%s'. "
-                                "Format should be 'key:val'.", capability)
-
-        dic = {
-            'cpus': cpus,
-            'memory_mb': memory_mb,
-            'hypervisor_type': self._get_hypervisor_type(),
-            'resource_class': str(node.resource_class),
-            'extra_specs': nodes_extra_specs,
-            'node_uuid': str(node.uuid),
-            'ports': node.ports,
-        }
-
-        if availability_zone is not None:
-            dic['availability_zone'] = str(availability_zone)
-
-        return dic
-
-    def _port_resource(self, port):
-        """Helper method to create resource dict from port stats."""
-        port_type = port.extra.get('port_type')
-
-        dic = {
-            'address': str(port.address),
-            'port_type': str(port_type),
-            'node_uuid': str(port.node_uuid),
-            'port_uuid': str(port.uuid),
-        }
-        return dic
-
     def _add_server_info_to_node(self, node, server):
 
         patch = list()
@@ -640,9 +570,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         Determines whether the node's resources should be presented
         to Mogan for use based on the current power, provision and maintenance
-        state. This is called after _node_resources_used, so any node that
-        is not used and not in AVAILABLE should be considered in a 'bad' state,
-        and unavailable for scheduling. Returns True if unacceptable.
+        state.
 
         :param node_obj: node object to check if it is unavailable.
         """
