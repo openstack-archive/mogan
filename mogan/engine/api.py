@@ -317,11 +317,7 @@ class API(object):
         Returns a server object
         """
 
-        # check availability zone
-        if availability_zone:
-            azs = self.list_availability_zones(context)
-            if availability_zone not in azs['availability_zones']:
-                raise exception.AZNotFound
+        # TODO(liusheng) check availability zone
 
         return self._create_server(context, flavor,
                                    image_uuid, name, description,
@@ -382,19 +378,6 @@ class API(object):
             return
 
         self.engine_rpcapi.rebuild_server(context, server)
-
-    def list_availability_zones(self, context):
-        """Get availability zone list."""
-        compute_nodes = objects.ComputeNodeList.get_all_available(context)
-
-        azs = set()
-        for node in compute_nodes:
-            az = node.availability_zone \
-                or CONF.engine.default_availability_zone
-            if az is not None:
-                azs.add(az)
-
-        return {'availability_zones': list(azs)}
 
     def lock(self, context, server):
         """Lock the given server."""
