@@ -103,12 +103,6 @@ availability_zone:
   in: body
   required: false
   type: string
-availability_zones:
-  description: |
-    An array of availability zone name.
-  in: body
-  required: true
-  type: array
 console_info:
   description: |
     The remote console object.

@@ -25,7 +25,6 @@ from wsme import types as wtypes
 
 from mogan.api.controllers import base
 from mogan.api.controllers import link
-from mogan.api.controllers.v1 import availability_zone
 from mogan.api.controllers.v1 import flavors
 from mogan.api.controllers.v1 import keypairs
 from mogan.api.controllers.v1 import servers
@@ -43,9 +42,6 @@ class V1(base.APIBase):
 
     flavors = [link.Link]
     """Links to the server types resource"""
-
-    availability_zones = [link.Link]
-    """Links to the availability zones resource"""
 
     keypairs = [link.Link]
     """Links to the keypairs resource"""
@@ -68,14 +64,6 @@ class V1(base.APIBase):
                                           'flavors', '',
                                           bookmark=True)
                       ]
-        v1.availability_zones = [link.Link.make_link('self',
-                                                     pecan.request.public_url,
-                                                     'availability_zones', ''),
-                                 link.Link.make_link('bookmark',
-                                                     pecan.request.public_url,
-                                                     'availability_zones', '',
-                                                     bookmark=True)
-                                 ]
         v1.keypairs = [link.Link.make_link('self',
                                            pecan.request.public_url,
                                            'keypairs', ''),
@@ -92,7 +80,6 @@ class Controller(rest.RestController):
 
     flavors = flavors.FlavorsController()
     servers = servers.ServerController()
-    availability_zones = availability_zone.AvailabilityZoneController()
     keypairs = keypairs.KeyPairController()
 
     @expose.expose(V1)
