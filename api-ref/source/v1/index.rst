@@ -13,4 +13,3 @@ Baremetal Compute API V1 (CURRENT)
 .. include:: server_serial_console.inc
 .. include:: flavors.inc
 .. include:: flavor_access.inc
-.. include:: availability_zones.inc
