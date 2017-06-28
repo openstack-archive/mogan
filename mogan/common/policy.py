@@ -114,9 +114,6 @@ server_policies = [
     policy.RuleDefault('mogan:server:get_serial_console',
                        'rule:default',
                        description='Get serial console for a server'),
-    policy.RuleDefault('mogan:availability_zone:get_all',
-                       'rule:default',
-                       description='Get the availability zone list'),
     policy.RuleDefault('mogan:flavor:create',
                        'rule:admin_api',
                        description='Create flavor records'),
@@ -141,9 +138,6 @@ server_policies = [
     policy.RuleDefault('mogan:flavor_access:get_all',
                        'rule:allow',
                        description='Retrieve all flavor access'),
-    policy.RuleDefault('mogan:node:get_all',
-                       'rule:admin_api',
-                       description='Retrieve all compute nodes'),
 ]
 
 
