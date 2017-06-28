@@ -21,38 +21,9 @@ opts = [
     cfg.StrOpt('scheduler_driver',
                default='mogan.scheduler.filter_scheduler.FilterScheduler',
                help=_('Default scheduler driver to use')),
-    cfg.StrOpt('scheduler_node_manager',
-               default='mogan.scheduler.node_manager.NodeManager',
-               help=_('The scheduler node manager class to use')),
     cfg.IntOpt('scheduler_max_attempts',
                default=3,
                help=_('Maximum number of attempts to schedule a node')),
-    cfg.StrOpt('scheduler_json_config_location',
-               default='',
-               help=_('Absolute path to scheduler configuration JSON file.')),
-    cfg.ListOpt('scheduler_default_filters',
-                default=[
-                    'AvailabilityZoneFilter',
-                    'FlavorFilter',
-                    'CapabilitiesFilter',
-                    'PortsFilter'
-                ],
-                help=_('Which filter class names to use for filtering nodes '
-                       'when not specified in the request.')),
-    cfg.ListOpt('scheduler_default_weighers',
-                default=[
-                    'PortWeigher',
-                ],
-                help=_('Which weigher class names to use for weighing '
-                       'nodes.')),
-    cfg.StrOpt('scheduler_weight_handler',
-               default='mogan.scheduler.weights.'
-                       'OrderedNodeWeightHandler',
-               help=_('Which handler to use for selecting the node after '
-                      'weighing')),
-    cfg.FloatOpt('port_weight_multiplier',
-                 default=-1.0,
-                 help=_('Node ports quantity weight multipler ratio.')),
 ]
 
 
