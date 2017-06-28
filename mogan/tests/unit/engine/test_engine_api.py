@@ -137,8 +137,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
     @mock.patch.object(engine_rpcapi.EngineAPI, 'schedule_and_create_servers')
     @mock.patch('mogan.engine.api.API._get_image')
     @mock.patch('mogan.engine.api.API._validate_and_build_base_options')
-    @mock.patch('mogan.engine.api.API.list_availability_zones')
-    def test_create(self, mock_list_az, mock_validate, mock_get_image,
+    def test_create(self, mock_validate, mock_get_image,
                     mock_create, mock_select_dest):
         flavor = self._create_flavor()
         base_options = {'image_uuid': 'fake-uuid',
@@ -155,7 +154,6 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_validate.return_value = (base_options, max_count, None)
         mock_get_image.side_effect = None
         mock_create.return_value = mock.MagicMock()
-        mock_list_az.return_value = {'availability_zones': ['test_az']}
         mock_select_dest.return_value = \
             [mock.MagicMock() for i in range(max_count)]
         requested_networks = [{'uuid': 'fake'}]
@@ -177,7 +175,6 @@ class ComputeAPIUnitTest(base.DbTestCase):
             min_count=min_count,
             max_count=max_count)
 
-        mock_list_az.assert_called_once_with(self.context)
         mock_validate.assert_called_once_with(
             self.context, flavor, 'fake-uuid', 'fake-name',
             'fake-descritpion', 'test_az', {'k1', 'v1'}, requested_networks,
@@ -188,29 +185,9 @@ class ComputeAPIUnitTest(base.DbTestCase):
         after_in_use = res.get('servers').in_use
         self.assertEqual(before_in_use + 2, after_in_use)
 
-    @mock.patch('mogan.engine.api.API.list_availability_zones')
-    def test_create_with_invalid_az(self, mock_list_az):
-        flavor = mock.MagicMock()
-        mock_list_az.return_value = {'availability_zones': ['invalid_az']}
-
-        self.assertRaises(
-            exception.AZNotFound,
-            self.engine_api.create,
-            self.context,
-            flavor,
-            'fake-uuid',
-            'fake-name',
-            'fake-descritpion',
-            'test_az',
-            {'k1', 'v1'},
-            [{'uuid': 'fake'}])
-
-        mock_list_az.assert_called_once_with(self.context)
-
     @mock.patch('mogan.engine.api.API._get_image')
     @mock.patch('mogan.engine.api.API._validate_and_build_base_options')
-    @mock.patch('mogan.engine.api.API.list_availability_zones')
-    def test_create_over_quota_limit(self, mock_list_az, mock_validate,
+    def test_create_over_quota_limit(self, mock_validate,
                                      mock_get_image):
         flavor = self._create_flavor()
 
@@ -227,7 +204,6 @@ class ComputeAPIUnitTest(base.DbTestCase):
         max_count = 20
         mock_validate.return_value = (base_options, max_count, None)
         mock_get_image.side_effect = None
-        mock_list_az.return_value = {'availability_zones': ['test_az']}
         requested_networks = [{'uuid': 'fake'}]
 
         self.assertRaises(
@@ -358,17 +334,3 @@ class ComputeAPIUnitTest(base.DbTestCase):
         fake_server_obj = self._create_fake_server_obj(fake_server)
         self.engine_api.rebuild(self.context, fake_server_obj)
         self.assertTrue(mock_rebuild.called)
-
-    def test_list_availability_zone(self):
-        uuid1 = uuidutils.generate_uuid()
-        uuid2 = uuidutils.generate_uuid()
-        obj_utils.create_test_compute_node(
-            self.context, availability_zone='az1')
-        obj_utils.create_test_compute_node(
-            self.context, node_uuid=uuid1, availability_zone='az2')
-        obj_utils.create_test_compute_node(
-            self.context, node_uuid=uuid2, availability_zone='az1')
-
-        azs = self.engine_api.list_availability_zones(self.context)
-
-        self.assertItemsEqual(['az1', 'az2'], azs['availability_zones'])
