@@ -81,70 +81,6 @@ class EngineManager(base_manager.BaseEngineManager):
         self.scheduler_client = client.SchedulerClient()
         self.reportclient = self.scheduler_client.reportclient
 
-    def _get_compute_port(self, context, port_uuid):
-        """Gets compute port by the uuid."""
-        try:
-            return objects.ComputePort.get(context, port_uuid)
-        except exception.NotFound:
-            LOG.warning("No compute port record for %(port)s",
-                        {'port': port_uuid})
-
-    def _get_compute_node(self, context, node_uuid):
-        """Gets compute node by the uuid."""
-        try:
-            return objects.ComputeNode.get(context, node_uuid)
-        except exception.NotFound:
-            LOG.warning("No compute node record for %(node)s",
-                        {'node': node_uuid})
-
-    def _init_compute_port(self, context, port):
-        """Initialize the compute port if it does not already exist.
-
-        :param context: security context
-        :param port: initial values
-        """
-
-        # now try to get the compute port record from the
-        # database. If we get one we use resources to initialize
-        cp = self._get_compute_port(context, port['port_uuid'])
-        if cp:
-            cp.update_from_driver(port)
-            cp.save()
-            return
-
-        # there was no compute port in the database so we need to create
-        # a new compute port. This needs to be initialized with node values.
-        cp = objects.ComputePort(context)
-        cp.update_from_driver(port)
-        cp.create()
-
-    def _init_compute_node(self, context, node):
-        """Initialize the compute node if it does not already exist.
-
-        :param context: security context
-        :param node: initial values
-        """
-
-        # now try to get the compute node record from the
-        # database. If we get one we use resources to initialize
-        cn = self._get_compute_node(context, node['node_uuid'])
-        if cn:
-            cn.update_from_driver(node)
-            cn.save()
-        else:
-            # there was no compute node in the database so we need to
-            # create a new compute node. This needs to be initialized
-            # with node values.
-            cn = objects.ComputeNode(context)
-            cn.update_from_driver(node)
-            cn.create()
-
-        # Record compute ports to db
-        for port in node['ports']:
-            # initialize the compute port object, creating it
-            # if it does not already exist.
-            self._init_compute_port(context, port)
-
     @periodic_task.periodic_task(
         spacing=CONF.engine.update_resources_interval,
         run_immediately=True)
@@ -156,25 +92,6 @@ class EngineManager(base_manager.BaseEngineManager):
 
         :param context: security context
         """
-        nodes = self.driver.get_available_resources()
-        compute_nodes_in_db = objects.ComputeNodeList.get_all(context)
-
-        # Record compute nodes to db
-        for uuid, node in nodes.items():
-            if node.get('resource_class') is None:
-                continue
-
-            # initialize the compute node object, creating it
-            # if it does not already exist.
-            self._init_compute_node(context, node)
-
-        # Delete orphan compute node not reported by driver but still in db
-        for cn in compute_nodes_in_db:
-            if cn.node_uuid not in nodes:
-                LOG.info("Deleting orphan compute node %(id)s)",
-                         {'id': cn.node_uuid})
-                cn.destroy()
-
         all_nodes = self.driver.get_all_nodes()
 
         all_rps = self.reportclient.get_filtered_resource_providers({})
