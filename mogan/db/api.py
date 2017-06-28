@@ -82,56 +82,6 @@ class Connection(object):
     def server_update(self, context, server_id, values):
         """Update a server."""
 
-    # Compute nodes
-    @abc.abstractmethod
-    def compute_node_create(self, context, values):
-        """Create a new compute node."""
-
-    @abc.abstractmethod
-    def compute_node_get(self, context, node_uuid):
-        """Get compute node by node uuid."""
-
-    @abc.abstractmethod
-    def compute_node_get_all(self, context):
-        """Get all compute nodes."""
-
-    @abc.abstractmethod
-    def compute_node_get_all_available(self, context):
-        """Get all available compute nodes."""
-
-    @abc.abstractmethod
-    def compute_node_destroy(self, context, node_uuid):
-        """Delete a compute node."""
-
-    @abc.abstractmethod
-    def compute_node_update(self, context, node_uuid, values):
-        """Update a compute node."""
-
-    # Compute ports
-    @abc.abstractmethod
-    def compute_port_create(self, context, values):
-        """Create a new compute port."""
-
-    @abc.abstractmethod
-    def compute_port_get(self, context, port_uuid):
-        """Get compute port by port uuid."""
-
-    @abc.abstractmethod
-    def compute_port_get_all(self, context):
-        """Get all compute ports."""
-
-    @abc.abstractmethod
-    def compute_port_get_by_node_uuid(self, context, node_uuid):
-        """Get compute ports by node_uuid."""
-
-    @abc.abstractmethod
-    def compute_port_destroy(self, context, port_uuid):
-        """Delete a compute port."""
-
-    @abc.abstractmethod
-    def compute_port_update(self, context, port_uuid, values):
-        """Update a compute port."""
-
     # Flavor access
     @abc.abstractmethod
     def flavor_access_add(self, context, flavor_id, project_id):
