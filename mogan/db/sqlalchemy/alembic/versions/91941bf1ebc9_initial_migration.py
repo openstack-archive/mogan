@@ -82,40 +82,6 @@ def upgrade():
         mysql_DEFAULT_CHARSET='UTF8'
     )
     op.create_table(
-        'compute_nodes',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('cpus', sa.Integer(), nullable=False),
-        sa.Column('memory_mb', sa.Integer(), nullable=False),
-        sa.Column('hypervisor_type', sa.String(length=255), nullable=False),
-        sa.Column('resource_class', sa.String(length=80), nullable=False),
-        sa.Column('availability_zone', sa.String(length=255), nullable=True),
-        sa.Column('node_uuid', sa.String(length=36), nullable=False),
-        sa.Column('extra_specs', sa.Text(), nullable=True),
-        sa.Column('used', sa.Boolean(), nullable=True),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('node_uuid', name='uniq_compute_nodes0node_uuid'),
-        mysql_ENGINE='InnoDB',
-        mysql_DEFAULT_CHARSET='UTF8'
-    )
-    op.create_table(
-        'compute_ports',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('address', sa.String(length=18), nullable=False),
-        sa.Column('port_type', sa.String(length=255), nullable=False),
-        sa.Column('port_uuid', sa.String(length=36), nullable=False),
-        sa.Column('node_uuid', sa.String(length=36), nullable=False),
-        sa.Column('extra_specs', sa.Text(), nullable=True),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('port_uuid', name='uniq_compute_ports0port_uuid'),
-        sa.ForeignKeyConstraint(['node_uuid'], ['compute_nodes.node_uuid'], ),
-        mysql_ENGINE='InnoDB',
-        mysql_DEFAULT_CHARSET='UTF8'
-    )
-    op.create_table(
         'server_nics',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
