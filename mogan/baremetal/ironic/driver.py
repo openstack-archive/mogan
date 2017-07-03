@@ -99,6 +99,36 @@ class IronicDriver(base_driver.BaseEngineDriver):
         except ironic_exc.NotFound:
             raise exception.ServerNotFound(server=server.uuid)
 
+    def _node_resource(self, node):
+        """Helper method to create resource dict from node stats."""
+
+        dic = {
+            'resource_class': str(node.resource_class),
+            'ports': node.ports,
+            'portgroups': node.portgroups,
+            'name': node.name,
+            'power_state': node.power_state,
+            'provision_state': node.provision_state,
+        }
+
+        return dic
+
+    def _port_or_group_resource(self, port_or_portgroup):
+        """Helper method to create resource dict from port or portgroup
+
+        stats.
+
+        """
+
+        dic = {
+            'address': str(port_or_portgroup.address),
+            'node_uuid': str(port_or_portgroup.node_uuid),
+            'port_uuid': str(port_or_portgroup.uuid),
+            'internal_info': str(port_or_portgroup.internal_info),
+            'extra': dict(port_or_portgroup.extra),
+        }
+        return dic
+
     def _add_server_info_to_node(self, node, server):
         patch = list()
         # Associate the node with a server
@@ -356,6 +386,67 @@ class IronicDriver(base_driver.BaseEngineDriver):
         LOG.info('Successfully unprovisioned Ironic node %s',
                  node.uuid, server=server)
 
+    def _get_manageable_nodes(self):
+        """Helper function to return the list of manageable nodes.
+
+        If unable to connect ironic server, an empty list is returned.
+
+        :returns: a list of raw node from ironic
+
+        """
+
+        # Retrieve nodes
+        params = {
+            'maintenance': False,
+            'detail': True,
+            'provision_state': ironic_states.ACTIVE,
+            'associated': False,
+            'limit': 0
+        }
+        try:
+            node_list = self.ironicclient.call("node.list", **params)
+        except client_e.ClientException as e:
+            LOG.exception("Could not get nodes from ironic. Reason: "
+                          "%(detail)s", {'detail': six.text_type(e)})
+            node_list = []
+
+        # Retrive ports
+        params = {
+            'limit': 0,
+            'fields': ('uuid', 'node_uuid', 'extra', 'address',
+                       'internal_info')
+        }
+
+        try:
+            port_list = self.ironicclient.call("port.list", **params)
+        except client_e.ClientException as e:
+            LOG.exception("Could not get ports from ironic. Reason: "
+                          "%(detail)s", {'detail': six.text_type(e)})
+            port_list = []
+
+        # Retrive portgroups
+        try:
+            portgroup_list = self.ironicclient.call("portgroup.list", **params)
+        except client_e.ClientException as e:
+            LOG.exception("Could not get portgroups from ironic. Reason: "
+                          "%(detail)s", {'detail': six.text_type(e)})
+            portgroup_list = []
+
+        node_resources = {}
+        for node in node_list:
+            if node.resource_class is None:
+                continue
+            # Add ports to the associated node
+            node.ports = [self._port_or_group_resource(port)
+                          for port in port_list
+                          if node.uuid == port.node_uuid]
+            # Add portgroups to the associated node
+            node.portgroups = [self._port_or_group_resource(portgroup)
+                               for portgroup in portgroup_list
+                               if node.uuid == portgroup.node_uuid]
+            node_resources[node.uuid] = self._node_resource(node)
+        return node_resources
+
     def get_maintenance_node_list(self):
         """Helper function to return the list of maintenance nodes.
 
@@ -591,3 +682,17 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 'step_size': 1,
                 'allocation_ratio': 1.0,
                 }
+
+    def get_manageable_nodes(self):
+        nodes = self._get_manageable_nodes()
+        manageable_nodes = []
+        for node_uuid, node in nodes.items():
+            manageable_nodes.append(
+                {'uuid': node_uuid,
+                 'name': node.get('name'),
+                 'resource_class': node.get('resource_class'),
+                 'power_state': node.get('power_state'),
+                 'provision_state': node.get('provision_state'),
+                 'ports': node.get('ports'),
+                 'portgroups': node.get('portgroups')})
+        return manageable_nodes

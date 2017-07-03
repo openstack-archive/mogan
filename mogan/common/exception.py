@@ -459,4 +459,8 @@ class ServerGroupNotFound(NotFound):
 class ServerGroupExists(Conflict):
     _msg_fmt = _("Sever group %(group_uuid)s already exists.")
 
+
+class GetManageableServersFailed(MoganException):
+    _msg_fmt = _("Failed to get manageable servers from driver: %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError
