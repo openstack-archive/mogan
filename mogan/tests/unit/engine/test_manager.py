@@ -187,3 +187,13 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
                           manager.EngineManager, self.context, server=server)
 
         self.assertFalse(called['fault_added'])
+
+    @mock.patch.object(IronicDriver, 'get_adoptable_nodes')
+    def test_get_adoptable_nodes(self, get_adoptable_mock):
+        get_adoptable_mock.side_effect = exception.MoganException()
+        self._start_service()
+        self.assertRaises(exception.GetAdoptableNodesFailed,
+                          self.service.get_adoptable_nodes,
+                          self.context)
+        self._stop_service()
+        get_adoptable_mock.assert_called_once_with(mock.ANY)

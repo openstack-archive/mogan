@@ -150,6 +150,9 @@ class IronicDriver(base_driver.BaseEngineDriver):
             'extra_specs': nodes_extra_specs,
             'node_uuid': str(node.uuid),
             'ports': node.ports,
+            'name': node.name,
+            'power_state': node.power_state,
+            'provision_state': node.provision_state
         }
 
         if availability_zone is not None:
@@ -430,7 +433,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         LOG.info('Successfully unprovisioned Ironic node %s',
                  node.uuid, server=server)
 
-    def get_available_resources(self):
+    def _get_available_resource(self):
         """Helper function to return the list of resources.
 
         If unable to connect ironic server, an empty list is returned.
@@ -475,6 +478,9 @@ class IronicDriver(base_driver.BaseEngineDriver):
                           if node.uuid == port.node_uuid]
             node_resources[node.uuid] = self._node_resource(node)
         return node_resources
+
+    def get_available_resources(self):
+        return self._get_available_resource()
 
     def get_maintenance_node_list(self):
         """Helper function to return the list of maintenance nodes.
@@ -659,3 +665,19 @@ class IronicDriver(base_driver.BaseEngineDriver):
         else:
             LOG.debug('Console is disabled for node %s', node_uuid)
             raise exception.ConsoleNotAvailable()
+
+    def get_adoptable_nodes(self, context):
+        nodes = self._get_available_resource()
+        adoptable_nodes = []
+        for node_uuid, node in nodes.items():
+            adoptable_nodes.append(
+                {'uuid': node_uuid,
+                 'name': node.get('name'),
+                 'cpu': node.get('cpu'),
+                 'memory_mb': node.get('memory_mb'),
+                 'resource_class': node.get('resource_class'),
+                 'power_state': node.get('power_state'),
+                 'provision_state': node.get('provision_state'),
+                 'ports': node.get('ports'),
+                 'extra_specs': node.get('extra_specs')})
+        return {'adoptable_nodes': adoptable_nodes}

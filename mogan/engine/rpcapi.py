@@ -87,3 +87,7 @@ class EngineAPI(object):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         cctxt.call(context, 'attach_interface',
                    server=server, net_id=net_id)
+
+    def get_adoptable_nodes(self, context):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        cctxt.call(context, 'get_adoptable_nodes')
