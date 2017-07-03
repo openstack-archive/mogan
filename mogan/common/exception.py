@@ -435,4 +435,7 @@ class InventoryInUse(InvalidInventory):
                  "resource provider '%(resource_provider)s' in use.")
 
 
+class GetAdoptableNodesFailed(MoganException):
+    msg_fmt = _("Failed to get adoptable nodes from driver: %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError

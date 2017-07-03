@@ -150,6 +150,9 @@ class IronicDriver(base_driver.BaseEngineDriver):
             'extra_specs': nodes_extra_specs,
             'node_uuid': str(node.uuid),
             'ports': node.ports,
+            'name': node.name,
+            'power_state': node.power_state,
+            'provision_state': node.provision_state
         }
 
         if availability_zone is not None:
@@ -424,51 +427,42 @@ class IronicDriver(base_driver.BaseEngineDriver):
         LOG.info('Successfully unprovisioned Ironic node %s',
                  node.uuid, server=server)
 
-    def get_available_resources(self):
-        """Helper function to return the list of resources.
+    def _get_available_resource(self):
+        """Helper function to return the list of all nodes.
 
         If unable to connect ironic server, an empty list is returned.
 
-        :returns: a list of raw node from ironic
+        :returns: a list of normal nodes from ironic
 
         """
-
-        # Retrieve nodes
+        normal_nodes = []
         params = {
-            'maintenance': False,
             'detail': True,
-            'provision_state': ironic_states.AVAILABLE,
-            'associated': False,
-            'limit': 0
+            'limit': 0,
+            'maintenance': False
         }
         try:
             node_list = self.ironicclient.call("node.list", **params)
         except client_e.ClientException as e:
             LOG.exception("Could not get nodes from ironic. Reason: "
-                          "%(detail)s", {'detail': six.text_type(e)})
-            node_list = []
+                          "%(detail)s", {'detail': e.message})
+            return []
 
-        # Retrive ports
-        params = {
-            'limit': 0,
-            'fields': ('uuid', 'node_uuid', 'extra', 'address')
-        }
+        bad_power_states = [ironic_states.ERROR, ironic_states.NOSTATE]
+        # keep NOSTATE around for compatibility
+        good_provision_states = [
+            ironic_states.AVAILABLE, ironic_states.NOSTATE]
+        for node_obj in node_list:
+            if ((node_obj.resource_class is None) or
+                node_obj.power_state in bad_power_states or
+                (node_obj.provision_state in good_provision_states and
+                    node_obj.instance_uuid is not None)):
+                continue
+            normal_nodes.append(node_obj)
+        return normal_nodes
 
-        try:
-            port_list = self.ironicclient.call("port.list", **params)
-        except client_e.ClientException as e:
-            LOG.exception("Could not get ports from ironic. Reason: "
-                          "%(detail)s", {'detail': six.text_type(e)})
-            port_list = []
-
-        # TODO(zhenguo): Add portgroups resources
-        node_resources = {}
-        for node in node_list:
-            # Add ports to the associated node
-            node.ports = [self._port_resource(port) for port in port_list
-                          if node.uuid == port.node_uuid]
-            node_resources[node.uuid] = self._node_resource(node)
-        return node_resources
+    def get_available_resources(self):
+        return self._get_available_resource()
 
     def get_maintenance_node_list(self):
         """Helper function to return the list of maintenance nodes.
@@ -654,40 +648,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
             LOG.debug('Console is disabled for node %s', node_uuid)
             raise exception.ConsoleNotAvailable()
 
-    def get_available_nodes(self):
-        """Helper function to return the list of all nodes.
-
-        If unable to connect ironic server, an empty list is returned.
-
-        :returns: a list of normal nodes from ironic
-
-        """
-        normal_nodes = []
-        params = {
-            'detail': True,
-            'limit': 0,
-            'maintenance': False
-        }
-        try:
-            node_list = self.ironicclient.call("node.list", **params)
-        except client_e.ClientException as e:
-            LOG.exception("Could not get nodes from ironic. Reason: "
-                          "%(detail)s", {'detail': e.message})
-            return []
-
-        bad_power_states = [ironic_states.ERROR, ironic_states.NOSTATE]
-        # keep NOSTATE around for compatibility
-        good_provision_states = [
-            ironic_states.AVAILABLE, ironic_states.NOSTATE]
-        for node_obj in node_list:
-            if ((node_obj.resource_class is None) or
-                node_obj.power_state in bad_power_states or
-                (node_obj.provision_state in good_provision_states and
-                    node_obj.instance_uuid is not None)):
-                continue
-            normal_nodes.append(node_obj)
-        return normal_nodes
-
     @staticmethod
     def get_node_inventory(node):
         """Get the inventory of a node.
@@ -701,3 +661,19 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 'step_size': 1,
                 'allocation_ratio': 1.0,
                 }
+
+    def get_adoptable_nodes(self, context):
+        nodes = self._get_available_resource()
+        adoptable_nodes = []
+        for node_uuid, node in nodes.items():
+            adoptable_nodes.append(
+                {'uuid': node_uuid,
+                 'name': node.get('name'),
+                 'cpu': node.get('cpu'),
+                 'memory_mb': node.get('memory_mb'),
+                 'resource_class': node.get('resource_class'),
+                 'power_state': node.get('power_state'),
+                 'provision_state': node.get('provision_state'),
+                 'ports': node.get('ports'),
+                 'extra_specs': node.get('extra_specs')})
+        return {'adoptable_nodes': adoptable_nodes}
