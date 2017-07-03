@@ -183,6 +183,9 @@ server_policies = [
     policy.RuleDefault('mogan:server_group:delete',
                        'rule:default',
                        description='Delete a server group'),
+    policy.RuleDefault('mogan:manageable_servers:get_all',
+                       'rule:admin_api',
+                       description='Get manageable nodes from driver'),
 ]
 
 
