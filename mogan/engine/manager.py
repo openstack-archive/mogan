@@ -580,3 +580,9 @@ class EngineManager(base_manager.BaseEngineManager):
                 nic.delete(context)
 
         LOG.info('Interface was successfully detached')
+
+    def get_adoptable_nodes(self, context):
+        try:
+            return self.driver.get_adoptable_nodes()
+        except Exception as e:
+            raise exception.GetAdoptableNodesFailed(reason=e)

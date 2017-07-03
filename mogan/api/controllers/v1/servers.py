@@ -548,7 +548,8 @@ class ServerController(ServerControllerBase):
     """Expose the console controller of servers"""
 
     _custom_actions = {
-        'detail': ['GET']
+        'detail': ['GET'],
+        'adoptable': ['GET']
     }
 
     def _get_server_collection(self, fields=None, all_tenants=False):
@@ -698,3 +699,14 @@ class ServerController(ServerControllerBase):
         """
         db_server = self._resource or self._get_resource(server_uuid)
         pecan.request.engine_api.delete(pecan.request.context, db_server)
+
+    @policy.authorize_wsgi("mogan:server", "adoptable", False)
+    @expose.expose(wtypes.text, None, status_code=http_client.OK)
+    def adoptable(self):
+        """List adoptable nodes from driver."""
+        # /detail should only work against collections
+        parent = pecan.request.path.split('/')[:-1][-1]
+        if parent != "servers":
+            raise exception.NotFound()
+        return pecan.request.engine_api.get_adoptable_nodes(
+            pecan.request.context)
