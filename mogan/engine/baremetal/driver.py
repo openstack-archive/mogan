@@ -129,6 +129,13 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
+    def get_adoptable_nodes(self):
+        """Retrieve all adoptable nodes information.
+
+        :returns: Dictionary describing nodes
+        """
+        raise NotImplementedError()
+
 
 def load_engine_driver(engine_driver):
     """Load a engine driver module.
