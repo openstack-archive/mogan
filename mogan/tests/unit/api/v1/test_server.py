@@ -142,6 +142,20 @@ class TestServerAuthorization(v1_test.APITestV1):
         self.assertEqual(error['faultstring'],
                          self.DENY_MESSAGE % 'server:get')
 
+    def test_server_get_adoptable_node_with_invalid_rule(self):
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context, roles="no-admin")
+        resp = self.get_json('/servers/adoptable', True, headers=headers)
+        error = self.parser_error_body(resp)
+        self.assertEqual(self.DENY_MESSAGE % 'server:adoptable',
+                         error['faultstring'])
+
+    def test_server_get_adoptable_node_with_invalid_url(self):
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context, roles="admin")
+        resp = self.get_json('/server/adoptable', True, headers=headers)
+        self.assertTrue(resp.json['error_message'])
+
 
 class TestPatch(v1_test.APITestV1):
 
