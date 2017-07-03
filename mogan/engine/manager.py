@@ -605,3 +605,6 @@ class EngineManager(base_manager.BaseEngineManager):
         aggregates = self.scheduler_client.reportclient \
             .get_aggregates_from_node(node)
         return aggregates
+
+    def get_manageable_servers(self, context):
+        return self.driver.get_manageable_nodes()

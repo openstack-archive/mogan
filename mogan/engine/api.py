@@ -588,3 +588,12 @@ class API(object):
     def list_node_aggregates(self, context, node):
         """Get the node aggregates list."""
         return self.engine_rpcapi.list_node_aggregates(context, node)
+
+    def get_manageable_servers(self, context):
+        """Get manageable servers list"""
+        mservers = []
+        try:
+            mservers = self.engine_rpcapi.get_manageable_servers(context)
+        except Exception as e:
+            raise exception.GetManageableServersFailed(reason=e)
+        return mservers
