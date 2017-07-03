@@ -29,8 +29,7 @@ def gen_post_body(**kw):
             "net_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31"
         },
         {
-            "net_id": "8e8ceb07-4641-4188-9b22-840755e92ee2",
-            "port_type": "10GE"
+            "net_id": "8e8ceb07-4641-4188-9b22-840755e92ee2"
         }
     ]
     return {
@@ -81,12 +80,10 @@ class TestServerAuthorization(v1_test.APITestV1):
         mock_engine_create.return_value = [self.server1]
         fake_networks = [
             {
-                "port_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31",
-                "port_type": "Ethernet"
+                "port_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31"
             },
             {
-                "port_id": "8e8ceb07-4641-4188-9b22-840755e92ee2",
-                "port_type": "Ethernet"
+                "port_id": "8e8ceb07-4641-4188-9b22-840755e92ee2"
             }
         ]
         body = gen_post_body(**{'networks': fake_networks})
@@ -110,13 +107,11 @@ class TestServerAuthorization(v1_test.APITestV1):
         fake_networks = [
             {
                 "port_id": "c1940655-8b8e-4370-b8f9-03ba1daeca31",
-                "net_id": "c1940655-8b8e-4370-b8f9-03ba1daeca32",
-                "port_type": "Ethernet"
+                "net_id": "c1940655-8b8e-4370-b8f9-03ba1daeca32"
             },
             {
                 "port_id": "8e8ceb07-4641-4188-9b22-840755e92ee2",
-                "net_id": "8e8ceb07-4641-4188-9b22-840755e92ee3",
-                "port_type": "Ethernet"
+                "net_id": "8e8ceb07-4641-4188-9b22-840755e92ee3"
             }
         ]
         body = gen_post_body(**{'networks': fake_networks})

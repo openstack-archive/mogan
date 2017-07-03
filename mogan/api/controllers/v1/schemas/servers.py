@@ -31,7 +31,6 @@ create_server = {
                 'type': 'object',
                 'properties': {
                     'net_id': parameter_types.network_id,
-                    'port_type': parameter_types.port_type,
                     'port_id': parameter_types.network_port_id,
                 },
                 'oneOf': [

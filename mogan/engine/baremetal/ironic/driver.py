@@ -159,11 +159,8 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
     def _port_resource(self, port):
         """Helper method to create resource dict from port stats."""
-        port_type = port.extra.get('port_type')
-
         dic = {
             'address': str(port.address),
-            'port_type': str(port_type),
             'node_uuid': str(port.node_uuid),
             'port_uuid': str(port.uuid),
         }
@@ -261,11 +258,8 @@ class IronicDriver(base_driver.BaseEngineDriver):
                                             detail=detail)
         return ports + portgroups
 
-    def plug_vif(self, ironic_port_id, port_id):
-        patch = [{'op': 'add',
-                  'path': '/extra/vif_port_id',
-                  'value': port_id}]
-        self.ironicclient.call("port.update", ironic_port_id, patch)
+    def plug_vif(self, node_uuid, port_id):
+        self.ironicclient.call("node.vif_attach", node_uuid, port_id)
 
     def unplug_vifs(self, context, server):
         LOG.debug("unplug: server_uuid=%(uuid)s vif=%(server_nics)s",

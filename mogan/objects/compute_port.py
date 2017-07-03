@@ -31,7 +31,6 @@ class ComputePort(base.MoganObject, object_base.VersionedObjectDictCompat):
     fields = {
         'id': object_fields.IntegerField(read_only=True),
         'address': object_fields.MACAddressField(nullable=False),
-        'port_type': object_fields.StringField(),
         'port_uuid': object_fields.UUIDField(read_only=True),
         'node_uuid': object_fields.UUIDField(read_only=True),
         'extra_specs': object_fields.FlexibleDictField(nullable=True),
@@ -74,7 +73,7 @@ class ComputePort(base.MoganObject, object_base.VersionedObjectDictCompat):
         self.obj_refresh(current)
 
     def update_from_driver(self, port):
-        keys = ["address", "port_type", "port_uuid", "node_uuid",
+        keys = ["address", "port_uuid", "node_uuid",
                 "extra_specs"]
         for key in keys:
             if key in port:
