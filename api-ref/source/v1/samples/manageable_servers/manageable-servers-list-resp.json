@@ -1,0 +1,30 @@
+{
+    "manageableservers": [
+        {
+            "uuid": "7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+            "name": "test_node",
+            "resource_class": "gold",
+            "power_state": "power on",
+            "provision_state": "active",
+            "ports": [
+                {
+                    "address": "a4:dc:be:0e:82:a5",
+                    "extra": {},
+                    "node_uuid": "1ec01153-685a-49b5-a6d3-45a4e7dddf53",
+                    "port_uuid": "a9b94592-1d8e-46bb-836b-c7ba935b0136",
+                    "internal_info": "None"
+                }
+            ],
+            "portgroups": [
+                {
+                    "address": "a4:dc:be:0e:82:a6",
+                    "extra": {},
+                    "node_uuid": "1ec01153-685a-49b5-a6d3-45a4e7dddf54",
+                    "port_uuid": "a9b94592-1d8e-46bb-836b-c7ba935b0137",
+                    "internal_info": "None"
+                }
+            ],
+            "image_source": "03239419-e588-42b6-a70f-94f23ed0c9e2"
+        }
+    ]
+}

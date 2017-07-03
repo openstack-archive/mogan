@@ -419,6 +419,60 @@ lock_state:
   in: body
   required: true
   type: boolean
+manageable_servers:
+  description: |
+    An array of manageable servers information.
+  in: body
+  required: true
+  type: array
+manageable_servers_image_source:
+  description: |
+    Image source uuid of manageable server.
+  in: body
+  required: false
+  type: string
+manageable_servers_name:
+  description: |
+    Name of manageable server.
+  in: body
+  required: false
+  type: string
+manageable_servers_portgroups:
+  description: |
+    The portgroups of manageable server.
+  in: body
+  required: false
+  type: array
+manageable_servers_ports:
+  description: |
+    The ports of manageable server.
+  in: body
+  required: false
+  type: array
+manageable_servers_power_state:
+  description: |
+    The power state of manageable server.
+  in: body
+  required: false
+  type: string
+manageable_servers_provision_state:
+  description: |
+    The provision state of manageable server.
+  in: body
+  required: false
+  type: string
+manageable_servers_resource_class:
+  description: |
+    Resource class of manageable server.
+  in: body
+  required: false
+  type: string
+manageable_servers_uuid:
+  description: |
+    UUID of manageable server.
+  in: body
+  required: false
+  type: string
 max_count_body:
   description: |
       The max number of servers to be created. Defaults to the value of ``min_count``.
