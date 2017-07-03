@@ -420,4 +420,8 @@ class KeypairNotFound(NotFound):
 class InvalidKeypair(Invalid):
     _msg_fmt = _("Keypair data is invalid: %(reason)s")
 
+
+class GetAdoptableNodesFailed(MoganException):
+    msg_fmt = _("Failed to get adoptable nodes from driver: %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError
