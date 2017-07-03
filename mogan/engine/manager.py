@@ -619,3 +619,9 @@ class EngineManager(base_manager.BaseEngineManager):
             server.save()
         except Exception as e:
             raise exception.InterfaceAttachFailed(message=e.message)
+
+    def get_adoptable_nodes(self, context):
+        try:
+            self.driver.get_adoptable_nodes()
+        except Exception as e:
+            raise exception.GetAdoptableNodesFailed(reason=e.message)
