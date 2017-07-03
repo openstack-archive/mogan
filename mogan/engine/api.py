@@ -511,3 +511,6 @@ class API(object):
     def detach_interface(self, context, server, port_id):
         self.engine_rpcapi.detach_interface(context, server=server,
                                             port_id=port_id)
+
+    def get_adoptable_nodes(self, context):
+        self.engine_rpcapi.get_adoptable_nodes(context)
