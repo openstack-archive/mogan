@@ -202,3 +202,21 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
                           manager.EngineManager, self.context, server=server)
 
         self.assertFalse(called['fault_added'])
+
+    @mock.patch.object(IronicDriver, 'get_manageable_servers')
+    def test_get_manageable_servers_failed(self, get_manageable_mock):
+        get_manageable_mock.side_effect = exception.MoganException()
+        self._start_service()
+        self.assertRaises(exception.GetManageableServersFailed,
+                          self.service.get_manageable_servers,
+                          self.context)
+        self._stop_service()
+        get_manageable_mock.assert_called_once_with()
+
+    @mock.patch.object(IronicDriver, 'get_manageable_servers')
+    def test_get_manageable_servers(self, get_manageable_mock):
+        get_manageable_mock.return_value = {}
+        self._start_service()
+        self.service.get_manageable_servers(self.context)
+        self._stop_service()
+        get_manageable_mock.assert_called_once_with()
