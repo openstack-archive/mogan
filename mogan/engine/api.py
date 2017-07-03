@@ -569,3 +569,6 @@ class API(object):
     def remove_aggregate(self, context, aggregate_uuid):
         """Remove the aggregate."""
         return self.engine_rpcapi.remove_aggregate(context, aggregate_uuid)
+
+    def get_manageable_servers(self, context):
+        self.engine_rpcapi.get_manageable_servers(context)
