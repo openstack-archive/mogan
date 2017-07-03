@@ -447,4 +447,8 @@ class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
 class FloatingIpNotAssociated(Invalid):
     _msg_fmt = _("Floating IP: %(floatingip)s is not associated")
 
+
+class GetAdoptableNodesFailed(MoganException):
+    msg_fmt = _("Failed to get adoptable nodes from driver: %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError
