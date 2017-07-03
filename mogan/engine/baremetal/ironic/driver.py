@@ -99,6 +99,71 @@ class IronicDriver(base_driver.BaseEngineDriver):
         except ironic_exc.NotFound:
             raise exception.ServerNotFound(server=server.uuid)
 
+    def _parse_node_properties(self, node):
+        """Helper method to parse the node's properties."""
+        properties = {}
+
+        for prop in ('cpus', 'memory_mb', 'local_gb'):
+            try:
+                properties[prop] = int(node.properties.get(prop, 0))
+            except (TypeError, ValueError):
+                LOG.warning('Node %(uuid)s has a malformed "%(prop)s". '
+                            'It should be an integer.',
+                            {'uuid': node.uuid, 'prop': prop})
+                properties[prop] = 0
+
+        properties['capabilities'] = node.properties.get('capabilities')
+        properties['availability_zone'] = \
+            node.properties.get('availability_zone')
+        return properties
+
+    def _node_resource(self, node):
+        """Helper method to create resource dict from node stats."""
+        properties = self._parse_node_properties(node)
+
+        cpus = properties['cpus']
+        memory_mb = properties['memory_mb']
+        availability_zone = properties['availability_zone']
+
+        nodes_extra_specs = {}
+
+        capabilities = properties['capabilities']
+        if capabilities:
+            for capability in str(capabilities).split(','):
+                parts = capability.split(':')
+                if len(parts) == 2 and parts[0] and parts[1]:
+                    nodes_extra_specs[parts[0].strip()] = parts[1]
+                else:
+                    LOG.warning("Ignoring malformed capability '%s'. "
+                                "Format should be 'key:val'.", capability)
+
+        dic = {
+            'cpus': cpus,
+            'memory_mb': memory_mb,
+            'hypervisor_type': self._get_hypervisor_type(),
+            'resource_class': str(node.resource_class),
+            'extra_specs': nodes_extra_specs,
+            'node_uuid': str(node.uuid),
+            'ports': node.ports,
+            'name': node.name,
+            'power_state': node.power_state,
+            'provision_state': node.provision_state
+        }
+
+        if availability_zone is not None:
+            dic['availability_zone'] = str(availability_zone)
+
+        return dic
+
+    def _port_resource(self, port):
+        """Helper method to create resource dict from port stats."""
+        dic = {
+            'address': str(port.address),
+            'node_uuid': str(port.node_uuid),
+            'port_uuid': str(port.uuid),
+        }
+        return dic
+
     def _add_server_info_to_node(self, node, server):
 
         patch = list()
@@ -361,6 +426,52 @@ class IronicDriver(base_driver.BaseEngineDriver):
         LOG.info('Successfully unprovisioned Ironic node %s',
                  node.uuid, server=server)
 
+    def _get_adoptable_nodes(self):
+        """Helper function to return the list of adoptable nodes.
+
+        If unable to connect ironic server, an empty list is returned.
+
+        :returns: a list of raw node from ironic
+
+        """
+
+        # Retrieve nodes
+        params = {
+            'maintenance': False,
+            'detail': True,
+            'provision_state': ironic_states.ACTIVE,
+            'associated': False,
+            'limit': 0
+        }
+        try:
+            node_list = self.ironicclient.call("node.list", **params)
+        except client_e.ClientException as e:
+            LOG.exception("Could not get nodes from ironic. Reason: "
+                          "%(detail)s", {'detail': six.text_type(e)})
+            node_list = []
+
+        # Retrive ports
+        params = {
+            'limit': 0,
+            'fields': ('uuid', 'node_uuid', 'extra', 'address')
+        }
+
+        try:
+            port_list = self.ironicclient.call("port.list", **params)
+        except client_e.ClientException as e:
+            LOG.exception("Could not get ports from ironic. Reason: "
+                          "%(detail)s", {'detail': six.text_type(e)})
+            port_list = []
+
+        # TODO(zhenguo): Add portgroups resources
+        node_resources = {}
+        for node in node_list:
+            # Add ports to the associated node
+            node.ports = [self._port_resource(port) for port in port_list
+                          if node.uuid == port.node_uuid]
+            node_resources[node.uuid] = self._node_resource(node)
+        return node_resources
+
     def get_maintenance_node_list(self):
         """Helper function to return the list of maintenance nodes.
 
@@ -592,3 +703,19 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 'step_size': 1,
                 'allocation_ratio': 1.0,
                 }
+
+    def get_adoptable_nodes(self):
+        nodes = self._get_adoptable_nodes()
+        adoptable_nodes = []
+        for node_uuid, node in nodes.items():
+            adoptable_nodes.append(
+                {'uuid': node_uuid,
+                 'name': node.get('name'),
+                 'cpu': node.get('cpu'),
+                 'memory_mb': node.get('memory_mb'),
+                 'resource_class': node.get('resource_class'),
+                 'power_state': node.get('power_state'),
+                 'provision_state': node.get('provision_state'),
+                 'ports': node.get('ports'),
+                 'extra_specs': node.get('extra_specs')})
+        return {'manageable_servers': adoptable_nodes}

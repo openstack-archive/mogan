@@ -586,3 +586,9 @@ class EngineManager(base_manager.BaseEngineManager):
     def remove_aggregate_node(self, context, aggregate_uuid, node):
         self.scheduler_client.reportclient \
             .update_aggregate_node(aggregate_uuid, node, 'remove')
+
+    def get_adoptable_nodes(self, context):
+        try:
+            return self.driver.get_adoptable_nodes()
+        except Exception as e:
+            raise exception.GetAdoptableNodesFailed(reason=e)
