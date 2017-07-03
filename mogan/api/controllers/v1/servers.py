@@ -558,7 +558,8 @@ class ServerController(ServerControllerBase):
     """Expose the console controller of servers"""
 
     _custom_actions = {
-        'detail': ['GET']
+        'detail': ['GET'],
+        'adoptable': ['GET']
     }
 
     def _get_server_collection(self, name=None, status=None,
