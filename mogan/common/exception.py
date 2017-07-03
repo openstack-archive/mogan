@@ -447,4 +447,8 @@ class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
 class FloatingIpNotAssociated(Invalid):
     _msg_fmt = _("Floating IP: %(floatingip)s is not associated")
 
+
+class GetManageableServersFailed(MoganException):
+    msg_fmt = _("Failed to get manageable servers from driver: %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError
