@@ -516,3 +516,6 @@ class API(object):
     @check_server_lock
     def attach_interface(self, context, server, net_id):
         self.engine_rpcapi.attach_interface(context, server, net_id)
+
+    def get_adoptable_nodes(self, context):
+        self.engine_rpcapi.get_adoptable_nodes(context)
