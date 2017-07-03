@@ -129,6 +129,13 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
+    def get_manageable_nodes(self):
+        """Retrieve all manageable nodes information.
+
+        :returns:A list of describing manageable nodes
+        """
+        raise NotImplementedError()
+
 
 def load_engine_driver(engine_driver):
     """Load a engine driver module.

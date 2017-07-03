@@ -120,3 +120,7 @@ class EngineAPI(object):
     def list_node_aggregates(self, context, node):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'list_node_aggregates', node=node)
+
+    def get_manageable_servers(self, context):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        cctxt.call(context, 'get_manageable_servers')
