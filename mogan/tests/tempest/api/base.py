@@ -48,8 +48,6 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         cls.baremetal_compute_client = cls.os_admin.baremetal_compute_client
         cls.compute_networks_client = cls.os_admin.compute_networks_client
         cls.baremetal_node_client = cls.os_admin.baremetal_node_client
-        cls.network_floatingip_client =\
-            cls.os_admin.network_floatingip_client
 
     @classmethod
     def _get_small_flavor(cls):
@@ -78,7 +76,6 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         cls.small_flavor = cls._get_small_flavor()
         cls.image_id = CONF.compute.image_ref
         cls.net_id = cls._get_net_id()
-        cls.ext_net_id = CONF.network.public_network_id
 
     @classmethod
     def create_server(cls, wait_until_active=True):
