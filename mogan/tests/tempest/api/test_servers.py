@@ -185,25 +185,3 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
             fixed_ip = nic['fixed_ips'][0]
             self.assertIn('subnet_id', fixed_ip)
             self.assertIn('ip_address', fixed_ip)
-
-    def test_floatingip_association_disassociation(self):
-        self._ensure_states_before_test()
-        resp = self.network_floatingip_client.create_floatingip(
-            floating_network_id=self.ext_net_id)
-        floatingip = resp['floatingip']
-        nics = self.baremetal_compute_client.server_get_networks(
-            self.server_ids[0])
-        for nic in nics:
-            self.assertIsNone(nic['floating_ip'])
-        self.baremetal_compute_client.server_associate_floatingip(
-            self.server_ids[0], floatingip['floating_ip_address'])
-        nics = self.baremetal_compute_client.server_get_networks(
-            self.server_ids[0])
-        server_floatingips = [nic['floating_ip'] for nic in nics]
-        self.assertIn(floatingip['floating_ip_address'], server_floatingips)
-        self.baremetal_compute_client.server_disassociate_floatingip(
-            self.server_ids[0], floatingip['floating_ip_address'])
-        nics = self.baremetal_compute_client.server_get_networks(
-            self.server_ids[0])
-        for nic in nics:
-            self.assertIsNone(nic['floating_ip'])
