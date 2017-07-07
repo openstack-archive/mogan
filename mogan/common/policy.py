@@ -147,6 +147,9 @@ server_policies = [
     policy.RuleDefault('mogan:server:detach_interface',
                        'rule:default',
                        description='Detach a network interface'),
+    policy.RuleDefault('mogan:server:adopt',
+                       'rule:admin_api',
+                       description='Adopt an existing baremetal server'),
 ]
 
 
