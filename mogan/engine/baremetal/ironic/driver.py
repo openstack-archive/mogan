@@ -84,8 +84,11 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
     def _get_node(self, node_uuid):
         """Get a node by its UUID."""
-        return self.ironicclient.call('node.get', node_uuid,
-                                      fields=_NODE_FIELDS)
+        try:
+            return self.ironicclient.call('node.get', node_uuid,
+                                          fields=_NODE_FIELDS)
+        except ironic_exc.NotFound:
+            raise exception.ComputeNodeNotFound(node=node_uuid)
 
     def _validate_server_and_node(self, server):
         """Get the node associated with the server.
@@ -701,3 +704,26 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 'step_size': 1,
                 'allocation_ratio': 1.0,
                 }
+
+    def get_nodes_and_ports(self, node_uuid):
+        """Get a node with ports
+
+        :param node_uuid: The baremetal node uuid.
+        :return:
+        """
+        node = self._get_node(node_uuid)
+        ports = self.get_ports_from_node(node_uuid)
+        node.ports = [self._port_resource(port) for port in ports]
+
+    def adopt(self, server):
+        """Adopt an existing baremental node.
+
+        :param server: The baremetal server object.
+        :return:
+        """
+        node = self._get_node(server.node_uuid)
+        image_resource = node.instance_info.get('image_source')
+        if image_resource:
+            server.image_uuid = image_resource
+
+        self._add_server_info_to_node(node, server)
