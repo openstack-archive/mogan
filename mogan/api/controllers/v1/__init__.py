@@ -29,6 +29,7 @@ from mogan.api.controllers.v1 import aggregates
 from mogan.api.controllers.v1 import availability_zone
 from mogan.api.controllers.v1 import flavors
 from mogan.api.controllers.v1 import keypairs
+from mogan.api.controllers.v1 import manageable_servers
 from mogan.api.controllers.v1 import nodes
 from mogan.api.controllers.v1 import servers
 from mogan.api import expose
@@ -120,6 +121,7 @@ class Controller(rest.RestController):
     keypairs = keypairs.KeyPairController()
     aggregates = aggregates.AggregateController()
     nodes = nodes.NodeController()
+    manageable_servers = manageable_servers.ManageableServerController()
 
     @expose.expose(V1)
     def get(self):
