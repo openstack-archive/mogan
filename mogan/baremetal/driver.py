@@ -144,6 +144,32 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
+    def get_manageable_node(self, node_uuid):
+        """Get the manageable node information by uuid
+
+        :param node_uuid: The manageable node uuid.
+        :return: A dict of manageable node information.
+        """
+        raise NotImplementedError()
+
+    def adopt(self, server, node):
+        """Adopt an existing bare mental node.
+
+        :param server: The bare metal server object.
+        :param node: The manageable bare metal node.
+        :return: None
+        """
+        raise NotImplementedError()
+
+    def unadopt(self, server, node):
+        """Unadopt a bare mental node.
+
+         :param server: The bare metal server object.
+         :param node: The managed bare metal node.
+         :return:
+         """
+        raise NotImplementedError()
+
 
 def load_engine_driver(engine_driver):
     """Load a engine driver module.

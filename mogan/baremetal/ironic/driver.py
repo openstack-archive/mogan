@@ -42,7 +42,8 @@ _UNPROVISION_STATES = (ironic_states.ACTIVE, ironic_states.DEPLOYFAIL,
 
 _NODE_FIELDS = ('uuid', 'power_state', 'target_power_state', 'provision_state',
                 'target_provision_state', 'last_error', 'maintenance',
-                'properties', 'instance_uuid')
+                'properties', 'instance_uuid', 'instance_info',
+                'resource_class', 'name')
 
 TENANT_VIF_KEY = 'tenant_vif_port_id'
 
@@ -88,8 +89,11 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
     def _get_node(self, node_uuid):
         """Get a node by its UUID."""
-        return self.ironicclient.call('node.get', node_uuid,
-                                      fields=_NODE_FIELDS)
+        try:
+            return self.ironicclient.call('node.get', node_uuid,
+                                          fields=_NODE_FIELDS)
+        except ironic_exc.NotFound:
+            raise exception.NodeNotFound(node=node_uuid)
 
     def _validate_server_and_node(self, server):
         """Get the node associated with the server.
@@ -163,6 +167,32 @@ class IronicDriver(base_driver.BaseEngineDriver):
     def _remove_server_info_from_node(self, node, server):
         patch = [{'path': '/instance_info', 'op': 'remove'},
                  {'path': '/instance_uuid', 'op': 'remove'}]
+        try:
+            self.ironicclient.call('node.update', node.uuid, patch)
+        except ironic_exc.BadRequest as e:
+            LOG.warning("Failed to remove deploy parameters from node "
+                        "%(node)s when unprovisioning the server "
+                        "%(server)s: %(reason)s",
+                        {'node': node.uuid, 'server': server.uuid,
+                         'reason': six.text_type(e)})
+
+    def _associate_server_to_node(self, node, server):
+        # Associate the node with a server
+        patch = [{'path': '/instance_uuid', 'op': 'add', 'value': server.uuid}]
+
+        try:
+            self.ironicclient.call('node.update', node['uuid'], patch,
+                                   retry_on_conflict=False)
+        except ironic_exc.BadRequest:
+            msg = (_("Failed to update parameters on node %(node)s "
+                     "when provisioning the server %(server)s")
+                   % {'node': node.uuid, 'server': server.uuid})
+            LOG.error(msg)
+            raise exception.ServerDeployFailure(msg)
+
+    def _disassociate_server_to_node(self, node, server):
+        patch = [{'path': '/instance_uuid', 'op': 'remove'}]
+
         try:
             self.ironicclient.call('node.update', node.uuid, patch)
         except ironic_exc.BadRequest as e:
@@ -703,3 +733,52 @@ class IronicDriver(base_driver.BaseEngineDriver):
                  'portgroups': node.get('portgroups'),
                  'image_source': node.get('image_source')})
         return manageable_nodes
+
+    def get_manageable_node(self, node_uuid):
+        node = self._get_node(node_uuid)
+        if (node.instance_uuid is not None or
+            node.provision_state != ironic_states.ACTIVE or
+                node.resource_class is None):
+                raise exception.NodeNotAllowManage(node_uuid=node_uuid)
+
+        # Retrieves ports
+        params = {
+            'limit': 0,
+            'fields': ('uuid', 'node_uuid', 'extra', 'address',
+                       'internal_info')
+        }
+
+        port_list = self.ironicclient.call("port.list", **params)
+        portgroup_list = self.ironicclient.call("portgroup.list", **params)
+
+        # Add ports to the associated node
+        node.ports = [self._port_or_group_resource(port)
+                      for port in port_list
+                      if node.uuid == port.node_uuid]
+        # Add portgroups to the associated node
+        node.portgroups = [self._port_or_group_resource(portgroup)
+                           for portgroup in portgroup_list
+                           if node.uuid == portgroup.node_uuid]
+        node.power_state = map_power_state(node.power_state)
+        manageable_node = self._node_resource(node)
+        manageable_node['uuid'] = node_uuid
+
+        return manageable_node
+
+    def adopt(self, server, node):
+        """Adopt an existing bare mental node.
+
+        :param server: The bare metal server object.
+        :param node: The manageable bare metal node.
+        :return:
+        """
+        self._associate_server_to_node(node, server)
+
+    def unadopt(self, server, node):
+        """Unadopt a bare mental node.
+
+         :param server: The bare metal server object.
+         :param node: The managed bare metal node.
+         :return:
+         """
+        self._disassociate_server_to_node(node, server)
