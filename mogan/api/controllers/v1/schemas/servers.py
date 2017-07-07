@@ -50,3 +50,30 @@ create_server = {
     'required': ['name', 'image_uuid', 'flavor_uuid', 'networks'],
     'additionalProperties': False,
 }
+
+adopt_server = {
+    "type": "object",
+    "properties": {
+        'name': {'type': 'string', 'minLength': 1, 'maxLength': 255},
+        'description': {'type': 'string', 'minLength': 1, 'maxLength': 255},
+        'availability_zone': {'type': 'string', 'minLength': 1,
+                              'maxLength': 255},
+        'node_uuid': {'type': 'string', 'format': 'uuid'},
+        'flavor_uuid': {'type': 'string', 'format': 'uuid'},
+        'networks': {
+            'type': 'array', 'minItems': 1,
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'port_type': {'type': 'string', 'minLength': 1,
+                                  'maxLength': 255},
+                    'port_id': {'type': 'string', 'format': 'uuid'},
+                },
+                'required': ['port_id'],
+                'additionalProperties': False,
+            },
+        },
+    },
+    'required': ['name', 'node_uuid', 'flavor_uuid', 'networks'],
+    'additionalProperties': False,
+}

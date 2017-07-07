@@ -117,6 +117,20 @@ class API(object):
                     port_id, exc_info=True)
                 raise e
 
+    def _update_port(self, context, port_id, body):
+        client = get_client(context.auth_token)
+
+        try:
+            port = client.update_port(port_id, body)
+        except neutron_exceptions.NeutronClientException as e:
+            msg = (_("Could not update neutron port %(port_id)s, "
+                     "body is %(body)s") %
+                   {'port_id': port_id,
+                    'body': body})
+            LOG.exception(msg)
+            raise exception.NetworkError(msg)
+        return port
+
     def _safe_get_floating_ips(self, client, **kwargs):
         """Get floating IP gracefully handling 404 from Neutron."""
         try:
@@ -308,6 +322,51 @@ class API(object):
                 return free_ports // ports_needed_per_server
 
         return num_servers
+
+    def plug_port_to_tenant_network(self, context, server, port_like_obj, port_id,
+                                    bare_metal_ports):
+        """Plug port like object to tenant network.
+
+        :param task: A TaskManager instance.
+        :param port_like_obj: port-like object to plug.
+        :param client: Neutron client instance.
+        :raises NetworkError: if failed to update Neutron port.
+        :raises VifNotAttached if tenant VIF is not associated with port_like_obj.
+        """
+
+        local_link_info = []
+        client_id_opt = None
+
+        try:
+            portgroup_id = port_like_obj.portgroup_uuid
+
+            pg_ports = [p for p in bare_metal_ports
+                            if p.portgroup_id == port_like_obj.id]
+            for port in pg_ports:
+                local_link_info.append(port.local_link_connection)
+        except AttributeError:
+            local_link_info.append(port_like_obj.local_link_connection)
+            client_id = port_like_obj.extra.get('client-id')
+            if client_id:
+                client_id_opt = ({'opt_name': 'client-id', 'opt_value': client_id})
+
+        # NOTE(sambetts) Only update required binding: attributes,
+        # because other port attributes may have been set by the user or
+        # nova.
+        body = {
+            'port': {
+                'device_id': server.uuid,
+                'binding:vnic_type': 'baremetal',
+                'binding:host_id': server.node_uuid,
+                'binding:profile': {
+                    'local_link_information': local_link_info,
+                },
+            }
+        }
+        if client_id_opt:
+            body['port']['extra_dhcp_opts'] = [client_id_opt]
+
+        self._update_port(context, port_id, body)
 
 
 def _ensure_requested_network_ordering(accessor, unordered, preferred):
