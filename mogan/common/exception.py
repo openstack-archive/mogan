@@ -455,4 +455,14 @@ class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
 class FloatingIpNotAssociated(Invalid):
     _msg_fmt = _("Floating IP: %(floatingip)s is not associated")
 
+
+class ResourceClassConflict(Conflict):
+    _msg_fmt = _("Requested flavor resource is %(resource)s, "
+                 "but baremetal node's reource class is %(resource_class)s")
+
+
+class UnsupportedOperation(Invalid):
+    _msg_fmt = _("Action %(action)s for %(server_uuid)s is not supported. The "
+                 "reason is %(reason)s")
+
 ObjectActionError = obj_exc.ObjectActionError

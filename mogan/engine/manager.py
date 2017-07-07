@@ -277,9 +277,14 @@ class EngineManager(base_manager.BaseEngineManager):
                 server.status = states.MAINTENANCE
                 server.save()
 
-    def destroy_networks(self, context, server):
+    def destroy_networks(self, context, server, adopt=None):
         ports = server.nics.get_port_ids()
         server.nics.delete(context)
+        if adopt:
+            LOG.debug("No need to delete port for adop server %(server_id)s",
+                      {"server_id": server.uuid})
+            return
+
         for port in ports:
             self.network_api.delete_port(context, port, server.uuid)
 
@@ -295,65 +300,77 @@ class EngineManager(base_manager.BaseEngineManager):
                                     injected_files,
                                     key_pair,
                                     request_spec=None,
+                                    node_uuid=None,
+                                    adopt=False,
                                     filter_properties=None):
 
-            if filter_properties is None:
-                filter_properties = {}
+        if filter_properties is None:
+            filter_properties = {}
 
-            retry = filter_properties.pop('retry', {})
+        retry = filter_properties.pop('retry', {})
 
-            # update attempt count:
-            if retry:
-                retry['num_attempts'] += 1
+        # update attempt count:
+        if retry:
+            retry['num_attempts'] += 1
+        else:
+            retry = {
+                'num_attempts': 1,
+                'nodes': []  # list of tried nodes
+            }
+        filter_properties['retry'] = retry
+        request_spec['num_servers'] = len(servers)
+        request_spec['server_ids'] = [s.uuid for s in servers]
+
+        try:
+            if adopt:
+                node = self.driver.get_node(node_uuid)
+                flavor = request_spec['flavor']
+                if node.resource_class not in flavor['resources']:
+                    raise exception.ResourceClassConflict(
+                        resource=flavor['resource'],
+                        resource_class=node.resource_class)
+                nodes = [node.uuid]
             else:
-                retry = {
-                    'num_attempts': 1,
-                    'nodes': []  # list of tried nodes
-                }
-            filter_properties['retry'] = retry
-            request_spec['num_servers'] = len(servers)
-            request_spec['server_ids'] = [s.uuid for s in servers]
-
-            try:
                 nodes = self.scheduler_client.select_destinations(
                     context, request_spec, filter_properties)
-            except exception.NoValidNode as e:
-                # Here should reset the state of building servers to Error
-                # state. And rollback the quotas.
-                # TODO(litao) rollback the quotas
-                with excutils.save_and_reraise_exception():
-                    for server in servers:
-                        fsm = utils.get_state_machine(
-                            start_state=server.status,
-                            target_state=states.ACTIVE)
-                        utils.process_event(fsm, server, event='error')
-                        utils.add_server_fault_from_exc(
-                            context, server, e, sys.exc_info())
+        except exception.NoValidNode as e:
+            # Here should reset the state of building servers to Error
+            # state. And rollback the quotas.
+            # TODO(litao) rollback the quotas
+            with excutils.save_and_reraise_exception():
+                for server in servers:
+                    fsm = utils.get_state_machine(
+                        start_state=server.status,
+                        target_state=states.ACTIVE)
+                    utils.process_event(fsm, server, event='error')
+                    utils.add_server_fault_from_exc(
+                        context, server, e, sys.exc_info())
 
-            LOG.info("The selected nodes %(nodes)s for servers",
-                     {"nodes": nodes})
+        LOG.info("The selected nodes %(nodes)s for servers",
+                 {"nodes": nodes})
 
-            for (server, node) in six.moves.zip(servers, nodes):
-                server.node_uuid = node
-                server.save()
-                # Add a retry entry for the selected node
-                retry_nodes = retry['nodes']
-                retry_nodes.append(node)
+        for (server, node) in six.moves.zip(servers, nodes):
+            server.node_uuid = node
+            server.save()
+            # Add a retry entry for the selected node
+            retry_nodes = retry['nodes']
+            retry_nodes.append(node)
 
-            for server in servers:
-                utils.spawn_n(self._create_server,
-                              context, server,
-                              requested_networks,
-                              user_data,
-                              injected_files,
-                              key_pair,
-                              request_spec,
-                              filter_properties)
+        for server in servers:
+            utils.spawn_n(self._create_server,
+                          context, server,
+                          requested_networks,
+                          user_data,
+                          injected_files,
+                          key_pair,
+                          request_spec,
+                          adopt,
+                          filter_properties)
 
     @wrap_server_fault
     def _create_server(self, context, server, requested_networks,
                        user_data, injected_files, key_pair, request_spec=None,
-                       filter_properties=None):
+                       adopt=False, filter_properties=None):
         """Perform a deployment."""
         LOG.debug("Starting server...", server=server)
         notifications.notify_about_server_action(
@@ -374,6 +391,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 injected_files,
                 key_pair,
                 request_spec,
+                adopt,
                 filter_properties,
             )
         except Exception:
@@ -546,7 +564,7 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             vif = self.network_api.create_port(context, net_id, server.uuid)
             vif_port = vif['port']
-            self.driver.plug_vif(server.node_uuid, vif_port['id'])
+            self.driver.plug_vif(context, server.node_uuid, vif_port['id'])
             nics_obj = objects.ServerNics(context)
             nic_dict = {'port_id': vif_port['id'],
                         'network_id': vif_port['network_id'],
