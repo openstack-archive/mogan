@@ -51,7 +51,8 @@ class EngineAPI(object):
 
     def schedule_and_create_servers(self, context, servers, requested_networks,
                                     user_data, injected_files, key_pair,
-                                    request_spec, filter_properties):
+                                    request_spec, node_uuid=None, adopt=False,
+                                    filter_properties=None):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         cctxt.cast(context, 'schedule_and_create_servers', servers=servers,
@@ -60,7 +61,9 @@ class EngineAPI(object):
                    injected_files=injected_files,
                    key_pair=key_pair,
                    request_spec=request_spec,
-                   filter_properties=filter_properties)
+                   filter_properties=filter_properties,
+                   node_uuid=node_uuid,
+                   adopt=adopt)
 
     def delete_server(self, context, server):
         """Signal to engine service to delete a server."""

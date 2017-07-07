@@ -27,6 +27,8 @@ from mogan.common import states
 from mogan.conf import CONF
 from mogan.engine.baremetal import driver as base_driver
 from mogan.engine.baremetal.ironic import ironic_states
+from mogan import network
+
 
 LOG = logging.getLogger(__name__)
 
@@ -42,7 +44,8 @@ _UNPROVISION_STATES = (ironic_states.ACTIVE, ironic_states.DEPLOYFAIL,
 
 _NODE_FIELDS = ('uuid', 'power_state', 'target_power_state', 'provision_state',
                 'target_provision_state', 'last_error', 'maintenance',
-                'properties', 'instance_uuid')
+                'properties', 'instance_uuid', 'resource_class',
+                'instance_info')
 
 
 def map_power_state(state):
@@ -81,11 +84,15 @@ class IronicDriver(base_driver.BaseEngineDriver):
     def __init__(self):
         super(IronicDriver, self).__init__()
         self.ironicclient = ironic.IronicClientWrapper()
+        self.network_api = network.API()
 
-    def _get_node(self, node_uuid):
+    def get_node(self, node_uuid):
         """Get a node by its UUID."""
-        return self.ironicclient.call('node.get', node_uuid,
-                                      fields=_NODE_FIELDS)
+        try:
+            return self.ironicclient.call('node.get', node_uuid,
+                                          fields=_NODE_FIELDS)
+        except ironic_exc.NotFound:
+            raise exception.ComputeNodeNotFound(node=node_uuid)
 
     def _validate_server_and_node(self, server):
         """Get the node associated with the server.
@@ -191,8 +198,15 @@ class IronicDriver(base_driver.BaseEngineDriver):
                                             detail=detail)
         return ports + portgroups
 
-    def plug_vif(self, node_uuid, port_id):
-        self.ironicclient.call("node.vif_attach", node_uuid, port_id)
+    def plug_vif(self, context, server, port_id, adopt=False, pvifs=[]):
+        if adopt:
+            port = self.network_api.show_port(context, port_id)
+            port_like_obj = self._plug_vif_by_update(server, port, pvifs)
+            self.network_api.plug_port_to_tenant_network(
+                context, server, port_like_obj, port_id, pvifs)
+        else:
+            self.ironicclient.call("node.vif_attach",
+                                   server.node_uuid, port_id)
 
     def unplug_vif(self, context, server, port_id):
         LOG.debug("unplug: server_uuid=%(uuid)s vif=%(server_nics)s "
@@ -200,7 +214,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
                   {'uuid': server.uuid,
                    'server_nics': str(server.nics),
                    'port_id': port_id})
-        node = self._get_node(server.node_uuid)
+        node = self.get_node(server.node_uuid)
         self._unplug_vif(node, server, port_id)
 
     def _unplug_vif(self, node, server, port_id):
@@ -238,7 +252,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
                   "driver for server %s.") % server.uuid)
 
         # add server info to node
-        node = self._get_node(node_uuid)
+        node = self.get_node(node_uuid)
         self._add_server_info_to_node(node, server)
 
         # validate we are ready to do the deploy
@@ -592,3 +606,56 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 'step_size': 1,
                 'allocation_ratio': 1.0,
                 }
+
+    def adopt(self, server):
+        """Adopt an existing baremental node.
+
+        :param server: The baremetal server object.
+        :return:
+        """
+        node = self.get_node(server.node_uuid)
+        image_resource = node.instance_info.get('image_source')
+        if image_resource:
+            server.image_uuid = image_resource
+
+        self._add_server_info_to_node(node, server)
+
+    def _plug_vif_by_update(self, server, port, pvifs):
+        """Plug vif via calling port update API
+
+        In adoption scenario, we must compare the mac address to find the
+        vif to attach port.
+
+        :param server: The baremetal server object.
+        :param ports: The associated ports for baremetal server.
+        :return: The selected bare metal port object
+        """
+        patch = list()
+
+        for pvif in pvifs:
+            if port['mac_address'].lower() == pvif.address.lower():
+                patch.append({'path': '/extra/vif_port_id',
+                              'op': 'add', 'value': port['id']})
+                self.ironicclient.call('port.update', pvif.uuid,
+                                       patch, retry_on_conflict=False)
+
+                patch.pop()
+                LOG.debug("Vif %(vif_id)s attach to port %(port_id)s for "
+                          "node %(node_uuid)s, server %(server_id)s "
+                          "successfully",
+                          {"vif_id": pvif.uuid,
+                           "port_id": port['id'],
+                           "node_uuid": server.node_uuid,
+                           "server_id": server.uuid})
+                break
+        else:
+            msg = (_("Request address of port %(port_id)s is %(address)s,"
+                     "but no suitable vifs of node %(node_uuid)s for "
+                     "server %(server_id)s") %
+                   {"port_id": port['id'],
+                    "address": port['mac_address'],
+                    "node_uuid": server.node_uuid,
+                    "server_id": server.uuid})
+            raise exception.NetworkError(msg)
+
+        return pvif
