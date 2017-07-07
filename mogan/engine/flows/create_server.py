@@ -102,7 +102,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                              request_spec=request_spec,
                              filter_properties=filter_properties)
 
-    def revert(self, context, result, flow_failures, server, **kwargs):
+    def revert(self, context, result, flow_failures, server, adopt, **kwargs):
         # Check if we have a cause which can tell us not to reschedule and
         # set the server's status to error.
         for failure in flow_failures.values():
@@ -110,6 +110,11 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                 LOG.error("Server %s: create failed and no reschedule.",
                           server.uuid)
                 return False
+
+        if adopt:
+            LOG.error("Adopt Server %s: failed and no reschedule.",
+                      server.uuid)
+            return False
 
         server.node_uuid = None
         server.save()
@@ -133,7 +138,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                                                requires=requires)
         self.manager = manager
 
-    def _build_networks(self, context, server, requested_networks):
+    def _build_networks(self, context, server, requested_networks, adopt):
 
         # TODO(zhenguo): This seems not needed as our scheduler has already
         # guaranteed this.
@@ -168,8 +173,9 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 server_nic = objects.ServerNic(context, **nic_dict)
                 nics_obj.objects.append(server_nic)
 
-                self.manager.driver.plug_vif(server.node_uuid,
-                                             port_dict['id'])
+                self.manager.driver.plug_vif(context, server, port_dict,
+                                             adopt, ports)
+
                 # Get updated VIF info
                 port_dict = self.manager.network_api.show_port(
                     context, port_dict.get('id'))
@@ -180,7 +186,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 # Set nics here, so we can clean up the
                 # created networks during reverting.
                 server.nics = nics_obj
-                LOG.error("Server %(server)s: create or get network "
+                LOG.exception("Server %(server)s: create or get network "
                           "failed. The reason is %(reason)s",
                           {"server": server.uuid, "reason": e})
                 raise exception.NetworkError(_(
@@ -188,11 +194,12 @@ class BuildNetworkTask(flow_utils.MoganTask):
 
         return nics_obj
 
-    def execute(self, context, server, requested_networks):
+    def execute(self, context, server, requested_networks, adopt):
         server_nics = self._build_networks(
             context,
             server,
-            requested_networks)
+            requested_networks,
+            adopt)
 
         server.nics = server_nics
         server.save()
@@ -271,9 +278,12 @@ class CreateServerTask(flow_utils.MoganTask):
             loopingcall.LoopingCallTimeOut,
         ]
 
-    def execute(self, context, server, configdrive):
-        configdrive_value = configdrive.get('value')
-        self.driver.spawn(context, server, configdrive_value)
+    def execute(self, context, server, configdrive, adopt):
+        if adopt:
+            self.driver.adopt(server)
+        else:
+            configdrive_value = configdrive.get('value')
+            self.driver.spawn(context, server, configdrive_value)
         LOG.info('Successfully provisioned Ironic node %s',
                  server.node_uuid)
 
@@ -289,7 +299,7 @@ class CreateServerTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, server, requested_networks, user_data,
-             injected_files, key_pair, request_spec,
+             injected_files, key_pair, request_spec, adopt,
              filter_properties):
 
     """Constructs and returns the manager entrypoint flow
@@ -317,7 +327,8 @@ def get_flow(context, manager, server, requested_networks, user_data,
         'user_data': user_data,
         'injected_files': injected_files,
         'key_pair': key_pair,
-        'configdrive': {}
+        'configdrive': {},
+        'adopt': adopt
     }
 
     server_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
