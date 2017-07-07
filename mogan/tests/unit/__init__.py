@@ -20,9 +20,11 @@
 .. automodule:: mogan.tests.unit
    :platform: Unix
 """
+import eventlet
 
 from mogan import objects
 
+eventlet.monkey_patch(os=False)
 # NOTE(Shaohe Feng): Make sure we have all of the objects loaded. We do this
 # at module import time, because we may be using mock decorators in our
 # tests that run at import time.

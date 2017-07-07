@@ -13,6 +13,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
+import os
+
+os.environ['EVENTLET_NO_GREENDNS'] = 'yes'
+
+import eventlet
+
 import oslo_i18n as i18n
 
+eventlet.monkey_patch(os=False)
 i18n.install('mogan')
