@@ -178,9 +178,9 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 # Set nics here, so we can clean up the
                 # created networks during reverting.
                 server.nics = nics_obj
-                LOG.error("Server %(server)s: create or get network "
-                          "failed. The reason is %(reason)s",
-                          {"server": server.uuid, "reason": e})
+                LOG.exception("Server %(server)s: create or get network "
+                              "failed. The reason is %(reason)s",
+                              {"server": server.uuid, "reason": e})
                 raise exception.NetworkError(_(
                     "Build network for server failed."))
 
