@@ -69,11 +69,14 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def plug_vif(self, node_interface, neutron_port_id):
+    def plug_vif(self, context, server, port_id, adopt=False, pvifs=[]):
         """Plug a neutron port to a baremetal port.
 
-        :param node_interface: bare metal interface to plug neutron port.
-        :param neutron_port_id: neutron port id to plug.
+        :param context: The context
+        :param server: bare metal server object.
+        :param port_id: neutron port id to plug.
+        :param adopt: indicate if this is a adoption process.
+        :param pvifs: The bare metal ports list
         """
         raise NotImplementedError()
 
@@ -126,6 +129,14 @@ class BaseEngineDriver(object):
         """Get the inventory of a node.
 
         :param node: node to get its inventory data.
+        """
+        raise NotImplementedError()
+
+    def adopt(self, server):
+        """Adopt an existing baremental node.
+
+        :param server: The baremetal server object.
+        :return:
         """
         raise NotImplementedError()
 
