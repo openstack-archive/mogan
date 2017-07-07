@@ -656,3 +656,41 @@ class API(object):
         except Exception as e:
             raise exception.GetManageableServersFailed(reason=e)
         return mservers
+
+    def manage(self, context, node_uuid, name, description, metadata):
+        """Create a new server by managing an existing bare metal node
+
+        Sending manageable server information to the engine and will handle
+        creating the DB entries.
+
+        Returns a server object
+        """
+        self._check_num_servers_quota(context, 1, 1)
+
+        # Create the servers reservations
+        reserve_opts = {'servers': 1}
+        reservations = self.quota.reserve(context, **reserve_opts)
+        if reservations:
+            self.quota.commit(context, reservations)
+
+        # TODO(litao) we will support to specify user and project in
+        # managing bare metal node later.
+        base_options = {
+            'image_uuid': None,
+            'status': None,
+            'user_id': context.user,
+            'project_id': context.tenant,
+            'power_state': states.NOSTATE,
+            'name': name,
+            'description': description,
+            'locked': False,
+            'metadata': metadata or {},
+            'availability_zone': None}
+
+        server = objects.Server(context=context)
+        server.update(base_options)
+        server.uuid = uuidutils.generate_uuid()
+
+        server = self.engine_rpcapi.manage_server(context, server, node_uuid)
+
+        return server

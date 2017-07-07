@@ -4,7 +4,7 @@
  Manageable Servers
 ===================
 
-Lists manageable servers.
+Lists, manages manageable servers.
 
 List manageable servers information
 ===================================
@@ -37,4 +37,64 @@ Response
 **Example List manageable servers information**
 
 .. literalinclude:: samples/manageable_servers/manageable-servers-list-resp.json
+   :language: javascript
+
+Manage an existing server
+=========================
+
+.. rest_method:: POST /manageable_servers
+
+Manage a server.
+
+Manage nodes in active which migrated by operators.
+
+Normal response codes: 201
+
+Error response codes: badRequest(400), unauthorized(401), forbidden(403),
+conflict(409)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: server_name
+  - description: server_description
+  - node_uuid: manageable_servers_uuid
+  - metadata: metadata
+
+**Example Manage Server: JSON request**
+
+.. literalinclude:: samples/servers/manageable-server-create-req.json
+   :language: javascript
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: server_name
+  - description: server_description
+  - flavor_uuid: flavorRef
+  - image_uuid: imageRef
+  - availability_zone: availability_zone
+  - addresses: addresses
+  - links: links
+  - uuid: server_uuid
+  - status: server_status
+  - power_state: server_power_state
+  - project_id: project_id_body
+  - user_id: user_id_body
+  - updated_at: updated_at
+  - created_at: created_at
+  - launched_at: launched_at
+  - metadata: metadata
+  - affinity_zone: affinity_zone
+  - key_name: key_name
+  - node_uuid: manageable_servers_uuid
+  - partitions: partitions
+
+**Example Manage Server: JSON response**
+
+.. literalinclude:: samples/servers/manageable-server-manage-resp.json
    :language: javascript

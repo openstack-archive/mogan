@@ -499,4 +499,9 @@ class ServerGroupExists(Conflict):
 class GetManageableServersFailed(MoganException):
     _msg_fmt = _("Failed to get manageable servers from driver: %(reason)s")
 
+
+class NodeNotAllowedManaged(Forbidden):
+    _msg_fmt = _("The bare metal node %(node_uuid)s is not allowed to "
+                 "be managed")
+
 ObjectActionError = obj_exc.ObjectActionError
