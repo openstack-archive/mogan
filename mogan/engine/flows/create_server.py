@@ -101,7 +101,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                              request_spec=request_spec,
                              filter_properties=filter_properties)
 
-    def revert(self, context, result, flow_failures, server, **kwargs):
+    def revert(self, context, result, flow_failures, server, adopt, **kwargs):
         # Cleanup associated server node uuid
         if server.node_uuid:
             # If the compute node is still in DB, release it.
@@ -119,6 +119,11 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                 LOG.error("Server %s: create failed and no reschedule.",
                           server.uuid)
                 return False
+
+        if adopt:
+            LOG.error("Adopt Server %s: failed and no reschedule.",
+                      server.uuid)
+            return False
 
         server.node_uuid = None
         server.save()
@@ -274,9 +279,12 @@ class CreateServerTask(flow_utils.MoganTask):
             loopingcall.LoopingCallTimeOut,
         ]
 
-    def execute(self, context, server, configdrive):
-        configdrive_value = configdrive.get('value')
-        self.driver.spawn(context, server, configdrive_value)
+    def execute(self, context, server, configdrive, adopt):
+        if adopt:
+            self.driver.adopt(server)
+        else:
+            configdrive_value = configdrive.get('value')
+            self.driver.spawn(context, server, configdrive_value)
         LOG.info('Successfully provisioned Ironic node %s',
                  server.node_uuid)
 
@@ -292,7 +300,7 @@ class CreateServerTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, server, requested_networks, user_data,
-             injected_files, key_pair, ports, request_spec,
+             injected_files, key_pair, ports, request_spec, adopt,
              filter_properties):
 
     """Constructs and returns the manager entrypoint flow
@@ -321,7 +329,8 @@ def get_flow(context, manager, server, requested_networks, user_data,
         'injected_files': injected_files,
         'key_pair': key_pair,
         'ports': ports,
-        'configdrive': {}
+        'configdrive': {},
+        'adopt': adopt
     }
 
     server_flow.add(OnFailureRescheduleTask(manager.engine_rpcapi),
