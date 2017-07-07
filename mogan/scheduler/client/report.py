@@ -176,10 +176,15 @@ class SchedulerReportClient(object):
         eg. filters = {'resources': {'CUSTOM_BAREMETAL_GOLD': 1}}
         """
         resources = filters.pop("resources", None)
+        uuid = filters.pop("uuid", None)
         if resources:
             resource_query = ",".join(sorted("%s:%s" % (rc, amount)
                                       for (rc, amount) in resources.items()))
             filters['resources'] = resource_query
+
+        if uuid:
+            filters['uuid'] = uuid
+
         resp = self.get("/resource_providers?%s" % parse.urlencode(filters),
                         version='1.4')
         if resp.status_code == 200:

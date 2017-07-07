@@ -550,7 +550,8 @@ class ServerController(ServerControllerBase):
     """Expose the console controller of servers"""
 
     _custom_actions = {
-        'detail': ['GET']
+        'detail': ['GET'],
+        'adopt': ['POST']
     }
 
     def _get_server_collection(self, name=None, status=None,
@@ -753,3 +754,35 @@ class ServerController(ServerControllerBase):
         """
         db_server = self._resource or self._get_resource(server_uuid)
         pecan.request.engine_api.delete(pecan.request.context, db_server)
+
+    @policy.authorize_wsgi("mogan:server", "adopt", False)
+    @expose.expose(Server, body=types.jsontype,
+                   status_code=http_client.ACCEPTED)
+    def adopt(self, server):
+        """Adopt a server
+
+        :param server: A server within the request body
+        :return: The server information.
+        """
+        validation.check_schema(server, server_schemas.adopt_server)
+
+        node_uuid = server.pop('node_uuid', None)
+        flavor_uuid = server.pop('flavor_uuid', None)
+        requested_networks = server.pop('networks', None)
+        flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
+
+        servers = pecan.request.engine_api.create(
+            pecan.request.context, flavor,
+            name=server.get('name'),
+            description=server.get('description'),
+            availability_zone=server.get('availability_zone'),
+            metadata=server.get('metadata'),
+            requested_networks=requested_networks,
+            node_uuid=node_uuid,
+            adopt=True,
+            min_count=1,
+            max_count=1)
+
+        # Set the HTTP Location Header for the first server.
+        pecan.response.location = link.build_url('server', servers[0].uuid)
+        return Server.convert_with_links(servers[0])
