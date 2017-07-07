@@ -267,7 +267,7 @@ class API(object):
     def _create_server(self, context, flavor, image_uuid,
                        name, description, availability_zone, metadata,
                        requested_networks, user_data, injected_files,
-                       key_name, min_count, max_count):
+                       key_name, node_uuid, adopt, min_count, max_count):
         """Verify all the input parameters"""
 
         # Verify the specified image exists
@@ -316,14 +316,14 @@ class API(object):
                                                        decoded_files,
                                                        key_pair,
                                                        request_spec,
-                                                       filter_properties=None)
+                                                       node_uuid, adopt)
         return servers
 
-    def create(self, context, flavor, image_uuid,
+    def create(self, context, flavor, image_uuid=None,
                name=None, description=None, availability_zone=None,
                metadata=None, requested_networks=None, user_data=None,
-               injected_files=None, key_name=None, min_count=None,
-               max_count=None):
+               injected_files=None, key_name=None, node_uuid=None, adopt=False,
+               min_count=None, max_count=None):
         """Provision servers
 
         Sending server information to the engine and will handle
@@ -343,6 +343,7 @@ class API(object):
                                    availability_zone, metadata,
                                    requested_networks, user_data,
                                    injected_files, key_name,
+                                   node_uuid, adopt,
                                    min_count, max_count)
 
     def _delete_server(self, context, server):

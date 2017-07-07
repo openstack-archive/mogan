@@ -94,6 +94,9 @@ class FilterScheduler(driver.Scheduler):
 
     def _get_filtered_nodes(self, request_spec):
         query_filters = {'resources': self._get_res_cls_filters(request_spec)}
+        if request_spec.get('uuid'):
+            query_filters['uuid'] = request_spec.get('uuid')
+
         filtered_nodes = self.reportclient.get_filtered_resource_providers(
             query_filters)
         if not filtered_nodes:
