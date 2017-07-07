@@ -394,3 +394,70 @@ class ComputeAPIUnitTest(base.DbTestCase):
             self.context,
             self.user_id,
             'test_keypair')
+
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'manage_server')
+    @mock.patch('mogan.engine.api.API.list_availability_zones')
+    @mock.patch('mogan.engine.api.API.get_manageable_servers')
+    def test_manage(self, mock_get_manageable_servers, mock_list_az,
+                    mock_manage_server):
+        node_uuid = 'aacdbd78-d670-409e-95aa-ecfcfb94fee2'
+        image_uuid = 'efe0a06f-ca95-4808-b41e-9f55b9c5eb98'
+        mock_get_manageable_servers.return_value = [
+            {'uuid': node_uuid,
+             'name': 'test_manageable_mode',
+             'resource_class': 'gold',
+             'power_state': 'power on',
+             'provision_state': 'active',
+             'ports': [],
+             'portgroups': [],
+             'image_source': image_uuid}]
+
+        mock_manage_server.return_value = mock.MagicMock()
+        mock_list_az.return_value = {'availability_zones': ['test_az']}
+
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        before_in_use = 0
+        if res.get('servers') is not None:
+            before_in_use = res.get('servers').in_use
+
+        server = self.engine_api.manage(self.context,
+                                        node_uuid=node_uuid,
+                                        name='fake-name',
+                                        description='fake-descritpion',
+                                        metadata={'k1', 'v1'})
+
+        mock_list_az.assert_not_called()
+        self.assertTrue(mock_manage_server.called)
+        self.assertTrue(mock_get_manageable_servers.called)
+        self.assertEqual(server.image_uuid, image_uuid)
+        self.assertIsNone(server.availability_zone)
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        after_in_use = res.get('servers').in_use
+        self.assertEqual(before_in_use + 1, after_in_use)
+
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'manage_server')
+    @mock.patch('mogan.engine.api.API.list_availability_zones')
+    @mock.patch('mogan.engine.api.API.get_manageable_servers')
+    def test_manage_with_exception(self, mock_get_manageable_servers,
+                                   mock_list_az, mock_manage_server):
+        node_uuid = 'aacdbd78-d670-409e-95aa-ecfcfb94fee2'
+        mock_get_manageable_servers.return_value = [
+            {'uuid': 'aacdbd78-d670-409e-95aa-ecfcfb94fee3',
+             'name': 'test_manageable_mode',
+             'resource_class': 'gold',
+             'power_state': 'power on',
+             'provision_state': 'active',
+             'ports': [],
+             'portgroups': [],
+             'image_source': None}]
+
+        self.assertRaises(exception.NodeNotAllowManage,
+                         self.engine_api.manage,
+                         self.context, node_uuid=node_uuid,
+                         name='fake-name', description='fake-descritpion',
+                         metadata={'k1', 'v1'}
+                         )
+
+        mock_list_az.assert_not_called()
+        mock_manage_server.assert_not_called()
+        mock_get_manageable_servers.assert_called_once()

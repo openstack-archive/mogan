@@ -300,58 +300,58 @@ class EngineManager(base_manager.BaseEngineManager):
                                     request_spec=None,
                                     filter_properties=None):
 
-            if filter_properties is None:
-                filter_properties = {}
+        if filter_properties is None:
+            filter_properties = {}
 
-            retry = filter_properties.pop('retry', {})
+        retry = filter_properties.pop('retry', {})
 
-            # update attempt count:
-            if retry:
-                retry['num_attempts'] += 1
-            else:
-                retry = {
-                    'num_attempts': 1,
-                    'nodes': []  # list of tried nodes
-                }
-            filter_properties['retry'] = retry
-            request_spec['num_servers'] = len(servers)
-            request_spec['server_ids'] = [s.uuid for s in servers]
+        # update attempt count:
+        if retry:
+            retry['num_attempts'] += 1
+        else:
+            retry = {
+                'num_attempts': 1,
+                'nodes': []  # list of tried nodes
+            }
+        filter_properties['retry'] = retry
+        request_spec['num_servers'] = len(servers)
+        request_spec['server_ids'] = [s.uuid for s in servers]
 
-            try:
-                nodes = self.scheduler_client.select_destinations(
-                    context, request_spec, filter_properties)
-            except exception.NoValidNode as e:
-                # Here should reset the state of building servers to Error
-                # state. And rollback the quotas.
-                # TODO(litao) rollback the quotas
-                with excutils.save_and_reraise_exception():
-                    for server in servers:
-                        fsm = utils.get_state_machine(
-                            start_state=server.status,
-                            target_state=states.ACTIVE)
-                        utils.process_event(fsm, server, event='error')
-                        utils.add_server_fault_from_exc(
-                            context, server, e, sys.exc_info())
+        try:
+            nodes = self.scheduler_client.select_destinations(
+                context, request_spec, filter_properties)
+        except exception.NoValidNode as e:
+            # Here should reset the state of building servers to Error
+            # state. And rollback the quotas.
+            # TODO(litao) rollback the quotas
+            with excutils.save_and_reraise_exception():
+                for server in servers:
+                    fsm = utils.get_state_machine(
+                        start_state=server.status,
+                        target_state=states.ACTIVE)
+                    utils.process_event(fsm, server, event='error')
+                    utils.add_server_fault_from_exc(
+                        context, server, e, sys.exc_info())
 
-            LOG.info("The selected nodes %(nodes)s for servers",
-                     {"nodes": nodes})
+        LOG.info("The selected nodes %(nodes)s for servers",
+                 {"nodes": nodes})
 
-            for (server, node) in six.moves.zip(servers, nodes):
-                server.node_uuid = node
-                server.save()
-                # Add a retry entry for the selected node
-                retry_nodes = retry['nodes']
-                retry_nodes.append(node)
+        for (server, node) in six.moves.zip(servers, nodes):
+            server.node_uuid = node
+            server.save()
+            # Add a retry entry for the selected node
+            retry_nodes = retry['nodes']
+            retry_nodes.append(node)
 
-            for server in servers:
-                utils.spawn_n(self._create_server,
-                              context, server,
-                              requested_networks,
-                              user_data,
-                              injected_files,
-                              key_pair,
-                              request_spec,
-                              filter_properties)
+        for server in servers:
+            utils.spawn_n(self._create_server,
+                          context, server,
+                          requested_networks,
+                          user_data,
+                          injected_files,
+                          key_pair,
+                          request_spec,
+                          filter_properties)
 
     @wrap_server_fault
     def _create_server(self, context, server, requested_networks,
@@ -608,3 +608,68 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def get_manageable_servers(self, context):
         return self.driver.get_manageable_nodes()
+
+    def manage_server(self, context, server, node):
+
+        fsm = utils.get_state_machine(start_state=server.status,
+                                      target_state=states.ACTIVE)
+        try:
+            # Allocate the resource
+            self.scheduler_client.reportclient.put_allocations(
+                node['uuid'], server.uuid, {}, server.project_id, server.user_id)
+
+            LOG.info("Begin to manage bare metal node %(node_uuid)s for "
+                     "server %(uuid)s",
+                     {"node_uuid": node['uuid'], "uuid": server.uuid})
+
+            # Plug vifs
+            nics_obj = objects.ServerNics(context)
+            all_ports = node['ports'] + node['portgroups']
+            for vif in all_ports:
+                neutron_port_id = vif['neutron_port_id']
+                if neutron_port_id is not None:
+                    port_dict = self.network_api.show_port(
+                        context, neutron_port_id)
+
+                    nic_dict = {'port_id': port_dict['id'],
+                                'network_id': port_dict['network_id'],
+                                'mac_address': port_dict['mac_address'],
+                                'fixed_ips': port_dict['fixed_ips'],
+                                'server_uuid': server.uuid}
+
+                    # Check if the neutron port's mac address matches the port
+                    # address of bare metal nics.
+                    if nic_dict['mac_address'] != vif['address']:
+                        msg = (
+                            _("The address of neutron port %(port_id)s is "
+                              "%(address)s, but the nic address of bare metal "
+                              "node %(node_uuid)s is %(nic_address)s.") %
+                            {"port_id": nic_dict['port_id'],
+                             "address": nic_dict['mac_address'],
+                             "node_uuid": node['uuid'],
+                             "nic_address": vif['address']})
+                        raise exception.NetworkError(msg)
+
+                    server_nic = objects.ServerNic(context, **nic_dict)
+                    nics_obj.objects.append(server_nic)
+
+            # Save the server information
+            server.node_uuid = node['uuid']
+            server.nics = nics_obj
+            server.save()
+
+            # Manage the bare metal node
+            self.driver.adopt(server, node)
+        except Exception:
+            with excutils.save_and_reraise_exception():
+                utils.process_event(fsm, server, event='error')
+                self._rollback_servers_quota(context, -1)
+        else:
+            # Advance the state model for the given event. Note that this
+            # doesn't alter the server in any way. This may raise
+            # InvalidState, if this event is not allowed in the current state.
+            server.power_state = self.driver.get_power_state(context,
+                                                             server.uuid)
+            server.launched_at = timeutils.utcnow()
+            utils.process_event(fsm, server, event='done')
+            LOG.info("Manage server %s successfully.", server.uuid)

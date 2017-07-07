@@ -4,7 +4,7 @@
  Manageable Servers
 ===================
 
-Lists manageable servers.
+Lists, creates manageable servers.
 
 List manageable servers information
 ===================================
@@ -37,4 +37,64 @@ Response
 **Example List manageable servers information**
 
 .. literalinclude:: samples/manageable_servers/manageable-servers-list-resp.json
+   :language: javascript
+
+Manage an existing server
+===============
+
+.. rest_method:: POST /servers
+
+Manage a server.
+
+Creates a server by using existing bare metal node in active status rather than
+provisioning a new bare metal node.
+
+The caller must specify the uuid to an existing bare metal node in the
+parameter in the request. The managing process does not provison a bare metal
+node, just establish the connection between server and node.
+
+Normal response codes: 201
+
+Error response codes: badRequest(400), unauthorized(401)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: server_name
+  - description: server_description
+  - node_uuid: manageable_servers_uuid
+  - metadata: metadata
+
+**Example Create Server: JSON request**
+
+.. literalinclude:: samples/servers/manageable-server-create-req.json
+   :language: javascript
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: server_name
+  - description: server_description
+  - flavor_uuid: flavorRef
+  - image_uuid: imageRef
+  - availability_zone: availability_zone
+  - nics: nics
+  - links: links
+  - uuid: server_uuid
+  - status: server_status
+  - power_state: server_power_state
+  - project_id: project_id_body
+  - user_id: user_id_body
+  - updated_at: updated_at
+  - created_at: created_at
+  - metadata: metadata
+  - affinity_zone: affinity_zone
+
+**Example Manage Server: JSON response**
+
+.. literalinclude:: samples/servers/manageable-server-manage-resp.json
    :language: javascript

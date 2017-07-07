@@ -63,3 +63,22 @@ create_server = {
     'required': ['server'],
     'additionalProperties': False,
 }
+
+manage_server = {
+    "type": "object",
+    "properties": {
+        'name': {'type': 'string', 'minLength': 1, 'maxLength': 255},
+        'description': {'type': 'string', 'minLength': 1, 'maxLength': 255},
+        'node_uuid': {'type': 'string', 'format': 'uuid'},
+        'metadata': {'type': 'object',
+                     'patternProperties': {
+                         '^[a-zA-Z0-9-_:. ]{1,255}$': {
+                             'type': 'string', 'maxLength': 255
+                         }
+                     },
+                     'additionalProperties': False
+        }
+    },
+    'required': ['name', 'node_uuid'],
+    'additionalProperties': False,
+}

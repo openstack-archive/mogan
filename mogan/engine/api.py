@@ -598,3 +598,50 @@ class API(object):
         except Exception as e:
             raise exception.GetManageableServersFailed(reason=e)
         return mservers
+
+    def manage(self, context, node_uuid, name, description, metadata):
+        """Create a new server by managing an existing bare metal node
+
+        Sending manageable server information to the engine and will handle
+        creating the DB entries.
+
+        Returns a server object
+        """
+        # Get the manageable bare metal node information
+        manageable_nodes = self.get_manageable_servers(context)
+
+        # check if the node is manageable
+        for manageable_node in manageable_nodes:
+            if node_uuid == manageable_node['uuid']:
+                break
+        else:
+            raise exception.NodeNotAllowManage(node_uuid=node_uuid)
+
+        image_uuid = manageable_node.get('image_source')
+        availability_zone = manageable_node.get('availability_zone', None)
+
+        if availability_zone:
+            # check availability zone
+            azs = self.list_availability_zones(context)
+            if availability_zone not in azs['availability_zones']:
+                raise exception.AZNotFound
+
+        if not uuidutils.is_uuid_like(image_uuid):
+            image_uuid = None
+
+        base_options = {
+            'image_uuid': image_uuid,
+            'status': states.BUILDING,
+            'user_id': context.user,
+            'project_id': context.tenant,
+            'power_state': states.NOSTATE,
+            'name': name,
+            'description': description,
+            'locked': False,
+            'metadata': metadata or {},
+            'availability_zone': availability_zone}
+
+        servers = self._provision_servers(context, base_options, 1, 1)
+        self.engine_rpcapi.manage_server(context, servers[0], manageable_node)
+
+        return servers[0]
