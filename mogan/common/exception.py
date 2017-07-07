@@ -435,4 +435,9 @@ class InventoryInUse(InvalidInventory):
                  "resource provider '%(resource_provider)s' in use.")
 
 
+class ResourceClassConflict(Conflict):
+    _msg_fmt = _("Requested flavor resource is %(resource)s, "
+                 "but baremetal node's reource class is %(resource_class)s")
+
+
 ObjectActionError = obj_exc.ObjectActionError
