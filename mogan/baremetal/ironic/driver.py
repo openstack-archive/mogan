@@ -27,6 +27,7 @@ from mogan.common.i18n import _
 from mogan.common import ironic
 from mogan.common import states
 from mogan.conf import CONF
+from mogan import network
 
 LOG = logging.getLogger(__name__)
 
@@ -88,8 +89,11 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
     def _get_node(self, node_uuid):
         """Get a node by its UUID."""
-        return self.ironicclient.call('node.get', node_uuid,
-                                      fields=_NODE_FIELDS)
+        try:
+            return self.ironicclient.call('node.get', node_uuid,
+                                          fields=_NODE_FIELDS)
+        except ironic_exc.NotFound:
+            raise exception.NodeNotFound(node=node_uuid)
 
     def _validate_server_and_node(self, server):
         """Get the node associated with the server.
@@ -155,6 +159,20 @@ class IronicDriver(base_driver.BaseEngineDriver):
                                    retry_on_conflict=False)
         except ironic_exc.BadRequest:
             msg = (_("Failed to add deploy parameters on node %(node)s "
+                     "when provisioning the server %(server)s")
+                   % {'node': node.uuid, 'server': server.uuid})
+            LOG.error(msg)
+            raise exception.ServerDeployFailure(msg)
+
+    def _update_server_info_to_node(self, node, server):
+        # Associate the node with a server
+        patch = [{'path': '/instance_uuid', 'op': 'add', 'value': server.uuid}]
+
+        try:
+            self.ironicclient.call('node.update', node['uuid'], patch,
+                                   retry_on_conflict=False)
+        except ironic_exc.BadRequest:
+            msg = (_("Failed to update parameters on node %(node)s "
                      "when provisioning the server %(server)s")
                    % {'node': node.uuid, 'server': server.uuid})
             LOG.error(msg)
@@ -703,3 +721,12 @@ class IronicDriver(base_driver.BaseEngineDriver):
                  'portgroups': node.get('portgroups'),
                  'image_source': node.get('image_source')})
         return manageable_nodes
+
+    def adopt(self, server, node):
+        """Adopt an existing bare mental node.
+
+        :param server: The bare metal server object.
+        :param node: The manageable bare metal node.
+        :return:
+        """
+        self._update_server_info_to_node(node, server)
