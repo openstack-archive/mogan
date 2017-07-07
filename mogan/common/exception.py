@@ -188,8 +188,7 @@ class AggregateMetadataNotFound(NotFound):
 
 
 class NodeNotFound(NotFound):
-    _msg_fmt = _("Node associated with server %(server)s "
-                 "could not be found.")
+    _msg_fmt = _("Node %(node)s could not be found.")
 
 
 class InvalidActionParameterValue(Invalid):
@@ -447,5 +446,11 @@ class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
 
 class FloatingIpNotAssociated(Invalid):
     _msg_fmt = _("Floating IP: %(floatingip)s is not associated")
+
+
+class ResourceClassConflict(Conflict):
+    _msg_fmt = _("Requested flavor resource is %(resource)s, "
+                 "but baremetal node's reource class is %(resource_class)s")
+
 
 ObjectActionError = obj_exc.ObjectActionError

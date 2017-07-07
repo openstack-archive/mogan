@@ -111,6 +111,8 @@ class RPCAPITestCase(base.DbTestCase):
                           injected_files=None,
                           key_pair=None,
                           request_spec=None,
+                          node_uuid=None,
+                          adopt=False,
                           filter_properties=None)
 
     def test_delete_server(self):
