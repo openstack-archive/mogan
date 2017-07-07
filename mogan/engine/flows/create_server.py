@@ -166,8 +166,8 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 server_nic = objects.ServerNic(context, **nic_dict)
                 nics_obj.objects.append(server_nic)
 
-                self.manager.driver.plug_vif(server.node_uuid,
-                                             port_dict['id'])
+                self.manager.driver.plug_vif(server.node_uuid, port_dict['id'])
+
                 # Get updated VIF info
                 port_dict = self.manager.network_api.show_port(
                     context, port_dict.get('id'))
@@ -178,9 +178,9 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 # Set nics here, so we can clean up the
                 # created networks during reverting.
                 server.nics = nics_obj
-                LOG.error("Server %(server)s: create or get network "
-                          "failed. The reason is %(reason)s",
-                          {"server": server.uuid, "reason": e})
+                LOG.exception("Server %(server)s: create or get network "
+                              "failed. The reason is %(reason)s",
+                              {"server": server.uuid, "reason": e})
                 raise exception.NetworkError(_(
                     "Build network for server failed."))
 

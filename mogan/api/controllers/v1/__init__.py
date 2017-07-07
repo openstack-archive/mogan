@@ -29,6 +29,7 @@ from mogan.api.controllers.v1 import aggregates
 from mogan.api.controllers.v1 import availability_zones
 from mogan.api.controllers.v1 import flavors
 from mogan.api.controllers.v1 import keypairs
+from mogan.api.controllers.v1 import manageable_servers
 from mogan.api.controllers.v1 import nodes
 from mogan.api.controllers.v1 import server_groups
 from mogan.api.controllers.v1 import servers
@@ -120,6 +121,15 @@ class V1(base.APIBase):
                                                 'server_groups', '',
                                                 bookmark=True)
                             ]
+        v1.manageable_servers = [link.Link.make_link('self',
+                                                     pecan.request.public_url,
+                                                     'manageable_servers', ''),
+
+                                 link.Link.make_link('bookmark',
+                                                     pecan.request.public_url,
+                                                     'manageable_servers', '',
+                                                     bookmark=True)
+                                 ]
         return v1
 
 
@@ -133,6 +143,7 @@ class Controller(rest.RestController):
     aggregates = aggregates.AggregateController()
     nodes = nodes.NodeController()
     server_groups = server_groups.ServerGroupController()
+    manageable_servers = manageable_servers.ManageableServerController()
 
     @expose.expose(V1)
     def get(self):

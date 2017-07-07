@@ -180,6 +180,7 @@ class SchedulerReportClient(object):
             resource_query = ",".join(sorted("%s:%s" % (rc, amount)
                                       for (rc, amount) in resources.items()))
             filters['resources'] = resource_query
+
         resp = self.get("/resource_providers?%s" % parse.urlencode(filters),
                         version='1.4')
         if resp.status_code == 200:
