@@ -42,10 +42,11 @@ class CreateServerFlowTestCase(base.TestCase):
         mock_save.return_value = None
 
         task.execute(
-            self.ctxt, server_obj, fake_requested_networks)
+            self.ctxt, server_obj, fake_requested_networks, False)
         mock_build_networks.assert_called_once_with(self.ctxt,
                                                     server_obj,
-                                                    fake_requested_networks)
+                                                    fake_requested_networks,
+                                                    False)
 
     @mock.patch.object(IronicDriver, 'spawn')
     def test_create_server_task_execute(self, mock_spawn):
@@ -55,6 +56,6 @@ class CreateServerFlowTestCase(base.TestCase):
         server_obj = obj_utils.get_test_server(self.ctxt)
         mock_spawn.side_effect = None
 
-        task.execute(self.ctxt, server_obj, {'value': 'configdrive'})
+        task.execute(self.ctxt, server_obj, {'value': 'configdrive'}, False)
         mock_spawn.assert_called_once_with(
             self.ctxt, server_obj, 'configdrive')
