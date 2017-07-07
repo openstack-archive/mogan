@@ -13,14 +13,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log
 import pecan
 from pecan import rest
+from six.moves import http_client
 from wsme import types as wtypes
 
 from mogan.api.controllers import base
+from mogan.api.controllers import link
+from mogan.api.controllers.v1.schemas import servers as server_schemas
+from mogan.api.controllers.v1.servers import Server
+from mogan.api.controllers.v1.servers import ServerControllerBase
 from mogan.api.controllers.v1 import types
 from mogan.api import expose
+from mogan.api import validation
+from mogan.common import exception
 from mogan.common import policy
+from mogan import objects
+
+
+LOG = log.getLogger(__name__)
 
 
 class ManageableServer(base.APIBase):
@@ -84,3 +96,32 @@ class ManageableServersController(rest.RestController):
         nodes = pecan.request.engine_api.get_manageable_servers(
             pecan.request.context)
         return ManageableServerCollection.convert_with_list_of_dicts(nodes)
+
+    @policy.authorize_wsgi("mogan:manageable_servers", "create", False)
+    @expose.expose(Server, body=types.jsontype,
+                   status_code=http_client.CREATED)
+    def post(self, server):
+        """Manage an existing bare metal node.
+
+        :param server: A server within the request body
+        :return: The server information.
+        """
+        validation.check_schema(server, server_schemas.manage_server)
+
+        node_uuid = server.pop('node_uuid', None)
+        flavor_uuid = server.pop('flavor_uuid', None)
+        requested_networks = server.pop('networks', None)
+        flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
+        if flavor.disabled:
+            raise exception.FlavorDisabled(flavor_id=flavor.uuid)
+
+        servers = pecan.request.engine_api.manage(
+            pecan.request.context, flavor, node_uuid,
+            server.get('name'),
+            server.get('description'),
+            requested_networks,
+            availability_zone=server.get('availability_zone'))
+
+        # Set the HTTP Location Header for the first server.
+        pecan.response.location = link.build_url('server', servers[0].uuid)
+        return Server.convert_with_links(servers[0])

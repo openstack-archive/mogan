@@ -117,6 +117,20 @@ class API(object):
                     port_id, exc_info=True)
                 raise e
 
+    def _update_port(self, context, port_id, body):
+        client = get_client(context.auth_token)
+
+        try:
+            port = client.update_port(port_id, body)
+        except neutron_exceptions.NeutronClientException:
+            msg = (_("Could not update neutron port %(port_id)s, "
+                     "body is %(body)s") %
+                   {'port_id': port_id,
+                    'body': body})
+            LOG.exception(msg)
+            raise exception.NetworkError(msg)
+        return port
+
     def _safe_get_floating_ips(self, client, **kwargs):
         """Get floating IP gracefully handling 404 from Neutron."""
         try:
@@ -308,6 +322,52 @@ class API(object):
                 return free_ports // ports_needed_per_server
 
         return num_servers
+
+    def plug_port_to_tenant_network(self, context, server, port_like_obj,
+                                    port_id, bare_metal_ports):
+        """Plug port like object to tenant network.
+
+        :param context: The context.
+        :param server: The bare metal server objecct .
+        :param port_like_obj: port-like object to plug,
+               it's a port or port group.
+        :param port_id: The neutron port id.
+        :param bare_metal_ports: The bare metal ports from ironic.
+        """
+
+        local_link_info = []
+        client_id_opt = None
+
+        # This is just decide whether it a port or port group.
+        if not hasattr(port_like_obj, "portgroup_uuid"):
+            # If port_like_obj is a port group.
+            pg_ports = [p for p in bare_metal_ports
+                        if p.portgroup_id == port_like_obj.id]
+            for port in pg_ports:
+                local_link_info.append(port.local_link_connection)
+
+        else:
+            # If port_like_obj is a port.
+            local_link_info.append(port_like_obj.local_link_connection)
+            client_id = port_like_obj.extra.get('client-id')
+            if client_id:
+                client_id_opt = ({'opt_name': 'client-id',
+                                  'opt_value': client_id})
+
+        body = {
+            'port': {
+                'device_id': server.uuid,
+                'binding:vnic_type': 'baremetal',
+                'binding:host_id': server.node_uuid,
+                'binding:profile': {
+                    'local_link_information': local_link_info,
+                },
+            }
+        }
+        if client_id_opt:
+            body['port']['extra_dhcp_opts'] = [client_id_opt]
+
+        self._update_port(context, port_id, body)
 
 
 def _ensure_requested_network_ordering(accessor, unordered, preferred):

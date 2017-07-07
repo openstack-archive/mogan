@@ -124,3 +124,11 @@ class EngineAPI(object):
     def get_manageable_servers(self, context):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'get_manageable_servers')
+
+    def manage_server(self, context, server, node_uuid, requested_networks,
+                      request_spec):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        return cctxt.call(context, 'manage_server',
+                          server=server, node_uuid=node_uuid,
+                          requested_networks=requested_networks,
+                          request_spec=request_spec)

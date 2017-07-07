@@ -127,6 +127,10 @@ class FilterScheduler(driver.Scheduler):
             for agg_filter in aggs_filters:
                 query_filters = {'resources': resources_filter,
                                  'member_of': 'in:' + ','.join(agg_filter)}
+
+                if request_spec.get('uuid'):
+                    query_filters['uuid'] = request_spec.get('uuid')
+
                 filtered_rps = self.reportclient.\
                     get_filtered_resource_providers(query_filters)
                 if not filtered_rps:

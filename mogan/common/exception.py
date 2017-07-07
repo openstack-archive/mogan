@@ -468,4 +468,15 @@ class ServerGroupExists(Conflict):
 class GetManageableServersFailed(MoganException):
     _msg_fmt = _("Failed to get manageable servers from driver: %(reason)s")
 
+
+class UnsupportedManageableState(Invalid):
+    _msg_fmt = _("Unsupported state for managing bare metal node."
+                 "The actual provision state is %(provision_state)s, "
+                 "expected provision state is %(expected_state)s")
+
+
+class NodeAlreadyManaged(Invalid):
+    _msg_fmt = _("This node has been already managed with server: "
+                 "%(server_uuid)")
+
 ObjectActionError = obj_exc.ObjectActionError
