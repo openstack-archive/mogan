@@ -29,6 +29,8 @@ from mogan.engine import manager
 from mogan.network import api as network_api
 from mogan.notifications import base as notifications
 from mogan.objects import fields
+from mogan.objects import server
+from mogan.scheduler.client.report import SchedulerReportClient as report_api
 from mogan.tests.unit.db import base as tests_db_base
 from mogan.tests.unit.engine import mgr_utils
 from mogan.tests.unit.objects import utils as obj_utils
@@ -270,3 +272,219 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
         self.service.get_manageable_servers(self.context)
         self._stop_service()
         get_manageable_mock.assert_called_once()
+
+    @mock.patch.object(network_api.API, 'bind_port')
+    @mock.patch.object(IronicDriver, 'manage')
+    @mock.patch.object(network_api.API, 'show_port')
+    @mock.patch.object(report_api, 'put_allocations')
+    def test__manage_servers(self,
+                             put_allocations_mock, show_port_mock,
+                             manage_mock, bind_port_mock):
+        neutron_port_id = '67ec8e86-d77b-4729-b11d-a009864d289d'
+        neutron_mac_address = '52:54:00:8e:6a:03'
+        node_uuid = 'aacdbd78-d670-409e-95aa-ecfcfb94fee2'
+        image_uuid = 'efe0a06f-ca95-4808-b41e-9f55b9c5eb98'
+
+        node = {
+            'uuid': node_uuid,
+            'name': 'test_manageable_mode',
+            'resource_class': 'gold',
+            'power_state': 'power on',
+            'provision_state': 'active',
+            "ports": [
+                {
+                    "address": neutron_mac_address,
+                    "uuid": "1ec01153-685a-49b5-a6d3-45a4e7dddf53",
+                    "neutron_port_id": neutron_port_id
+                }
+            ],
+            "portgroups": [
+                {
+                    "address": "a4:dc:be:0e:82:a6",
+                    "uuid": "1ec01153-685a-49b5-a6d3-45a4e7dddf54",
+                    "neutron_port_id": None
+                }
+            ],
+            'image_source': image_uuid
+        }
+
+        put_allocations_mock.side_effect = None
+        show_port_mock.return_value = {
+            'id': neutron_port_id,
+            'network_id': '34ec8e86-d77b-4729-b11d-a009864d3456',
+            'mac_address': neutron_mac_address,
+            'fixed_ips': [{"subnet_id": "d2d7a7c2-17d2-4268-906d-1da8dde24fa8",
+                           "ip_address": "10.80.20.12"}]
+        }
+
+        bind_port_mock.side_effect = None
+        server = obj_utils.get_test_server(
+            self.context, status=None, node_uuid=None,
+            power_state=states.NOSTATE, availability_zone=None,
+            image_uuid=None)
+
+        manage_mock.side_effect = None
+        self.service._manage_server(self.context, server, node)
+
+        put_allocations_mock.assert_called_once()
+        manage_mock.assert_called_once()
+        show_port_mock.assert_called_once_with(self.context, neutron_port_id)
+        bind_port_mock.assert_called_once_with(self.context, neutron_port_id,
+                                               server)
+        self.assertEqual(server.node_uuid, node_uuid)
+        self.assertIsNone(server.availability_zone)
+        self.assertEqual(server.status, 'active')
+        self.assertEqual(server.power_state, 'power on')
+        self.assertEqual(server.image_uuid, image_uuid)
+
+    @mock.patch.object(network_api.API, 'bind_port')
+    @mock.patch.object(IronicDriver, 'manage')
+    @mock.patch.object(network_api.API, 'show_port')
+    @mock.patch.object(report_api, 'put_allocations')
+    def test__manage_servers_with_mac_exception(self,
+                                                put_allocations_mock,
+                                                show_port_mock,
+                                                manage_mock, bind_port_mock):
+        neutron_port_id1 = '67ec8e86-d77b-4729-b11d-a009864d289d'
+        neutron_port_id2 = '67ec8e86-d77b-4729-b11d-a009864d289d'
+        neutron_mac_address1 = '52:54:00:8e:6a:03'
+        neutron_mac_address2 = '52:54:00:8e:6a:04'
+        node_uuid = 'aacdbd78-d670-409e-95aa-ecfcfb94fee2'
+
+        node = {
+            'uuid': node_uuid,
+            'name': 'test_manageable_mode',
+            'resource_class': 'gold',
+            'power_state': 'power on',
+            'provision_state': 'active',
+            "ports": [
+                {
+                    "address": neutron_mac_address1,
+                    "uuid": "1ec01153-685a-49b5-a6d3-45a4e7dddf53",
+                    "neutron_port_id": neutron_port_id1
+                }
+            ],
+            "portgroups": [
+                {
+                    "address": "a4:dc:be:0e:82:a6",
+                    "uuid": "1ec01153-685a-49b5-a6d3-45a4e7dddf54",
+                    "neutron_port_id": neutron_port_id2
+                }
+            ],
+            'image_source': 'efe0a06f-ca95-4808-b41e-9f55b9c5eb98'
+        }
+
+        put_allocations_mock.side_effect = None
+        show_port_mock.return_value = {
+            'id': neutron_port_id1,
+            'network_id': '34ec8e86-d77b-4729-b11d-a009864d3456',
+            'mac_address': neutron_mac_address2,
+            'fixed_ips': [{"subnet_id": "d2d7a7c2-17d2-4268-906d-1da8dde24fa8",
+                           "ip_address": "10.80.20.12"}]
+        }
+
+        server = obj_utils.get_test_server(
+            self.context, status=None, node_uuid=None,
+            power_state=states.NOSTATE, availability_zone=None,
+            image_uuid=None)
+
+        manage_mock.side_effect = None
+        self.assertRaises(exception.NetworkError, self.service._manage_server,
+                          self.context, server, node)
+
+        put_allocations_mock.assert_called_once()
+        show_port_mock.assert_called_with(self.context, neutron_port_id1)
+        show_port_mock.assert_called_with(self.context, neutron_port_id2)
+        manage_mock.assert_not_called()
+        bind_port_mock.assert_not_called()
+        self.assertNotEqual(server.node_uuid, node_uuid)
+        self.assertIsNone(server.availability_zone)
+        self.assertIsNone(server.status, None)
+        self.assertEqual(server.power_state, states.NOSTATE)
+        self.assertIsNone(server.image_uuid, None)
+
+    @mock.patch.object(server.Server, 'create')
+    @mock.patch.object(IronicDriver, 'unmanage')
+    @mock.patch.object(manager.EngineManager, '_manage_server')
+    @mock.patch.object(IronicDriver, 'get_manageable_node')
+    def test_manage_servers(self, get_manageable_mock,
+                            manage_mock, umanage_mock, server_create_mock):
+        get_manageable_mock.side_effect = None
+        manage_mock.side_effect = None
+        server_create_mock.side_effect = None
+
+        server = obj_utils.get_test_server(
+            self.context, status=None, node_uuid=None,
+            power_state=states.NOSTATE, availability_zone=None,
+            image_uuid=None)
+        node_uuid = 'aacdbd78-d670-409e-95aa-ecfcfb94fee2'
+
+        self.service.manage_server(self.context, server, node_uuid)
+
+        get_manageable_mock.assert_called_once_with(node_uuid)
+        manage_mock.assert_called_once()
+        umanage_mock.assert_not_called()
+        server_create_mock.assert_called_once()
+
+    @mock.patch.object(manager.EngineManager, '_rollback_servers_quota')
+    @mock.patch.object(server.Server, 'create')
+    @mock.patch.object(IronicDriver, 'unmanage')
+    @mock.patch.object(manager.EngineManager, '_manage_server')
+    @mock.patch.object(IronicDriver, 'get_manageable_node')
+    def test_manage_servers_with_db_exception(self,
+                                              get_manageable_mock,
+                                              manage_mock,
+                                              umanage_mock,
+                                              server_create_mock,
+                                              rollback_quota_mock):
+        get_manageable_mock.side_effect = None
+        manage_mock.side_effect = None
+        server_create_mock.side_effect = exception.ServerAlreadyExists(
+            "test-server")
+
+        server = obj_utils.get_test_server(
+            self.context, status=None, node_uuid=None,
+            power_state=states.NOSTATE, availability_zone=None,
+            image_uuid=None)
+        node_uuid = 'aacdbd78-d670-409e-95aa-ecfcfb94fee2'
+
+        self.assertRaises(exception.ServerAlreadyExists,
+                          self.service.manage_server,
+                          self.context, server, node_uuid)
+
+        get_manageable_mock.assert_called_once_with(node_uuid)
+        manage_mock.assert_called_once()
+        umanage_mock.assert_called_once()
+        server_create_mock.assert_called_once()
+        rollback_quota_mock.assert_called_once_with(self.context, -1)
+
+    @mock.patch.object(manager.EngineManager, '_rollback_servers_quota')
+    @mock.patch.object(server.Server, 'create')
+    @mock.patch.object(IronicDriver, 'unmanage')
+    @mock.patch.object(manager.EngineManager, '_manage_server')
+    @mock.patch.object(IronicDriver, 'get_manageable_node')
+    def test_manage_servers_with_network_exception(self,
+                                                   get_manageable_mock,
+                                                   manage_mock,
+                                                   umanage_mock,
+                                                   server_create_mock,
+                                                   rollback_quota_mock):
+        get_manageable_mock.side_effect = None
+        manage_mock.side_effect = exception.NetworkError()
+        server_create_mock.side_effect = None
+
+        server = obj_utils.get_test_server(
+            self.context, status=None, node_uuid=None,
+            power_state=states.NOSTATE, availability_zone=None,
+            image_uuid=None)
+        node_uuid = 'aacdbd78-d670-409e-95aa-ecfcfb94fee2'
+
+        self.assertRaises(exception.NetworkError,
+                          self.service.manage_server,
+                          self.context, server, node_uuid)
+
+        get_manageable_mock.assert_called_once_with(node_uuid)
+        manage_mock.assert_called_once()
+        umanage_mock.assert_not_called()
+        server_create_mock.assert_not_called()
+        rollback_quota_mock.assert_called_once_with(self.context, -1)
