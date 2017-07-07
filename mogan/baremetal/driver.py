@@ -129,6 +129,14 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
+    def adopt(self, server):
+        """Adopt an existing baremental node.
+
+        :param server: The baremetal server object.
+        :return: None
+        """
+        raise NotImplementedError()
+
 
 def load_engine_driver(engine_driver):
     """Load a engine driver module.

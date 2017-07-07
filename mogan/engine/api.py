@@ -572,3 +572,42 @@ class API(object):
     def list_node_aggregates(self, context, node):
         """Get the node aggregates list."""
         return self.engine_rpcapi.list_node_aggregates(context, node)
+
+    def manage(self, context, flavor, node_uuid, name, description,
+               requested_networks, availability_zone=None):
+        """Create a new server by managing an existing bare metal node
+
+        Sending manageable server information to the engine and will handle
+        creating the DB entries.
+
+        Returns a server object
+        """
+        if not availability_zone:
+            availability_zone = CONF.engine.default_schedule_zone
+        else:
+            # check availability zone
+            azs = self.list_availability_zones(context)
+            if availability_zone not in azs['availability_zones']:
+                raise exception.AZNotFound
+
+        base_options, max_net_count, _ = \
+            self._validate_and_build_base_options(
+                context, flavor, None, name, description,
+                availability_zone, None, requested_networks, None,
+                None, 1)
+
+        # check the port limit
+        if max_net_count < 1:
+            raise exception.PortLimitExceeded()
+
+        servers = self._provision_servers(context, base_options, 1, 1)
+
+        request_spec = {
+            'flavor': dict(flavor),
+            'availability_zone': availability_zone
+        }
+
+        self.engine_rpcapi.manage_server(context, servers[0], node_uuid,
+                                         requested_networks, request_spec)
+
+        return servers

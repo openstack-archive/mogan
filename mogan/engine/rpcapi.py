@@ -120,3 +120,11 @@ class EngineAPI(object):
     def list_node_aggregates(self, context, node):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'list_node_aggregates', node=node)
+
+    def manage_server(self, context, server, node_uuid, requested_networks,
+                      request_spec):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        return cctxt.call(context, 'manage_server',
+                          server=server, node_uuid=node_uuid,
+                          requested_networks=requested_networks,
+                          request_spec=request_spec)
