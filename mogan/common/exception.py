@@ -455,4 +455,15 @@ class ServerGroupNotFound(NotFound):
 class ServerGroupExists(Conflict):
     _msg_fmt = _("Sever group %(group_uuid)s already exists.")
 
+
+class UnsupportedManageableState(Invalid):
+    _msg_fmt = _("Unsupported state for managing bare metal node."
+                 "The actual provision state is %(provision_state)s, "
+                 "expected provision state is %(expected_state)s")
+
+
+class NodeAlreadyManaged(Invalid):
+    _msg_fmt = _("This node has been already managed with server: "
+                 "%(server_uuid)")
+
 ObjectActionError = obj_exc.ObjectActionError

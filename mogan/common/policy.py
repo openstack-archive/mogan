@@ -183,6 +183,9 @@ server_policies = [
     policy.RuleDefault('mogan:server_group:delete',
                        'rule:default',
                        description='Delete a server group'),
+    policy.RuleDefault('mogan:manageable_servers:create',
+                       'rule:admin_api',
+                       description='Manage an existing baremetal server')
 ]
 
 
