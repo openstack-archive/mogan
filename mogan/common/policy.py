@@ -171,6 +171,9 @@ server_policies = [
     policy.RuleDefault('mogan:node:get_all',
                        'rule:admin_api',
                        description='Get the nodes list'),
+    policy.RuleDefault('mogan:manageable_server:create',
+                       'rule:admin_api',
+                       description='Manage an existing baremetal server'),
 ]
 
 
