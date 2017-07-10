@@ -14,13 +14,6 @@ set -o xtrace
 # Defaults
 # --------
 
-# Support entry points installation of console scripts
-if [[ -d ${MOGAN_DIR}/bin ]]; then
-    MOGAN_BIN_DIR=${MOGAN_DIR}/bin
-else
-    MOGAN_BIN_DIR=$(get_python_exec_prefix)
-fi
-
 # create_mogan_accounts - Set up common required mogan accounts
 #
 # Project     User       Roles
@@ -31,9 +24,9 @@ function create_mogan_accounts {
     get_or_create_service "mogan" "baremetal_compute" "Baremetal Compute"
     get_or_create_endpoint "baremetal_compute" \
         "$REGION_NAME" \
-        "${MOGAN_SERVICE_PROTOCOL}://${MOGAN_SERVICE_HOST}:${MOGAN_SERVICE_PORT}/v1" \
-        "${MOGAN_SERVICE_PROTOCOL}://${MOGAN_SERVICE_HOST}:${MOGAN_SERVICE_PORT}/v1" \
-        "${MOGAN_SERVICE_PROTOCOL}://${MOGAN_SERVICE_HOST}:${MOGAN_SERVICE_PORT}/v1"
+        "${MOGAN_SERVICE_PROTOCOL}://${MOGAN_SERVICE_HOST}/baremetal_compute/v1" \
+        "${MOGAN_SERVICE_PROTOCOL}://${MOGAN_SERVICE_HOST}/baremetal_compute/v1" \
+        "${MOGAN_SERVICE_PROTOCOL}://${MOGAN_SERVICE_HOST}/baremetal_compute/v1"
 }
 
 
@@ -119,6 +112,9 @@ function configure_mogan {
     if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
         setup_colorized_logging ${MOGAN_CONF_FILE} DEFAULT tenant user
     fi
+
+    # uWSGI configuration
+    write_uwsgi_config "$MOGAN_UWSGI_CONF" "$MOGAN_UWSGI_APP" "/baremetal_compute"
 }
 
 
@@ -139,6 +135,7 @@ function install_mogan {
             die $LINENO "$srv should be enabled for Mogan."
         fi
     done
+	pip_install uwsgi
 
     setup_develop ${MOGAN_DIR}
 }
@@ -155,7 +152,7 @@ function install_mogan_pythonclient {
 function start_mogan {
     if is_service_enabled mogan-api && is_service_enabled mogan-engine && is_service_enabled mogan-scheduler; then
         echo_summary "Installing all mogan services in separate processes"
-        run_process mogan-api "${MOGAN_BIN_DIR}/mogan-api --config-file ${MOGAN_CONF_DIR}/mogan.conf"
+        run_process mogan-api "$MOGAN_BIN_DIR/uwsgi --ini $MOGAN_UWSGI_CONF"
         if ! wait_for_service ${SERVICE_TIMEOUT} ${MOGAN_SERVICE_PROTOCOL}://${MOGAN_SERVICE_HOST}:${MOGAN_SERVICE_PORT}; then
             die $LINENO "mogan-api did not start"
         fi
@@ -175,6 +172,7 @@ function stop_mogan {
     for serv in mogan-api mogan-engine mogan-scheduler mogan-consoleauth mogan-shellinaboxproxy; do
         stop_process $serv
     done
+    remove_uwsgi_config "$MOGAN_UWSGI_CONF" "$MOGAN_UWSGI_APP"
 }
 
 
