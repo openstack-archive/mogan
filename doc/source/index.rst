@@ -54,7 +54,7 @@ project.
   Setting Up Your Development Environment <dev/dev-quickstart>
 
 Advanced testing and guides
-----------------------------
+---------------------------
 
 .. toctree::
     :maxdepth: 1
@@ -103,3 +103,11 @@ Running tests of Mogan
    :maxdepth: 1
 
    dev/testing
+
+Installation and Setup
+======================
+
+.. toctree::
+   :maxdepth: 1
+
+   installation/uwsgi

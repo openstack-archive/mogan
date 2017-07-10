@@ -12,6 +12,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import sys
 
 from oslo_config import cfg
 import pecan
@@ -29,6 +30,10 @@ def get_pecan_config():
 
 
 def setup_app(pecan_config=None, extra_hooks=None):
+    if not pecan_config:
+        pecan_config = get_pecan_config()
+    pecan.configuration.set_config(dict(pecan_config), overwrite=True)
+
     app_hooks = [hooks.ConfigHook(),
                  hooks.DBHook(),
                  hooks.EngineAPIHook(),
@@ -37,11 +42,6 @@ def setup_app(pecan_config=None, extra_hooks=None):
                  hooks.PublicUrlHook()]
     if extra_hooks:
         app_hooks.extend(extra_hooks)
-
-    if not pecan_config:
-        pecan_config = get_pecan_config()
-
-    pecan.configuration.set_config(dict(pecan_config), overwrite=True)
 
     app = pecan.make_app(
         pecan_config.app.root,
@@ -66,3 +66,9 @@ class VersionSelectorApplication(object):
 
     def __call__(self, environ, start_response):
         return self.v1(environ, start_response)
+
+
+def build_wsgi_app():
+    from mogan.common import service as mogan_service
+    mogan_service.prepare_service(sys.argv)
+    return setup_app()
