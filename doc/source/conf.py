@@ -21,10 +21,15 @@ sys.path.insert(0, os.path.abspath('../..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'oslosphinx',
+    'openstackdocstheme',
     'oslo_config.sphinxconfiggen',
     'oslo_policy.sphinxpolicygen',
 ]
+
+# openstackdocstheme options
+repository_name = 'openstack/mogan'
+bug_project = 'mogan'
+bug_tag = 'doc'
 
 config_generator_config_file = '../../tools/config/mogan-config-generator.conf'
 sample_config_basename = '_static/mogan'
@@ -62,7 +67,10 @@ pygments_style = 'sphinx'
 # Sphinx are currently 'default' and 'sphinxdoc'.
 # html_theme_path = ["."]
 # html_theme = '_theme'
+html_theme = 'openstackdocs'
 # html_static_path = ['static']
+
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
