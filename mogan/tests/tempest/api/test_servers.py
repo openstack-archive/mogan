@@ -36,7 +36,7 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         resp = self.creation_resp
         self.assertEqual(self.server_ids[0], resp['uuid'])
         self.assertEqual('building', resp['status'])
-        self.assertEqual(self.small_flavor, resp['flavor_uuid'])
+        self.assertEqual(self.flavor, resp['flavor_uuid'])
         self.assertEqual('mogan tempest server', resp['description'])
         self.assertEqual(self.image_id, resp['image_uuid'])
         self.assertIn('launched_at', resp)
@@ -53,7 +53,7 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         resp = self.baremetal_compute_client.show_server(
             self.server_ids[0])
         self.assertEqual('active', resp['status'])
-        self.assertEqual(self.small_flavor, resp['flavor_uuid'])
+        self.assertEqual(self.flavor, resp['flavor_uuid'])
         self.assertEqual('mogan tempest server', resp['description'])
         self.assertEqual(self.image_id, resp['image_uuid'])
         self.assertEqual('power on', resp['power_state'])
