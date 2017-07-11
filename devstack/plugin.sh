@@ -184,19 +184,27 @@ function cleanup_mogan {
 
 
 function create_flavor {
-    openstack baremetal flavor create ${MOGAN_DEFAULT_FLAVOR} --description 'Mogan default flavor' --resources ${MOGAN_DEFAULT_FLAVOR}=1
-}
-
-
-function update_ironic_node_resource_class {
-    ironic_nodes=$(openstack baremetal node list -c UUID -f value)
-    for node in ${ironic_nodes};do
-        openstack --os-baremetal-api-version latest baremetal node set --resource-class ${MOGAN_DEFAULT_FLAVOR} ${node}
-    done
+    # this makes consistency with ironic resource class, will move the mogan flavor
+    # creation to ironic devstack plugin when we are offical.
+    if [[ "$IRONIC_IS_HARDWARE" == "False" ]]; then
+        local ironic_node_cpu=$IRONIC_VM_SPECS_CPU
+        local ironic_node_ram=$IRONIC_VM_SPECS_RAM
+        local ironic_node_disk=$IRONIC_VM_SPECS_DISK
+    else
+        local ironic_node_cpu=$IRONIC_HW_NODE_CPU
+        local ironic_node_ram=$IRONIC_HW_NODE_RAM
+        local ironic_node_disk=$IRONIC_HW_NODE_DISK
+    fi
+    # this will look like baremetal_1cpu_256mbram_10gbdisk
+    resource_class="baremetal_${ironic_node_cpu}cpu_${ironic_node_ram}mbram_${ironic_node_disk}gbdisk"
+    openstack baremetal flavor create ${resource_class} --description 'Mogan default flavor' --resources ${resource_class}=1
 }
 
 
 if is_service_enabled mogan; then
+    if [[ "$IRONIC_USE_RESOURCE_CLASSES" == "False" ]]; then
+        die "Ironic node resource class is required for Mogan"
+    fi
     if ! is_service_enabled placement; then
         die "placement service is required for Mogan"
     fi
@@ -218,8 +226,6 @@ if is_service_enabled mogan; then
         start_mogan
         echo_summary "Creating flavor"
         create_flavor
-        echo_summary "Updating ironic node resource class"
-        update_ironic_node_resource_class
     fi
 
     if [[ "$1" == "unstack" ]]; then
