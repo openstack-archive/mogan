@@ -298,6 +298,9 @@ Create devstack/local.conf with minimal settings required to enable Mogan
     # Swift temp URL's are required for agent_* drivers.
     SWIFT_ENABLE_TEMPURLS=True
 
+    # Set resource_classes for nodes to use placement service
+    IRONIC_USE_RESOURCE_CLASSES=True
+
     # Create 3 virtual machines to pose as Ironic's baremetal nodes.
     IRONIC_VM_COUNT=3
     IRONIC_VM_SSH_PORT=22
