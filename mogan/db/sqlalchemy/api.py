@@ -207,8 +207,7 @@ class Connection(api.Connection):
     def server_get(self, context, server_id):
         query = model_query(
             context,
-            models.Server,
-            server=True).filter_by(uuid=server_id)
+            models.Server).filter_by(uuid=server_id)
         try:
             return query.one()
         except NoResultFound:
@@ -216,7 +215,7 @@ class Connection(api.Connection):
 
     def server_get_all(self, context, project_only):
         return model_query(context, models.Server,
-                           server=True, project_only=project_only)
+                           project_only=project_only)
 
     def server_destroy(self, context, server_id):
         with _session_for_write():
@@ -248,7 +247,7 @@ class Connection(api.Connection):
 
     def _do_update_server(self, context, server_id, values):
         with _session_for_write():
-            query = model_query(context, models.Server, server=True)
+            query = model_query(context, models.Server)
             query = add_identity_filter(query, server_id)
             try:
                 ref = query.with_lockmode('update').one()
@@ -579,7 +578,7 @@ class Connection(api.Connection):
         return reservation_ref
 
     def _sync_servers(self, context, project_id):
-        query = model_query(context, models.Server, server=True).\
+        query = model_query(context, models.Server).\
             filter_by(project_id=project_id).all()
         return {'servers': len(query) or 0}
 
