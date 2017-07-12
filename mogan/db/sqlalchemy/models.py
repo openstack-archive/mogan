@@ -305,3 +305,51 @@ class KeyPair(Base):
     public_key = Column(Text())
     type = Column(Enum('ssh', 'x509', name='keypair_types'),
                   nullable=False, server_default='ssh')
+
+
+class AggregateMetadata(Base):
+    """Represents possible types for aggregate metadata."""
+
+    __tablename__ = 'aggregate_metadata'
+    __table_args__ = (
+        schema.UniqueConstraint(
+            'aggregate_id', 'key',
+            name='uniq_aggregate_metadata0aggregate_id0key'),
+        Index('aggregate_metadata_key_idx', 'key'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    key = Column(String(255), nullable=False)
+    value = Column(String(255), nullable=False)
+    aggregate_id = Column(Integer, ForeignKey('aggregates.id'), nullable=False)
+
+
+class Aggregate(Base):
+    """Represents possible types for aggregates."""
+
+    __tablename__ = 'aggregates'
+    __table_args__ = (
+        Index('aggregate_uuid_idx', 'uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=False)
+    name = Column(String(255), nullable=False)
+    _metadata = orm.relationship(
+        AggregateMetadata,
+        primaryjoin='and_('
+        'Aggregate.id == AggregateMetadata.aggregate_id)')
+
+    @property
+    def _extra_keys(self):
+        return ['metadetails', 'availability_zone']
+
+    @property
+    def metadetails(self):
+        return {m.key: m.value for m in self._metadata}
+
+    @property
+    def availability_zone(self):
+        if 'availability_zone' not in self.metadetails:
+            return None
+        return self.metadetails['availability_zone']
