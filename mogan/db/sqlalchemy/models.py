@@ -21,7 +21,8 @@ from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
 from oslo_db.sqlalchemy import types as db_types
 import six.moves.urllib.parse as urlparse
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Text
+from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey,
+                        Index, Text)
 from sqlalchemy import orm
 from sqlalchemy import schema, String, Integer
 from sqlalchemy.dialects.mysql import MEDIUMTEXT
@@ -286,3 +287,31 @@ class KeyPair(Base):
     public_key = Column(Text())
     type = Column(Enum('ssh', 'x509', name='keypair_types'),
                   nullable=False, server_default='ssh')
+
+
+class AggregateMetadata(Base):
+    """Represents possible types for aggregate metadata."""
+
+    __tablename__ = 'aggregate_metadata'
+    __table_args__ = (
+        schema.UniqueConstraint('aggregate_id', 'key',
+            name='uniq_aggregate_metadata0aggregate_id0key'),
+        Index('aggregate_metadata_key_idx', 'key'),
+    )
+    id = Column(Integer, primary_key=True)
+    key = Column(String(255), nullable=False)
+    value = Column(String(255), nullable=False)
+    aggregate_id = Column(Integer, ForeignKey('aggregates.id'), nullable=False)
+
+
+class Aggregate(Base):
+    """Represents possible types for aggregates."""
+
+    __tablename__ = 'aggregates'
+    __table_args__ = (Index('aggregate_uuid_idx', 'uuid'),)
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=False)
+    name = Column(String(255), nullable=False)
+    _metadata = orm.relationship(AggregateMetadata,
+                             primaryjoin='and_('
+                             'Aggregate.id == AggregateMetadata.aggregate_id)')

@@ -26,6 +26,7 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import contains_eager
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 from sqlalchemy.sql import true
@@ -798,6 +799,70 @@ class Connection(api.Connection):
     def key_pair_count_by_user(self, context, user_id):
         return model_query(context, models.KeyPair).filter_by(
             user_id=user_id).count()
+
+    def aggregate_create(self, context, values):
+        aggregate = models.Aggregate()
+        aggregate.update(values)
+
+        with _session_for_write() as session:
+            try:
+                session.add(aggregate)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.AggregateAlreadyExists(uuid=values['uuid'])
+            return aggregate
+
+    def aggregate_get(self, context, aggregate_id):
+        query = model_query(context, models.Aggregate).filter_by(
+            uuid=aggregate_id).options(joinedload("_metadata"))
+
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.AggregateNotFound(aggregate=aggregate_id)
+
+    def aggregate_update(self, context, aggregate_id, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing aggregate.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            return self._do_update_aggregate(context, aggregate_id, values)
+        except db_exc.DBDuplicateEntry as e:
+            if 'name' in e.columns:
+                raise exception.DuplicateName(name=values['name'])
+
+    def _do_update_aggregate(self, context, aggregate_id, values):
+        with _session_for_write():
+            query = model_query(context, models.Aggregate)
+            query = add_identity_filter(query, aggregate_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.AggregateNotFound(aggregate=aggregate_id)
+
+            ref.update(values)
+        return ref
+
+    def aggregate_get_all(self, context):
+        return model_query(context, models.Aggregate). \
+            options(joinedload("_metadata")).all()
+
+    def aggregate_destroy(self, context, aggregate_id):
+        with _session_for_write():
+            query = model_query(context, models.Aggregate)
+            query = add_identity_filter(query, aggregate_id)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.AggregateNotFound(aggregate=aggregate_id)
+
+    def aggregate_get_by_metadata_key(self, context, key):
+        query = model_query(context, models.Aggregate)
+        query = query.join("_metadata")
+        query = query.filter(models.AggregateMetadata.key == key)
+        query = query.options(contains_eager("_metadata"))
+        return query.all()
 
 
 def _type_get_id_from_type_query(context, type_id):
