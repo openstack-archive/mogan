@@ -775,7 +775,7 @@ class Connection(api.Connection):
                 session.add(key_pair_ref)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise exception.KeyPairExists(key_name=values['name'])
+                raise exception.KeypairExists(key_name=values['name'])
             return key_pair_ref
 
     def key_pair_destroy(self, context, user_id, name):

@@ -409,8 +409,8 @@ class Base64Exception(MoganException):
     _msg_fmt = _("Invalid Base 64 data for file %(path)s")
 
 
-class KeyPairExists(MoganException):
-    _msg_fmt = _("KeyPaire with key name %(key_name)s already exists.")
+class KeypairExists(MoganException):
+    _msg_fmt = _("Keypair with key name %(key_name)s already exists.")
 
 
 class KeypairNotFound(NotFound):

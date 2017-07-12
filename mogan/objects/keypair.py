@@ -69,7 +69,7 @@ class KeyPair(base.MoganObject):
                                               reason='already created')
         try:
             self.dbapi.key_pair_get(self._context, self.user_id, self.name)
-            raise exception.KeyPairExists(key_name=self.name)
+            raise exception.KeypairExists(key_name=self.name)
         except exception.KeypairNotFound:
             pass
         updates = self.obj_get_changes()
