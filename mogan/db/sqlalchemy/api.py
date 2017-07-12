@@ -25,7 +25,9 @@ from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from sqlalchemy import or_
+from sqlalchemy.orm import contains_eager
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 from sqlalchemy.sql import true
 
@@ -687,6 +689,146 @@ class Connection(api.Connection):
     def key_pair_count_by_user(self, context, user_id):
         return model_query(context, models.KeyPair).filter_by(
             user_id=user_id).count()
+
+    def aggregate_create(self, context, values, metadata=None):
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        with _session_for_write():
+            query = model_query(context, models.Aggregate).filter_by(
+                name=values['name']).options(joinedload("_metadata"))
+            aggregate = query.first()
+            if not aggregate:
+                aggregate = models.Aggregate()
+                aggregate.update(values)
+                aggregate.save(context.session)
+                # We don't want these to be lazy loaded later.  We know there
+                # is nothing here since we just created this aggregate.
+                aggregate._metadata = []
+            else:
+                raise exception.AggregateNameExists(name=values['name'])
+            if metadata:
+                self.aggregate_metadata_update_or_create(
+                    context, aggregate.id, metadata)
+                # NOTE(pkholkin): '_metadata' attribute was updated during
+                # 'aggregate_metadata_add' method, so it should be expired and
+                # read from db
+                context.session.expire(aggregate, ['_metadata'])
+                aggregate._metadata
+            return aggregate
+
+    def aggregate_get(self, context, aggregate_id):
+        query = model_query(context, models.Aggregate).filter_by(
+            uuid=aggregate_id).options(joinedload("_metadata"))
+
+        try:
+            result = query.one()
+        except NoResultFound:
+            raise exception.AggregateNotFound(aggregate=aggregate_id)
+        return result
+
+    def aggregate_update(self, context, aggregate_id, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing aggregate.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            result = self._do_update_aggregate(context, aggregate_id, values)
+        except db_exc.DBDuplicateEntry as e:
+            if 'name' in e.columns:
+                raise exception.DuplicateName(name=values['name'])
+        return result
+
+    def _do_update_aggregate(self, context, aggregate_id, values):
+        with _session_for_write():
+            query = model_query(context, models.Aggregate)
+            query = add_identity_filter(query, aggregate_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.AggregateNotFound(aggregate=aggregate_id)
+            ref.update(values)
+        return ref
+
+    def aggregate_get_all(self, context):
+        aggregates = model_query(context, models.Aggregate). \
+            options(joinedload("_metadata")).all()
+        return aggregates
+
+    def aggregate_destroy(self, context, aggregate_id):
+        with _session_for_write():
+            # First clean up all metadata related to this type
+            meta_query = model_query(
+                context,
+                models.AggregateMetadata).filter_by(
+                aggregate_id=aggregate_id)
+            meta_query.delete()
+
+            query = model_query(
+                context,
+                models.Aggregate).filter_by(id=aggregate_id)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.AggregateNotFound(aggregate=aggregate_id)
+
+    def aggregate_get_by_metadata_key(self, context, key):
+        query = model_query(context, models.Aggregate)
+        query = query.join("_metadata")
+        query = query.filter(models.AggregateMetadata.key == key)
+        query = query.options(contains_eager("_metadata"))
+        return query.all()
+
+    def aggregate_metadata_update_or_create(self, context, aggregate_id,
+                                            metadata, max_retries=10):
+        for attempt in range(max_retries):
+            try:
+                query = model_query(
+                    context, models.AggregateMetadata).\
+                    filter_by(aggregate_id=aggregate_id).\
+                    filter(models.AggregateMetadata.key.in_(
+                        metadata.keys())).with_lockmode('update').all()
+
+                already_existing_keys = set()
+                for meta_ref in query:
+                    key = meta_ref["key"]
+                    meta_ref.update({"value": metadata[key]})
+                    already_existing_keys.add(key)
+
+                for key, value in metadata.items():
+                    if key in already_existing_keys:
+                        continue
+                    metadata_ref = models.AggregateMetadata()
+                    metadata_ref.upate({"key": key,
+                                        "value": value,
+                                        "aggregate_id": aggregate_id})
+                    with _session_for_write() as session:
+                        session.add(metadata_ref)
+                        session.flush()
+
+                return metadata
+            except db_exc.DBDuplicateEntry:
+                # a concurrent transaction has been committed,
+                # try again unless this was the last attempt
+                if attempt < max_retries - 1:
+                    LOG.warning("Add metadata failed for aggregate %(id)s "
+                                "after %(retries)s retries",
+                                {"id": aggregate_id, "retries": max_retries})
+
+    def aggregate_metadata_get(self, context, aggregate_id):
+        rows = model_query(context, models.AggregateMetadata). \
+            filter_by(aggregate_id=aggregate_id).all()
+        return {row["key"]: row["value"] for row in rows}
+
+    def aggregate_metadata_delete(self, context, aggregate_id, key):
+        result = model_query(context, models.AggregateMetadata). \
+            filter_by(aggregate_id=aggregate_id). \
+            filter(models.AggregateMetadata.key == key). \
+            delete(synchronize_session=False)
+        # did not find the metadata
+        if result == 0:
+            raise exception.AggregateMetadataNotFound(
+                key=key, aggregate_id=aggregate_id)
 
 
 def _get_id_from_flavor_query(context, type_id):
