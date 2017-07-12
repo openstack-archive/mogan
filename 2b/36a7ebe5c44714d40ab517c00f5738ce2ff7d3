@@ -1,0 +1,9 @@
+Code-Review+2: liusheng <liusheng2048@gmail.com>
+Code-Review+2: ShaoHe Feng <shaohe.feng@intel.com>
+Workflow+1: ShaoHe Feng <shaohe.feng@intel.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 12 Jul 2017 10:24:09 +0000
+Reviewed-on: https://review.openstack.org/482757
+Project: openstack/mogan
+Branch: refs/heads/master
