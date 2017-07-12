@@ -624,9 +624,9 @@ class EngineManager(base_manager.BaseEngineManager):
         raise exception.ComputePortNotAvailable(message=message)
 
     def attach_interface(self, context, server, net_id=None):
-        vif = self.network_api.create_port(context, net_id, server.uuid)
-        vif_port = vif['port']
         try:
+            vif = self.network_api.create_port(context, net_id, server.uuid)
+            vif_port = vif['port']
             self.driver.plug_vif(server.node_uuid, vif_port['id'])
             nics_obj = objects.ServerNics(context)
             nic_dict = {'port_id': vif_port['id'],
