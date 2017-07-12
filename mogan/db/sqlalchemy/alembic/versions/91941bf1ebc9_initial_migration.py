@@ -211,3 +211,28 @@ def upgrade():
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
+    op.create_table(
+        'aggregates',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
+        sa.Column('uuid', sa.String(length=36), nullable=False),
+        sa.Column('name', sa.String(length=255), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
+    op.create_table(
+        'aggregate_metadata',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
+        sa.Column('key', sa.String(length=255), nullable=False),
+        sa.Column('value', sa.String(length=255), nullable=False),
+        sa.Column('aggregate_id', sa.Integer(), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.ForeignKeyConstraint(['aggregate_id'],
+                                ['aggregates.id']),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
+    )
