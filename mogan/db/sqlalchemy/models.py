@@ -286,3 +286,17 @@ class KeyPair(Base):
     public_key = Column(Text())
     type = Column(Enum('ssh', 'x509', name='keypair_types'),
                   nullable=False, server_default='ssh')
+
+
+class Aggregate(Base):
+    """Represents possible types for aggregates."""
+
+    __tablename__ = 'aggregates'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_aggregates0uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=False)
+    name = Column(String(255), nullable=False)
+    extra = Column(db_types.JsonEncodedDict)

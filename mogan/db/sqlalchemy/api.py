@@ -799,6 +799,62 @@ class Connection(api.Connection):
         return model_query(context, models.KeyPair).filter_by(
             user_id=user_id).count()
 
+    def aggregate_create(self, context, values):
+        aggregate = models.Aggregate()
+        aggregate.update(values)
+
+        with _session_for_write() as session:
+            try:
+                session.add(aggregate)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.AggregateAlreadyExists(uuid=values['uuid'])
+            return aggregate
+
+    def aggregate_get(self, context, aggregate_id):
+        query = model_query(context, models.Aggregate).filter_by(
+            uuid=aggregate_id)
+
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.AggregateNotFound(aggregate=aggregate_id)
+
+    def aggregate_update(self, context, aggregate_id, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing aggregate.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            return self._do_update_aggregate(context, aggregate_id, values)
+        except db_exc.DBDuplicateEntry as e:
+            if 'name' in e.columns:
+                raise exception.DuplicateName(name=values['name'])
+
+    def _do_update_aggregate(self, context, aggregate_id, values):
+        with _session_for_write():
+            query = model_query(context, models.Aggregate)
+            query = add_identity_filter(query, aggregate_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.AggregateNotFound(aggregate=aggregate_id)
+
+            ref.update(values)
+        return ref
+
+    def aggregate_get_all(self, context):
+        return model_query(context, models.Aggregate).all()
+
+    def aggregate_destroy(self, context, aggregate_id):
+        with _session_for_write():
+            query = model_query(context, models.Aggregate)
+            query = add_identity_filter(query, flavor_uuid)
+
+            count = query.delete()
+            if count != 1:
+                raise exception.AggregateNotFound(aggregate=aggregate_id)
+
 
 def _type_get_id_from_type_query(context, type_id):
     return model_query(context, models.Flavors). \
