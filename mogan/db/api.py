@@ -134,12 +134,12 @@ class Connection(object):
 
     # Flavor access
     @abc.abstractmethod
-    def flavor_access_add(self, context, flavor_id, project_id):
+    def flavor_access_add(self, context, flavor_uuid, project_id):
         """Add flavor access for project."""
 
     @abc.abstractmethod
-    def flavor_access_get(self, context, flavor_id):
-        """Get flavor access by flavor id."""
+    def flavor_access_get(self, context, flavor_uuid):
+        """Get flavor access by flavor uuid."""
 
     @abc.abstractmethod
     def flavor_access_remove(self, context, flavor_id, project_id):

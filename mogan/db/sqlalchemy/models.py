@@ -21,7 +21,8 @@ from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
 from oslo_db.sqlalchemy import types as db_types
 import six.moves.urllib.parse as urlparse
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Text
+from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey,
+                        Index, Text)
 from sqlalchemy import orm
 from sqlalchemy import schema, String, Integer
 from sqlalchemy.dialects.mysql import MEDIUMTEXT
@@ -68,6 +69,8 @@ class Server(Base):
 
     __tablename__ = 'servers'
     __table_args__ = (
+        Index('uuid', 'uuid', unique=True),
+        Index('servers_project_id_idx', 'project_id'),
         schema.UniqueConstraint('uuid', name='uniq_servers0uuid'),
         table_args()
     )
@@ -134,7 +137,11 @@ class ServerNic(Base):
     """Represents the NIC info for servers."""
 
     __tablename__ = 'server_nics'
-    server_uuid = Column(String(36), nullable=True)
+    __table_args__ = (
+        Index('server_nics_server_uuid_idx', 'server_uuid'),
+        table_args()
+    )
+    server_uuid = Column(String(36), ForeignKey('servers.uuid'))
     port_id = Column(String(36), primary_key=True)
     mac_address = Column(String(32), nullable=False)
     network_id = Column(String(36), nullable=True)
@@ -147,11 +154,38 @@ class ServerNic(Base):
         primaryjoin='Server.uuid == ServerNic.server_uuid')
 
 
+class ServerFault(Base):
+    """Represents fault info for server"""
+
+    __tablename__ = "server_faults"
+    __table_args__ = (
+        Index('server_faults_server_uuid_idx', 'server_uuid'),
+        table_args()
+    )
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    server_uuid = Column(String(36), ForeignKey('servers.uuid'))
+    code = Column(Integer(), nullable=False)
+    message = Column(String(255))
+    detail = Column(MediumText())
+    server = orm.relationship(
+        Server,
+        backref=orm.backref('server_faults', uselist=False),
+        foreign_keys=server_uuid,
+        primaryjoin='Server.uuid == ServerFault.server_uuid')
+
+
 class Flavors(Base):
     """Represents possible types for servers."""
 
     __tablename__ = 'flavors'
-    uuid = Column(String(36), primary_key=True)
+    __table_args__ = (
+        schema.UniqueConstraint("uuid", name="uniq_flavors0uuid"),
+        schema.UniqueConstraint("name", name="uniq_flavors0name"),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(MediumText())
     resources = Column(db_types.JsonEncodedDict)
@@ -171,37 +205,21 @@ class FlavorProjects(Base):
     __tablename__ = 'flavor_projects'
     __table_args__ = (
         schema.UniqueConstraint(
-            'flavor_uuid', 'project_id',
-            name='uniq_flavor_projects0flavor_uuid0project_id'
+            'flavor_id', 'project_id',
+            name='uniq_flavor_projects0flavor_id0project_id'
         ),
         table_args()
     )
     id = Column(Integer, primary_key=True)
-    flavor_uuid = Column(Integer, nullable=True)
+    flavor_id = Column(Integer, ForeignKey('flavors.id'),
+                       nullable=True)
     project_id = Column(String(36), nullable=True)
-    servers = orm.relationship(
+    flavors = orm.relationship(
         Flavors,
         backref=orm.backref('projects', uselist=False),
-        foreign_keys=flavor_uuid,
-        primaryjoin='FlavorProjects.flavor_uuid'
-                    ' == Flavors.uuid')
-
-
-class ServerFault(Base):
-    """Represents fault info for server"""
-
-    __tablename__ = "server_faults"
-
-    id = Column(Integer, primary_key=True, nullable=False)
-    server_uuid = Column(String(36), ForeignKey('servers.uuid'))
-    code = Column(Integer(), nullable=False)
-    message = Column(String(255))
-    detail = Column(MediumText())
-    server = orm.relationship(
-        Server,
-        backref=orm.backref('server_faults', uselist=False),
-        foreign_keys=server_uuid,
-        primaryjoin='Server.uuid == ServerFault.server_uuid')
+        foreign_keys=flavor_id,
+        primaryjoin='FlavorProjects.flavor_id'
+                    ' == Flavors.id')
 
 
 class Quota(Base):
@@ -227,6 +245,7 @@ class QuotaUsage(Base):
     __table_args__ = (
         schema.UniqueConstraint('resource_name', 'project_id',
                                 name='uniq_quotas0resource_name'),
+        Index('quota_usage_project_id_idx', 'project_id'),
         table_args()
     )
 
@@ -248,6 +267,7 @@ class Reservation(Base):
     __tablename__ = 'reservations'
     __table_args__ = (
         schema.UniqueConstraint('uuid', name='uniq_reservation0uuid'),
+        Index('reservations_project_id_idx', 'project_id'),
         table_args()
     )
 
