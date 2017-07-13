@@ -52,15 +52,14 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
             cls.os_admin.network_floatingip_client
 
     @classmethod
-    def _get_small_flavor(cls):
+    def _get_flavor(cls):
+        # TODO(liusheng) we shouldn't depend on the default flavor
+        # created by devstack.
         flavors = cls.baremetal_compute_client.list_flavors()
-        for f in flavors:
-            if f['name'] == 'small':
-                return f['uuid']
+        if flavors:
+            return flavors[0]['uuid']
         else:
-            # TODO(liusheng) we shouldn't depend on the default
-            # type created by devstack
-            raise exception.FlavorNotFound("'small' flavor not found.")
+            raise exception.FlavorNotFound("No flavor found!")
 
     @classmethod
     def _get_net_id(cls):
@@ -75,7 +74,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         super(BaseBaremetalComputeTest, cls).resource_setup()
         cls.flavor_ids = []
         cls.server_ids = []
-        cls.small_flavor = cls._get_small_flavor()
+        cls.flavor = cls._get_flavor()
         cls.image_id = CONF.compute.image_ref
         cls.net_id = cls._get_net_id()
         cls.ext_net_id = CONF.network.public_network_id
@@ -84,7 +83,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
     def create_server(cls, wait_until_active=True):
         body = {'name': data_utils.rand_name('mogan_server'),
                 'description': "mogan tempest server",
-                'flavor_uuid': cls.small_flavor,
+                'flavor_uuid': cls.flavor,
                 'image_uuid': cls.image_id,
                 "networks": [{"net_id": cls.net_id}]
                 }
