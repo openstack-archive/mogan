@@ -117,7 +117,7 @@ class Connection(api.Connection):
                 session.add(flavor)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise exception.FlavorAlreadyExists(uuid=values['uuid'])
+                raise exception.FlavorAlreadyExists(name=values['name'])
             return flavor
 
     def flavor_get(self, context, flavor_uuid):
@@ -163,13 +163,13 @@ class Connection(api.Connection):
 
     def flavor_destroy(self, context, flavor_uuid):
         with _session_for_write():
-            type_id = _type_get_id_from_type(context, flavor_uuid)
+            flavor_id = _get_id_from_flavor(context, flavor_uuid)
 
             # Clean up all access related to this flavor
             project_query = model_query(
                 context,
                 models.FlavorProjects).filter_by(
-                flavor_uuid=type_id)
+                flavor_id=flavor_id)
             project_query.delete()
 
             # Then delete the type record
@@ -256,19 +256,21 @@ class Connection(api.Connection):
             ref.update(values)
         return ref
 
-    def flavor_access_get(self, context, flavor_id):
+    def flavor_access_get(self, context, flavor_uuid):
+        flavor_id = _get_id_from_flavor(context, flavor_uuid)
         return _flavor_access_query(context, flavor_id)
 
-    def flavor_access_add(self, context, flavor_id, project_id):
+    def flavor_access_add(self, context, flavor_uuid, project_id):
+        flavor_id = _get_id_from_flavor(context, flavor_uuid)
         access_ref = models.FlavorProjects()
-        access_ref.update({"flavor_uuid": flavor_id,
+        access_ref.update({"flavor_id": flavor_id,
                            "project_id": project_id})
         with _session_for_write() as session:
             try:
                 session.add(access_ref)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise exception.FlavorAccessExists(flavor_id=flavor_id,
+                raise exception.FlavorAccessExists(flavor_id=flavor_uuid,
                                                    project_id=project_id)
         return access_ref
 
@@ -687,18 +689,18 @@ class Connection(api.Connection):
             user_id=user_id).count()
 
 
-def _type_get_id_from_type_query(context, type_id):
+def _get_id_from_flavor_query(context, type_id):
     return model_query(context, models.Flavors). \
         filter_by(uuid=type_id)
 
 
-def _type_get_id_from_type(context, type_id):
-    result = _type_get_id_from_type_query(context, type_id).first()
+def _get_id_from_flavor(context, type_id):
+    result = _get_id_from_flavor_query(context, type_id).first()
     if not result:
         raise exception.FlavorNotFound(flavor_id=type_id)
-    return result.uuid
+    return result.id
 
 
 def _flavor_access_query(context, flavor_id):
     return model_query(context, models.FlavorProjects). \
-        filter_by(flavor_uuid=flavor_id)
+        filter_by(flavor_id=flavor_id)
