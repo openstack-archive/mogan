@@ -160,6 +160,7 @@ def create_test_compute_port(context={}, **kw):
 
 def get_test_flavor(**kw):
     return {
+        'id': kw.get('id', 123),
         'uuid': kw.get('uuid', uuidutils.generate_uuid()),
         'name': kw.get('name', 'test'),
         'description': kw.get('description', 'test'),
@@ -183,6 +184,9 @@ def create_test_flavor(context={}, **kw):
 
     """
     flavor = get_test_flavor(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del flavor['id']
     dbapi = db_api.get_instance()
 
     return dbapi.flavor_create(context, flavor)
