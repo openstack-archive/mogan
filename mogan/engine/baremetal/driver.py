@@ -84,8 +84,8 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def unplug_vifs(self, context, server):
-        """Unplug network interfaces.
+    def unplug_vif(self, context, server, port_id):
+        """Unplug network interface.
 
         :param server: the server object.
         """
