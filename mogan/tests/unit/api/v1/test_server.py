@@ -73,8 +73,6 @@ class TestServerAuthorization(v1_test.APITestV1):
     @mock.patch('mogan.objects.Flavor.get')
     def test_server_post_with_port_ids(self, mock_get, mock_engine_create):
         flavor = mock.MagicMock()
-        flavor.nics = [{"type": "Ethernet", "speed": "10GE"},
-                       {"type": "Ethernet", "speed": "10GE"}]
         mock_get.return_value = flavor
         mock_engine_create.side_effect = None
         mock_engine_create.return_value = [self.server1]
@@ -99,8 +97,6 @@ class TestServerAuthorization(v1_test.APITestV1):
     def test_server_post_with_port_ids_and_networks(self, mock_get,
                                                     mock_engine_create):
         flavor = mock.MagicMock()
-        flavor.nics = [{"type": "Ethernet", "speed": "10GE"},
-                       {"type": "Ethernet", "speed": "10GE"}]
         mock_get.return_value = flavor
         mock_engine_create.side_effect = None
         mock_engine_create.return_value = [self.server1]
