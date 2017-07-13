@@ -359,8 +359,11 @@ Source credentials, and spawn a server as the ``demo`` user::
     # query the image id of the default cirros image
     image=$(openstack image show $DEFAULT_IMAGE_NAME -f value -c id)
 
-    # spawn server
-    As our moganclient is not ready now, will add this soon...
+    # query the private network id
+	net=$(openstack network show private -f value -c id)
+
+    # spawn a server
+    openstack baremetal server create --flavor $MOGAN_DEFAULT_FLAVOR --nic net-id=$net --image $image test
 
 Building developer documentation
 ================================
