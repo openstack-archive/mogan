@@ -32,6 +32,7 @@ def upgrade():
         'flavors',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('uuid', sa.String(length=36), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
@@ -39,7 +40,7 @@ def upgrade():
         sa.Column('resource_traits', sa.Text(), nullable=True),
         sa.Column('is_public', sa.Boolean(), nullable=False),
         sa.Column('disabled', sa.Boolean(), nullable=False),
-        sa.PrimaryKeyConstraint('uuid'),
+        sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
@@ -48,10 +49,10 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('flavor_uuid', sa.String(length=36), nullable=True),
+        sa.Column('flavor_id', sa.Integer(), nullable=False),
         sa.Column('project_id', sa.String(length=36), nullable=True),
-        sa.ForeignKeyConstraint(['flavor_uuid'],
-                                ['flavors.uuid']),
+        sa.ForeignKeyConstraint(['flavor_id'],
+                                ['flavors.id']),
         sa.PrimaryKeyConstraint('id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
