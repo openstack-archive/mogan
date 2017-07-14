@@ -34,7 +34,7 @@ from mogan.common import utils
 from mogan.engine import configdrive
 from mogan.engine import metadata as server_metadata
 from mogan import objects
-
+from mogan.scheduler import client as sched_client
 
 LOG = logging.getLogger(__name__)
 
@@ -64,6 +64,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
             exception.ServerDeployAborted,
             exception.NetworkError,
         ]
+        self.reportclient = sched_client.SchedulerClient().reportclient
 
     def execute(self, **kwargs):
         pass
@@ -137,15 +138,16 @@ class BuildNetworkTask(flow_utils.MoganTask):
     """Build network for the server."""
 
     def __init__(self, manager):
-        requires = ['server', 'requested_networks', 'ports', 'context']
+        requires = ['server', 'requested_networks', 'context']
         super(BuildNetworkTask, self).__init__(addons=[ACTION],
                                                requires=requires)
         self.manager = manager
 
-    def _build_networks(self, context, server, requested_networks, ports):
+    def _build_networks(self, context, server, requested_networks):
 
         # TODO(zhenguo): This seems not needed as our scheduler has already
         # guaranteed this.
+        ports = self.manager.driver.get_ports_from_node(server.node_uuid)
         if len(requested_networks) > len(ports):
             raise exception.InterfacePlugException(_(
                 "Ironic node: %(id)s virtual to physical interface count"
@@ -196,12 +198,11 @@ class BuildNetworkTask(flow_utils.MoganTask):
 
         return nics_obj
 
-    def execute(self, context, server, requested_networks, ports):
+    def execute(self, context, server, requested_networks):
         server_nics = self._build_networks(
             context,
             server,
-            requested_networks,
-            ports)
+            requested_networks)
 
         server.nics = server_nics
         server.save()
@@ -298,7 +299,7 @@ class CreateServerTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, server, requested_networks, user_data,
-             injected_files, key_pair, ports, request_spec,
+             injected_files, key_pair, request_spec,
              filter_properties):
 
     """Constructs and returns the manager entrypoint flow
@@ -326,7 +327,6 @@ def get_flow(context, manager, server, requested_networks, user_data,
         'user_data': user_data,
         'injected_files': injected_files,
         'key_pair': key_pair,
-        'ports': ports,
         'configdrive': {}
     }
 
