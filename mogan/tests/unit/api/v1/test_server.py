@@ -64,7 +64,6 @@ class TestServerAuthorization(v1_test.APITestV1):
         body = gen_post_body()
         self.context.roles = "no-admin"
         # we can not prevent the evil tenant, quota will limite him.
-        # Note(Shaohe): quota is in plan
         self.context.tenant = self.evil_project
         headers = self.gen_headers(self.context)
         self.post_json('/servers', body, headers=headers, status=201)
@@ -87,7 +86,6 @@ class TestServerAuthorization(v1_test.APITestV1):
         body = gen_post_body(**{'networks': fake_networks})
         self.context.roles = "no-admin"
         # we can not prevent the evil tenant, quota will limite him.
-        # Note(Shaohe): quota is in plan
         self.context.tenant = self.evil_project
         headers = self.gen_headers(self.context)
         self.post_json('/servers', body, headers=headers, status=201)
@@ -113,7 +111,6 @@ class TestServerAuthorization(v1_test.APITestV1):
         body = gen_post_body(**{'networks': fake_networks})
         self.context.roles = "no-admin"
         # we can not prevent the evil tenant, quota will limite him.
-        # Note(Shaohe): quota is in plan
         self.context.tenant = self.evil_project
         headers = self.gen_headers(self.context)
         ret = self.post_json('/servers', body, headers=headers,
