@@ -53,13 +53,13 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
 
     @classmethod
     def _get_flavor(cls):
-        # TODO(liusheng) we shouldn't depend on the default flavor
-        # created by devstack.
-        flavors = cls.baremetal_compute_client.list_flavors()
-        if flavors:
-            return flavors[0]['uuid']
-        else:
-            raise exception.FlavorNotFound("No flavor found!")
+        resource_class = CONF.baremetal_compute_plugin.baremetal_resource_class
+        body = {"name": data_utils.rand_name('tempest-flavor'),
+                "description": "flavor to be used by tempest",
+                'is_public': True, 'resources': {resource_class: 1},
+                'resource_traits': {resource_class: 'foo'}}
+        tempest_flavor = cls.baremetal_compute_client.create_flavor(**body)
+        return tempest_flavor['uuid']
 
     @classmethod
     def _get_net_id(cls):
@@ -75,6 +75,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         cls.flavor_ids = []
         cls.server_ids = []
         cls.flavor = cls._get_flavor()
+        cls.flavor_ids.append(cls.flavor)
         cls.image_id = CONF.compute.image_ref
         cls.net_id = cls._get_net_id()
         cls.ext_net_id = CONF.network.public_network_id
@@ -145,12 +146,12 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
 
     @classmethod
     def resource_cleanup(cls):
-        cls.cleanup_resources(
-            cls.baremetal_compute_client.delete_flavor, cls.flavor_ids)
         cls.cleanup_resources(cls.baremetal_compute_client.delete_server,
                               cls.server_ids)
         # NOTE(liusheng): need to ensure servers have been completely
         # deleted in Mogan's db
         for server_id in cls.server_ids:
             cls._wait_for_servers_status(server_id, 1, 60, 'deleted')
+        cls.cleanup_resources(
+            cls.baremetal_compute_client.delete_flavor, cls.flavor_ids)
         super(BaseBaremetalComputeTest, cls).resource_cleanup()
