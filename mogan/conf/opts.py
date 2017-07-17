@@ -14,7 +14,6 @@ import itertools
 
 import mogan.conf.api
 import mogan.conf.configdrive
-import mogan.conf.database
 import mogan.conf.default
 import mogan.conf.engine
 import mogan.conf.glance
@@ -36,7 +35,6 @@ _opts = [
     ('DEFAULT', itertools.chain(*_default_opt_lists)),
     ('api', mogan.conf.api.opts),
     ('configdrive', mogan.conf.configdrive.opts),
-    ('database', mogan.conf.database.opts),
     ('engine', mogan.conf.engine.opts),
     ('glance', mogan.conf.glance.opts),
     ('ironic', mogan.conf.ironic.ironic_opts),
