@@ -197,7 +197,8 @@ function create_flavor {
     fi
     # this will look like baremetal_1cpu_256mbram_10gbdisk
     resource_class="baremetal_${ironic_node_cpu}cpu_${ironic_node_ram}mbram_${ironic_node_disk}gbdisk"
-    openstack baremetal flavor create ${resource_class} --description 'Mogan default flavor' --resources ${resource_class}=1
+    description="CPU: ${ironic_node_cpu}, RAM: ${ironic_node_ram}MB, DISK: ${ironic_node_disk}GB"
+    openstack baremetal flavor create ${resource_class} --description ${description} --resources ${resource_class}=1
 }
 
 
