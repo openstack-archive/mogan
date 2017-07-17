@@ -31,6 +31,11 @@ baremetal_compute_group = cfg.OptGroup(
     name='baremetal_compute_plugin', title='Baremetal compute Service Options')
 
 BaremetalComputeGroup = [
+    cfg.StrOpt('baremetal_resource_class',
+               default='baremetal_1cpu_1024mbram_10gbdisk',
+               help="The resource class of baremetal resource providers, "
+                    "which will be reported to placement service and be "
+                    "matched with Mogan flavor for scheduling."),
     cfg.StrOpt('catalog_type',
                default='baremetal_compute',
                help="Catalog type of the baremetal_compute service."),
