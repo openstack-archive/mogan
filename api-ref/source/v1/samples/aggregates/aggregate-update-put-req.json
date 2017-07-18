@@ -1,0 +1,12 @@
+[
+   {
+      "op": "replace",
+      "path": "/metadata/k1",
+      "value": "v2"
+   },
+   {
+      "op": "add",
+      "path": "/metadata/k2",
+      "value": "v2"
+   }
+]
