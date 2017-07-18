@@ -21,7 +21,7 @@ from mogan.objects import base
 from mogan.objects import fields as object_fields
 
 
-def _get_nodes_from_cache(context, aggregate_id):
+def _get_nodes_from_cache(aggregate_id):
     return []
 
 

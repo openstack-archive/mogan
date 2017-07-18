@@ -144,6 +144,21 @@ server_policies = [
     policy.RuleDefault('mogan:server:detach_interface',
                        'rule:default',
                        description='Detach a network interface'),
+    policy.RuleDefault('mogan:aggregate:create',
+                       'rule:admin_api',
+                       description='Create aggregate records'),
+    policy.RuleDefault('mogan:aggregate:update',
+                       'rule:admin_api',
+                       description='Update aggregate records'),
+    policy.RuleDefault('mogan:aggregate:delete',
+                       'rule:admin_api',
+                       description='Delete aggregate records'),
+    policy.RuleDefault('mogan:aggregate:get_all',
+                       'rule:admin_api',
+                       description='Retrieve all aggregate records'),
+    policy.RuleDefault('mogan:aggregate:get_one',
+                       'rule:admin_api',
+                       description='Show aggregate details'),
 ]
 
 
