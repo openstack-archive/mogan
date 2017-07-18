@@ -30,3 +30,4 @@ def register_all():
     __import__('mogan.objects.server_nics')
     __import__('mogan.objects.server_fault')
     __import__('mogan.objects.keypair')
+    __import__('mogan.objects.aggregate')
