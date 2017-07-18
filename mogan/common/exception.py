@@ -149,7 +149,7 @@ class InvalidUUID(Invalid):
 
 
 class FlavorAlreadyExists(Conflict):
-    _msg_fmt = _("Flavor with uuid %(uuid)s already exists.")
+    _msg_fmt = _("Flavor with name %(name)s already exists.")
 
 
 class FlavorNotFound(NotFound):
