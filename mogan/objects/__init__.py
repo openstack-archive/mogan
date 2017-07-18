@@ -32,3 +32,4 @@ def register_all():
     __import__('mogan.objects.compute_node')
     __import__('mogan.objects.compute_port')
     __import__('mogan.objects.keypair')
+    __import__('mogan.objects.aggregate')
