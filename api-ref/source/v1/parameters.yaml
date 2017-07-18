@@ -15,6 +15,12 @@ address_path:
   in: path
   required: true
   type: string
+aggregate_uuid_path:
+  description: |
+    The UUID of the aggregate.
+  in: path
+  required: true
+  type: string
 api_version:
   in: path
   required: true
@@ -85,6 +91,30 @@ user_id:
 address:
   description: |
     The floating IP address.
+  in: body
+  required: true
+  type: string
+aggregate_metadata:
+  description: |
+    Metadata key and value pairs associate with the aggregate.
+  in: body
+  required: true
+  type: string
+aggregate_name:
+  description: |
+    The name of the node aggregate.
+  in: body
+  required: true
+  type: string
+aggregate_uuid:
+  description: |
+    The UUID of the node aggregate.
+  in: body
+  required: true
+  type: string
+aggregates:
+  description: |
+    The list of existing aggregates.
   in: body
   required: true
   type: string
