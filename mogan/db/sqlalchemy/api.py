@@ -17,6 +17,7 @@
 
 import threading
 
+from oslo_db import api as oslo_db_api
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils as sqlalchemyutils
@@ -48,6 +49,9 @@ def _session_for_read():
     return enginefacade.reader.using(_CONTEXT)
 
 
+# Please add @oslo_db_api.retry_on_deadlock decorator to all methods using
+# _session_for_write (as deadlocks happen on write), so that oslo_db is able
+# to retry in case of deadlocks.
 def _session_for_write():
     return enginefacade.writer.using(_CONTEXT)
 
@@ -120,6 +124,7 @@ class Connection(api.Connection):
             query = query.filter_by(image_uuid=filters['image_uuid'])
         return query
 
+    @oslo_db_api.retry_on_deadlock
     def flavor_create(self, context, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
@@ -155,6 +160,7 @@ class Connection(api.Connection):
             raise exception.FlavorNotFound(
                 flavor_id=flavor_uuid)
 
+    @oslo_db_api.retry_on_deadlock
     def flavor_update(self, context, flavor_id, values):
         with _session_for_write():
             query = model_query(context, models.Flavors)
@@ -179,6 +185,7 @@ class Connection(api.Connection):
 
         return query.all()
 
+    @oslo_db_api.retry_on_deadlock
     def flavor_destroy(self, context, flavor_uuid):
         with _session_for_write():
             flavor_id = _get_id_from_flavor(context, flavor_uuid)
@@ -199,6 +206,7 @@ class Connection(api.Connection):
                 raise exception.FlavorNotFound(
                     flavor_id=flavor_uuid)
 
+    @oslo_db_api.retry_on_deadlock
     def server_create(self, context, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
@@ -236,6 +244,7 @@ class Connection(api.Connection):
         query = self._add_servers_filters(context, query, filters)
         return query.all()
 
+    @oslo_db_api.retry_on_deadlock
     def server_destroy(self, context, server_id):
         with _session_for_write():
             query = model_query(context, models.Server)
@@ -264,6 +273,7 @@ class Connection(api.Connection):
             if 'name' in e.columns:
                 raise exception.DuplicateName(name=values['name'])
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_server(self, context, server_id, values):
         with _session_for_write():
             query = model_query(context, models.Server)
@@ -280,6 +290,7 @@ class Connection(api.Connection):
         flavor_id = _get_id_from_flavor(context, flavor_uuid)
         return _flavor_access_query(context, flavor_id)
 
+    @oslo_db_api.retry_on_deadlock
     def flavor_access_add(self, context, flavor_uuid, project_id):
         flavor_id = _get_id_from_flavor(context, flavor_uuid)
         access_ref = models.FlavorProjects()
@@ -294,22 +305,27 @@ class Connection(api.Connection):
                                                    project_id=project_id)
         return access_ref
 
+    @oslo_db_api.retry_on_deadlock
     def flavor_access_remove(self, context, flavor_id, project_id):
-        count = _flavor_access_query(context, flavor_id). \
-            filter_by(project_id=project_id). \
-            delete(synchronize_session=False)
+        with _session_for_write():
+            count = _flavor_access_query(context, flavor_id). \
+                filter_by(project_id=project_id). \
+                delete(synchronize_session=False)
 
         if count == 0:
             raise exception.FlavorAccessNotFound(flavor_id=flavor_id,
                                                  project_id=project_id)
 
+    @oslo_db_api.retry_on_deadlock
     def server_nic_delete(self, context, port_id):
-        query = model_query(context, models.ServerNic).filter_by(
-            port_id=port_id)
-        count = query.delete()
+        with _session_for_write():
+            query = model_query(context, models.ServerNic).filter_by(
+                port_id=port_id)
+            count = query.delete()
         if count != 1:
             raise exception.PortNotFound(port_id=port_id)
 
+    @oslo_db_api.retry_on_deadlock
     def server_nic_update_or_create(self, context, port_id, values):
         with _session_for_write() as session:
             query = model_query(context, models.ServerNic).filter_by(
@@ -327,6 +343,7 @@ class Connection(api.Connection):
         return model_query(context, models.ServerNic).filter_by(
             server_uuid=server_uuid).all()
 
+    @oslo_db_api.retry_on_deadlock
     def server_fault_create(self, context, values):
         """Create a new ServerFault."""
 
@@ -367,6 +384,7 @@ class Connection(api.Connection):
         except NoResultFound:
             raise exception.QuotaNotFound(quota_name=resource_name)
 
+    @oslo_db_api.retry_on_deadlock
     def quota_create(self, context, values):
         quota = models.Quota()
         quota.update(values)
@@ -384,6 +402,7 @@ class Connection(api.Connection):
     def quota_get_all(self, context, project_only):
         return model_query(context, models.Quota, project_only=project_only)
 
+    @oslo_db_api.retry_on_deadlock
     def quota_destroy(self, context, project_id, resource_name):
         with _session_for_write():
             query = model_query(context, models.Quota)
@@ -394,6 +413,7 @@ class Connection(api.Connection):
             if count != 1:
                 raise exception.QuotaNotFound(quota_name=resource_name)
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_quota(self, context, project_id, resource_name, updates):
         with _session_for_write():
             query = model_query(context, models.Quota)
@@ -446,6 +466,7 @@ class Connection(api.Connection):
             with_lockmode('update').all()
         return {row.resource_name: row for row in rows}
 
+    @oslo_db_api.retry_on_deadlock
     def quota_allocated_update(self, context, project_id, resource, allocated):
         with _session_for_write():
             quota_ref = self.quota_get(context, project_id, resource)
@@ -492,6 +513,7 @@ class Connection(api.Connection):
             filter_by(project_id=project_id).all()
         return {'servers': len(query) or 0}
 
+    @oslo_db_api.retry_on_deadlock
     def quota_reserve(self, context, resources, quotas, deltas, expire,
                       until_refresh, max_age, project_id,
                       is_allocated_reserve=False):
@@ -615,6 +637,7 @@ class Connection(api.Connection):
     def _dict_with_usage_id(self, usages):
         return {row.id: row for row in usages.values()}
 
+    @oslo_db_api.retry_on_deadlock
     def reservation_commit(self, context, reservations, project_id):
         with _session_for_write():
             usages = self._get_quota_usages(context, project_id)
@@ -634,6 +657,7 @@ class Connection(api.Connection):
                 if count != 1:
                     raise exception.ReservationNotFound(uuid=reservation.uuid)
 
+    @oslo_db_api.retry_on_deadlock
     def reservation_rollback(self, context, reservations, project_id):
         with _session_for_write():
             usages = self._get_quota_usages(context, project_id)
@@ -652,6 +676,7 @@ class Connection(api.Connection):
                 if count != 1:
                     raise exception.ReservationNotFound(uuid=reservation.uuid)
 
+    @oslo_db_api.retry_on_deadlock
     def reservation_expire(self, context):
         with _session_for_write() as session:
             current_time = timeutils.utcnow()
@@ -676,6 +701,7 @@ class Connection(api.Connection):
                         uuid = reservation.uuid
                         raise exception.ReservationNotFound(uuid=uuid)
 
+    @oslo_db_api.retry_on_deadlock
     def key_pair_create(self, context, values):
         key_pair_ref = models.KeyPair()
         key_pair_ref.update(values)
@@ -687,9 +713,11 @@ class Connection(api.Connection):
                 raise exception.KeypairExists(key_name=values['name'])
             return key_pair_ref
 
+    @oslo_db_api.retry_on_deadlock
     def key_pair_destroy(self, context, user_id, name):
-        result = model_query(context, models.KeyPair).filter_by(
-            user_id=user_id).filter_by(name=name).delete()
+        with _session_for_write():
+            result = model_query(context, models.KeyPair).filter_by(
+                user_id=user_id).filter_by(name=name).delete()
         if not result:
             raise exception.KeypairNotFound(user_id=user_id, name=name)
 
