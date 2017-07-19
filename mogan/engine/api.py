@@ -70,6 +70,7 @@ class API(object):
         self.network_api = network.API()
         self.quota = quota.Quota()
         self.quota.register_resource(objects.quota.ServerResource())
+        self.quota.register_resource(objects.quota.KeyPairResource())
         self.consoleauth_rpcapi = consoleauth_rpcapi.ConsoleAuthAPI()
 
     def _get_image(self, context, image_uuid):
@@ -181,6 +182,21 @@ class API(object):
             return available_quota
         else:
             raise exception.OverQuota(overs='servers')
+
+    def _check_num_keypairs_quota(self, context, count):
+        keypair_resource = self.quota.resources['keypairs']
+        quotas = self.quota.get_quota_limit_and_usage(context,
+                                                      {'keyparis':
+                                                       keypair_resource},
+                                                      context.tenant)
+        limit = quotas['keypairs']['limit']
+        in_use = quotas['keypairs']['in_use']
+        reserved = quotas['keypairs']['reserved']
+        available_quota = limit - in_use - reserved
+        if count <= available_quota:
+            return count
+        else:
+            raise exception.OverQuota(overs='keypairs')
 
     def _decode_files(self, injected_files):
         """Base64 decode the list of files to inject."""
@@ -470,6 +486,10 @@ class API(object):
         self._validate_new_key_pair(context, user_id, key_name, key_type)
         private_key, public_key, fingerprint = self._generate_key_pair(
             user_id, key_type)
+        # Create the keypair reservations
+        num_keypairs = self._check_num_keypairs_quota(context, 1)
+        reserve_opts = {'keypairs': num_keypairs}
+        reservations = self.quota.reserve(context, **reserve_opts)
         keypair = objects.KeyPair(context)
         keypair.user_id = user_id
         keypair.name = key_name
@@ -477,6 +497,9 @@ class API(object):
         keypair.fingerprint = fingerprint
         keypair.public_key = public_key
         keypair.create()
+        # Commit servers reservations
+        if reservations:
+            self.quota.commit(context, reservations)
         return keypair, private_key
 
     def _generate_fingerprint(self, public_key, key_type):
@@ -493,6 +516,10 @@ class API(object):
 
     def delete_key_pair(self, context, user_id, key_name):
         """Delete a keypair by name."""
+        reserve_opts = {'keypairs': -1}
+        reservations = self.quota.reserve(context, **reserve_opts)
+        if reservations:
+            self.quota.commit(context, reservations)
         objects.KeyPair.destroy_by_name(context, user_id, key_name)
 
     def get_key_pairs(self, context, user_id):
