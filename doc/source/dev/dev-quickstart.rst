@@ -23,7 +23,7 @@ to submitting a patch.
 
 .. seealso::
 
-    http://docs.openstack.org/infra/manual/developers.html#development-workflow
+    https://docs.openstack.org/infra/manual/developers.html#development-workflow
 
 Preparing Development System
 ============================
@@ -194,7 +194,7 @@ Then run ``tox`` with the debug environment as one of the following::
   tox -e debug test_file_name.TestClass.test_name
 
 For more information see the `oslotest documentation
-<http://docs.openstack.org/developer/oslotest/features.html#debugging-with-oslo-debug-helper>`_.
+<https://docs.openstack.org/oslotest/latest/user/features.html#debugging-with-oslo-debug-helper>`_.
 
 Additional Tox Targets
 ----------------------
@@ -225,7 +225,7 @@ beginning this process.
 
 .. seealso::
 
-    http://docs.openstack.org/developer/devstack/
+    https://docs.openstack.org/devstack/latest/
 
 
 Devstack will no longer create the user 'stack' with the desired

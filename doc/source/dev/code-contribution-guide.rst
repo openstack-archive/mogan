@@ -13,7 +13,7 @@ Getting Started
 
 If you're completely new to OpenStack and want to contribute to the mogan
 project, please start by familiarizing yourself with the `Infra Team's Developer
-Guide <http://docs.openstack.org/infra/manual/developers.html>`_. This will help
+Guide <https://docs.openstack.org/infra/manual/developers.html>`_. This will help
 you get your accounts set up in Launchpad and Gerrit, familiarize you with the
 workflow for the OpenStack continuous integration and testing systems, and help
 you with your first commit.
@@ -43,13 +43,13 @@ Project Hosting Details
 -----------------------
 
 Bug tracker
-    http://launchpad.net/mogan
+    https://launchpad.net/mogan
 
 Mailing list (prefix Subject line with ``[mogan]``)
     http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev
 
 Wiki
-    http://wiki.openstack.org/Mogan
+    https://wiki.openstack.org/Mogan
 
 Code Hosting
     https://git.openstack.org/cgit/openstack/mogan
