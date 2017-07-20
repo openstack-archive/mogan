@@ -405,6 +405,12 @@ nics:
   in: body
   required: true
   type: dict
+node_uuid:
+  description: |
+    The UUID of the node which our server associated with. Only visible for admin users.
+  in: body
+  required: false
+  type: string
 personality:
   description: |
     The file path and contents, text only, to inject into the server at launch. The
