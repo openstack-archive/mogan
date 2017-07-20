@@ -190,6 +190,11 @@ class DbQuotaDriver(object):
                                               'hard_limit': 10,
                                               'allocated': 0})
             project_quotas['servers'] = 10
+            self.dbapi.quota_create(context, {'resource_name': 'keypairs',
+                                              'project_id': project_id,
+                                              'hard_limit': 100,
+                                              'allocated': 0})
+            project_quotas['keypairs'] = 10
         allocated_quotas = None
         if usages:
             project_usages = self.dbapi.quota_usage_get_all_by_project(
@@ -416,3 +421,14 @@ class ServerResource(BaseResource):
         :param name: The kind of resource, i.e., "servers".
         """
         super(ServerResource, self).__init__(name, "_sync_%s" % name)
+
+
+class KeyPairResource(BaseResource):
+    """ReservableResource for a specific keypair."""
+
+    def __init__(self, name='keypairs'):
+        """Initializes a KeyPairResource.
+
+        :param name: The kind of resource, i.e., "keypairs".
+        """
+        super(KeyPairResource, self).__init__(name, "_sync_%s" % name)
