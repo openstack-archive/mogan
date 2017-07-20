@@ -98,7 +98,8 @@ class Connection(api.Connection):
     """SqlAlchemy connection."""
 
     def __init__(self):
-        self.QUOTA_SYNC_FUNCTIONS = {'_sync_servers': self._sync_servers}
+        self.QUOTA_SYNC_FUNCTIONS = {'_sync_servers': self._sync_servers,
+                                     '_sync_keypairs': self._sync_keypairs}
         pass
 
     def _add_servers_filters(self, context, query, filters):
@@ -491,6 +492,11 @@ class Connection(api.Connection):
         query = model_query(context, models.Server).\
             filter_by(project_id=project_id).all()
         return {'servers': len(query) or 0}
+
+    def _sync_keypairs(self, context, project_id):
+        query = model_query(context, models.KeyPair).\
+            filter_by(project_id=project_id).all()
+        return {'keypairs': len(query) or 0}
 
     def quota_reserve(self, context, resources, quotas, deltas, expire,
                       until_refresh, max_age, project_id,
