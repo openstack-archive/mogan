@@ -180,6 +180,7 @@ def upgrade():
         sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('user_id', sa.String(length=255), nullable=True),
+        sa.Column('project_id', sa.String(length=36), nullable=True),
         sa.Column('fingerprint', sa.String(255)),
         sa.Column('public_key', sa.Text()),
         sa.Column('type', sa.Enum('ssh', 'x509'), nullable=False,

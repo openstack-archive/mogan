@@ -390,7 +390,7 @@ expected_object_fingerprints = {
     'ServerNic': '1.0-0494306157ef437802260ff8b51cf5cf',
     'ServerNics': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'Quota': '1.0-c8caa082f4d726cb63fdc5943f7cd186',
-    'KeyPair': '1.0-c6820166e307676c5900f7801831b84c',
+    'KeyPair': '1.0-1a1ea1f9b4d03503f5c13b52d1432fa9',
     'KeyPairList': '1.0-33a2e1bb91ad4082f9f63429b77c1244'
 }
 

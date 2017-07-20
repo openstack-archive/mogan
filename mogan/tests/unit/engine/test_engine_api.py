@@ -365,3 +365,33 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.engine_api.detach_interface(self.context, fake_server_obj,
                                          fake_server_obj['nics'][0]['port_id'])
         self.assertTrue(mock_detach_interface.called)
+
+    def test_create_key_pairs_with_quota(self):
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        before_in_use = 0
+        if res.get('keypairs') is not None:
+            before_in_use = res.get('keypairs').in_use
+        self.engine_api.create_key_pair(self.context, self.user_id,
+                                        'test_keypair')
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        after_in_use = res.get('keypairs').in_use
+        self.assertEqual(before_in_use + 1, after_in_use)
+
+    def test_create_key_pairs_with_over_quota_limit(self):
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        before_in_use = 0
+        if res.get('keypairs') is not None:
+            before_in_use = res.get('keypairs').in_use
+        for i in range(1, 11):
+            key_name = 'test_keypair_%s' % str(i)
+            self.engine_api.create_key_pair(self.context, self.user_id,
+                                            key_name)
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        after_in_use = res.get('keypairs').in_use
+        self.assertEqual(before_in_use + 10, after_in_use)
+        self.assertRaises(
+            exception.OverQuota,
+            self.engine_api.create_key_pair,
+            self.context,
+            self.user_id,
+            'test_keypair')
