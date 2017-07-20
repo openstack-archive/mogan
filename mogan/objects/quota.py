@@ -185,11 +185,18 @@ class DbQuotaDriver(object):
         for p_quota in res:
             project_quotas[p_quota.resource_name] = p_quota.hard_limit
         if project_quotas == {}:
+            servers_hard_limit = CONF.quota.servers_hard_limit
             self.dbapi.quota_create(context, {'resource_name': 'servers',
                                               'project_id': project_id,
-                                              'hard_limit': 10,
+                                              'hard_limit': servers_hard_limit,
                                               'allocated': 0})
-            project_quotas['servers'] = 10
+            project_quotas['servers'] = servers_hard_limit
+            kpairs_hard_limit = CONF.quota.keypairs_hard_limit
+            self.dbapi.quota_create(context, {'resource_name': 'keypairs',
+                                              'project_id': project_id,
+                                              'hard_limit': kpairs_hard_limit,
+                                              'allocated': 0})
+            project_quotas['keypairs'] = kpairs_hard_limit
         allocated_quotas = None
         if usages:
             project_usages = self.dbapi.quota_usage_get_all_by_project(
@@ -410,9 +417,22 @@ class BaseResource(object):
 class ServerResource(BaseResource):
     """ReservableResource for a specific server."""
 
-    def __init__(self, name='servers'):
+    def __init__(self):
         """Initializes a ServerResource.
 
-        :param name: The kind of resource, i.e., "servers".
         """
-        super(ServerResource, self).__init__(name, "_sync_%s" % name)
+        self.name = 'servers'
+        super(ServerResource, self).__init__(self.name,
+                                             "_sync_%s" % self.name)
+
+
+class KeyPairResource(BaseResource):
+    """ReservableResource for a specific keypair."""
+
+    def __init__(self):
+        """Initializes a KeyPairResource.
+
+        """
+        self.name = 'keypairs'
+        super(KeyPairResource, self).__init__(self.name,
+                                              "_sync_%s" % self.name)

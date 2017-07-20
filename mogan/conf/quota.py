@@ -32,6 +32,12 @@ quota_opts = [
     cfg.IntOpt('max_age',
                default=0,
                help=_('Number of seconds between subsequent usage refreshes')),
+    cfg.IntOpt('servers_hard_limit',
+               default=10,
+               help=_('Number of servers quota hard limit.')),
+    cfg.IntOpt('keypairs_hard_limit',
+               default=100,
+               help=_('Number of keypairs quota hard limit.')),
 ]
 
 opt_quota_group = cfg.OptGroup(name='quota',

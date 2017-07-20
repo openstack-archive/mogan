@@ -28,6 +28,7 @@ class TestKeyPairObject(base.DbTestCase):
             "id": 1,
             "public_key": "fake-publick-key",
             "user_id": "e78b60069fc9467e97fb4b74de9cadc1",
+            "project_id": "c18e8a1a870d4c08a0b51ced6e0b6459",
             "name": "test_key",
             "fingerprint": "f1:83:34:02:f9:63:79:d4:bd:2a:1d:50:16:61:1b:cc",
             "type": "ssh",
