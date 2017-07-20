@@ -384,7 +384,12 @@ class API(object):
 
     def list_availability_zones(self, context):
         """Get availability zone list."""
-        return {'availability_zones': [CONF.engine.default_availability_zone]}
+        aggregates = objects.AggregateList.get_by_metadata_key(
+            context, 'availability_zone')
+        azs = set([agg.metadata['availability_zone'] for agg in aggregates
+                   if 'availability_zone' in agg.metadata])
+        azs.add(CONF.engine.default_availability_zone)
+        return {'availability_zones': list(azs)}
 
     def lock(self, context, server):
         """Lock the given server."""
