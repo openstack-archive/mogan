@@ -36,6 +36,7 @@ class KeyPair(base.MoganObject):
         'id': fields.IntegerField(),
         'name': fields.StringField(nullable=False),
         'user_id': fields.StringField(nullable=True),
+        'project_id': fields.StringField(nullable=True),
         'fingerprint': fields.StringField(nullable=True),
         'public_key': fields.StringField(nullable=True),
         'type': fields.StringField(nullable=False),
