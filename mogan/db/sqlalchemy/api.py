@@ -67,6 +67,7 @@ def model_query(context, model, *args, **kwargs):
       project_id.
     :type project_only: bool
     """
+
     if kwargs.pop("project_only", False):
         kwargs["project_id"] = context.tenant
 
@@ -98,27 +99,9 @@ class Connection(api.Connection):
     """SqlAlchemy connection."""
 
     def __init__(self):
-        self.QUOTA_SYNC_FUNCTIONS = {'_sync_servers': self._sync_servers}
+        self.QUOTA_SYNC_FUNCTIONS = {'_sync_servers': self._sync_servers,
+                                     '_sync_keypairs': self._sync_keypairs}
         pass
-
-    def _add_servers_filters(self, context, query, filters):
-        if filters is None:
-            filters = []
-        if 'name' in filters:
-            name_start_with = filters['name']
-            query = query.filter(models.Server.name.like(
-                "%" + name_start_with + "%"))
-        if 'status' in filters:
-            query = query.filter_by(status=filters['status'])
-        if 'flavor_uuid' in filters or 'flavor_name' in filters:
-            if 'flavor_name' in filters:
-                flavor_query = model_query(context, models.Flavors).filter_by(
-                    name=filters['flavor_name'])
-                filters['flavor_uuid'] = flavor_query.first().uuid
-            query = query.filter_by(flavor_uuid=filters['flavor_uuid'])
-        if 'image_uuid' in filters:
-            query = query.filter_by(image_uuid=filters['image_uuid'])
-        return query
 
     def flavor_create(self, context, values):
         if not values.get('uuid'):
@@ -230,11 +213,9 @@ class Connection(api.Connection):
         except NoResultFound:
             raise exception.ServerNotFound(server=server_id)
 
-    def server_get_all(self, context, project_only, filters=None):
-        query = model_query(context, models.Server,
-                            project_only=project_only)
-        query = self._add_servers_filters(context, query, filters)
-        return query.all()
+    def server_get_all(self, context, project_only):
+        return model_query(context, models.Server,
+                           project_only=project_only)
 
     def server_destroy(self, context, server_id):
         with _session_for_write():
@@ -491,6 +472,11 @@ class Connection(api.Connection):
         query = model_query(context, models.Server).\
             filter_by(project_id=project_id).all()
         return {'servers': len(query) or 0}
+
+    def _sync_keypairs(self, context, project_id):
+        query = model_query(context, models.KeyPair).\
+            filter_by(project_id=project_id).all()
+        return {'keypairs': len(query) or 0}
 
     def quota_reserve(self, context, resources, quotas, deltas, expire,
                       until_refresh, max_age, project_id,
