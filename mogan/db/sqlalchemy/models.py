@@ -260,6 +260,8 @@ class KeyPair(Base):
 
     user_id = Column(String(255), nullable=False)
 
+    project_id = Column(String(255), nullable=False)
+
     fingerprint = Column(String(255))
     public_key = Column(Text())
     type = Column(Enum('ssh', 'x509', name='keypair_types'),
