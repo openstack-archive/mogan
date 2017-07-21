@@ -96,10 +96,10 @@ run mogan tempest tests with `tempest run` command, see::
 
 For more details, you can see `tempest documentation`_
 
-.. _tempest documentation: http://docs.openstack.org/developer/tempest/
+.. _tempest documentation: https://docs.openstack.org/tempest/latest/
 
 .. seealso::
 
    * tox_
 
-.. _tox: http://tox.testrun.org/latest/
+.. _tox: https://tox.readthedocs.io/en/latest/
