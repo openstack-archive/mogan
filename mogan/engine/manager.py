@@ -580,3 +580,8 @@ class EngineManager(base_manager.BaseEngineManager):
                 nic.delete(context)
 
         LOG.info('Interface was successfully detached')
+
+    def list_compute_nodes(self, context):
+        nodes = self.scheduler_client.reportclient \
+            .get_nodes_from_resource_providers()
+        return nodes
