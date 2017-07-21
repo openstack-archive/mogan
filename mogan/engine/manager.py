@@ -110,7 +110,7 @@ class EngineManager(base_manager.BaseEngineManager):
             inventory = self.driver.get_node_inventory(node)
             inventory_data = {resource_class: inventory}
             self.scheduler_client.set_inventory_for_provider(
-                node.uuid, node.name, inventory_data,
+                node.uuid, node.name or node.uuid, inventory_data,
                 resource_class)
             if node.provision_state == 'available':
                 self.scheduler_client.reportclient \
