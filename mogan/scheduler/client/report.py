@@ -709,3 +709,8 @@ class SchedulerReportClient(object):
             LOG.info('Deleted allocation for resource provider %s', rp_uuid)
         for consumer_id in allocations:
             self.delete_allocation_for_server(consumer_id)
+
+    def get_nodes_from_resource_providers(self):
+        # Use the rps we cached
+        rps = self._resource_providers
+        return {'nodes': [rp['name'] for id, rp in rps.items()]}

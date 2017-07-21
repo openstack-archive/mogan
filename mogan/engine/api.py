@@ -516,3 +516,7 @@ class API(object):
     def detach_interface(self, context, server, port_id):
         self.engine_rpcapi.detach_interface(context, server=server,
                                             port_id=port_id)
+
+    def list_compute_nodes(self, context):
+        """Get compute node list."""
+        return self.engine_rpcapi.list_compute_nodes(context)
