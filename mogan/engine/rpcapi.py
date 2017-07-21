@@ -92,3 +92,7 @@ class EngineAPI(object):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         cctxt.call(context, 'detach_interface', server=server,
                    port_id=port_id)
+
+    def list_compute_nodes(self, context):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        cctxt.call(context, 'list_compute_nodes')
