@@ -37,6 +37,7 @@ def setup_app(pecan_config=None, extra_hooks=None):
     app_hooks = [hooks.ConfigHook(),
                  hooks.DBHook(),
                  hooks.EngineAPIHook(),
+                 hooks.SchedulerClientHook(),
                  hooks.ContextHook(pecan_config.app.acl_public_routes),
                  hooks.NoExceptionTracebackHook(),
                  hooks.PublicUrlHook()]

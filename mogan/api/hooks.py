@@ -22,6 +22,7 @@ from six.moves import http_client
 from mogan.common import policy
 from mogan.db import api as dbapi
 from mogan.engine import api as engineapi
+from mogan.scheduler import client as sche_client
 
 
 class ConfigHook(hooks.PecanHook):
@@ -46,6 +47,16 @@ class EngineAPIHook(hooks.PecanHook):
 
     def before(self, state):
         state.request.engine_api = self.engine_api
+
+
+class SchedulerClientHook(hooks.PecanHook):
+    """Attach the scheduler_client object to the request."""
+
+    def __init__(self):
+        self.scheduler_client = sche_client.SchedulerClient()
+
+    def before(self, state):
+        state.request.scheduler_client = self.scheduler_client
 
 
 class ContextHook(hooks.PecanHook):
