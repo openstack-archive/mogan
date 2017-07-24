@@ -101,11 +101,6 @@ class FlavorPatchType(types.JsonPatchType):
 
     _api_base = Flavor
 
-    @staticmethod
-    def internal_attrs():
-        defaults = types.JsonPatchType.internal_attrs()
-        return defaults + ['/cpus', '/memory', '/nics', '/disks']
-
 
 class FlavorCollection(base.APIBase):
     """API representation of a collection of flavor."""
