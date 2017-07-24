@@ -103,8 +103,7 @@ class FlavorPatchType(types.JsonPatchType):
 
     @staticmethod
     def internal_attrs():
-        defaults = types.JsonPatchType.internal_attrs()
-        return defaults + ['/cpus', '/memory', '/nics', '/disks']
+        return types.JsonPatchType.internal_attrs()
 
 
 class FlavorCollection(base.APIBase):
