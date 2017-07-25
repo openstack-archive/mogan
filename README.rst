@@ -2,11 +2,11 @@
 Mogan
 =====
 
-Mogan is a project dedicated for bare metal computing management, which
-is designed specifically for BMs, so we can provide a more lightweight and
-convenient platform with more advanced features by leveraging Ironic. Besides
-this, we also plan to support RSD(Rack Scale Design), so we can not only
-provide Pre-set Configuration Servers but also Custom Servers.
+Mogan is an OpenStack project which offers bare metals as first class resources
+to users, supporting variety of bare metal provisioning drivers including Ironic.
+
+OpenStack Mogan is distributed under the terms of the Apache License, Version 2.0.
+The full terms and conditions of this license are detailed in the LICENSE file.
 
 -----------------
 Project Resources
