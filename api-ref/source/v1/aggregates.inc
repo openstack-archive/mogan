@@ -180,3 +180,91 @@ Response
 --------
 
 No body content is returned on a successful DELETE.
+
+
+List Aggregate Nodes
+====================
+
+.. rest_method:: GET /aggregates/{aggregate_uuid}/nodes
+
+Lists nodes for the specified aggregate.
+
+Normal response codes: 200
+
+Error response codes: unauthorized(401), forbidden(403)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - aggregate_uuid: aggregate_uuid_path
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+   - nodes: aggregate_nodes
+
+**Example List aggregates: JSON response**
+
+.. literalinclude:: samples/aggregates/aggregates-list-nodes-resp.json
+   :language: javascript
+
+
+Add Aggregate Node
+==================
+
+.. rest_method:: POST /aggregates/{aggregate_uuid}/nodes
+
+Adds a node to an aggregate.
+
+Normal response codes: 204
+
+Error response codes: badRequest(400), unauthorized(401), forbidden(403),
+conflict(409)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - aggregate_uuid: aggregate_uuid_path
+   - node: aggregate_node
+
+**Example Add Aggregate Node: JSON request**
+
+.. literalinclude:: samples/aggregates/aggregate-add-node-req.json
+   :language: javascript
+
+Response
+--------
+
+If successful, this method does not return content in the response body.
+
+
+Remove Aggregate Node
+=====================
+
+.. rest_method:: DELETE /aggregates/{aggregate_uuid}/nodes/{node}
+
+Removes a node to an aggregate.
+
+Normal response codes: 204
+
+Error response codes: badRequest(400), unauthorized(401), forbidden(403),
+conflict(409)
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - aggregate_uuid: aggregate_uuid_path
+   - node: aggregate_node_path
+
+Response
+--------
+
+If successful, this method does not return content in the response body.

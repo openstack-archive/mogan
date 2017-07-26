@@ -96,3 +96,18 @@ class EngineAPI(object):
     def list_compute_nodes(self, context):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'list_compute_nodes')
+
+    def list_aggregate_nodes(self, context, aggregate_uuid):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        return cctxt.call(context, 'list_aggregate_nodes',
+                          aggregate_uuid=aggregate_uuid)
+
+    def add_aggregate_node(self, context, aggregate_uuid, node):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        return cctxt.call(context, 'add_aggregate_node',
+                          aggregate_uuid=aggregate_uuid, node=node)
+
+    def remove_aggregate_node(self, context, aggregate_uuid, node):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        return cctxt.call(context, 'remove_aggregate_node',
+                          aggregate_uuid=aggregate_uuid, node=node)
