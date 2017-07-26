@@ -26,6 +26,7 @@ from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from sqlalchemy import or_
+from sqlalchemy import orm
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload
@@ -890,6 +891,155 @@ class Connection(api.Connection):
         if result == 0:
             raise exception.AggregateMetadataNotFound(
                 key=key, aggregate_id=aggregate_id)
+
+    @oslo_db_api.retry_on_deadlock
+    def _server_group_policies_add(self, context, group_id, policies,
+                                   delete=False):
+        all_policies = set(policies)
+        query = model_query(context, models.ServerGroupPolicy).filter_by(
+            group_id=group_id)
+        if delete:
+            query.filter(~models.ServerGroupPolicy.policy.in_(
+                all_policies)).delete(synchronize_session=False)
+        query = query.filter(models.ServerGroupPolicy.policy.in_(all_policies))
+        already_existing = set()
+        for policy_ref in query.all():
+            already_existing.add(policy_ref.policy)
+        with _session_for_write() as session:
+            for policy in all_policies:
+                if policy in already_existing:
+                    continue
+                policy_ref = models.ServerGroupPolicy()
+                policy_ref.update({'policy': policy,
+                                   'group_id': group_id})
+                session.add(policy_ref)
+        return policies
+
+    @oslo_db_api.retry_on_deadlock
+    def _server_group_members_add(self, context, group_id, members,
+                                  delete=False):
+        all_members = set(members)
+        query = model_query(context, models.ServerGroupMember).filter_by(
+            group_id=group_id)
+        if delete:
+            query.filter(~models.ServerGroupMember.server_id.in_(
+                all_members)).delete(synchronize_session=False)
+        query = query.filter(models.ServerGroupMember.server_id.in_(
+            all_members))
+        already_existing = set()
+        for member_ref in query.all():
+            already_existing.add(member_ref.server_id)
+        with _session_for_write() as session:
+            for server_id in members:
+                if server_id in already_existing:
+                    continue
+                member_ref = models.ServerGroupMember()
+                member_ref.update({'server_id': server_id,
+                                   'group_id': group_id})
+                session.add(member_ref)
+        return members
+
+    def _server_group_id(self, context, group_uuid):
+        """Returns the group database ID for the group UUID."""
+
+        result = model_query(context,
+                             models.ServerGroup,
+                             (models.ServerGroup.id,)). \
+            filter_by(uuid=group_uuid). \
+            first()
+        if not result:
+            raise exception.ServerGroupNotFound(group_uuid=group_uuid)
+        return result.id
+
+    @oslo_db_api.retry_on_deadlock
+    def server_group_create(self, context, values, policies=None,
+                            members=None):
+        """Create a new group."""
+        uuid = values.get('uuid', None)
+        if uuid is None:
+            uuid = uuidutils.generate_uuid()
+            values['uuid'] = uuid
+
+        server_group_ref = models.ServerGroup()
+        server_group_ref.update(values)
+        with _session_for_write() as session:
+            try:
+                session.add(server_group_ref)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.ServerGroupExists(key_name=values['name'])
+        if policies:
+            self._server_group_policies_add(context, server_group_ref.id,
+                                            policies)
+        else:
+            server_group_ref._policies = []
+        if members:
+            self._server_group_members_add(context, server_group_ref.id,
+                                           members)
+        else:
+            server_group_ref._members = []
+        return self.server_group_get(context, uuid)
+
+    def server_group_get(self, context, group_uuid):
+        """Get a specific group by uuid."""
+        columns_to_join = ['_policies', '_members']
+        query = model_query(context, models.ServerGroup)
+        for c in columns_to_join:
+            query = query.options(orm.joinedload(c))
+        group = query.first()
+        if not group:
+            raise exception.ServerGroupNotFound(group_uuid=group_uuid)
+        return group
+
+    @oslo_db_api.retry_on_deadlock
+    def server_group_update(self, context, group_uuid, values):
+        """Update the attributes of a group.
+
+        If values contains a metadata key, it updates the aggregate metadata
+        too. Similarly for the policies and members.
+        """
+        group_query = model_query(context, models.ServerGroup).filter_by(
+            uuid=group_uuid)
+        group = group_query.first()
+        if not group:
+            raise exception.ServerGroupNotFound(group_uuid=group_uuid)
+
+        policies = values.get('policies')
+        if policies is not None:
+            self._server_group_policies_add(context,
+                                            group.id,
+                                            values.pop('policies'),
+                                            True)
+        members = values.get('members')
+        if members is not None:
+            self._server_group_members_add(context,
+                                           group.id,
+                                           values.pop('members'),
+                                           True)
+        with _session_for_write():
+            group_query.update(values)
+
+        if policies:
+            values['policies'] = policies
+        if members:
+            values['members'] = members
+
+    def server_group_delete(self, context, group_uuid):
+        """Delete a group."""
+        columns_to_join = ['_policies', '_members']
+        query = model_query(context, models.ServerGroup)
+        for c in columns_to_join:
+            query = query.options(orm.joinedload(c))
+        query = query.filter(group_uuid == group_uuid)
+        query.delete()
+
+    def server_group_get_all(self, context):
+        """Get all groups."""
+        columns_to_join = ['_policies', '_members']
+        query = model_query(context, models.ServerGroup)
+        for c in columns_to_join:
+            query = query.options(orm.joinedload(c))
+        return query.all()
 
 
 def _get_id_from_flavor_query(context, type_id):

@@ -447,4 +447,12 @@ class CannotDisassociateAutoAssignedFloatingIP(Forbidden):
 class FloatingIpNotAssociated(Invalid):
     _msg_fmt = _("Floating IP: %(floatingip)s is not associated")
 
+
+class ServerGroupNotFound(NotFound):
+    msg_fmt = _("Server group %(group_uuid)s could not be found.")
+
+
+class ServerGroupExists(Conflict):
+    msg_fmt = _("Sever group %(group_uuid)s already exists.")
+
 ObjectActionError = obj_exc.ObjectActionError
