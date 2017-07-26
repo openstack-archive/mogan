@@ -31,6 +31,7 @@ LOG = logging.getLogger(__name__)
 _RE_INV_IN_USE = re.compile("Inventory for (.+) on resource provider "
                             "(.+) in use")
 WARN_EVERY = 10
+PLACEMENT_API_VERSION = "latest"
 
 
 def warn_limit(self, msg):
@@ -115,13 +116,13 @@ class SchedulerReportClient(object):
 
     def get(self, url, version=None):
         kwargs = {}
-        if version is not None:
-            # TODO(mriedem): Perform some version discovery at some point.
-            kwargs = {
-                'headers': {
-                    'OpenStack-API-Version': 'placement %s' % version
-                },
-            }
+        version = version or PLACEMENT_API_VERSION
+        # TODO(mriedem): Perform some version discovery at some point.
+        kwargs = {
+            'headers': {
+                'OpenStack-API-Version': 'placement %s' % version
+            },
+        }
         return self._client.get(
             url,
             endpoint_filter=self.ks_filter, raise_exc=False, **kwargs)
@@ -132,13 +133,13 @@ class SchedulerReportClient(object):
         # more sensitive to this than other APIs in the OpenStack
         # ecosystem.
         kwargs = {}
-        if version is not None:
-            # TODO(mriedem): Perform some version discovery at some point.
-            kwargs = {
-                'headers': {
-                    'OpenStack-API-Version': 'placement %s' % version
-                },
-            }
+        version = version or PLACEMENT_API_VERSION
+        # TODO(mriedem): Perform some version discovery at some point.
+        kwargs = {
+            'headers': {
+                'OpenStack-API-Version': 'placement %s' % version
+            },
+        }
         return self._client.post(
             url, json=data,
             endpoint_filter=self.ks_filter, raise_exc=False, **kwargs)
@@ -149,13 +150,13 @@ class SchedulerReportClient(object):
         # more sensitive to this than other APIs in the OpenStack
         # ecosystem.
         kwargs = {}
-        if version is not None:
-            # TODO(mriedem): Perform some version discovery at some point.
-            kwargs = {
-                'headers': {
-                    'OpenStack-API-Version': 'placement %s' % version
-                },
-            }
+        version = version or PLACEMENT_API_VERSION
+        # TODO(mriedem): Perform some version discovery at some point.
+        kwargs = {
+            'headers': {
+                'OpenStack-API-Version': 'placement %s' % version
+            },
+        }
         if data:
             kwargs['json'] = data
         return self._client.put(
