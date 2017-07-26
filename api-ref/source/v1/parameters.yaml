@@ -15,6 +15,12 @@ address_path:
   in: path
   required: true
   type: string
+aggregate_node_path:
+  description: |
+    The name of the node.
+  in: path
+  required: true
+  type: string
 aggregate_uuid_path:
   description: |
     The UUID of the aggregate.
@@ -142,6 +148,18 @@ aggregate_name:
   in: body
   required: true
   type: string
+aggregate_node:
+  description: |
+    The name of the node.
+  in: body
+  required: true
+  type: string
+aggregate_nodes:
+  description: |
+    An array of node information.
+  in: body
+  required: true
+  type: array
 aggregate_uuid:
   description: |
     The UUID of the node aggregate.
