@@ -243,3 +243,24 @@ class Connection(object):
     def aggregate_metadata_delete(self, context, key):
         """Delete aggregate metadata by key."""
         return IMPL.aggregate_metadata_delete(context, key)
+
+    def server_group_create(self, context, values, policies=None,
+                            members=None):
+        """Create a new group."""
+        return IMPL.server_group_create(context, values, policies, members)
+
+    def server_group_get(self, context, group_uuid):
+        """Get a specific group by uuid."""
+        return IMPL.server_group_get(context, group_uuid)
+
+    def server_group_update(self, context, group_uuid, values):
+        """Update the attributes of a group."""
+        return IMPL.server_group_update(context, group_uuid, values)
+
+    def server_group_delete(self, context, group_uuid):
+        """Delete a group."""
+        return IMPL.server_group_delete(context, group_uuid)
+
+    def server_group_get_all(self, context, project_id=None):
+        """Get server groups."""
+        return IMPL.server_group_get_all(context, project_id)
