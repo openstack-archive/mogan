@@ -47,6 +47,9 @@ class Aggregate(base.APIBase):
     metadata = {wtypes.text: types.jsontype}
     """The meta data of the aggregate"""
 
+    nodes = wtypes.ArrayType(str)
+    """The nodes of the aggregate"""
+
     links = wsme.wsattr([link.Link], readonly=True)
     """A list containing a self link"""
 
@@ -94,8 +97,49 @@ class AggregateCollection(base.APIBase):
         return collection
 
 
+class AggregateNodeController(rest.RestController):
+    """REST controller for aggregate nodes."""
+
+    @policy.authorize_wsgi("mogan:aggregate_node", "get_all")
+    @expose.expose(wtypes.text, types.uuid)
+    def get_all(self, aggregate_uuid):
+        """Retrieve a list of nodes of the queried aggregate."""
+        # check whether the aggregate exists
+        objects.Aggregate.get(pecan.request.context, aggregate_uuid)
+
+        nodes = pecan.request.engine_api.list_aggregate_nodes(
+            pecan.request.context, aggregate_uuid)
+
+        return nodes
+
+    @policy.authorize_wsgi("mogan:aggregate_node", "create")
+    @expose.expose(None, types.uuid, body=types.jsontype,
+                   status_code=http_client.NO_CONTENT)
+    def post(self, aggregate_uuid, node):
+        """Add node to the given aggregate."""
+        validation.check_schema(node, agg_schema.add_aggregate_node)
+
+        # check whether the aggregate exists
+        objects.Aggregate.get(pecan.request.context, aggregate_uuid)
+        pecan.request.engine_api.add_aggregate_node(
+            pecan.request.context, aggregate_uuid, node['node'])
+
+    @policy.authorize_wsgi("mogan:aggregate_node", "delete")
+    @expose.expose(None, types.uuid, wtypes.text,
+                   status_code=http_client.NO_CONTENT)
+    def delete(self, aggregate_uuid, node):
+        """Remove node from the given aggregate."""
+        # check whether the aggregate exists
+        objects.Aggregate.get(pecan.request.context, aggregate_uuid)
+
+        pecan.request.engine_api.remove_aggregate_node(
+            pecan.request.context, aggregate_uuid, node)
+
+
 class AggregateController(rest.RestController):
     """REST controller for Aggregates."""
+
+    nodes = AggregateNodeController()
 
     @policy.authorize_wsgi("mogan:aggregate", "get_all")
     @expose.expose(AggregateCollection)
@@ -112,8 +156,11 @@ class AggregateController(rest.RestController):
 
         :param aggregate_uuid: UUID of an aggregate.
         """
+        nodes = pecan.request.engine_api.list_aggregate_nodes(
+            pecan.request.context, aggregate_uuid)
         db_aggregate = objects.Aggregate.get(pecan.request.context,
                                              aggregate_uuid)
+        db_aggregate['nodes'] = nodes or []
         return Aggregate.convert_with_links(db_aggregate)
 
     @policy.authorize_wsgi("mogan:aggregate", "create")
