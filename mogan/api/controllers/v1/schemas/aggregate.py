@@ -26,3 +26,12 @@ create_aggregate = {
     'required': ['name'],
     'additionalProperties': False,
 }
+
+add_aggregate_node = {
+    'type': 'object',
+    'properties': {
+        'node': parameter_types.name,
+    },
+    'required': ['node'],
+    'additionalProperties': False,
+}
