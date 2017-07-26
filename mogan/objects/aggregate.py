@@ -21,10 +21,6 @@ from mogan.objects import base
 from mogan.objects import fields as object_fields
 
 
-def _get_nodes_from_cache(aggregate_id):
-    return []
-
-
 @base.MoganObjectRegistry.register
 class Aggregate(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
@@ -36,7 +32,6 @@ class Aggregate(base.MoganObject, object_base.VersionedObjectDictCompat):
         'id': object_fields.IntegerField(read_only=True),
         'uuid': object_fields.UUIDField(read_only=True),
         'name': object_fields.StringField(),
-        'nodes': object_fields.ListOfStringsField(nullable=True),
         'metadata': object_fields.FlexibleDictField(nullable=True),
     }
 
@@ -50,8 +45,6 @@ class Aggregate(base.MoganObject, object_base.VersionedObjectDictCompat):
         for field in aggregate.fields:
             if field == 'metadata':
                 aggregate[field] = db_aggregate['metadetails']
-            elif field == 'nodes':
-                aggregate[field] = _get_nodes_from_cache(aggregate['uuid'])
             else:
                 aggregate[field] = db_aggregate[field]
         aggregate.obj_reset_changes()
