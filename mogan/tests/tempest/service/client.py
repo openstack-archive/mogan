@@ -16,7 +16,7 @@
 from oslo_serialization import jsonutils as json
 from tempest import config
 from tempest.lib.common import rest_client
-from tempest.lib.services.compute import networks_client as network_cli
+from tempest.lib.services.network import networks_client as network_cli
 from tempest.lib.services.image.v2 import images_client as image_cli
 from tempest.lib.services.network import floating_ips_client as fip_cli
 from tempest import manager
@@ -301,7 +301,7 @@ class Manager(manager.Manager):
 
     load_clients = [
         'baremetal_compute_client',
-        'compute_networks_client',
+        'networks_client',
         'image_client_v2',
         'baremetal_node_client',
         'network_floatingip_client'
@@ -320,15 +320,6 @@ class Manager(manager.Manager):
         'endpoint_type': CONF.baremetal_compute_plugin.endpoint_type,
     }
     baremetal_compute_params.update(default_params)
-
-    compute_params = {
-        'service': CONF.compute.catalog_type,
-        'region': CONF.compute.region or CONF.identity.region,
-        'endpoint_type': CONF.compute.endpoint_type,
-        'build_interval': CONF.compute.build_interval,
-        'build_timeout': CONF.compute.build_timeout,
-    }
-    compute_params.update(default_params)
 
     image_params = {
         'service': CONF.image.catalog_type,
@@ -364,10 +355,10 @@ class Manager(manager.Manager):
         self.baremetal_compute_client = BaremetalComputeClient(
             self.auth_provider, **self.baremetal_compute_params)
 
-    def set_compute_networks_client(self):
-        self.compute_networks_client = network_cli.NetworksClient(
+    def set_networks_client(self):
+        self.networks_client = network_cli.NetworksClient(
             self.auth_provider,
-            **self.compute_params)
+            **self.network_params)
 
     def set_network_floatingip_client(self):
         self.network_floatingip_client = fip_cli.FloatingIPsClient(
