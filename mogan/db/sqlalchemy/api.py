@@ -122,6 +122,8 @@ class Connection(api.Connection):
             query = query.filter_by(flavor_uuid=filters['flavor_uuid'])
         if 'image_uuid' in filters:
             query = query.filter_by(image_uuid=filters['image_uuid'])
+        if 'node_uuid' in filters:
+            query = query.filter_by(image_uuid=filters['node_uuid'])
         return query
 
     @oslo_db_api.retry_on_deadlock
