@@ -308,3 +308,61 @@ class Aggregate(Base):
     @property
     def metadetails(self):
         return {m.key: m.value for m in self._metadata}
+
+
+class ServerGroupMember(Base):
+    """Represents the members for a server group."""
+    __tablename__ = 'server_group_member'
+    __table_args__ = (
+        Index('server_group_member_server_idx', 'server_uuid'),
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    server_uuid = Column(String(255))
+    group_id = Column(Integer, ForeignKey('server_groups.id'),
+                      nullable=False)
+
+
+class ServerGroupPolicy(Base):
+    """Represents the policy type for a server group."""
+    __tablename__ = 'server_group_policy'
+    __table_args__ = (
+        Index('server_group_policy_policy_idx', 'policy'),
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    policy = Column(String(255))
+    group_id = Column(Integer, ForeignKey('server_groups.id'),
+                      nullable=False)
+
+
+class ServerGroup(Base):
+    """Represents a server group.
+
+    A group will maintain a collection of servers and the relationship
+    between them.
+    """
+
+    __tablename__ = 'server_groups'
+    __table_args__ = (
+        schema.UniqueConstraint("uuid",
+                                name="uniq_server_groups0uuid"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(255))
+    project_id = Column(String(255))
+    uuid = Column(String(36), nullable=False)
+    name = Column(String(255))
+    _policies = orm.relationship(
+        ServerGroupPolicy,
+        primaryjoin='ServerGroup.id == ServerGroupPolicy.group_id')
+    _members = orm.relationship(
+        ServerGroupMember,
+        primaryjoin='ServerGroup.id == ServerGroupMember.group_id')
+
+    @property
+    def policies(self):
+        return [p.policy for p in self._policies]
+
+    @property
+    def members(self):
+        return [m.server_uuid for m in self._members]
