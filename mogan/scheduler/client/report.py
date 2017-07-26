@@ -156,7 +156,7 @@ class SchedulerReportClient(object):
                     'OpenStack-API-Version': 'placement %s' % version
                 },
             }
-        if data:
+        if data is not None:
             kwargs['json'] = data
         return self._client.put(
             url, endpoint_filter=self.ks_filter, raise_exc=False,
@@ -223,6 +223,43 @@ class SchedulerReportClient(object):
             LOG.warning(msg, args)
         else:
             msg = ("[%(placement_req_id)s] Failed to retrieve aggregates "
+                   "from placement API for resource provider with UUID "
+                   "%(uuid)s. Got %(status_code)d: %(err_text)s.")
+            args = {
+                'placement_req_id': placement_req_id,
+                'uuid': rp_uuid,
+                'status_code': resp.status_code,
+                'err_text': resp.text,
+            }
+            LOG.error(msg, args)
+
+    @safe_connect
+    def _put_provider_aggregates(self, rp_uuid, aggs):
+        """Associate a list of aggregates with the resource provider.
+
+        :param aggs: a list of UUID of the aggregates.
+        :param rp_uuid: UUID of the resource provider.
+        """
+        url = "/resource_providers/%s/aggregates" % rp_uuid
+        payload = list(aggs)
+        resp = self.put(url, payload, version='1.1')
+        if resp.status_code == 200:
+            self._provider_aggregate_map[rp_uuid] = aggs
+            data = resp.json()
+            return set(data['aggregates'])
+
+        placement_req_id = get_placement_request_id(resp)
+        if resp.status_code == 404:
+            msg = "[%(placement_req_id)s] Tried to put a provider's "
+            "aggregates; however the provider %(uuid)s does not "
+            "exist."
+            args = {
+                'uuid': rp_uuid,
+                'placement_req_id': placement_req_id,
+            }
+            LOG.warning(msg, args)
+        else:
+            msg = ("[%(placement_req_id)s] Failed to set aggregates "
                    "from placement API for resource provider with UUID "
                    "%(uuid)s. Got %(status_code)d: %(err_text)s.")
             args = {
@@ -714,3 +751,36 @@ class SchedulerReportClient(object):
         # Use the rps we cached
         rps = self._resource_providers
         return {'nodes': [rp['name'] for id, rp in rps.items()]}
+
+    def get_nodes_from_aggregate(self, aggregate_uuid):
+        # Use the aggregates we cached
+        rps = self._resource_providers
+        rp_aggs = self._provider_aggregate_map
+        rp_uuids = []
+        for rp, aggs in rp_aggs.items():
+            if aggregate_uuid in aggs:
+                rp_uuids.append(rp)
+        return {'nodes': [rps[id]['name'] for id in rp_uuids]}
+
+    def update_aggregate_node(self, aggregate_uuid, node, action):
+        rps = self._resource_providers
+        for id, rp in rps.items():
+            if node == rp['name']:
+                rp_uuid = id
+                break
+        else:
+            raise exception.NodeNotFound(node=node)
+
+        aggs = self._provider_aggregate_map[rp_uuid]
+        if action == 'add':
+            new_aggs = aggs | set([aggregate_uuid])
+        elif action == 'remove':
+            if aggregate_uuid in aggs:
+                new_aggs = aggs - set([aggregate_uuid])
+            else:
+                return
+        else:
+            LOG.info('Bad action parameter for update_aggregate_node() %s',
+                     action)
+            return
+        self._put_provider_aggregates(rp_uuid, list(new_aggs))
