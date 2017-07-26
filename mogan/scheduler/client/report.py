@@ -707,5 +707,7 @@ class SchedulerReportClient(object):
         allocations = self.get_allocations_for_resource_provider(rp_uuid)
         if allocations:
             LOG.info('Deleted allocation for resource provider %s', rp_uuid)
+        else:
+            return
         for consumer_id in allocations:
             self.delete_allocation_for_server(consumer_id)
