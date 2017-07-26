@@ -520,3 +520,8 @@ class API(object):
     def list_compute_nodes(self, context):
         """Get compute node list."""
         return self.engine_rpcapi.list_compute_nodes(context)
+
+    def list_aggregate_nodes(self, context, aggregate_uuid):
+        """Get aggregate node list."""
+        return self.engine_rpcapi.list_aggregate_nodes(context,
+                                                       aggregate_uuid)

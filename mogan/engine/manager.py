@@ -585,3 +585,8 @@ class EngineManager(base_manager.BaseEngineManager):
         nodes = self.scheduler_client.reportclient \
             .get_nodes_from_resource_providers()
         return nodes
+
+    def list_aggregate_nodes(self, context, aggregate_uuid):
+        nodes = self.scheduler_client.reportclient \
+            .get_nodes_from_aggregate(aggregate_uuid)
+        return nodes

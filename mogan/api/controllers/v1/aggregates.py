@@ -94,8 +94,33 @@ class AggregateCollection(base.APIBase):
         return collection
 
 
+class Nodes(base.APIBase):
+    """API representation of a collection of nodes."""
+
+    nodes = [wtypes.text]
+    """A list containing compute node names"""
+
+
+class AggregateNodeController(rest.RestController):
+    """REST controller for aggregate nodes."""
+
+    @policy.authorize_wsgi("mogan:aggregate_node", "get_all")
+    @expose.expose(wtypes.text, types.uuid)
+    def get_all(self, aggregate_uuid):
+        """Retrieve a list of nodes of the queried aggregate."""
+
+        nodes = pecan.request.engine_api.list_aggregate_nodes(
+            pecan.request.context, aggregate_uuid)
+
+        collection = Nodes()
+        collection.nodes = nodes['nodes']
+        return collection
+
+
 class AggregateController(rest.RestController):
     """REST controller for Aggregates."""
+
+    nodes = AggregateNodeController()
 
     @policy.authorize_wsgi("mogan:aggregate", "get_all")
     @expose.expose(AggregateCollection)
