@@ -31,6 +31,7 @@ from mogan.common.i18n import _
 from mogan.common import states
 from mogan.common import utils
 from mogan.conf import CONF
+from mogan.engine.baremetal.ironic import ironic_states
 from mogan.engine import base_manager
 from mogan.engine.flows import create_server
 from mogan.notifications import base as notifications
@@ -101,10 +102,17 @@ class EngineManager(base_manager.BaseEngineManager):
         # Clean orphan resource providers in placement
         for rp in all_rps:
             if rp['uuid'] not in node_uuids:
+                server_by_node = objects.Server.list(
+                    context, filters={'node_uuid': rp['uuid']})
+                if server_by_node:
+                    continue
                 self.scheduler_client.reportclient.delete_resource_provider(
                     rp['uuid'])
 
         for node in all_nodes:
+            if node.provision_state == ironic_states.AVAILABLE:
+                self.scheduler_client.reportclient \
+                    .delete_allocations_for_resource_provider(node.uuid)
             resource_class = sched_utils.ensure_resource_class_name(
                 node.resource_class)
             inventory = self.driver.get_node_inventory(node)
@@ -112,9 +120,6 @@ class EngineManager(base_manager.BaseEngineManager):
             self.scheduler_client.set_inventory_for_provider(
                 node.uuid, node.name or node.uuid, inventory_data,
                 resource_class)
-            if node.provision_state == 'available':
-                self.scheduler_client.reportclient \
-                    .delete_allocations_for_resource_provider(node.uuid)
 
     @periodic_task.periodic_task(spacing=CONF.engine.sync_power_state_interval,
                                  run_immediately=True)
