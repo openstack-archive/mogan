@@ -205,3 +205,35 @@ def create_test_aggregate(context={}, **kw):
     dbapi = db_api.get_instance()
 
     return dbapi.aggregate_create(context, agg)
+
+
+def get_test_server_group(**kw):
+    return {
+        'id': kw.get('id', 123),
+        'name': kw.get('name', 'test'),
+        'uuid': kw.get('uuid', uuidutils.generate_uuid()),
+        'user_id': kw.get('user_id', '2b846ce623754aa1b2ae3f99ff297cb8'),
+        'project_id': kw.get('project_id', '9851baf53c75452dad7951bca7b3dbac'),
+        'policies': kw.get('policies', ["anti-affinity", "affinity"]),
+        'members': kw.get('members', ['server1', 'server2']),
+        'updated_at': kw.get('updated_at'),
+        'created_at': kw.get('updated_at')
+    }
+
+
+def create_test_server_group(context={}, **kw):
+    """Create test server fault entry in DB and return the DB object.
+
+    Function to be used to create test Server Fault objects in the database.
+
+    :param context: The request context, for access checks.
+    :param kw: kwargs with overriding values for server fault's attributes.
+    :returns: Test Server Fault DB object.
+
+    """
+    server_fault = get_test_server_group(**kw)
+    dbapi = db_api.get_instance()
+    members = server_fault.pop('members')
+    policies = server_fault.pop('policies')
+    return dbapi.server_group_create(context, server_fault, policies=policies,
+                                     members=members)
