@@ -216,3 +216,43 @@ def upgrade():
     )
     op.create_index('aggregate_metadata_key_idx', 'aggregate_metadata',
                     ['key'], unique=False)
+
+    op.create_table(
+        'server_groups',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
+        sa.Column('uuid', sa.String(length=36), nullable=True),
+        sa.Column('name', sa.String(length=255), nullable=False),
+        sa.Column('user_id', sa.String(length=255), nullable=True),
+        sa.Column('project_id', sa.String(length=255), nullable=True),
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('uuid', name='uniq_server_groups0uuid'),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )
+    op.create_table(
+        'server_group_policy',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
+        sa.Column('policy', sa.String(length=36), nullable=True),
+        sa.Column('group_id', sa.String(length=255), nullable=False),
+        sa.Index('server_group_policy_policy_idx', 'policy'),
+        sa.PrimaryKeyConstraint('id'),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )
+
+    op.create_table(
+        'server_group_member',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime()),
+        sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
+        sa.Column('server_uuid', sa.String(length=36), nullable=True),
+        sa.Column('group_id', sa.Integer, sa.ForeignKey('server_groups.id'),
+                  nullable=False),
+        sa.Index('server_group_member_server_idx', 'server_uuid'),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )
