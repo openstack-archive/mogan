@@ -201,22 +201,21 @@ function create_flavor {
 
 
 if is_service_enabled mogan; then
-    if [[ "$IRONIC_USE_RESOURCE_CLASSES" == "False" ]]; then
-        die "Ironic node resource class is required for Mogan"
-    fi
-    if ! is_service_enabled placement; then
-        die "placement service is required for Mogan"
-    fi
-    if is_service_enabled tempest; then
-        iniset $TEMPEST_CONFIG compute fixed_network_name $PRIVATE_NETWORK_NAME
-    fi
-
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing mogan"
+        if [[ "$IRONIC_USE_RESOURCE_CLASSES" == "False" ]]; then
+            die "Ironic node resource class is required for Mogan"
+        fi
+        if ! is_service_enabled placement; then
+            die "placement service is required for Mogan"
+        fi
         install_mogan
         install_mogan_pythonclient
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring mogan"
+        if is_service_enabled tempest; then
+           iniset $TEMPESTCONFIG compute fixed_network_name $PRIVATE_NETWORK_NAME
+        fi
         configure_mogan
         create_mogan_accounts
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
