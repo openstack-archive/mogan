@@ -530,18 +530,6 @@ class EngineManager(base_manager.BaseEngineManager):
                 'port': parsed_url.port,
                 'internal_access_path': None}
 
-    def _choose_pif_from_node(self, context, node):
-        pifs = self.driver.get_ports_from_node(node, detail=True)
-        for pif in pifs:
-            vif = pif.extra.get('vif_port_id', None)
-            if not vif:
-                return pif
-
-        # if no available compute ports, raise exception
-        message = "Node %s has no available physical ports." % node
-        LOG.error(message)
-        raise exception.ComputePortNotAvailable(message=message)
-
     def attach_interface(self, context, server, net_id=None):
         try:
             vif = self.network_api.create_port(context, net_id, server.uuid)
