@@ -174,26 +174,6 @@ class FlavorAccessNotFound(NotFound):
                  "%(project_id)s combination.")
 
 
-class ComputeNodeAlreadyExists(Conflict):
-    _msg_fmt = _("ComputeNode with node_uuid %(node)s already exists.")
-
-
-class ComputeNodeNotFound(NotFound):
-    _msg_fmt = _("ComputeNode %(node)s could not be found.")
-
-
-class ComputePortAlreadyExists(Conflict):
-    _msg_fmt = _("ComputePort with port_uuid %(port)s already exists.")
-
-
-class ComputePortNotFound(NotFound):
-    _msg_fmt = _("ComputePort %(port)s could not be found.")
-
-
-class ComputePortNotAvailable(NotFound):
-    _msg_fmt = _("No available compute ports.")
-
-
 class NodeNotFound(NotFound):
     _msg_fmt = _("Node associated with server %(server)s "
                  "could not be found.")

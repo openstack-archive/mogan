@@ -91,47 +91,6 @@ class Server(Base):
     locked_by = Column(Enum('owner', 'admin'))
 
 
-class ComputeNode(Base):
-    """Represents the compute nodes."""
-
-    __tablename__ = 'compute_nodes'
-    __table_args__ = (
-        schema.UniqueConstraint('node_uuid',
-                                name='uniq_compute_nodes0node_uuid'),
-        table_args()
-    )
-    id = Column(Integer, primary_key=True)
-    cpus = Column(Integer, nullable=False)
-    memory_mb = Column(Integer, nullable=False)
-    hypervisor_type = Column(String(255), nullable=False)
-    resource_class = Column(String(80), nullable=False)
-    availability_zone = Column(String(255), nullable=True)
-    node_uuid = Column(String(36), nullable=False)
-    extra_specs = Column(db_types.JsonEncodedDict)
-    used = Column(Boolean, default=False)
-
-
-class ComputePort(Base):
-    """Represents the compute ports."""
-
-    __tablename__ = 'compute_ports'
-    __table_args__ = (
-        schema.UniqueConstraint('port_uuid',
-                                name='uniq_compute_ports0port_uuid'),
-        table_args()
-    )
-    id = Column(Integer, primary_key=True)
-    address = Column(String(18), nullable=False)
-    port_uuid = Column(String(36), nullable=False)
-    node_uuid = Column(String(36), nullable=False)
-    extra_specs = Column(db_types.JsonEncodedDict)
-    _node = orm.relationship(
-        "ComputeNode",
-        backref='ports',
-        foreign_keys=node_uuid,
-        primaryjoin='ComputeNode.node_uuid == ComputePort.node_uuid')
-
-
 class ServerNic(Base):
     """Represents the NIC info for servers."""
 
