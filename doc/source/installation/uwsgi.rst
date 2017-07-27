@@ -28,6 +28,11 @@ The ``mogan/api/app.wsgi`` file contains a WSGI application of
 Mogan API service. This file is installed with Mogan application
 code.
 
+apache-mogan.template
+*********************
+The ``mogan/etc/apache-mogan.template`` file contains a copy
+of Apache configuration file for Mogan API used by devstack.
+
 mogan-uwsgi.ini.sample
 **********************
 The ``mogan/etc/mogan-uwsgi.ini.sample`` file is a sample
@@ -45,9 +50,16 @@ Steps to use these sample configuration files:
   ``/etc/httpd/conf.modules.d/11-proxy_uwsgi.conf`` containing
   ``LoadModule proxy_uwsgi_module modules/mod_proxy_uwsgi.so``
 
-2. On deb-based systems copy or symlink the file to
-   ``/etc/apache2/sites-available/mogan.conf``. For rpm-based systems the file should go into
-   ``/etc/httpd/conf.d/mogan.conf``.
+2. On deb-based systems copy or symlink the file ``apache-mogan.template`` to
+  ``/etc/apache2/sites-available/mogan.conf``. For rpm-based systems the file
+  should go into ``/etc/httpd/conf.d/mogan.conf``.
+  uWSGI need a socket file to connect between apache proxy and uWSGI web
+  server, but ``/var/run`` will be empty on after reboot, so we can use
+  systemd-temptiles to automatically create a socket_dir::
+
+    sudo mkdir -p /etc/tmpfiles.d/
+    echo "d /var/run/uwsgi 0755 $STACK_USER root" | sudo tee /etc/tmpfiles.d/uwsgi.conf
+    sudo systemd-tmpfiles --create /etc/tmpfiles.d/uwsgi.conf
 
 3. Enable Mogan site. On deb-based systems::
 
@@ -63,4 +75,4 @@ Steps to use these sample configuration files:
 5. Start Mogan api using uWSGI::
 
       $ sudo pip install uwsgi
-      $ uwsgi /etc/mogan/mogan-uwsgi.ini
+      $ uwsgi --ini /etc/mogan/mogan-uwsgi.ini
