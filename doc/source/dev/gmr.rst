@@ -55,6 +55,10 @@ For example, suppose that ``mogan-api`` was run with
 Then, ``touch /tmp/guru_report`` will trigger the Guru Meditation report to be
 printed to ``/var/log/mogan/mogan-api-err.log``.
 
+For uwsgi mode, user should use the second way to generate the Guru report
+by touching the file.
+
+
 Structure of a GMR
 ------------------
 

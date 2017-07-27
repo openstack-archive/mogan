@@ -15,12 +15,15 @@
 import sys
 
 from oslo_config import cfg
+from oslo_reports import guru_meditation_report as gmr
+from oslo_reports import opts as gmr_opts
 import pecan
 
 from mogan.api import config
 from mogan.api import hooks
 from mogan.api import middleware
 from mogan.api.middleware import auth_token
+from mogan import version
 
 
 def get_pecan_config():
@@ -33,6 +36,9 @@ def setup_app(pecan_config=None, extra_hooks=None):
     if not pecan_config:
         pecan_config = get_pecan_config()
     pecan.configuration.set_config(dict(pecan_config), overwrite=True)
+
+    gmr_opts.set_defaults(cfg.CONF)
+    gmr.TextGuruMeditation.setup_autorun(version, conf=cfg.CONF)
 
     app_hooks = [hooks.ConfigHook(),
                  hooks.DBHook(),
