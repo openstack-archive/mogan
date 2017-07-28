@@ -194,6 +194,19 @@ class ComputePortNotAvailable(NotFound):
     _msg_fmt = _("No available compute ports.")
 
 
+class AggregateNameExists(Conflict):
+    _msg_fmt = _("Aggregate %(name)s already exists.")
+
+
+class AggregateNotFound(NotFound):
+    _msg_fmt = _("Aggregate %(aggregate)s could not be found.")
+
+
+class AggregateMetadataNotFound(NotFound):
+    _msg_fmt = _("Aggregate %(aggregate_id)s metadata with key %(key)s "
+                 "could not be found.")
+
+
 class NodeNotFound(NotFound):
     _msg_fmt = _("Node associated with server %(server)s "
                  "could not be found.")

@@ -196,3 +196,50 @@ class Connection(object):
     def key_pair_count_by_user(self, context, user_id):
         """Count number of key pairs for the given user ID."""
         return IMPL.key_pair_count_by_user(context, user_id)
+
+    @abc.abstractmethod
+    def aggregate_create(self, context, values):
+        """Create an aggregate from the values dictionary."""
+        return IMPL.aggregate_create(context, values)
+
+    @abc.abstractmethod
+    def aggregate_update(self, context, aggregate_id, values):
+        """Update an aggregate from the values dictionary."""
+        return IMPL.aggregate_update(context, aggregate_id, values)
+
+    @abc.abstractmethod
+    def aggregate_get(self, context, aggregate_id):
+        """Get an aggregate or raise if it does not exist."""
+        return IMPL.aggregate_get(context, aggregate_id)
+
+    @abc.abstractmethod
+    def aggregate_get_all(self, context):
+        """Get all aggregates."""
+        return IMPL.aggregate_get_all(context)
+
+    @abc.abstractmethod
+    def aggregate_destroy(self, context, aggregate_id):
+        """Destroy the aggregate or raise if it does not exist."""
+        return IMPL.aggregate_destroy(context, aggregate_id)
+
+    @abc.abstractmethod
+    def aggregate_get_by_metadata_key(self, context, key):
+        """Get a list of aggregates by metadata key."""
+        return IMPL.aggregate_get_by_metadata_key(context, key)
+
+    @abc.abstractmethod
+    def aggregate_metadata_update_or_create(self, context, aggregate_id,
+                                            metadata):
+        """Update/Create aggregates metadata."""
+        return IMPL.aggregate_metadata_update_or_create(context, aggregate_id,
+                                                        metadata)
+
+    @abc.abstractmethod
+    def aggregate_metadata_get(self, context, aggregate_id):
+        """Get aggregate metadata by aggregate id."""
+        return IMPL.aggregate_metadata_get(context, aggregate_id)
+
+    @abc.abstractmethod
+    def aggregate_metadata_delete(self, context, key):
+        """Delete aggregate metadata by key."""
+        return IMPL.aggregate_metadata_delete(context, key)
