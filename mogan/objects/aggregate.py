@@ -51,7 +51,7 @@ class Aggregate(base.MoganObject, object_base.VersionedObjectDictCompat):
             if field == 'metadata':
                 aggregate[field] = db_aggregate['metadetails']
             elif field == 'nodes':
-                aggregate[field] = _get_nodes_from_cache(aggregate['uuid'])
+                aggregate[field] = _get_nodes_from_cache(db_aggregate['uuid'])
             else:
                 aggregate[field] = db_aggregate[field]
         aggregate.obj_reset_changes()
