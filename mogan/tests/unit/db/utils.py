@@ -175,3 +175,32 @@ def create_test_quota(context={}, **kw):
     dbapi = db_api.get_instance()
 
     return dbapi.quota_create(context, quota)
+
+
+def get_test_aggregate(**kw):
+    return {
+        'id': kw.get('id', 123),
+        'uuid': kw.get('uuid', uuidutils.generate_uuid()),
+        'name': kw.get('name', 'test'),
+        'updated_at': kw.get('updated_at'),
+        'created_at': kw.get('created_at'),
+    }
+
+
+def create_test_aggregate(context={}, **kw):
+    """Create test aggregate entry in DB and return the DB object.
+
+    Function to be used to create test Aggregate objects in the database.
+
+    :param context: The request context, for access checks.
+    :param kw: kwargs with overriding values for aggregate's attributes.
+    :returns: Test Aggregate DB object.
+
+    """
+    agg = get_test_aggregate(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del agg['id']
+    dbapi = db_api.get_instance()
+
+    return dbapi.aggregate_create(context, agg)
