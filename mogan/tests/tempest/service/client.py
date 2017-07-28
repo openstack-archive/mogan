@@ -234,6 +234,36 @@ class BaremetalComputeClient(rest_client.RestClient):
             body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
+    def list_aggregates(self):
+        uri = '%s/aggregates' % self.uri_prefix
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['aggregates']
+        return rest_client.ResponseBodyList(resp, body)
+
+    def show_aggregate(self, aggregate_uuid):
+        uri = '%s/aggregates/%s' % (self.uri_prefix, aggregate_uuid)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def delete_aggregate(self, aggregate_uuid):
+        uri = "%s/aggregates/%s" % (self.uri_prefix, aggregate_uuid)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def create_aggregate(self, **kwargs):
+        uri = "%s/aggregates" % self.uri_prefix
+        body = self.serialize(kwargs)
+        resp, body = self.post(uri, body)
+        self.expected_success(201, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
 
 class BaremetalNodeClient(rest_client.RestClient):
     version = '1'
@@ -295,6 +325,17 @@ class BaremetalNodeClient(rest_client.RestClient):
         updates = [{"path": "/driver_info/ipmi_terminal_port",
                     "value": port, "op": "add"}]
         self.update_bm_node(node_id, updates)
+
+
+class BaremetalAggregateClient(rest_client.RestClient):
+    version = '1'
+    uri_prefix = "v1"
+
+    def deserialize(self, body):
+        return json.loads(body.replace("\n", ""))
+
+    def serialize(self, body):
+        return json.dumps(body)
 
 
 class Manager(manager.Manager):
