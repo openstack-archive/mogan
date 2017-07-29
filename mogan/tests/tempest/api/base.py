@@ -46,7 +46,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
     def setup_clients(cls):
         super(BaseBaremetalComputeTest, cls).setup_clients()
         cls.baremetal_compute_client = cls.os_admin.baremetal_compute_client
-        cls.compute_networks_client = cls.os_admin.compute_networks_client
+        cls.networks_client = cls.os_admin.networks_client
         cls.baremetal_node_client = cls.os_admin.baremetal_node_client
         cls.network_floatingip_client =\
             cls.os_admin.network_floatingip_client
@@ -63,8 +63,8 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
 
     @classmethod
     def _get_net_id(cls):
-        for net in cls.compute_networks_client.list_networks()['networks']:
-            if net['label'] == CONF.compute.fixed_network_name:
+        for net in cls.networks_client.list_networks()['networks']:
+            if net['name'] == CONF.compute.fixed_network_name:
                 return net['id']
         else:
             raise lib_exc.TempestException('Could not find fixed network!')
