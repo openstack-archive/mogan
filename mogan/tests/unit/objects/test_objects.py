@@ -393,7 +393,9 @@ expected_object_fingerprints = {
     'KeyPair': '1.0-c6820166e307676c5900f7801831b84c',
     'KeyPairList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
     'Aggregate': '1.0-e2f3060705a18e1de8daae3f1af6b104',
-    'AggregateList': '1.0-33a2e1bb91ad4082f9f63429b77c1244'
+    'AggregateList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
+    'ServerGroup': '1.0-b2dcc1b9980eafaa5d1e67f54796b6ef',
+    'ServerGroupList': '1.0-43e8aad0258652921f929934e9e048fd'
 }
 
 
