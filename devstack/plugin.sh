@@ -11,6 +11,9 @@
 XTRACE=$(set +o | grep xtrace)
 set -o xtrace
 
+# TODO(zhenguo): Remove this when placement is started as a separate service
+source $MOGAN_DIR/devstack/placement
+
 # Defaults
 # --------
 
@@ -206,11 +209,12 @@ if is_service_enabled mogan; then
         if [[ "$IRONIC_USE_RESOURCE_CLASSES" == "False" ]]; then
             die "Ironic node resource class is required for Mogan"
         fi
-        if ! is_service_enabled placement; then
-            die "placement service is required for Mogan"
-        fi
         install_mogan
         install_mogan_pythonclient
+        # TODO(zhenguo): Remove this when placement is started as a separated service
+        if ! is_service_enabled placement; then
+            install_placement
+        fi
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring mogan"
         if is_service_enabled tempest; then
@@ -218,24 +222,40 @@ if is_service_enabled mogan; then
         fi
         configure_mogan
         create_mogan_accounts
+        # TODO(zhenguo): Remove this when placement is started as a separated service
+        if ! is_service_enabled placement; then
+            configure_placement
+        fi
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         echo_summary "Initializing mogan"
         init_mogan
         start_mogan
         echo_summary "Creating flavor"
         create_flavor
+        # TODO(zhenguo): Remove this when placement is started as a separated service
+        if ! is_service_enabled placement; then
+            init_placement
+            start_placement
+        fi
     fi
 
     if [[ "$1" == "unstack" ]]; then
         echo_summary "Shutting down mogan"
         stop_mogan
+        # TODO(zhenguo): Remove this when placement is started as a separated service
+        if ! is_service_enabled placement; then
+            stop_placement
+        fi
     fi
 
     if [[ "$1" == "clean" ]]; then
         echo_summary "Cleaning mogan"
+        # TODO(zhenguo): Remove this when placement is started as a separated service
+        if ! is_service_enabled placement; then
+            cleanup_placement
+        fi
     fi
 fi
-
 
 # Restore xtrace
 $XTRACE

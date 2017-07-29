@@ -8,8 +8,6 @@ enable_service mogan mogan-api mogan-engine mogan-scheduler mogan-consoleauth mo
 # Set up default repos
 MOGAN_REPO=${MOGAN_REPO:-${GIT_BASE}/openstack/mogan.git}
 MOGAN_BRANCH=${MOGAN_BRANCH:-master}
-#MOGAN_DASHBOARD_REPO=${MOGAN_DASHBOARD_REPO:-${GIT_BASE}/openstack/mogan-dashboard.git}
-#MOGAN_DASHBOARD_BRANCH=${MOGAN_DASHBOARD_BRANCH:-${MOGAN_BRANCH}}
 
 MOGAN_PYTHONCLIENT_REPO=${MOGAN_PYTHONCLIENT_REPO:-${GIT_BASE}/openstack/python-moganclient.git}
 MOGAN_PYTHONCLIENT_BRANCH=${MOGAN_PYTHONCLIENT_BRANCH:-master}
