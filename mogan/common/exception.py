@@ -414,7 +414,7 @@ class Base64Exception(Invalid):
     _msg_fmt = _("Invalid Base 64 data for file %(path)s")
 
 
-class KeyPairExists(Conflict):
+class KeypairExists(Conflict):
     _msg_fmt = _("KeyPaire with key name %(key_name)s already exists.")
 
 
