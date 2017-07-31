@@ -92,6 +92,7 @@ def get_test_flavor(**kw):
         'description': kw.get('description', 'test'),
         'resources': kw.get('resources', {}),
         'resource_traits': kw.get('resource_traits', {}),
+        'aggregates': kw.get('aggregates', {}),
         'is_public': kw.get('is_public', 1),
         'disabled': kw.get('disabled', 0),
         'updated_at': kw.get('updated_at'),

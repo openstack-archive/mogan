@@ -36,6 +36,7 @@ Response
    - description: flavor_description
    - resources: flavor_resources
    - resource_traits: flavor_resource_traits
+   - aggregates: flavor_aggregates
    - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
@@ -71,6 +72,7 @@ Request
    - description: flavor_description
    - resources: flavor_resources
    - resource_traits: flavor_resource_traits
+   - aggregates: flavor_aggregates
    - is_public: flavor_is_public_not_required
    - disabled: flavor_disabled
 
@@ -89,6 +91,7 @@ Response
    - description: flavor_description
    - resources: flavor_resources
    - resource_traits: flavor_resource_traits
+   - aggregates: flavor_aggregates
    - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
@@ -140,6 +143,7 @@ Response
    - description: flavor_description
    - resources: flavor_resources
    - resource_traits: flavor_resource_traits
+   - aggregates: flavor_aggregates
    - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at
@@ -179,6 +183,7 @@ Response
    - description: flavor_description
    - resources: flavor_resources
    - resource_traits: flavor_resource_traits
+   - aggregates: flavor_aggregates
    - uuid: flavor_uuid
    - created_at: created_at
    - updated_at: updated_at

@@ -41,7 +41,8 @@ class TestFlavor(v1_test.APITestV1):
     def test_flavor_post(self):
         body = {"name": "test", "description": "just test",
                 "resources": {"CUSTOM_GOLD": 1},
-                "resource_traits": {"CUSTOM_GOLD": "FPGA"}}
+                "resource_traits": {"CUSTOM_GOLD": "FPGA"},
+                "aggregates": {"high_mem": "true"}}
         resp = self.post_json(
             '/flavors', body, headers=self.headers, status=201)
         resp = resp.json
@@ -50,6 +51,7 @@ class TestFlavor(v1_test.APITestV1):
         self.assertTrue(resp['is_public'])
         self.assertEqual({'CUSTOM_GOLD': 1}, resp['resources'])
         self.assertEqual({'CUSTOM_GOLD': 'FPGA'}, resp['resource_traits'])
+        self.assertEqual({'high_mem': 'true'}, resp['aggregates'])
         self.assertIn('uuid', resp)
         self.assertIn('links', resp)
 

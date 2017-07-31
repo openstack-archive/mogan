@@ -29,6 +29,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
             body = {"name": "mogan_flavor_" + {0: 'public', 1: 'private'}[i],
                     "description": "mogan flavor description",
                     "resources": {"CUSTOM_GOLD": 1},
+                    "aggregates": {"high_mem": "true"},
                     'is_public': not bool(i)}
             resp = cls.baremetal_compute_client.create_flavor(**body)
             cls.flavor_ids.append(resp['uuid'])
@@ -52,7 +53,8 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
         body = {"name": 'mogan_flavor_create',
                 "description": "mogan flavor description",
                 'is_public': True, 'resources': {'gold': 1},
-                'resource_traits': {'gold': 'foo'}}
+                'resource_traits': {'gold': 'foo'},
+                'aggregates': {'high_mem': 'true'}}
         resp = self.baremetal_compute_client.create_flavor(**body)
         self.assertEqual('mogan_flavor_create', resp['name'])
         self.assertEqual('mogan flavor description',
@@ -61,6 +63,7 @@ class BaremetalComputeAPITest(base.BaseBaremetalComputeTest):
         self.assertFalse(resp['disabled'])
         self.assertEqual({'gold': 1}, resp['resources'])
         self.assertEqual({'gold': 'foo'}, resp['resource_traits'])
+        self.assertEqual({'high_mem': 'true'}, resp['aggregates'])
         self.assertIn('uuid', resp)
         self.assertIn('links', resp)
         self.flavor_ids.append(resp['uuid'])

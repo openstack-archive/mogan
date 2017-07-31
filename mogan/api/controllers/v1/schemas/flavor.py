@@ -24,6 +24,7 @@ create_flavor = {
         'description': {'type': 'string', 'minLength': 1},
         'resources': parameter_types.resources,
         'resource_traits': parameter_types.resource_traits,
+        'aggregates': parameter_types.metadata,
         'is_public': parameter_types.boolean,
         'disabled': parameter_types.boolean,
     },
