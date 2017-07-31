@@ -385,7 +385,7 @@ expected_object_fingerprints = {
     'Server': '1.0-dc54162c0cc91fac43fed5304cd2c968',
     'ServerFault': '1.0-74349ff701259e4834b4e9dc2dac1b12',
     'ServerFaultList': '1.0-43e8aad0258652921f929934e9e048fd',
-    'Flavor': '1.0-f53b71bd4aaaadea0d9284b811a82bb5',
+    'Flavor': '1.0-9f7166aa387d89ec40cd699019d0c9a9',
     'MyObj': '1.1-aad62eedc5a5cc8bcaf2982c285e753f',
     'ServerNic': '1.0-0494306157ef437802260ff8b51cf5cf',
     'ServerNics': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
