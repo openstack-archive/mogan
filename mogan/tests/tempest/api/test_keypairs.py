@@ -96,7 +96,7 @@ class BaremetalComputeAPIKeypairsTest(base.BaseBaremetalComputeTest):
         self.assertIn('fingerprint', keypair)
 
     @decorators.idempotent_id('65614c7e-a1d9-4d1b-aa9a-6893616c0cc1')
-    def test_flavor_delete(self):
+    def test_keypair_delete(self):
         keypair_body = {
             "type": "ssh",
             "name": "test-delete"
