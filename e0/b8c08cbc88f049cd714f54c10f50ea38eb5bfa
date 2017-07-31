@@ -1,0 +1,9 @@
+Code-Review+1: wanghao <sxmatch1986@gmail.com>
+Code-Review+2: liusheng <liusheng2048@gmail.com>
+Workflow+1: liusheng <liusheng2048@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 31 Jul 2017 08:17:29 +0000
+Reviewed-on: https://review.openstack.org/489089
+Project: openstack/mogan
+Branch: refs/heads/master
