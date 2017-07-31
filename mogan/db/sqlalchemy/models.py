@@ -148,6 +148,7 @@ class Flavors(Base):
     description = Column(MediumText())
     resources = Column(db_types.JsonEncodedDict)
     resource_traits = Column(db_types.JsonEncodedDict)
+    resource_aggregates = Column(db_types.JsonEncodedDict)
     is_public = Column(Boolean, default=True)
     disabled = Column(Boolean, default=False)
     servers = orm.relationship(

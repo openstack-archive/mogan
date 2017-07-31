@@ -39,6 +39,7 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         'disabled': object_fields.BooleanField(),
         'resources': object_fields.FlexibleDictField(nullable=True),
         'resource_traits': object_fields.FlexibleDictField(nullable=True),
+        'resource_aggregates': object_fields.FlexibleDictField(nullable=True),
         'projects': object_fields.ListOfStringsField(),
     }
 

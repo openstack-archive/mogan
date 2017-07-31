@@ -232,6 +232,13 @@ flavor_access:
   in: body
   required: true
   type: array
+flavor_aggregates:
+  description: |
+    A dict of key and value pairs associate with the flavor including the resources
+    aggregate metadata.
+  in: body
+  required: true
+  type: object
 flavor_description:
   description: |
     The description of the flavor.
@@ -277,7 +284,7 @@ flavor_resources:
     name and the quantity.
   in: body
   required: true
-  type: string
+  type: object
 flavor_uuid:
   description: |
     The UUID of the flavor.
