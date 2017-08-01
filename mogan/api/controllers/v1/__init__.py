@@ -25,6 +25,7 @@ from wsme import types as wtypes
 
 from mogan.api.controllers import base
 from mogan.api.controllers import link
+from mogan.api.controllers.v1 import aggregates
 from mogan.api.controllers.v1 import availability_zone
 from mogan.api.controllers.v1 import flavors
 from mogan.api.controllers.v1 import keypairs
@@ -49,6 +50,9 @@ class V1(base.APIBase):
 
     keypairs = [link.Link]
     """Links to the keypairs resource"""
+
+    aggregates = [link.Link]
+    """Links to the aggregates resource"""
 
     @staticmethod
     def convert():
@@ -84,6 +88,14 @@ class V1(base.APIBase):
                                            'keypairs', '',
                                            bookmark=True)
                        ]
+        v1.aggregates = [link.Link.make_link('self',
+                                             pecan.request.public_url,
+                                             'aggregates', ''),
+                         link.Link.make_link('bookmark',
+                                             pecan.request.public_url,
+                                             'aggregates', '',
+                                             bookmark=True)
+                         ]
         return v1
 
 
@@ -94,6 +106,7 @@ class Controller(rest.RestController):
     servers = servers.ServerController()
     availability_zones = availability_zone.AvailabilityZoneController()
     keypairs = keypairs.KeyPairController()
+    aggregates = aggregates.AggregateController()
 
     @expose.expose(V1)
     def get(self):
