@@ -76,6 +76,11 @@ class Flavor(base.APIBase):
         self.fields = []
         for field in objects.Flavor.fields:
             # Skip fields we do not expose.
+            if not pecan.request.context.is_admin:
+                if not field == 'name' and not field == 'description' and \
+                        not field == 'uuid' and not field == 'is_public':
+                    setattr(self, field, wtypes.Unset)
+                    continue
             if not hasattr(self, field):
                 continue
             self.fields.append(field)
@@ -85,15 +90,15 @@ class Flavor(base.APIBase):
     def convert_with_links(cls, db_flavor):
         flavor = Flavor(**db_flavor.as_dict())
         url = pecan.request.public_url
-        flavor.links = [link.Link.make_link('self', url,
-                                            'flavors',
-                                            flavor.uuid),
-                        link.Link.make_link('bookmark', url,
-                                            'flavors',
-                                            flavor.uuid,
-                                            bookmark=True)
-                        ]
-
+        if pecan.request.context.is_admin:
+            flavor.links = [link.Link.make_link('self', url,
+                                                'flavors',
+                                                flavor.uuid),
+                            link.Link.make_link('bookmark', url,
+                                                'flavors',
+                                                flavor.uuid,
+                                                bookmark=True)
+                            ]
         return flavor
 
 
