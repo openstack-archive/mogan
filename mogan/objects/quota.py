@@ -19,7 +19,7 @@
 
 '''
 Quotas for servers.
-Leverages cinder/quota.py
+Leverages nova/config/cinder.py
 '''
 
 import datetime
