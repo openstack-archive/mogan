@@ -258,6 +258,7 @@ Response
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - nics: nics
+  - node_uuid: node_uuid
   - links: links
   - uuid: server_uuid
   - status: server_status
