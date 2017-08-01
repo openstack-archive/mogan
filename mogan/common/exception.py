@@ -455,4 +455,39 @@ class ServerGroupNotFound(NotFound):
 class ServerGroupExists(Conflict):
     _msg_fmt = _("Sever group %(group_uuid)s already exists.")
 
+
+class CinderAPIVersionNotAvailable(Invalid):
+    """Used to indicate that a requested Cinder API version, generally a
+    microversion, is not available.
+    """
+    _msg_fmt = _('Cinder API version %(version)s is not available.')
+
+
+class UnsupportedCinderAPIVersion(Invalid):
+    _msg_fmt = _('Mogan does not support Cinder API version %(version)s')
+
+
+class CinderConnectionFailed(MoganException):
+    _msg_fmt = _("Connection to cinder host failed: %(reason)s")
+
+
+class InvalidInput(Invalid):
+    _msg_fmt = _("Invalid input received: %(reason)s")
+
+
+class VolumeNotFound(NotFound):
+    _msg_fmt = _("Volume %(volume_id)s could not be found.")
+
+
+class VolumeAttachmentNotFound(NotFound):
+    _msg_fmt = _("Volume attachment %(attachment_id)s could not be found.")
+
+
+class InvalidVolume(Invalid):
+    _msg_fmt = _("Invalid volume: %(reason)s")
+
+
+class VolumeUnattached(Invalid):
+    _msg_fmt = _("Volume %(volume_id)s is not attached to anything")
+
 ObjectActionError = obj_exc.ObjectActionError
