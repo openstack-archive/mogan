@@ -159,6 +159,9 @@ server_policies = [
     policy.RuleDefault('mogan:aggregate:get_one',
                        'rule:admin_api',
                        description='Show aggregate details'),
+    policy.RuleDefault('mogan:node:get_all',
+                       'rule:admin_api',
+                       description='Get the nodes list'),
 ]
 
 
