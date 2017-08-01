@@ -1,0 +1,12 @@
+Code-Review+2: liusheng <liusheng2048@gmail.com>
+Code-Review+2: ShaoHe Feng <shaohe.feng@intel.com>
+Code-Review+1: lidong <lidongbj@inspur.com>
+Code-Review+1: YuYang <yuyangwang1985@gmail.com>
+Code-Review+1: ShangXiao <shangxiaobj@inspur.com>
+Workflow+1: liusheng <liusheng2048@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 01 Aug 2017 07:08:43 +0000
+Reviewed-on: https://review.openstack.org/485506
+Project: openstack/mogan
+Branch: refs/heads/master
