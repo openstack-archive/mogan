@@ -76,15 +76,21 @@ class Flavor(base.APIBase):
         self.fields = []
         for field in objects.Flavor.fields:
             # Skip fields we do not expose.
+            if not pecan.request.context.is_admin:
+                if not field == 'name' and not field == 'description' and \
+                        not field == 'uuid' and not field == 'is_public':
+                    continue
             if not hasattr(self, field):
                 continue
             self.fields.append(field)
             setattr(self, field, kwargs.get(field, wtypes.Unset))
 
     @classmethod
-    def convert_with_links(cls, db_flavor):
+    def convert_with_links(cls, db_flavor, fields=None):
         flavor = Flavor(**db_flavor.as_dict())
         url = pecan.request.public_url
+        if fields is not None:
+            flavor.unset_fields_except(fields)
         flavor.links = [link.Link.make_link('self', url,
                                             'flavors',
                                             flavor.uuid),
@@ -93,7 +99,6 @@ class Flavor(base.APIBase):
                                             flavor.uuid,
                                             bookmark=True)
                         ]
-
         return flavor
 
 
@@ -109,7 +114,7 @@ class FlavorCollection(base.APIBase):
     """A list containing Flavor objects"""
 
     @staticmethod
-    def convert_with_links(flavors, url=None, **kwargs):
+    def convert_with_links(flavors):
         collection = FlavorCollection()
         collection.flavors = [Flavor.convert_with_links(flavor)
                               for flavor in flavors]
@@ -179,7 +184,6 @@ class FlavorsController(rest.RestController):
     @expose.expose(FlavorCollection)
     def get_all(self):
         """Retrieve a list of flavor."""
-
         flavors = objects.Flavor.list(pecan.request.context)
         return FlavorCollection.convert_with_links(flavors)
 
