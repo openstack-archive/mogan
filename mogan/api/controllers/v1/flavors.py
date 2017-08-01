@@ -33,6 +33,9 @@ from mogan.common import policy
 from mogan import objects
 
 
+_DEFAULT_FLAVOR_RETURN_FIELDS = ['uuid', 'name', 'description', 'is_public']
+
+
 def _marshall_flavor_access(flavor):
     rval = []
     for project_id in flavor.projects:
@@ -82,9 +85,11 @@ class Flavor(base.APIBase):
             setattr(self, field, kwargs.get(field, wtypes.Unset))
 
     @classmethod
-    def convert_with_links(cls, db_flavor):
+    def convert_with_links(cls, db_flavor, fields=None):
         flavor = Flavor(**db_flavor.as_dict())
         url = pecan.request.public_url
+        if fields is not None:
+            flavor.unset_fields_except(fields)
         flavor.links = [link.Link.make_link('self', url,
                                             'flavors',
                                             flavor.uuid),
@@ -93,7 +98,6 @@ class Flavor(base.APIBase):
                                             flavor.uuid,
                                             bookmark=True)
                         ]
-
         return flavor
 
 
@@ -109,9 +113,9 @@ class FlavorCollection(base.APIBase):
     """A list containing Flavor objects"""
 
     @staticmethod
-    def convert_with_links(flavors, url=None, **kwargs):
+    def convert_with_links(flavors, fields=None):
         collection = FlavorCollection()
-        collection.flavors = [Flavor.convert_with_links(flavor)
+        collection.flavors = [Flavor.convert_with_links(flavor, fields=fields)
                               for flavor in flavors]
         return collection
 
@@ -179,9 +183,12 @@ class FlavorsController(rest.RestController):
     @expose.expose(FlavorCollection)
     def get_all(self):
         """Retrieve a list of flavor."""
-
         flavors = objects.Flavor.list(pecan.request.context)
-        return FlavorCollection.convert_with_links(flavors)
+        if not pecan.request.context.is_admin:
+            return FlavorCollection.convert_with_links(
+                flavors, fields=_DEFAULT_FLAVOR_RETURN_FIELDS)
+        else:
+            return FlavorCollection.convert_with_links(flavors)
 
     @policy.authorize_wsgi("mogan:flavor", "get_one")
     @expose.expose(Flavor, types.uuid)
@@ -191,7 +198,11 @@ class FlavorsController(rest.RestController):
         :param flavor_uuid: UUID of a flavor.
         """
         db_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
-        return Flavor.convert_with_links(db_flavor)
+        if not pecan.request.context.is_admin:
+            return Flavor.convert_with_links(
+                db_flavor, fields=_DEFAULT_FLAVOR_RETURN_FIELDS)
+        else:
+            return Flavor.convert_with_links(db_flavor)
 
     @policy.authorize_wsgi("mogan:flavor", "create")
     @expose.expose(Flavor, body=types.jsontype,
