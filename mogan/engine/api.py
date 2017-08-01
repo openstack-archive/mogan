@@ -548,3 +548,20 @@ class API(object):
     def list_compute_nodes(self, context):
         """Get compute node list."""
         return self.engine_rpcapi.list_compute_nodes(context)
+
+    def list_aggregate_nodes(self, context, aggregate_uuid):
+        """Get aggregate node list."""
+        return self.engine_rpcapi.list_aggregate_nodes(context,
+                                                       aggregate_uuid)
+
+    def add_aggregate_node(self, context, aggregate_uuid, node):
+        """Add a node to the aggregate."""
+        return self.engine_rpcapi.add_aggregate_node(context,
+                                                     aggregate_uuid,
+                                                     node)
+
+    def remove_aggregate_node(self, context, aggregate_uuid, node):
+        """Remove a node to the aggregate."""
+        return self.engine_rpcapi.remove_aggregate_node(context,
+                                                        aggregate_uuid,
+                                                        node)

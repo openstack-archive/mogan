@@ -188,8 +188,7 @@ class AggregateMetadataNotFound(NotFound):
 
 
 class NodeNotFound(NotFound):
-    _msg_fmt = _("Node associated with server %(server)s "
-                 "could not be found.")
+    _msg_fmt = _("Node %(node)s could not be found.")
 
 
 class InvalidActionParameterValue(Invalid):

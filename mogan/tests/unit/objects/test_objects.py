@@ -392,7 +392,7 @@ expected_object_fingerprints = {
     'Quota': '1.0-c8caa082f4d726cb63fdc5943f7cd186',
     'KeyPair': '1.0-1a1ea1f9b4d03503f5c13b52d1432fa9',
     'KeyPairList': '1.0-33a2e1bb91ad4082f9f63429b77c1244',
-    'Aggregate': '1.0-e2f3060705a18e1de8daae3f1af6b104',
+    'Aggregate': '1.0-b62b178679d1b69bc2643909d8874af1',
     'AggregateList': '1.0-33a2e1bb91ad4082f9f63429b77c1244'
 }
 
