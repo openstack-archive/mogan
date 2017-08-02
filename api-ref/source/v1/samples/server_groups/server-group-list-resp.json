@@ -1,0 +1,48 @@
+{
+    "server_groups": [
+        {
+            "user_id": "9851baf53c75452dad7951bca7b3dbac",
+            "uuid": "73f9f8be-2e4e-4de8-b3f9-e1bf6618c1b1",
+            "links": [
+                {
+                    "href": "http://10.229.40.107/v1/server_groups/73f9f8be-2e4e-4de8-b3f9-e1bf6618c1b1",
+                    "rel": "self"
+                },
+                {
+                    "href": "http://10.229.40.107/server_groups/73f9f8be-2e4e-4de8-b3f9-e1bf6618c1b1",
+                    "rel": "bookmark"
+                }
+            ],
+            "created_at": "2017-08-02T09:18:24+00:00",
+            "updated_at": null,
+            "members": [],
+            "project_id": "b5f8b7e5429449a8a1366088abede8d1",
+            "policies": [
+                "anti-affinity"
+            ],
+            "name": "test"
+        },
+        {
+            "user_id": "9851baf53c75452dad7951bca7b3dbac",
+            "uuid": "fd2dab04-ab3e-4893-9ee4-837cc0ea2d9c",
+            "links": [
+                {
+                    "href": "http://10.229.40.107/v1/server_groups/fd2dab04-ab3e-4893-9ee4-837cc0ea2d9c",
+                    "rel": "self"
+                },
+                {
+                    "href": "http://10.229.40.107/server_groups/fd2dab04-ab3e-4893-9ee4-837cc0ea2d9c",
+                    "rel": "bookmark"
+                }
+            ],
+            "created_at": "2017-08-02T09:20:24+00:00",
+            "updated_at": null,
+            "members": [],
+            "project_id": "b5f8b7e5429449a8a1366088abede8d1",
+            "policies": [
+                "affinity"
+            ],
+            "name": "test2"
+        }
+    ]
+}
