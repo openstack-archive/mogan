@@ -31,6 +31,7 @@ from mogan.api.controllers.v1 import flavors
 from mogan.api.controllers.v1 import keypairs
 from mogan.api.controllers.v1 import nodes
 from mogan.api.controllers.v1 import servers
+from mogan.api.controllers.v1 import server_groups
 from mogan.api import expose
 
 
@@ -108,6 +109,14 @@ class V1(base.APIBase):
                                         'nodes', '',
                                         bookmark=True)
                     ]
+        v1.server_groups = [link.Link.make_link('self',
+                                                pecan.request.public_url,
+                                                'server_groups', ''),
+                            link.Link.make_link('bookmark',
+                                                pecan.request.public_url,
+                                                'server_groups', '',
+                                                bookmark=True)
+                            ]
         return v1
 
 
@@ -120,6 +129,7 @@ class Controller(rest.RestController):
     keypairs = keypairs.KeyPairController()
     aggregates = aggregates.AggregateController()
     nodes = nodes.NodeController()
+    server_groups = server_groups.ServerGroupController()
 
     @expose.expose(V1)
     def get(self):
