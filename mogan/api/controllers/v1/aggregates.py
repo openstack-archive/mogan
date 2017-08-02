@@ -27,6 +27,7 @@ from mogan.api.controllers.v1 import utils as api_utils
 from mogan.api import expose
 from mogan.api import validation
 from mogan.common import exception
+from mogan.common.i18n import _
 from mogan.common import policy
 from mogan import objects
 
@@ -116,10 +117,28 @@ class AggregateNodeController(rest.RestController):
         """Add node to the given aggregate."""
         validation.check_schema(node, agg_schema.add_aggregate_node)
 
-        # check whether the aggregate exists
-        objects.Aggregate.get(pecan.request.context, aggregate_uuid)
+        node = node['node']
+        # check whether the node is already in another az
+        db_aggregate = objects.Aggregate.get(pecan.request.context,
+                                             aggregate_uuid)
+        if 'availability_zone' in db_aggregate['metadata']:
+            node_aggs = pecan.request.engine_api.list_node_aggregates(
+                pecan.request.context, node)
+            aggregates = objects.AggregateList.get_by_metadata_key(
+                pecan.request.context, 'availability_zone')
+            agg_az = db_aggregate.metadata['availability_zone']
+            conflict_azs = [
+                agg.metadata['availability_zone'] for agg in aggregates
+                if agg.uuid in node_aggs['aggregates'] and
+                agg.metadata['availability_zone'] != agg_az]
+            if conflict_azs:
+                msg = _("Node %(node)s is already in availability zone(s) "
+                        "%(az)s") % {"node": node, "az": conflict_azs}
+                raise wsme.exc.ClientSideError(
+                    msg, status_code=http_client.BAD_REQUEST)
+
         pecan.request.engine_api.add_aggregate_node(
-            pecan.request.context, aggregate_uuid, node['node'])
+            pecan.request.context, aggregate_uuid, node)
 
     @policy.authorize_wsgi("mogan:aggregate_node", "delete")
     @expose.expose(None, types.uuid, wtypes.text,
@@ -161,11 +180,19 @@ class AggregateController(rest.RestController):
     @expose.expose(Aggregate, body=types.jsontype,
                    status_code=http_client.CREATED)
     def post(self, aggregate):
-        """Create an new aggregate.
+        """Create a new aggregate.
 
         :param aggregate: an aggregate within the request body.
         """
         validation.check_schema(aggregate, agg_schema.create_aggregate)
+        metadata = aggregate.get('metadata')
+        if metadata and 'availability_zone' in metadata:
+            if not metadata['availability_zone']:
+                msg = _("Aggregate %s does not support empty named "
+                        "availability zone") % aggregate['name']
+                raise wsme.exc.ClientSideError(
+                    msg, status_code=http_client.BAD_REQUEST)
+
         new_aggregate = objects.Aggregate(pecan.request.context, **aggregate)
         new_aggregate.create()
         # Set the HTTP Location Header
@@ -193,6 +220,14 @@ class AggregateController(rest.RestController):
         except api_utils.JSONPATCH_EXCEPTIONS as e:
             raise exception.PatchError(patch=patch, reason=e)
 
+        # Check if this tries to change availability zone
+        az_changed = False
+        for patch_dict in patch:
+            if patch_dict['path'] == '/metadata/availability_zone' \
+                    and patch_dict['op'] != 'remove':
+                az_changed = True
+                break
+
         # Update only the fields that have changed
         for field in objects.Aggregate.fields:
             try:
@@ -204,6 +239,41 @@ class AggregateController(rest.RestController):
                 patch_val = None
             if db_aggregate[field] != patch_val:
                 db_aggregate[field] = patch_val
+
+                if field == 'metadata' and az_changed:
+                    if not patch_val['availability_zone']:
+                        msg = _("Aggregate %s does not support empty named "
+                                "availability zone") % aggregate.name
+                        raise wsme.exc.ClientSideError(
+                            msg, status_code=http_client.BAD_REQUEST)
+
+                    # ensure it's safe to update availability_zone
+                    aggregates = objects.AggregateList.get_by_metadata_key(
+                        pecan.request.context, 'availability_zone')
+                    nodes = pecan.request.engine_api.list_aggregate_nodes(
+                        pecan.request.context, db_aggregate['uuid'])
+                    filtered_aggs = []
+                    for agg in aggregates:
+                        agg_nodes = \
+                            pecan.request.engine_api.list_aggregate_nodes(
+                                pecan.request.context, agg.uuid)
+                        for node in agg_nodes['nodes']:
+                            if node in nodes['nodes']:
+                                filtered_aggs.append(agg)
+                                break
+
+                    new_az = patch_val['availability_zone']
+                    conflict_azs = [
+                        agg.metadata['availability_zone']
+                        for agg in filtered_aggs
+                        if agg.metadata['availability_zone'] != new_az and
+                        agg.uuid != db_aggregate['uuid']
+                    ]
+                    if conflict_azs:
+                        msg = _("One or more nodes already in different "
+                                "availability zone(s) %s") % conflict_azs
+                        raise wsme.exc.ClientSideError(
+                            msg, status_code=http_client.BAD_REQUEST)
 
         db_aggregate.save()
 
