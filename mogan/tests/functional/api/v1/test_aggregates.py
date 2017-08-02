@@ -14,6 +14,7 @@
 
 import mock
 import six
+from six.moves import http_client
 
 from mogan.tests.functional.api import v1 as v1_test
 
@@ -48,6 +49,15 @@ class TestAggregate(v1_test.APITestV1):
         self.assertEqual({'k1': 'v1'}, resp['metadata'])
         self.assertIn('uuid', resp)
         self.assertIn('links', resp)
+
+    def test_aggregate_post_with_empty_az(self):
+        body = {"name": "test_empty",
+                "metadata": {"availability_zone": ""}}
+        response = self.post_json(
+            '/aggregates', body, headers=self.headers, expect_errors=True)
+        self.assertEqual(http_client.BAD_REQUEST, response.status_code)
+        self.assertEqual('application/json', response.content_type)
+        self.assertTrue(response.json['error_message'])
 
     def test_aggregate_get_all(self):
         self._prepare_aggregates()
@@ -85,3 +95,14 @@ class TestAggregate(v1_test.APITestV1):
                              headers=self.headers)
         self.assertEqual('updated_name', resp['name'])
         self.assertItemsEqual({'k1': 'v1', 'k2': 'v2'}, resp['metadata'])
+
+    def test_aggregate_update_with_empty_az(self):
+        self._prepare_aggregates()
+        response = self.patch_json('/aggregates/' + self.AGGREGATE_UUIDS[0],
+                                   [{'path': '/metadata/availability_zone',
+                                     'value': '', 'op': 'add'}],
+                                   headers=self.headers,
+                                   expect_errors=True)
+        self.assertEqual(http_client.BAD_REQUEST, response.status_code)
+        self.assertEqual('application/json', response.content_type)
+        self.assertTrue(response.json['error_message'])
