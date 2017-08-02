@@ -784,3 +784,16 @@ class SchedulerReportClient(object):
                      action)
             return
         self._put_provider_aggregates(rp_uuid, list(new_aggs))
+
+    def get_aggregates_from_node(self, node):
+        # Use the aggregates we cached
+        rps = self._resource_providers
+        for id, rp in rps.items():
+            if node == rp['name']:
+                rp_uuid = id
+                break
+        else:
+            raise exception.NodeNotFound(node=node)
+
+        aggs = self._provider_aggregate_map[rp_uuid]
+        return {'aggregates': list(aggs)}

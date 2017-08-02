@@ -27,6 +27,7 @@ from mogan.api.controllers.v1 import utils as api_utils
 from mogan.api import expose
 from mogan.api import validation
 from mogan.common import exception
+from mogan.common.i18n import _
 from mogan.common import policy
 from mogan import objects
 
@@ -116,8 +117,25 @@ class AggregateNodeController(rest.RestController):
         """Add node to the given aggregate."""
         validation.check_schema(node, agg_schema.add_aggregate_node)
 
-        # check whether the aggregate exists
-        objects.Aggregate.get(pecan.request.context, aggregate_uuid)
+        # check whether the node is already in another az
+        db_aggregate = objects.Aggregate.get(pecan.request.context,
+                                             aggregate_uuid)
+        if 'availability_zone' in db_aggregate['metadata']:
+            node_aggs = pecan.request.engine_api.list_node_aggregates(
+                pecan.request.context, node)
+            aggregates = objects.AggregateList.get_by_metadata_key(
+                pecan.request.context, 'availability_zone')
+            agg_az = db_aggregate.metadata['availabilty_zone']
+            conflict_azs = [
+                agg.metadata['availability_zone'] for agg in aggregates
+                if agg.uuid in node_aggs['aggregates'] and
+                agg.metadata['availability_zone'] != agg_az]
+            if conflict_azs:
+                msg = _("Node %(node)s is already in availability zone(s) "
+                        "%(az)s") % {"node": node, "az": conflict_azs}
+                raise wsme.exc.ClientSideError(
+                    msg, status_code=http_client.BAD_REQUEST)
+
         pecan.request.engine_api.add_aggregate_node(
             pecan.request.context, aggregate_uuid, node['node'])
 
@@ -161,7 +179,7 @@ class AggregateController(rest.RestController):
     @expose.expose(Aggregate, body=types.jsontype,
                    status_code=http_client.CREATED)
     def post(self, aggregate):
-        """Create an new aggregate.
+        """Create a new aggregate.
 
         :param aggregate: an aggregate within the request body.
         """
@@ -203,6 +221,12 @@ class AggregateController(rest.RestController):
             if patch_val == wtypes.Unset:
                 patch_val = None
             if db_aggregate[field] != patch_val:
+                if field == 'metadata' and 'availability_zone' in patch_val:
+                    if not patch_val['availability_zone']:
+                        msg = _("Aggregate %s does not support empty named "
+                                "availability zone") % aggregate.name
+                        raise wsme.exc.ClientSideError(
+                            msg, status_code=http_client.BAD_REQUEST)
                 db_aggregate[field] = patch_val
 
         db_aggregate.save()
