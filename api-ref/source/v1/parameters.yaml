@@ -45,6 +45,12 @@ port_ident:
   in: path
   required: true
   type: string
+server_group_uuid_path:
+  description: |
+    The UUID of the server group.
+  in: path
+  required: true
+  type: string
 server_ident:
   description: |
     The UUID of the server.
@@ -522,6 +528,29 @@ server_fault:
   in: body
   required: false
   type: object
+server_group_name:
+  description: |
+    The server group name.
+  in: body
+  required: true
+  type: string
+server_group_members:
+  description: |
+    A list of uuids of servers which belong to this server group.
+  in: body
+  required: false
+  type: array
+server_group_policies:
+  description: |
+    A list of exactly one policy name to associate with the server group. The
+    current valid policy names are:
+
+    - ``anti-affinity`` - servers in this group must be scheduled to
+      different hosts.
+    - ``affinity`` - servers in this group must be scheduled to the same host.
+  in: body
+  required: true
+  type: array
 server_name:
   description: |
     The server name.
