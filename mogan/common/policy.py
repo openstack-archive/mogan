@@ -171,6 +171,18 @@ server_policies = [
     policy.RuleDefault('mogan:node:get_all',
                        'rule:admin_api',
                        description='Get the nodes list'),
+    policy.RuleDefault('mogan:server_group:get_all',
+                       'rule:default',
+                       description='Get the server group list'),
+    policy.RuleDefault('mogan:server_group:get_one',
+                       'rule:default',
+                       description='Show a server group details'),
+    policy.RuleDefault('mogan:server_group:create',
+                       'rule:default',
+                       description='Create a server group'),
+    policy.RuleDefault('mogan:server_group:delete',
+                       'rule:default',
+                       description='Delete a server group'),
 ]
 
 
