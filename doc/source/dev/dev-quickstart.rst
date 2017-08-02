@@ -239,17 +239,7 @@ Switch to the stack user and clone DevStack::
     sudo su - stack
     git clone https://git.openstack.org/openstack-dev/devstack.git devstack
 
-Create devstack/local.conf with minimal settings required to enable Mogan
-
-.. note::
-    As Ironic tempest configuration depends on baremetal flavor, we have to
-    temporarily disable tempest in the devstack config file to make it work
-    with Ironic.
-    It's ok to enable Horizon, Nova and Cinder services, they don't impact
-    Mogan at all, disable them in the demo configuration to only deploy the
-    dependent services
-
-::
+Create devstack/local.conf with minimal settings required to enable Mogan::
 
     cd devstack
     cat >local.conf <<END
@@ -269,31 +259,10 @@ Create devstack/local.conf with minimal settings required to enable Mogan
     # Enable Mogan plugin
     enable_plugin mogan git://git.openstack.org/openstack/mogan
 
-    # Enable Mogan UI plugin
-    enable_plugin mogan-ui git://git.openstack.org/openstack/mogan-ui
-
     # Enable Ironic UI plugin
     enable_plugin ironic-ui git://git.openstack.org/openstack/ironic-ui
 
-    # Enable Neutron which is required by Ironic and disable nova-network.
-    disable_service n-net
-    enable_service q-svc
-    enable_service q-agt
-    enable_service q-dhcp
-    enable_service q-l3
-    enable_service q-meta
-    enable_service neutron
-
-    # Enable Swift for agent_* drivers
-    enable_service s-proxy
-    enable_service s-object
-    enable_service s-container
-    enable_service s-account
-
-    # Disable Cinder
-    disable_service cinder c-sch c-api c-vol
-    # Disable Tempest
-    disable_service tempest
+    ENABLED_SERVICES=g-api,g-reg,q-agt,q-dhcp,q-l3,q-svc,key,mysql,rabbit,ir-api,ir-cond,s-account,s-container,s-object,s-proxy,tempest
 
     # Swift temp URL's are required for agent_* drivers.
     SWIFT_ENABLE_TEMPURLS=True
@@ -307,7 +276,7 @@ Create devstack/local.conf with minimal settings required to enable Mogan
     IRONIC_BAREMETAL_BASIC_OPS=True
 
     # Enable Ironic drivers.
-    IRONIC_ENABLED_DRIVERS=fake,agent_ssh,agent_ipmitool,pxe_ssh,pxe_ipmitool
+    IRONIC_ENABLED_DRIVERS=fake,agent_ipmitool,pxe_ipmitool
 
     # Change this to alter the default driver for nodes created by devstack.
     # This driver should be in the enabled list above.
@@ -331,14 +300,6 @@ Create devstack/local.conf with minimal settings required to enable Mogan
     IRONIC_VM_LOG_DIR=$HOME/ironic-bm-logs
 
     END
-
-.. note::
-    If you want to enable shellinabox console functionality, please disable
-    VM console log and set the ironic deployment driver as *agent_ssh* in
-    the devstack config file::
-
-    IRONIC_VM_LOG_CONSOLE=False
-    IRONIC_DEPLOY_DRIVER=agent_ssh
 
 .. note::
     Git protocol requires access to port 9418, which is not a standard port that
