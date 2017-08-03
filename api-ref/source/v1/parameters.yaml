@@ -296,6 +296,12 @@ flavors:
   in: body
   required: true
   type: array
+image_ident:
+  description: |
+    The UUID of the image to apply to rebuild your server.
+  in: body
+  required: false
+  type: string
 imageRef:
   description: |
     The UUID of the image to use for your server.
@@ -453,18 +459,18 @@ nics:
   in: body
   required: true
   type: dict
-nodes:
-  description: |
-    The compute node name list.
-  in: body
-  required: true
-  type: dict
 node_uuid:
   description: |
     The UUID of the node which our server associated with. Only visible for admin users.
   in: body
   required: false
   type: string
+nodes:
+  description: |
+    The compute node name list.
+  in: body
+  required: true
+  type: dict
 personality:
   description: |
     The file path and contents, text only, to inject into the server at launch. The

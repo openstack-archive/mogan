@@ -484,15 +484,15 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.info('Successfully set node power state: %s',
                  state, server=server)
 
-    def _rebuild_server(self, context, server):
+    def _rebuild_server(self, context, server, image_uuid=None):
         """Perform rebuild action on the specified server."""
 
         # TODO(zhenguo): Add delete notification
 
-        self.driver.rebuild(context, server)
+        self.driver.rebuild(context, server, image_uuid)
 
     @wrap_server_fault
-    def rebuild_server(self, context, server):
+    def rebuild_server(self, context, server, image_uuid=None):
         """Destroy and re-make this server.
 
         :param context: mogan request context
@@ -504,7 +504,7 @@ class EngineManager(base_manager.BaseEngineManager):
         fsm = utils.get_state_machine(start_state=server.status)
 
         try:
-            self._rebuild_server(context, server)
+            self._rebuild_server(context, server, image_uuid)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 utils.process_event(fsm, server, event='error')

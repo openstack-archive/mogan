@@ -73,10 +73,11 @@ class EngineAPI(object):
         return cctxt.cast(context, 'set_power_state',
                           server=server, state=state)
 
-    def rebuild_server(self, context, server):
+    def rebuild_server(self, context, server, image_uuid=None):
         """Signal to engine service to rebuild a server."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
-        return cctxt.cast(context, 'rebuild_server', server=server)
+        return cctxt.cast(context, 'rebuild_server', server=server,
+                          image_uuid=image_uuid)
 
     def get_serial_console(self, context, server):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
