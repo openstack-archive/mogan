@@ -492,27 +492,29 @@ class EngineManager(base_manager.BaseEngineManager):
         self.driver.rebuild(context, server)
 
     @wrap_server_fault
-    def rebuild_server(self, context, server):
+    def rebuild_server(self, context, server, image_uuid=None):
         """Destroy and re-make this server.
 
         :param context: mogan request context
         :param server: server object
         """
-
         LOG.debug('Rebuilding server', server=server)
 
         fsm = utils.get_state_machine(start_state=server.status)
-
+        orig_image = server.image_uuid
+        if image_uuid:
+            server.image_uuid = image_uuid
+            server.save()
         try:
             self._rebuild_server(context, server)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 utils.process_event(fsm, server, event='error')
+                server.image_uuid = orig_image
                 LOG.error("Rebuild server %(uuid)s failed."
                           "Exception: %(exception)s",
                           {"uuid": server.uuid,
                            "exception": e})
-
         utils.process_event(fsm, server, event='done')
         LOG.info('Server was successfully rebuilt', server=server)
 

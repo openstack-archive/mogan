@@ -129,6 +129,7 @@ Request
 
     - server_uuid: server_ident
     - target: provision_state
+    - image_uuid: image_ident
 
 **Example request to rebuild a Server:**
 
