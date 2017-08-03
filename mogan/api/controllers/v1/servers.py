@@ -158,9 +158,9 @@ class ServerStatesController(ServerControllerBase):
             pecan.request.engine_api.unlock(context, db_server)
 
     @policy.authorize_wsgi("mogan:server", "set_provision_state")
-    @expose.expose(None, types.uuid, wtypes.text,
+    @expose.expose(None, types.uuid, wtypes.text, types.uuid,
                    status_code=http_client.ACCEPTED)
-    def provision(self, server_uuid, target):
+    def provision(self, server_uuid, target, image_uuid=None):
         """Asynchronous trigger the provisioning of the server.
 
         This will set the target provision state of the server, and
@@ -179,10 +179,10 @@ class ServerStatesController(ServerControllerBase):
             raise exception.InvalidActionParameterValue(
                 value=target, action="provision",
                 server=server_uuid)
-
         db_server = self._resource or self._get_resource(server_uuid)
         if target == states.REBUILD:
-            pecan.request.engine_api.rebuild(pecan.request.context, db_server)
+            pecan.request.engine_api.rebuild(pecan.request.context, db_server,
+                                             image_uuid)
 
         # Set the HTTP Location Header
         url_args = '/'.join([server_uuid, 'states'])
@@ -675,7 +675,6 @@ class ServerController(ServerControllerBase):
         :param server: a server within the request body.
         """
         validation.check_schema(server, server_schemas.create_server)
-
         min_count = server.get('min_count', 1)
         max_count = server.get('max_count', min_count)
 

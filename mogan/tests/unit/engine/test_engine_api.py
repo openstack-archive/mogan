@@ -340,21 +340,40 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_rebuild.assert_not_called()
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_server')
-    def test_rebuild_locked_server_with_admin(self, mock_rebuild):
+    @mock.patch('mogan.engine.api.API._get_image')
+    def test_rebuild_locked_server_with_admin(self, mock_rebuild,
+                                              mock_get_image):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
             locked=True, locked_by='owner')
         fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
+        mock_get_image.side_effect = None
         self.engine_api.rebuild(admin_context, fake_server_obj)
         self.assertTrue(mock_rebuild.called)
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_server')
-    def test_rebuild_server(self, mock_rebuild):
+    @mock.patch('mogan.engine.api.API._get_image')
+    def test_rebuild_server(self, mock_rebuild, mock_get_image):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id)
         fake_server_obj = self._create_fake_server_obj(fake_server)
+        mock_get_image.side_effect = None
         self.engine_api.rebuild(self.context, fake_server_obj)
+        self.assertTrue(mock_get_image.called)
+        self.assertTrue(mock_rebuild.called)
+
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'rebuild_server')
+    @mock.patch('mogan.engine.api.API._get_image')
+    def test_rebuild_server_with_new_image(self, mock_rebuild, mock_get_image):
+        fake_server = db_utils.get_test_server(
+            user_id=self.user_id, project_id=self.project_id)
+        fake_server_obj = self._create_fake_server_obj(fake_server)
+        mock_get_image.side_effect = None
+        image_uuid = 'fake-uuid'
+
+        self.engine_api.rebuild(self.context, fake_server_obj, image_uuid)
+        self.assertTrue(mock_get_image.called)
         self.assertTrue(mock_rebuild.called)
 
     @mock.patch.object(engine_rpcapi.EngineAPI, 'detach_interface')
