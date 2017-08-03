@@ -503,7 +503,6 @@ class EngineManager(base_manager.BaseEngineManager):
         :param context: mogan request context
         :param server: server object
         """
-
         LOG.debug('Rebuilding server', server=server)
 
         fsm = utils.get_state_machine(start_state=server.status)
@@ -517,7 +516,6 @@ class EngineManager(base_manager.BaseEngineManager):
                           "Exception: %(exception)s",
                           {"uuid": server.uuid,
                            "exception": e})
-
         utils.process_event(fsm, server, event='done')
         LOG.info('Server was successfully rebuilt', server=server)
 
