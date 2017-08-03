@@ -386,8 +386,14 @@ class API(object):
 
     @check_server_lock
     @check_server_maintenance
-    def rebuild(self, context, server):
+    def rebuild(self, context, server, image_uuid=None):
         """Rebuild a server."""
+        if image_uuid and image != server.image_uuid:
+            # check if the image exists
+            self._get_image(context, image_uuid)
+            server.image_uuid = image_uuid
+            server.save()
+
         fsm = utils.get_state_machine(start_state=server.status)
         try:
             utils.process_event(fsm, server, event='rebuild')
