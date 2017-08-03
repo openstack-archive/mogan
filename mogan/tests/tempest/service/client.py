@@ -264,6 +264,36 @@ class BaremetalComputeClient(rest_client.RestClient):
         body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
+    def list_server_groups(self):
+        uri = '%s/server_groups' % self.uri_prefix
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)['server_groups']
+        return rest_client.ResponseBodyList(resp, body)
+
+    def show_server_group(self, sg_uuid):
+        uri = '%s/server_groups/%s' % (self.uri_prefix, sg_uuid)
+        resp, body = self.get(uri)
+        self.expected_success(200, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def delete_server_group(self, sg_uuid):
+        uri = "%s/server_groups/%s" % (self.uri_prefix, sg_uuid)
+        resp, body = self.delete(uri)
+        self.expected_success(204, resp.status)
+        if body:
+            body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
+    def create_server_group(self, **kwargs):
+        uri = "%s/server_groups" % self.uri_prefix
+        body = self.serialize(kwargs)
+        resp, body = self.post(uri, body)
+        self.expected_success(201, resp.status)
+        body = self.deserialize(body)
+        return rest_client.ResponseBody(resp, body)
+
 
 class BaremetalNodeClient(rest_client.RestClient):
     version = '1'
