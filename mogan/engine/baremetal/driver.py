@@ -100,7 +100,7 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def rebuild(self, context, server):
+    def rebuild(self, context, server, image_uuid):
         """Trigger node deploy process.
 
         :param server: server to rebuild.

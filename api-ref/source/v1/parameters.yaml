@@ -296,6 +296,12 @@ flavors:
   in: body
   required: true
   type: array
+image_ident:
+  description: |
+    The UUID of the image to apply to rebuild your server.
+  in: body
+  required: false
+  type: string
 imageRef:
   description: |
     The UUID of the image to use for your server.
