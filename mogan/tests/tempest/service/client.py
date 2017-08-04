@@ -327,17 +327,6 @@ class BaremetalNodeClient(rest_client.RestClient):
         self.update_bm_node(node_id, updates)
 
 
-class BaremetalAggregateClient(rest_client.RestClient):
-    version = '1'
-    uri_prefix = "v1"
-
-    def deserialize(self, body):
-        return json.loads(body.replace("\n", ""))
-
-    def serialize(self, body):
-        return json.dumps(body)
-
-
 class Manager(manager.Manager):
 
     load_clients = [
