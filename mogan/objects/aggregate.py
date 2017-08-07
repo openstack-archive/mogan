@@ -1,7 +1,6 @@
 # Copyright 2017 Huawei Technologies Co.,LTD.
 # All Rights Reserved.
 #
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -54,9 +53,9 @@ class Aggregate(base.MoganObject, object_base.VersionedObjectDictCompat):
         super(Aggregate, self).obj_reset_changes(fields=fields,
                                                  recursive=recursive)
         if fields is None or 'metadata' in fields:
-            self.orig_metadata = (dict(self.metadata)
-                                  if self.obj_attr_is_set('metadata')
-                                  else {})
+            self._orig_metadata = (dict(self.metadata)
+                                   if self.obj_attr_is_set('metadata')
+                                   else {})
 
     def obj_what_changed(self):
         changes = super(Aggregate, self).obj_what_changed()
