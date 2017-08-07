@@ -7,6 +7,9 @@
     "resource_traits": {
         "CUSTOM_BAREMETAL_GOLD": "FPGA"
     },
+    "resource_aggregates": {
+        "high_mem": "true"
+    },
     "is_public": true,
     "disabled": true
 }

@@ -72,6 +72,9 @@ class Flavor(base.APIBase):
     resource_traits = {wtypes.text: types.jsontype}
     """The resource traits of the flavor"""
 
+    resource_aggregates = {wtypes.text: types.jsontype}
+    """The resource aggregates of the flavor"""
+
     links = wsme.wsattr([link.Link], readonly=True)
     """A list containing a self link"""
 

@@ -38,6 +38,7 @@ def upgrade():
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('resources', sa.Text(), nullable=True),
         sa.Column('resource_traits', sa.Text(), nullable=True),
+        sa.Column('resource_aggregates', sa.Text(), nullable=True),
         sa.Column('is_public', sa.Boolean(), nullable=False),
         sa.Column('disabled', sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint('id'),
