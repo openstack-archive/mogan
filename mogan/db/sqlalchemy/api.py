@@ -841,38 +841,38 @@ class Connection(api.Connection):
     def aggregate_metadata_update_or_create(self, context, aggregate_id,
                                             metadata, max_retries=10):
         for attempt in range(max_retries):
-            try:
-                query = model_query(
-                    context, models.AggregateMetadata).\
-                    filter_by(aggregate_id=aggregate_id).\
-                    filter(models.AggregateMetadata.key.in_(
-                        metadata.keys())).with_lockmode('update').all()
+            with _session_for_write() as session:
+                try:
+                    query = model_query(
+                        context, models.AggregateMetadata).\
+                        filter_by(aggregate_id=aggregate_id).\
+                        filter(models.AggregateMetadata.key.in_(
+                            metadata.keys())).with_lockmode('update').all()
 
-                already_existing_keys = set()
-                for meta_ref in query:
-                    key = meta_ref["key"]
-                    meta_ref.update({"value": metadata[key]})
-                    already_existing_keys.add(key)
+                    already_existing_keys = set()
+                    for meta_ref in query:
+                        key = meta_ref["key"]
+                        meta_ref.update({"value": metadata[key]})
+                        already_existing_keys.add(key)
 
-                for key, value in metadata.items():
-                    if key in already_existing_keys:
-                        continue
-                    metadata_ref = models.AggregateMetadata()
-                    metadata_ref.update({"key": key,
-                                         "value": value,
-                                         "aggregate_id": aggregate_id})
-                    with _session_for_write() as session:
+                    for key, value in metadata.items():
+                        if key in already_existing_keys:
+                            continue
+                        metadata_ref = models.AggregateMetadata()
+                        metadata_ref.update({"key": key,
+                                             "value": value,
+                                             "aggregate_id": aggregate_id})
                         session.add(metadata_ref)
                         session.flush()
 
-                return metadata
-            except db_exc.DBDuplicateEntry:
-                # a concurrent transaction has been committed,
-                # try again unless this was the last attempt
-                if attempt < max_retries - 1:
-                    LOG.warning("Add metadata failed for aggregate %(id)s "
-                                "after %(retries)s retries",
-                                {"id": aggregate_id, "retries": max_retries})
+                    return metadata
+                except db_exc.DBDuplicateEntry:
+                    # a concurrent transaction has been committed,
+                    # try again unless this was the last attempt
+                    if attempt < max_retries - 1:
+                        LOG.warning("Add metadata failed for aggregate %(id)s "
+                                    "after %(retries)s retries",
+                                    {"id": aggregate_id, "retries": max_retries})
 
     def aggregate_metadata_get(self, context, aggregate_id):
         rows = model_query(context, models.AggregateMetadata). \
