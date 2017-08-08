@@ -20,8 +20,10 @@ import mogan.conf.glance
 import mogan.conf.ironic
 import mogan.conf.keystone
 import mogan.conf.neutron
+import mogan.conf.placement
 import mogan.conf.quota
 import mogan.conf.scheduler
+import mogan.conf.shellinabox
 
 _default_opt_lists = [
     mogan.conf.default.api_opts,
@@ -39,9 +41,11 @@ _opts = [
     ('glance', mogan.conf.glance.opts),
     ('ironic', mogan.conf.ironic.ironic_opts),
     ('keystone', mogan.conf.keystone.opts),
-    ('neutron', mogan.conf.neutron.opts),
+    ('neutron', mogan.conf.neutron.list_opts()),
+    ('placement', mogan.conf.placement.list_opts()),
     ('quota', mogan.conf.quota.quota_opts),
     ('scheduler', mogan.conf.scheduler.opts),
+    ('shellinabox_console', mogan.conf.shellinabox.shellinabox_opts),
 ]
 
 

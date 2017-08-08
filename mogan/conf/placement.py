@@ -10,8 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
+
+from mogan.conf import auth
 
 placement_group = cfg.OptGroup(
     'placement',
@@ -39,15 +40,8 @@ service catalog.
 def register_opts(conf):
     conf.register_group(placement_group)
     conf.register_opts(placement_opts, group=placement_group)
-    ks_loading.register_session_conf_options(conf, placement_group.name)
-    ks_loading.register_auth_conf_options(conf, placement_group.name)
+    auth.register_auth_opts(conf, 'placement')
 
 
 def list_opts():
-    return {
-        placement_group.name: (
-            placement_opts +
-            ks_loading.get_session_conf_options() +
-            ks_loading.get_auth_common_conf_options() +
-            ks_loading.get_auth_plugin_conf_options('v3password'))
-    }
+    return auth.add_auth_opts(placement_opts)
