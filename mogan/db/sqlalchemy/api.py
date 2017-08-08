@@ -25,6 +25,7 @@ from oslo_log import log as logging
 from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+from sqlalchemy import and_
 from sqlalchemy import or_
 from sqlalchemy import orm
 from sqlalchemy.orm import contains_eager
@@ -837,6 +838,14 @@ class Connection(api.Connection):
         query = model_query(context, models.Aggregate)
         query = query.join("_metadata")
         query = query.filter(models.AggregateMetadata.key == key)
+        query = query.options(contains_eager("_metadata"))
+        return query.all()
+
+    def aggregate_get_by_metadata(self, context, key, value):
+        query = model_query(context, models.Aggregate)
+        query = query.join("_metadata")
+        query = query.filter(and_(models.AggregateMetadata.key == key,
+                                  models.AggregateMetadata.value == value))
         query = query.options(contains_eager("_metadata"))
         return query.all()
 

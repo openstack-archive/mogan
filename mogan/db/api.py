@@ -228,6 +228,11 @@ class Connection(object):
         return IMPL.aggregate_get_by_metadata_key(context, key)
 
     @abc.abstractmethod
+    def aggregate_get_by_metadata(self, context, key, value):
+        """Get a list of aggregates by metadata key/value."""
+        return IMPL.aggregate_get_by_metadata(context, key, value)
+
+    @abc.abstractmethod
     def aggregate_metadata_update_or_create(self, context, aggregate_id,
                                             metadata):
         """Update/Create aggregates metadata."""
