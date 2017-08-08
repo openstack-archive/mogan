@@ -179,10 +179,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         _log_ironic_polling(message, node, server)
 
-    def _get_hypervisor_type(self):
-        """Get hypervisor type."""
-        return 'ironic'
-
     def get_ports_from_node(self, node_uuid, detail=True):
         """List the MAC addresses and the port types from a node."""
         ports = self.ironicclient.call("node.list_ports",
