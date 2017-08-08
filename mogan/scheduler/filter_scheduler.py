@@ -92,10 +92,46 @@ class FilterScheduler(driver.Scheduler):
                           for res in flavor_dict['resources'].items()])
         return resources
 
-    def _get_filtered_nodes(self, request_spec):
-        query_filters = {'resources': self._get_res_cls_filters(request_spec)}
-        filtered_nodes = self.reportclient.get_filtered_resource_providers(
-            query_filters)
+    @staticmethod
+    def _get_res_aggregates_filters(context, request_spec):
+        flavor_dict = request_spec['flavor']
+        resource_aggregates = flavor_dict.get('resource_aggregates', {})
+        filters = []
+        for key, value in resource_aggregates.items():
+            aggregates = objects.AggregateList.get_by_metadata(
+                context, key, value)
+            filters.append([agg.uuid for agg in aggregates])
+
+        return filters
+
+    def _get_filtered_nodes(self, context, request_spec):
+        resources_filter = self._get_res_cls_filters(request_spec)
+        aggs_filters = self._get_res_aggregates_filters(context, request_spec)
+
+        if aggs_filters:
+            filtered_nodes = set()
+            for agg_filter in aggs_filters:
+                query_filters = {'resources': resources_filter,
+                                 'member_of': agg_filter}
+                filtered_rps = self.reportclient.\
+                    get_filtered_resource_providers(query_filters)
+                if not filtered_rps:
+                    # if got empty, just break here.
+                    return []
+                filtered_rps = set([rp['uuid'] for rp in filtered_rps])
+                if not filtered_nodes:
+                    # initialize the filtered_nodes
+                    filtered_nodes = filtered_rps
+                else:
+                    filtered_nodes &= filtered_rps
+                if not filtered_nodes:
+                    # if got empty, just break here.
+                    return []
+        else:
+            query_filters = {'resources': resources_filter}
+            filtered_nodes = self.reportclient.\
+                get_filtered_resource_providers(query_filters)
+
         if not filtered_nodes:
             return []
         return [node['uuid'] for node in filtered_nodes]
@@ -110,7 +146,7 @@ class FilterScheduler(driver.Scheduler):
         @utils.synchronized('schedule')
         def _schedule(self, context, request_spec, filter_properties):
             self._populate_retry(filter_properties, request_spec)
-            filtered_nodes = self._get_filtered_nodes(request_spec)
+            filtered_nodes = self._get_filtered_nodes(context, request_spec)
             if not filtered_nodes:
                 LOG.warning('No filtered nodes found for server '
                             'with properties: %s',
