@@ -97,19 +97,15 @@ Interdependencies to other options:
   section.
 """)
 
-ALL_OPTS = [shellinaboxproxy_host_opt, shellinaboxproxy_port_opt,
+shellinabox_opts = [shellinaboxproxy_host_opt, shellinaboxproxy_port_opt,
             shellinabox_base_url_opt]
 
 
 def register_opts(conf):
     conf.register_group(shellinabox_opt_group)
-    conf.register_opts(ALL_OPTS, group=shellinabox_opt_group)
+    conf.register_opts(shellinabox_opts, group=shellinabox_opt_group)
 
 
 def register_cli_opts(conf):
     conf.register_group(shellinabox_opt_group)
-    conf.register_cli_opts(ALL_OPTS, shellinabox_opt_group)
-
-
-def list_opts():
-    return {shellinabox_opt_group: ALL_OPTS}
+    conf.register_cli_opts(shellinabox_opts, shellinabox_opt_group)
