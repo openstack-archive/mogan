@@ -145,3 +145,10 @@ class AggregateList(object_base.ObjectListBase, base.MoganObject,
         db_aggregates = cls.dbapi.aggregate_get_by_metadata_key(context, key)
         return object_base.obj_make_list(context, cls(context),
                                          Aggregate, db_aggregates)
+
+    @classmethod
+    def get_by_metadata(cls, context, key, value):
+        db_aggregates = cls.dbapi.aggregate_get_by_metadata(
+            context, key, value)
+        return object_base.obj_make_list(context, cls(context),
+                                         Aggregate, db_aggregates)
