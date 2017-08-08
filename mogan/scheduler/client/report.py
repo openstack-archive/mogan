@@ -195,7 +195,7 @@ class SchedulerReportClient(object):
                 'err_text': resp.text,
             }
             LOG.error(msg, args)
-            return None
+            return []
 
     @safe_connect
     def _get_provider_aggregates(self, rp_uuid):
