@@ -586,3 +586,7 @@ class EngineManager(base_manager.BaseEngineManager):
     def remove_aggregate_node(self, context, aggregate_uuid, node):
         self.scheduler_client.reportclient \
             .update_aggregate_node(aggregate_uuid, node, 'remove')
+
+    def remove_aggregate(self, context, aggregate_uuid):
+        self.scheduler_client.reportclient \
+            .remove_aggregate(aggregate_uuid)

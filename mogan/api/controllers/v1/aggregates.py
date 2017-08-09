@@ -218,4 +218,6 @@ class AggregateController(rest.RestController):
         """
         db_aggregate = objects.Aggregate.get(pecan.request.context,
                                              aggregate_uuid)
+        pecan.request.engine_api.remove_aggregate(pecan.request.context,
+                                                  aggregate_uuid)
         db_aggregate.destroy()

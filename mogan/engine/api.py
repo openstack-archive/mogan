@@ -565,3 +565,7 @@ class API(object):
         return self.engine_rpcapi.remove_aggregate_node(context,
                                                         aggregate_uuid,
                                                         node)
+
+    def remove_aggregate(self, context, aggregate_uuid):
+        """Remove the aggregate."""
+        return self.engine_rpcapi.remove_aggregate(context, aggregate_uuid)
