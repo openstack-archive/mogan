@@ -34,9 +34,6 @@ opts = [
                default=60,
                help=_('Interval between syncing the resources from underlying '
                       'hypervisor, in seconds.')),
-    cfg.StrOpt('default_availability_zone',
-               default='mogan',
-               help=_("Default bare metal node availability zone.")),
     cfg.IntOpt('sync_power_state_pool_size',
                default=1000,
                help=_("Number of greenthreads available for use to sync "
