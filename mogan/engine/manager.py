@@ -25,13 +25,13 @@ from oslo_utils import uuidutils
 import six
 import six.moves.urllib.parse as urlparse
 
+from mogan.baremetal.ironic import ironic_states
 from mogan.common import exception
 from mogan.common import flow_utils
 from mogan.common.i18n import _
 from mogan.common import states
 from mogan.common import utils
 from mogan.conf import CONF
-from mogan.engine.baremetal.ironic import ironic_states
 from mogan.engine import base_manager
 from mogan.engine.flows import create_server
 from mogan.notifications import base as notifications
