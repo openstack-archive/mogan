@@ -19,11 +19,11 @@ import mock
 from oslo_config import cfg
 from oslo_utils import uuidutils
 
+from mogan.baremetal.ironic.driver import ironic_states
+from mogan.baremetal.ironic import IronicDriver
 from mogan.common import exception
 from mogan.common import ironic
 from mogan.common import states
-from mogan.engine.baremetal.ironic.driver import ironic_states
-from mogan.engine.baremetal.ironic import IronicDriver
 from mogan.engine import manager
 from mogan.network import api as network_api
 from mogan.tests.unit.db import base as tests_db_base

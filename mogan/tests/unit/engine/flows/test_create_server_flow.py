@@ -17,7 +17,7 @@
 import mock
 from oslo_context import context
 
-from mogan.engine.baremetal.ironic import IronicDriver
+from mogan.baremetal.ironic import IronicDriver
 from mogan.engine.flows import create_server
 from mogan.engine import manager
 from mogan import objects

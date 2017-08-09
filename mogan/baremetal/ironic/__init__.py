@@ -13,6 +13,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from mogan.engine.baremetal.ironic import driver
+from mogan.baremetal.ironic import driver
 
 IronicDriver = driver.IronicDriver
