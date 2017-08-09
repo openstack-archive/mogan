@@ -188,7 +188,7 @@ function cleanup_mogan {
 
 function create_flavor {
     # this makes consistency with ironic resource class, will move the mogan flavor
-    # creation to ironic devstack plugin when we are offical.
+    # creation to ironic devstack plugin when we are official.
     if [[ "$IRONIC_IS_HARDWARE" == "False" ]]; then
         local ironic_node_cpu=$IRONIC_VM_SPECS_CPU
         local ironic_node_ram=$IRONIC_VM_SPECS_RAM

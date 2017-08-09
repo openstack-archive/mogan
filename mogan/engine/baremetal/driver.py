@@ -96,7 +96,7 @@ class BaseEngineDriver(object):
     def destroy(self, context, server):
         """Trigger node destroy process.
 
-        :param server: the server to destory.
+        :param server: the server to destroy.
         """
         raise NotImplementedError()
 
