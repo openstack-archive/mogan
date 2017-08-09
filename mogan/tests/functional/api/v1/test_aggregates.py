@@ -61,7 +61,9 @@ class TestAggregate(v1_test.APITestV1):
         self.assertEqual('test0', resp['name'])
         self.assertEqual({'k1': 'v1'}, resp['metadata'])
 
-    def test_aggregate_delete(self):
+    @mock.patch('mogan.engine.api.API.remove_aggregate')
+    def test_aggregate_delete(self, mock_remove_agg):
+        mock_remove_agg.side_effect = None
         self._prepare_aggregates()
         resp = self.get_json('/aggregates', headers=self.headers)
         self.assertEqual(4, len(resp['aggregates']))

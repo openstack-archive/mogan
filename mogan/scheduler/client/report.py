@@ -784,3 +784,11 @@ class SchedulerReportClient(object):
                      action)
             return
         self._put_provider_aggregates(rp_uuid, list(new_aggs))
+
+    def remove_aggregate(self, aggregate_uuid):
+        # Use the aggregates we cached
+        rp_aggs = self._provider_aggregate_map
+        for rp, aggs in rp_aggs.items():
+            if aggregate_uuid in aggs:
+                new_aggs = aggs - set([aggregate_uuid])
+                self._put_provider_aggregates(rp, list(new_aggs))
