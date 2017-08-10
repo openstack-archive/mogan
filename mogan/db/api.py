@@ -47,14 +47,14 @@ class Connection(object):
         """Create a new server type."""
 
     @abc.abstractmethod
-    def flavor_get(self, context, flavor_uuid):
+    def flavor_get(self, context, flavor_uuid, disabled):
         """Get server type by uuid."""
 
     def flavor_update(self, context, flavor_id, values):
         """Update a server type."""
 
     @abc.abstractmethod
-    def flavor_get_all(self, context):
+    def flavor_get_all(self, context, disabled):
         """Get all server types."""
 
     @abc.abstractmethod

@@ -186,11 +186,13 @@ class FlavorsController(rest.RestController):
     @expose.expose(FlavorCollection)
     def get_all(self):
         """Retrieve a list of flavor."""
-        flavors = objects.Flavor.list(pecan.request.context)
         if not pecan.request.context.is_admin:
+            flavors = objects.Flavor.list(pecan.request.context,
+                                          disabled=False)
             return FlavorCollection.convert_with_links(
                 flavors, fields=_DEFAULT_FLAVOR_RETURN_FIELDS)
         else:
+            flavors = objects.Flavor.list(pecan.request.context)
             return FlavorCollection.convert_with_links(flavors)
 
     @policy.authorize_wsgi("mogan:flavor", "get_one")
@@ -200,11 +202,13 @@ class FlavorsController(rest.RestController):
 
         :param flavor_uuid: UUID of a flavor.
         """
-        db_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         if not pecan.request.context.is_admin:
+            db_flavor = objects.Flavor.get(pecan.request.context,
+                                           flavor_uuid, disabled=False)
             return Flavor.convert_with_links(
                 db_flavor, fields=_DEFAULT_FLAVOR_RETURN_FIELDS)
         else:
+            db_flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
             return Flavor.convert_with_links(db_flavor)
 
     @policy.authorize_wsgi("mogan:flavor", "create")
