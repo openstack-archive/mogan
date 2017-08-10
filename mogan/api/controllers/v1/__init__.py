@@ -26,7 +26,7 @@ from wsme import types as wtypes
 from mogan.api.controllers import base
 from mogan.api.controllers import link
 from mogan.api.controllers.v1 import aggregates
-from mogan.api.controllers.v1 import availability_zone
+from mogan.api.controllers.v1 import availability_zones
 from mogan.api.controllers.v1 import flavors
 from mogan.api.controllers.v1 import keypairs
 from mogan.api.controllers.v1 import nodes
@@ -116,7 +116,7 @@ class Controller(rest.RestController):
 
     flavors = flavors.FlavorsController()
     servers = servers.ServerController()
-    availability_zones = availability_zone.AvailabilityZoneController()
+    availability_zones = availability_zones.AvailabilityZoneController()
     keypairs = keypairs.KeyPairController()
     aggregates = aggregates.AggregateController()
     nodes = nodes.NodeController()

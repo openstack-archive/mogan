@@ -27,7 +27,7 @@ def register_all():
     # need to receive it via RPC.
     __import__('mogan.objects.flavor')
     __import__('mogan.objects.server')
-    __import__('mogan.objects.server_nics')
+    __import__('mogan.objects.server_nic')
     __import__('mogan.objects.server_fault')
     __import__('mogan.objects.keypair')
     __import__('mogan.objects.aggregate')
