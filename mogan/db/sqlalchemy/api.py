@@ -151,6 +151,7 @@ class Connection(api.Connection):
             uuid=flavor_uuid)
 
         if not context.is_admin:
+            query = query.filter_by(disabled=False)
             the_filter = [models.Flavors.is_public == true()]
             the_filter.extend([
                 models.Flavors.projects.has(project_id=context.project_id)
@@ -180,6 +181,7 @@ class Connection(api.Connection):
     def flavor_get_all(self, context):
         query = model_query(context, models.Flavors)
         if not context.is_admin:
+            query = query.filter_by(disabled=False)
             the_filter = [models.Flavors.is_public == true()]
             the_filter.extend([
                 models.Flavors.projects.has(project_id=context.project_id)
