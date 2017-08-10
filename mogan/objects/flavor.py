@@ -92,15 +92,15 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
                 for obj in db_objects]
 
     @classmethod
-    def list(cls, context):
+    def list(cls, context, disabled=True):
         """Return a list of Flavor objects."""
-        db_flavors = cls.dbapi.flavor_get_all(context)
+        db_flavors = cls.dbapi.flavor_get_all(context, disabled)
         return Flavor._from_db_object_list(db_flavors, cls, context)
 
     @classmethod
-    def get(cls, context, flavor_uuid):
+    def get(cls, context, flavor_uuid, disabled=True):
         """Find a Flavor and return a Flavor object."""
-        db_flavor = cls.dbapi.flavor_get(context, flavor_uuid)
+        db_flavor = cls.dbapi.flavor_get(context, flavor_uuid, disabled)
         flavor = Flavor._from_db_object(
             context, cls(context), db_flavor,
             expected_attrs=['projects'])

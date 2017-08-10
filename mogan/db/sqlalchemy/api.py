@@ -146,9 +146,12 @@ class Connection(api.Connection):
                 raise exception.FlavorAlreadyExists(name=values['name'])
             return flavor
 
-    def flavor_get(self, context, flavor_uuid):
+    def flavor_get(self, context, flavor_uuid, disabled=True):
         query = model_query(context, models.Flavors).filter_by(
             uuid=flavor_uuid)
+
+        if not disabled:
+            query = query.filter_by(disabled=False)
 
         if not context.is_admin:
             the_filter = [models.Flavors.is_public == true()]
@@ -177,8 +180,10 @@ class Connection(api.Connection):
             ref.update(values)
             return ref
 
-    def flavor_get_all(self, context):
+    def flavor_get_all(self, context, disabled=True):
         query = model_query(context, models.Flavors)
+        if not disabled:
+            query = query.filter_by(disabled=False)
         if not context.is_admin:
             the_filter = [models.Flavors.is_public == true()]
             the_filter.extend([

@@ -38,7 +38,8 @@ class TestFlavorObject(base.DbTestCase):
 
                 flavor = objects.Flavor.get(self.context, uuid)
 
-                mock_flavor_get.assert_called_once_with(self.context, uuid)
+                mock_flavor_get.assert_called_once_with(self.context,
+                                                        uuid, True)
                 mock_access_get.assert_called_once_with(self.context, uuid)
                 self.assertEqual(self.context, flavor._context)
 
@@ -49,7 +50,7 @@ class TestFlavorObject(base.DbTestCase):
 
             flavors = objects.Flavor.list(self.context)
 
-            mock_flavor_get_all.assert_called_once_with(self.context)
+            mock_flavor_get_all.assert_called_once_with(self.context, True)
             self.assertIsInstance(flavors[0], objects.Flavor)
             self.assertEqual(self.context, flavors[0]._context)
 
