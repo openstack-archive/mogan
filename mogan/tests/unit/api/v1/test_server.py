@@ -59,7 +59,9 @@ class TestServerAuthorization(v1_test.APITestV1):
     @mock.patch('mogan.engine.api.API.create')
     @mock.patch('mogan.objects.Flavor.get')
     def test_server_post(self, mock_get, mock_engine_create):
-        mock_get.side_effect = None
+        mock_flavor = mock.MagicMock()
+        mock_flavor.disabled = False
+        mock_get.return_value = mock_flavor
         mock_engine_create.side_effect = None
         mock_engine_create.return_value = [self.server1]
         body = gen_post_body()
@@ -69,11 +71,20 @@ class TestServerAuthorization(v1_test.APITestV1):
         headers = self.gen_headers(self.context)
         self.post_json('/servers', body, headers=headers, status=201)
 
+    @mock.patch('mogan.objects.Flavor.get')
+    def test_server_post_with_disabled_flavor(self, mock_get):
+        mock_flavor = mock.MagicMock()
+        mock_flavor.disabled = True
+        mock_get.return_value = mock_flavor
+        body = gen_post_body()
+        self.post_json('/servers', body, status=204, expect_errors=True)
+
     @mock.patch('mogan.engine.api.API.create')
     @mock.patch('mogan.objects.Flavor.get')
     def test_server_post_with_port_ids(self, mock_get, mock_engine_create):
-        flavor = mock.MagicMock()
-        mock_get.return_value = flavor
+        mock_flavor = mock.MagicMock()
+        mock_flavor.disabled = False
+        mock_get.return_value = mock_flavor
         mock_engine_create.side_effect = None
         mock_engine_create.return_value = [self.server1]
         fake_networks = [
@@ -95,8 +106,9 @@ class TestServerAuthorization(v1_test.APITestV1):
     @mock.patch('mogan.objects.Flavor.get')
     def test_server_post_with_port_ids_and_networks(self, mock_get,
                                                     mock_engine_create):
-        flavor = mock.MagicMock()
-        mock_get.return_value = flavor
+        mock_flavor = mock.MagicMock()
+        mock_flavor.disabled = False
+        mock_get.return_value = mock_flavor
         mock_engine_create.side_effect = None
         mock_engine_create.return_value = [self.server1]
         fake_networks = [
@@ -161,7 +173,9 @@ class TestServerAuthorization(v1_test.APITestV1):
     @mock.patch('mogan.objects.Flavor.get')
     def test_server_post_with_port_limit_exceeded(self, mock_get,
                                                   mock_engine_create):
-        mock_get.side_effect = None
+        mock_flavor = mock.Mock()
+        mock_flavor.disabled = False
+        mock_get.return_value = mock_flavor
         mock_engine_create.side_effect = exception.PortLimitExceeded()
         body = gen_post_body()
         self.context.roles = "no-admin"

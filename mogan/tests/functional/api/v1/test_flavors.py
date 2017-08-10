@@ -57,8 +57,16 @@ class TestFlavor(v1_test.APITestV1):
 
     def test_flavor_get_all(self):
         self._prepare_flavors()
+        self.patch_json('/flavors/' + self.FLAVOR_UUIDS[0],
+                        [{'path': '/disabled', 'value': 'true',
+                          'op': 'replace'}],
+                        headers=self.headers, status=200)
+        # admin
         resp = self.get_json('/flavors', headers=self.headers)
         self.assertEqual(4, len(resp['flavors']))
+        # non admin
+        resp = self.get_json('/flavors')
+        self.assertEqual(3, len(resp['flavors']))
 
     def test_flavor_get_one(self):
         self._prepare_flavors()
