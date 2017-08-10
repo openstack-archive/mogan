@@ -34,9 +34,19 @@ opts = [
                default=60,
                help=_('Interval between syncing the resources from underlying '
                       'hypervisor, in seconds.')),
-    cfg.StrOpt('default_availability_zone',
-               default='mogan',
-               help=_("Default bare metal node availability zone.")),
+    cfg.StrOpt('default_schedule_zone',
+               help="""
+Availability zone to use when user doesn't specify one.
+
+This option is used by the scheduler to determine which availability
+zone to place a new server into if the user did not specify one at the
+time of server boot request.
+
+Possible values:
+
+* Any string representing an availability zone name
+* Default value is None.
+"""),
     cfg.IntOpt('sync_power_state_pool_size',
                default=1000,
                help=_("Number of greenthreads available for use to sync "
