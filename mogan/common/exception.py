@@ -156,6 +156,10 @@ class FlavorNotFound(NotFound):
     _msg_fmt = _("Flavor %(flavor_id)s could not be found.")
 
 
+class FlavorDisabled(Invalid):
+    _msg_fmt = _("Flavor %(flavor_id)s is disabled.")
+
+
 class ServerAlreadyExists(Conflict):
     _msg_fmt = _("Server with name %(name)s already exists.")
 

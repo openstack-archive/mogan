@@ -697,6 +697,8 @@ class ServerController(ServerControllerBase):
                 injected_files.append((item['path'], item['contents']))
 
         flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
+        if flavor.disabled:
+            raise exception.FlavorDisabled(flavor_id=flavor.uuid)
 
         servers = pecan.request.engine_api.create(
             pecan.request.context,
