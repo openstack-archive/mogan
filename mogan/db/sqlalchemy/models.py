@@ -16,6 +16,7 @@
 """
 SQLAlchemy models for baremetal compute service.
 """
+from os import path
 
 from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
@@ -28,10 +29,10 @@ from sqlalchemy import schema, String, Integer
 from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlalchemy.ext.declarative import declarative_base
 
-from mogan.common import paths
 from mogan.conf import CONF
 
-_DEFAULT_SQL_CONNECTION = 'sqlite:///' + paths.state_path_def('mogan.sqlite')
+_DEFAULT_SQL_CONNECTION = 'sqlite:///' + path.join('$state_path',
+                                                   'ironic.sqlite')
 
 
 db_options.set_defaults(CONF, connection=_DEFAULT_SQL_CONNECTION)
