@@ -116,3 +116,7 @@ class EngineAPI(object):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'remove_aggregate',
                           aggregate_uuid=aggregate_uuid)
+
+    def list_node_aggregates(self, context, node):
+        cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
+        return cctxt.call(context, 'list_node_aggregates', node=node)
