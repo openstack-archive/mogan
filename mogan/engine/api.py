@@ -275,7 +275,7 @@ class API(object):
             self._get_image(context, image_uuid)
 
         if not availability_zone:
-            availability_zone = CONF.engine.default_availability_zone
+            availability_zone = CONF.engine.default_schedule_zone
 
         base_options, max_net_count, key_pair = \
             self._validate_and_build_base_options(
@@ -404,7 +404,6 @@ class API(object):
             context, 'availability_zone')
         azs = set([agg.metadata['availability_zone'] for agg in aggregates
                    if 'availability_zone' in agg.metadata])
-        azs.add(CONF.engine.default_availability_zone)
         return {'availability_zones': list(azs)}
 
     def lock(self, context, server):

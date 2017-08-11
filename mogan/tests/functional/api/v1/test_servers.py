@@ -152,7 +152,7 @@ class TestServers(v1_test.APITestV1):
         self.assertEqual(self.FLAVOR_UUID, resp['flavor_uuid'])
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
-        self.assertEqual('mogan', resp['availability_zone'])
+        self.assertIsNone(resp['availability_zone'])
         self.assertEqual([], resp['nics'])
         self.assertEqual({'fake_key': 'fake_value'}, resp['metadata'])
         self.assertIn('links', resp)
@@ -174,7 +174,7 @@ class TestServers(v1_test.APITestV1):
         self.assertEqual(self.FLAVOR_UUID, resp['flavor_uuid'])
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
-        self.assertEqual('mogan', resp['availability_zone'])
+        self.assertIsNone(resp['availability_zone'])
         self.assertEqual([], resp['nics'])
         self.assertEqual({'fake_key': 'fake_value'}, resp['metadata'])
         self.assertIn('links', resp)
