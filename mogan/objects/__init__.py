@@ -28,6 +28,7 @@ def register_all():
     __import__('mogan.objects.flavor')
     __import__('mogan.objects.server')
     __import__('mogan.objects.server_nic')
+    __import__('mogan.objects.quota')
     __import__('mogan.objects.server_fault')
     __import__('mogan.objects.keypair')
     __import__('mogan.objects.aggregate')
