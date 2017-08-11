@@ -148,7 +148,7 @@ def load_engine_driver(engine_driver):
     LOG.info("Loading engine driver '%s'", engine_driver)
     try:
         driver = importutils.import_object(
-            'mogan.engine.baremetal.%s' % engine_driver)
+            'mogan.baremetal.%s' % engine_driver)
         return utils.check_isinstance(driver, BaseEngineDriver)
     except ImportError:
         LOG.exception("Unable to load the baremetal driver")
