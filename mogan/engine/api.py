@@ -331,7 +331,7 @@ class API(object):
 
         Returns a server object
         """
-
+        LOG.debug("Going to try to create server")
         # check availability zone
         if availability_zone:
             azs = self.list_availability_zones(context)
@@ -388,6 +388,7 @@ class API(object):
     @check_server_maintenance
     def rebuild(self, context, server):
         """Rebuild a server."""
+        LOG.debug("Going to try to rebuild server %s", server.uuid)
         fsm = utils.get_state_machine(start_state=server.status)
         try:
             utils.process_event(fsm, server, event='rebuild')
@@ -414,7 +415,7 @@ class API(object):
         if server.locked and is_owner:
             return
 
-        LOG.debug('Locking', server=server)
+        LOG.debug('Going to lock server %s', server.uuid)
         server.locked = True
         server.locked_by = 'owner' if is_owner else 'admin'
         server.save()
@@ -422,7 +423,7 @@ class API(object):
     def unlock(self, context, server):
         """Unlock the given server."""
 
-        LOG.debug('Unlocking', server=server)
+        LOG.debug('Going to unlock server %s', server.uuid)
         server.locked = False
         server.locked_by = None
         server.save()
@@ -488,6 +489,7 @@ class API(object):
     def create_key_pair(self, context, user_id, key_name,
                         key_type=keypair_obj.KEYPAIR_TYPE_SSH):
         """Create a new key pair."""
+        LOG.debug('Going to create key pair')
         self._validate_new_key_pair(context, user_id, key_name, key_type)
         private_key, public_key, fingerprint = self._generate_key_pair(
             user_id, key_type)
@@ -522,6 +524,7 @@ class API(object):
 
     def delete_key_pair(self, context, user_id, key_name):
         """Delete a keypair by name."""
+        LOG.debug('Going to delete key pair')
         objects.KeyPair.destroy_by_name(context, user_id, key_name)
         reserve_opts = {'keypairs': -1}
         reservations = self.quota.reserve(context, **reserve_opts)
@@ -538,10 +541,12 @@ class API(object):
 
     @check_server_lock
     def attach_interface(self, context, server, net_id):
+        LOG.debug('Going to attach interface to server %s', server.uuid)
         self.engine_rpcapi.attach_interface(context, server, net_id)
 
     @check_server_lock
     def detach_interface(self, context, server, port_id):
+        LOG.debug('Going to detach interface from server %s', server.uuid)
         self.engine_rpcapi.detach_interface(context, server=server,
                                             port_id=port_id)
 
@@ -556,16 +561,19 @@ class API(object):
 
     def add_aggregate_node(self, context, aggregate_uuid, node):
         """Add a node to the aggregate."""
+        LOG.debug('Going to add node to aggregate %s', aggregate_uuid)
         return self.engine_rpcapi.add_aggregate_node(context,
                                                      aggregate_uuid,
                                                      node)
 
     def remove_aggregate_node(self, context, aggregate_uuid, node):
         """Remove a node to the aggregate."""
+        LOG.debug('Going to remove node from aggregate %s', aggregate_uuid)
         return self.engine_rpcapi.remove_aggregate_node(context,
                                                         aggregate_uuid,
                                                         node)
 
     def remove_aggregate(self, context, aggregate_uuid):
         """Remove the aggregate."""
+        LOG.debug('Going to remove aggregate %s', aggregate_uuid)
         return self.engine_rpcapi.remove_aggregate(context, aggregate_uuid)

@@ -360,7 +360,7 @@ class EngineManager(base_manager.BaseEngineManager):
                        user_data, injected_files, key_pair, request_spec=None,
                        filter_properties=None):
         """Perform a deployment."""
-        LOG.debug("Starting server...", server=server)
+        LOG.debug("Creating server: %s", server)
         notifications.notify_about_server_action(
             context, server, self.host,
             action=fields.NotificationAction.CREATE,
@@ -439,7 +439,7 @@ class EngineManager(base_manager.BaseEngineManager):
     @wrap_server_fault
     def delete_server(self, context, server):
         """Delete a server."""
-        LOG.debug("Deleting server...")
+        LOG.debug("Deleting server: %s.", server.uuid)
 
         fsm = utils.get_state_machine(start_state=server.status,
                                       target_state=states.DELETED)
@@ -469,6 +469,7 @@ class EngineManager(base_manager.BaseEngineManager):
         server.power_state = states.NOSTATE
         utils.process_event(fsm, server, event='done')
         server.destroy()
+        LOG.info("Deleted server successfully.")
 
     def set_power_state(self, context, server, state):
         """Set power state for the specified server."""
@@ -504,7 +505,7 @@ class EngineManager(base_manager.BaseEngineManager):
         :param server: server object
         """
 
-        LOG.debug('Rebuilding server', server=server)
+        LOG.debug('Rebuilding server: %s', server)
 
         fsm = utils.get_state_machine(start_state=server.status)
 
@@ -519,7 +520,7 @@ class EngineManager(base_manager.BaseEngineManager):
                            "exception": e})
 
         utils.process_event(fsm, server, event='done')
-        LOG.info('Server was successfully rebuilt', server=server)
+        LOG.info('Server was successfully rebuilt')
 
     def get_serial_console(self, context, server):
         node_console_info = self.driver.get_serial_console_by_server(
@@ -536,6 +537,8 @@ class EngineManager(base_manager.BaseEngineManager):
                 'internal_access_path': None}
 
     def attach_interface(self, context, server, net_id=None):
+        LOG.debug("Attaching interface %(net_id) to server %(server)s",
+                  {'net_id': net_id, 'server': server})
         try:
             vif = self.network_api.create_port(context, net_id, server.uuid)
             vif_port = vif['port']
@@ -552,9 +555,11 @@ class EngineManager(base_manager.BaseEngineManager):
             server.save()
         except Exception as e:
             raise exception.InterfaceAttachFailed(message=six.text_type(e))
+        LOG.info('Attaching interface successfully')
 
     def detach_interface(self, context, server, port_id):
-        LOG.info('Detaching interface...', server=server)
+        LOG.debug("Detaching interface %(port_id) from server %(server)s",
+                  {'port_id': port_id, 'server': server})
         try:
             self.driver.unplug_vif(context, server, port_id)
         except exception.MoganException as e:
@@ -585,13 +590,16 @@ class EngineManager(base_manager.BaseEngineManager):
         return nodes
 
     def add_aggregate_node(self, context, aggregate_uuid, node):
+        LOG.info('Adding node to aggregate: %s', aggregate_uuid)
         self.scheduler_client.reportclient \
             .update_aggregate_node(aggregate_uuid, node, 'add')
 
     def remove_aggregate_node(self, context, aggregate_uuid, node):
+        LOG.info('Removing node from aggregate: %s', aggregate_uuid)
         self.scheduler_client.reportclient \
             .update_aggregate_node(aggregate_uuid, node, 'remove')
 
     def remove_aggregate(self, context, aggregate_uuid):
+        LOG.info('Removing aggregate: %s', aggregate_uuid)
         self.scheduler_client.reportclient \
             .remove_aggregate(aggregate_uuid)
