@@ -229,16 +229,16 @@ if is_service_enabled mogan; then
             configure_placement
         fi
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
-        echo_summary "Initializing mogan"
-        init_mogan
-        start_mogan
-        echo_summary "Creating flavor"
-        create_flavor
         # TODO(zhenguo): Remove this when placement is started as a separated service
         if ! is_service_enabled placement; then
             init_placement
             start_placement
         fi
+        echo_summary "Initializing mogan"
+        init_mogan
+        start_mogan
+        echo_summary "Creating flavor"
+        create_flavor
     fi
 
     if [[ "$1" == "unstack" ]]; then
