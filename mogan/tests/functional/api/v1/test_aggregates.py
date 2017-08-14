@@ -59,6 +59,15 @@ class TestAggregate(v1_test.APITestV1):
         self.assertEqual('application/json', response.content_type)
         self.assertTrue(response.json['error_message'])
 
+    def test_aggregate_post_with_empty_affinity_zone(self):
+        body = {"name": "test_empty",
+                "metadata": {"affinity_zone": ""}}
+        response = self.post_json(
+            '/aggregates', body, headers=self.headers, expect_errors=True)
+        self.assertEqual(http_client.BAD_REQUEST, response.status_code)
+        self.assertEqual('application/json', response.content_type)
+        self.assertTrue(response.json['error_message'])
+
     def test_aggregate_get_all(self):
         self._prepare_aggregates()
         resp = self.get_json('/aggregates', headers=self.headers)
@@ -102,6 +111,17 @@ class TestAggregate(v1_test.APITestV1):
         self._prepare_aggregates()
         response = self.patch_json('/aggregates/' + self.AGGREGATE_UUIDS[0],
                                    [{'path': '/metadata/availability_zone',
+                                     'value': '', 'op': 'add'}],
+                                   headers=self.headers,
+                                   expect_errors=True)
+        self.assertEqual(http_client.BAD_REQUEST, response.status_code)
+        self.assertEqual('application/json', response.content_type)
+        self.assertTrue(response.json['error_message'])
+
+    def test_aggregate_update_with_empty_affinity_zone(self):
+        self._prepare_aggregates()
+        response = self.patch_json('/aggregates/' + self.AGGREGATE_UUIDS[0],
+                                   [{'path': '/metadata/affinity_zone',
                                      'value': '', 'op': 'add'}],
                                    headers=self.headers,
                                    expect_errors=True)
