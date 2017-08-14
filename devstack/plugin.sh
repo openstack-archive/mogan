@@ -187,8 +187,6 @@ function cleanup_mogan {
 
 
 function create_flavor {
-    # this makes consistency with ironic resource class, will move the mogan flavor
-    # creation to ironic devstack plugin when we are official.
     if [[ "$IRONIC_IS_HARDWARE" == "False" ]]; then
         local ironic_node_cpu=$IRONIC_VM_SPECS_CPU
         local ironic_node_ram=$IRONIC_VM_SPECS_RAM
@@ -198,10 +196,8 @@ function create_flavor {
         local ironic_node_ram=$IRONIC_HW_NODE_RAM
         local ironic_node_disk=$IRONIC_HW_NODE_DISK
     fi
-    # this will look like baremetal_1cpu_256mbram_10gbdisk
-    resource_class="baremetal_${ironic_node_cpu}cpu_${ironic_node_ram}mbram_${ironic_node_disk}gbdisk"
     description="CPU: ${ironic_node_cpu}, RAM: ${ironic_node_ram}MB, DISK: ${ironic_node_disk}GB"
-    openstack baremetal flavor create ${resource_class} --description "${description}" --resources ${resource_class}=1
+    openstack baremetal flavor create $IRONIC_DEFAULT_RESOURCE_CLASS --description "${description}" --resources $IRONIC_DEFAULT_RESOURCE_CLASS=1
 }
 
 
@@ -229,16 +225,16 @@ if is_service_enabled mogan; then
             configure_placement
         fi
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
-        echo_summary "Initializing mogan"
-        init_mogan
-        start_mogan
-        echo_summary "Creating flavor"
-        create_flavor
         # TODO(zhenguo): Remove this when placement is started as a separated service
         if ! is_service_enabled placement; then
             init_placement
             start_placement
         fi
+        echo_summary "Initializing mogan"
+        init_mogan
+        start_mogan
+        echo_summary "Creating flavor"
+        create_flavor
     fi
 
     if [[ "$1" == "unstack" ]]; then
