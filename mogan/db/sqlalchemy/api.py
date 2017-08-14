@@ -192,6 +192,12 @@ class Connection(api.Connection):
 
     @oslo_db_api.retry_on_deadlock
     def flavor_destroy(self, context, flavor_uuid):
+        # check if the flavor is in use
+        query = model_query(
+            context, models.Server).filter_by(flavor_uuid=flavor_uuid)
+        if query.first():
+            raise exception.FlavorInUse(flavor_id=flavor_uuid)
+
         with _session_for_write():
             flavor_id = _get_id_from_flavor(context, flavor_uuid)
 

@@ -160,6 +160,11 @@ class FlavorDisabled(Invalid):
     _msg_fmt = _("Flavor %(flavor_id)s is disabled.")
 
 
+class FlavorInUse(Conflict):
+    _msg_fmt = _("Flavor %(flavor_id)s is still in use, you can disable "
+                 "it to make it not available for users.")
+
+
 class ServerAlreadyExists(Conflict):
     _msg_fmt = _("Server with name %(name)s already exists.")
 
