@@ -520,6 +520,25 @@ provision_state:
   in: body
   required: true
   type: string
+remote_console_protocol:
+  description: |
+    The protocol of remote console. The valid value is ``serial`` now.
+  in: body
+  required: true
+  type: string
+remote_console_type:
+  description: |
+    The type of remote console. The valid values are ``socat``, and
+    ``shellinabox``.
+  in: body
+  required: true
+  type: string
+remote_console_url:
+  description: |
+    The URL is used to connect the console.
+  in: body
+  required: true
+  type: string
 server_description:
   description: |
     A free form description of the server. Limited to 255 characters
