@@ -23,7 +23,6 @@ from oslo_utils import excutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import six
-import six.moves.urllib.parse as urlparse
 
 from mogan.baremetal.ironic import ironic_states
 from mogan.common import exception
@@ -521,18 +520,27 @@ class EngineManager(base_manager.BaseEngineManager):
         utils.process_event(fsm, server, event='done')
         LOG.info('Server was successfully rebuilt', server=server)
 
-    def get_serial_console(self, context, server):
-        node_console_info = self.driver.get_serial_console_by_server(
-            context, server)
+    def get_serial_console(self, context, server, console_type):
+        """Returns connection information for a serial console."""
+
+        LOG.debug("Getting serial console", server=server)
+
         token = uuidutils.generate_uuid()
-        access_url = '%s?token=%s' % (
-            CONF.shellinabox_console.shellinabox_base_url, token)
-        console_url = node_console_info['console_info']['url']
-        parsed_url = urlparse.urlparse(console_url)
+        if console_type == 'shellinabox':
+            access_url = '%s?token=%s' % (
+                CONF.serial_console.shellinabox_base_url, token)
+        elif console_type == 'socat':
+            access_url = '%s?token=%s' % (
+                CONF.serial_console.socat_base_url, token)
+        else:
+            raise exception.ConsoleTypeInvalid(console_type=console_type)
+
+        console_url = self.driver.get_serial_console(
+            context, server, console_type)
         return {'access_url': access_url,
                 'token': token,
-                'host': parsed_url.hostname,
-                'port': parsed_url.port,
+                'host': console_url.hostname,
+                'port': console_url.port,
                 'internal_access_path': None}
 
     def attach_interface(self, context, server, net_id=None):

@@ -434,17 +434,17 @@ class API(object):
             return False
         return True
 
-    def get_serial_console(self, context, server):
+    def get_serial_console(self, context, server, console_type):
         """Get a url to a server Console."""
         connect_info = self.engine_rpcapi.get_serial_console(
-            context, server=server)
+            context, server=server, console_type=console_type)
+
         self.consoleauth_rpcapi.authorize_console(
             context,
-            connect_info['token'], 'serial',
+            connect_info['token'], console_type,
             connect_info['host'], connect_info['port'],
             connect_info['internal_access_path'], server.uuid,
             access_url=connect_info['access_url'])
-
         return {'url': connect_info['access_url']}
 
     def _validate_new_key_pair(self, context, user_id, key_name, key_type):
