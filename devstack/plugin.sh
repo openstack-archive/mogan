@@ -83,6 +83,7 @@ function configure_mogan {
     iniset ${MOGAN_CONF_FILE} ironic api_endpoint "${KEYSTONE_AUTH_PROTOCOL}://${SERVICE_HOST}:${IRONIC_SERVICE_PORT}"
 
     # Setup placement section
+    iniset ${MOGAN_CONF_FILE} placement os_region_name ${REGION_NAME}
     iniset ${MOGAN_CONF_FILE} placement project_domain_name ${SERVICE_DOMAIN_NAME}
     iniset ${MOGAN_CONF_FILE} placement project_name ${SERVICE_PROJECT_NAME}
     iniset ${MOGAN_CONF_FILE} placement user_domain_name ${SERVICE_DOMAIN_NAME}
@@ -90,7 +91,6 @@ function configure_mogan {
     iniset ${MOGAN_CONF_FILE} placement password ${SERVICE_PASSWORD}
     iniset ${MOGAN_CONF_FILE} placement auth_url ${KEYSTONE_AUTH_URI}
     iniset ${MOGAN_CONF_FILE} placement auth_type "password"
-    iniset ${MOGAN_CONF_FILE} placement api_endpoint "${KEYSTONE_AUTH_PROTOCOL}://${SERVICE_HOST}:${IRONIC_SERVICE_PORT}"
 
     # Setup neutron section
     iniset ${MOGAN_CONF_FILE} neutron url "${NEUTRON_SERVICE_PROTOCOL}://${SERVICE_HOST}:${NEUTRON_SERVICE_PORT}"
