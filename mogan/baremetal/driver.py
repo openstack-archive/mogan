@@ -107,10 +107,11 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def get_serial_console_by_server(self, context, server):
+    def get_serial_console(self, context, server, console_type):
         """Get console info by server.
 
         :param server: server to get its console info.
+        :param console_type: the type of the console.
         """
         raise NotImplementedError()
 
