@@ -78,10 +78,10 @@ class EngineAPI(object):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.cast(context, 'rebuild_server', server=server)
 
-    def get_serial_console(self, context, server):
+    def get_serial_console(self, context, server, console_type):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         return cctxt.call(context, 'get_serial_console',
-                          server=server)
+                          server=server, console_type=console_type)
 
     def attach_interface(self, context, server, net_id):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
