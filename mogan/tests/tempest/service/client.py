@@ -177,11 +177,14 @@ class BaremetalComputeClient(rest_client.RestClient):
         body = self.deserialize(body)['nodes']
         return rest_client.ResponseBodyList(resp, body)
 
-    def server_get_serial_console(self, server_id):
-        uri = '%s/servers/%s/serial_console' % (self.uri_prefix, server_id)
-        resp, body = self.get(uri)
+    def server_create_shellinabox_console(self, server_id):
+        uri = '%s/servers/%s/remote_consoles' % (self.uri_prefix, server_id)
+        target_body = {'protocol': 'serial', 'type': 'shellinabox'}
+        target_body = self.serialize(target_body)
+        resp, body = self.post(uri, target_body)
         self.expected_success(200, resp.status)
-        body = self.deserialize(body)['console']
+        if body:
+            body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
     def server_get_networks(self, server_id):
