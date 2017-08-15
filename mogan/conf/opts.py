@@ -23,7 +23,7 @@ import mogan.conf.neutron
 import mogan.conf.placement
 import mogan.conf.quota
 import mogan.conf.scheduler
-import mogan.conf.shellinabox
+import mogan.conf.serial_console
 
 _default_opt_lists = [
     mogan.conf.default.api_opts,
@@ -45,7 +45,7 @@ _opts = [
     ('placement', mogan.conf.placement.list_opts()),
     ('quota', mogan.conf.quota.quota_opts),
     ('scheduler', mogan.conf.scheduler.opts),
-    ('shellinabox_console', mogan.conf.shellinabox.shellinabox_opts),
+    ('serial_console', mogan.conf.serial_console.opts),
 ]
 
 

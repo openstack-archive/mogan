@@ -456,7 +456,19 @@ class IronicDriver(base_driver.BaseEngineDriver):
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
         LOG.info('Server was successfully rebuilt', server=server)
 
-    def get_serial_console_by_server(self, context, server):
+    def get_node_console_with_reset(self, context, server):
+        """Acquire console information for a server.
+
+        If the console is enabled, the console will be re-enabled
+        before returning.
+
+        :param server: mogan server object
+        :return: a dictionary with below values
+            { 'node': ironic node
+              'console_info': node console info }
+        :raise ConsoleNotAvailable: if console is unavailable
+            for the server
+        """
         node = self._validate_server_and_node(server)
         node_uuid = node.uuid
 
@@ -531,15 +543,37 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 console = _enable_console(True)
 
         if console['console_enabled']:
-            if console['console_info']['type'] != 'shellinabox':
-                raise exception.ConsoleTypeUnavailable(
-                    console_type=console['console_info']['type'])
-
             return {'node': node,
                     'console_info': console['console_info']}
         else:
             LOG.debug('Console is disabled for node %s', node_uuid)
             raise exception.ConsoleNotAvailable()
+
+    def get_serial_console(self, context, server, console_type):
+        """Acquire serial console information.
+
+        :param context: request context
+        :param server: mogan server object
+        :return: ConsoleSerial object
+        :raise ConsoleTypeUnavailable: if serial console is unavailable
+            for the server
+        """
+        LOG.debug('Getting serial console', server=server)
+        try:
+            result = self._get_node_console_with_reset(server)
+        except exception.ConsoleNotAvailable:
+            raise exception.ConsoleTypeUnavailable(console_type=console_type)
+
+        if console_info["type"] != console_type:
+            LOG.warning('Console type "%(type)s" (of ironic node '
+                        '%(node)s) does not match with the given type',
+                        {'type': console_info["type"],
+                         'node': node.uuid},
+                        server=server)
+            raise exception.ConsoleTypeUnavailable(console_type=console_type)
+
+        return result
+
 
     def get_available_nodes(self):
         """Helper function to return the list of all nodes.

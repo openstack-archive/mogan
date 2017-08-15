@@ -27,6 +27,7 @@ from wsme import types as wtypes
 
 from mogan.api.controllers import base
 from mogan.api.controllers import link
+from mogan.api.controllers.v1.schemas import remote_consoles as console_schemas
 from mogan.api.controllers.v1.schemas import floating_ips as fip_schemas
 from mogan.api.controllers.v1.schemas import interfaces as interface_schemas
 from mogan.api.controllers.v1.schemas import servers as server_schemas
@@ -525,23 +526,46 @@ class ServerCollection(base.APIBase):
 class ServerConsole(base.APIBase):
     """API representation of the console of a server."""
 
-    console = {wtypes.text: types.jsontype}
-    """The console information of the server"""
+    protocol = wtypes.text
+    """The protocol of the console"""
+
+    type = wtypes.text
+    """The type of the console"""
+
+    url = wtypes.text
+    """The url of the console"""
+
+    @classmethod
+    def sample(cls):
+        sample = cls(
+            protocol='serial', type='shellinabox',
+            url='http://example.com/?token=b4f5cb4a-8b01-40ea-ae46-67f0db4969b3')
+        return sample
 
 
-class ServerSerialConsoleController(ServerControllerBase):
+class ServerRemoteConsoleController(ServerControllerBase):
     """REST controller for Server."""
 
-    @policy.authorize_wsgi("mogan:server", "get_serial_console")
-    @expose.expose(ServerConsole, types.uuid)
-    def get(self, server_uuid):
+    @policy.authorize_wsgi("mogan:server", "create_remote_console")
+    @expose.expose(ServerConsole, types.uuid, body=types.jsontype,
+                   status_code=http_client.CREATED)
+    def post(self, server_uuid, remote_console):
         """Get the serial console info of the server.
 
         :param server_uuid: the UUID of a server.
+        :param remote_console: request body includes console type and protocol.
         """
+        validation.check_schema(
+            remote_console, console_schemas.create_console)
+
         server_obj = self._resource or self._get_resource(server_uuid)
-        console = pecan.request.engine_api.get_serial_console(
-            pecan.request.context, server_obj)
+        protocol = remote_console['protocol']
+        console_type = remote_console['type']
+        # Only serial console is supported now
+        if protocol == 'serial':
+            console = pecan.request.engine_api.get_serial_console(
+                pecan.request.context, server_obj, console_type)
+
         return ServerConsole(console=console)
 
 
@@ -554,7 +578,7 @@ class ServerController(ServerControllerBase):
     networks = ServerNetworksController()
     """Expose the network controller action as a sub-element of servers"""
 
-    serial_console = ServerSerialConsoleController()
+    remote_consoles = ServerRemoteConsoleController()
     """Expose the console controller of servers"""
 
     _custom_actions = {

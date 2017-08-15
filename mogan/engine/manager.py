@@ -521,13 +521,24 @@ class EngineManager(base_manager.BaseEngineManager):
         utils.process_event(fsm, server, event='done')
         LOG.info('Server was successfully rebuilt', server=server)
 
-    def get_serial_console(self, context, server):
-        node_console_info = self.driver.get_serial_console_by_server(
-            context, server)
+    def get_serial_console(self, context, server, console_type):
+        """Returns connection information for a serial console."""
+
+        LOG.debug("Getting serial console", server=server)
+
         token = uuidutils.generate_uuid()
-        access_url = '%s?token=%s' % (
-            CONF.shellinabox_console.shellinabox_base_url, token)
-        console_url = node_console_info['console_info']['url']
+        if console_type == 'shellinabox':
+            access_url = '%s?token=%s' % (
+                CONF.serial.shellinabox_base_url, token)
+        elif console_type == 'socat':
+            access_url = '%s?token=%s' % (
+                CONF.serial.socat_base_url, token)
+        else:
+            raise exception.ConsoleTypeInvalid(console_type=console_type)
+
+        console_info = self.driver.get_serial_console(
+            context, server, console_type)
+        console_url = console_info['console_info']['url']
         parsed_url = urlparse.urlparse(console_url)
         return {'access_url': access_url,
                 'token': token,
