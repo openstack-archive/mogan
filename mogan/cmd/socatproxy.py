@@ -14,16 +14,15 @@
 
 from mogan.conf import CONF
 from mogan.conf import serial_console
-from mogan.console import shellinabox as shellinabox_console
+from mogan.console import websocketproxy
 
 serial_console.register_cli_opts(CONF)
 
 
 def main():
-    server_address = (CONF.serial_console.shellinaboxproxy_host,
-                      CONF.serial_console.shellinaboxproxy_port)
-
-    httpd = shellinabox_console.ThreadingHTTPServer(
-        server_address,
-        shellinabox_console.ProxyHandler)
-    httpd.service_start()
+    websocketproxy.MoganWebSocketProxy(
+        listen_host=CONF.serial_console.socatproxy_host,
+        listen_port=CONF.serial_console.socatproxy_port,
+        file_only=True,
+        RequestHandlerClass=websocketproxy.MoganProxyRequestHandler
+    ).start_server()

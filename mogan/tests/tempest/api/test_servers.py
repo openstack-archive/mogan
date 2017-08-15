@@ -142,16 +142,18 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
                     'Failed to acquire console information for  node: %s' %
                     node)
 
-    def test_server_get_console(self):
+    def test_server_create_shellinabox_console(self):
         self._ensure_states_before_test()
         node = self.baremetal_node_client.show_bm_node(
             service_id=self.server_ids[0])
         self.baremetal_node_client.bm_node_set_console_port(node['uuid'], 4321)
         self.baremetal_node_client.set_node_console_state(node['uuid'], True)
         self._wait_for_console(node['uuid'], True)
-        console = self.baremetal_compute_client.server_get_serial_console(
-            self.server_ids[0])
+        console = self.baremetal_compute_client.\
+            server_create_shellinabox_console(self.server_ids[0])
         self.assertIn('url', console)
+        self.assertEqual('serial', console['protocol'])
+        self.assertEqual('shellinabox', console['type'])
 
     def test_server_get_nics(self):
         nics = self.baremetal_compute_client.server_get_networks(

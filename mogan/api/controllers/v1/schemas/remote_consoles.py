@@ -1,3 +1,4 @@
+# Copyright 2017 Huawei Technologies Co.,LTD.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,18 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from mogan.conf import CONF
-from mogan.conf import serial_console
-from mogan.console import shellinabox as shellinabox_console
 
-serial_console.register_cli_opts(CONF)
-
-
-def main():
-    server_address = (CONF.serial_console.shellinaboxproxy_host,
-                      CONF.serial_console.shellinaboxproxy_port)
-
-    httpd = shellinabox_console.ThreadingHTTPServer(
-        server_address,
-        shellinabox_console.ProxyHandler)
-    httpd.service_start()
+create_console = {
+    'type': 'object',
+    'properties': {
+        'protocol': {
+            'type': 'string',
+            'enum': ['serial'],
+        },
+        'type': {
+            'type': 'string',
+            'enum': ['shellinabox', 'socat'],
+        },
+    },
+    'required': ['protocol', 'type'],
+    'additionalProperties': False
+}

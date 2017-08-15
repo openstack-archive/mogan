@@ -389,6 +389,10 @@ class ConsoleTypeUnavailable(Invalid):
     _msg_fmt = _("Unavailable console type %(console_type)s.")
 
 
+class ConsoleTypeInvalid(Invalid):
+    _msg_fmt = _("Invalid console type %(console_type)s")
+
+
 class ConfigDriveMountFailed(MoganException):
     _msg_fmt = _("Could not mount vfat config drive. %(operation)s failed. "
                  "Error: %(error)s")

@@ -140,7 +140,8 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
             {"console_enabled": True, "console_info": fake_console_url}]
         server = obj_utils.create_test_server(self.context)
         self._start_service()
-        console = self.service.get_serial_console(self.context, server)
+        console = self.service.get_serial_console(
+            self.context, server, 'shellinabox')
         self._stop_service()
         self.assertEqual(4321, console['port'])
         self.assertTrue(
