@@ -530,23 +530,41 @@ class EngineManager(base_manager.BaseEngineManager):
                 'port': parsed_url.port,
                 'internal_access_path': None}
 
-    def attach_interface(self, context, server, net_id=None):
+    @wrap_server_fault
+    def attach_interface(self, context, server, net_id, port_id):
         LOG.debug("Attaching interface %(net_id) to server %(server)s",
                   {'net_id': net_id, 'server': server})
+        # prepare port to be attached
+        if port_id:
+            try:
+                vif_port = self.network_api.show_port(context, port_id)
+            except Exception:
+                raise exception.PortNotFound(port_id=port_id)
+
+            self.network_api.validate_port(vif_port)
+
+        else:
+            vif_port = self.network_api.create_port(context, net_id,
+                                                    server.uuid)
+
         try:
-            port = self.network_api.create_port(context, net_id, server.uuid)
-            self.driver.plug_vif(server.node_uuid, port['id'])
+            vif = self.network_api.update_port(context, vif_port['id'], server)
+            vif_port = vif['port']
+            self.driver.plug_vif(server.node_uuid, vif_port['id'])
             nics_obj = objects.ServerNics(context)
-            nic_dict = {'port_id': port['id'],
-                        'network_id': port['network_id'],
-                        'mac_address': port['mac_address'],
-                        'fixed_ips': port['fixed_ips'],
+            nic_dict = {'port_id': vif_port['id'],
+                        'network_id': vif_port['network_id'],
+                        'mac_address': vif_port['mac_address'],
+                        'fixed_ips': vif_port['fixed_ips'],
                         'server_uuid': server.uuid}
             nics_obj.objects.append(objects.ServerNic(
                 context, **nic_dict))
             server.nics = nics_obj
             server.save()
         except Exception as e:
+            # Delete port when attach interface fails
+            # Maybe deallocate port is better
+            self.network_api.delete_port(context, vif_port['id'], server.uuid)
             raise exception.InterfaceAttachFailed(message=six.text_type(e))
         LOG.info('Attaching interface successfully')
 
@@ -569,6 +587,7 @@ class EngineManager(base_manager.BaseEngineManager):
         except exception.PortNotFound:
             pass
 
+    @wrap_server_fault
     def detach_interface(self, context, server, port_id):
         LOG.debug("Detaching interface %(port_id) from server %(server)s",
                   {'port_id': port_id, 'server': server.uuid})

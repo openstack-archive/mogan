@@ -117,6 +117,7 @@ Request
 
     - server_uuid: server_ident
     - net_id: network_uuid
+    - port_id: port_uuid
 
 **Example request to Add (Associate) Interface to a server:**
 
