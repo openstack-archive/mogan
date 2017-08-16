@@ -23,6 +23,9 @@ from mogan.conf import CONF
 LOG = logging.getLogger(__name__)
 
 _NEUTRON_SESSION = None
+BINDING_PROFILE = 'binding:profile'
+BINDING_HOST_ID = 'binding:host_id'
+BINDING_VNIC_TYPE = 'binding:vnic_type'
 
 
 def _get_neutron_session():
@@ -204,6 +207,43 @@ class API(object):
             net_ids)
 
         return nets
+
+    def bind_port(self, context, port, server):
+        client = get_client(context.auth_token)
+        req_body = {
+            'port': {
+                'device_id': server.uuid,
+            }
+        }
+        try:
+            port = client.update_port(port, req_body)
+        except neutron_exceptions.PortNotFoundClient:
+            LOG.debug('Unable to bind port %s as it no longer exists.', port)
+        except Exception:
+            LOG.exception("Unable to add device ID for port '%s'", port)
+        return port
+
+    def unbind_port(self, context, port):
+        client = get_client(context.auth_token)
+        port_req_body = {'port': {'device_id': '', 'device_owner': ''}}
+        if port[BINDING_HOST_ID]:
+            port_req_body['port'][BINDING_HOST_ID] = None
+        if port[BINDING_PROFILE]:
+            port_req_body['port'][BINDING_PROFILE] = {}
+        if port[BINDING_VNIC_TYPE] != 'normal':
+            port_req_body['port'][BINDING_VNIC_TYPE] = 'normal'
+
+        try:
+            port = client.update_port(port['id'], port_req_body)
+        except neutron_exceptions.PortNotFoundClient:
+            LOG.debug('Unable to unbind port %s as it no longer exists.',
+                      port)
+        except Exception:
+            LOG.exception("Unable to clear device ID for port '%s'", port)
+
+    def check_port_availability(self, port):
+        if port['device_id']:
+            raise exception.PortInUse(port_id=port['id'])
 
     def _get_available_ports(self, port_ids, client):
         """Return a port list available for the tenant."""
