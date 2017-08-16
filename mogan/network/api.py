@@ -205,6 +205,20 @@ class API(object):
 
         return nets
 
+    def update_port(self, context, port, server):
+        client = get_client(context.auth_token)
+        req_body = {
+            'port': {
+                'device_id': server.uuid,
+            }
+        }
+        port = client.update_port(port, req_body)
+        return port
+
+    def validate_port(self, port):
+        if port['device_id']:
+            raise exception.PortInUse(port_id=port['id'])
+
     def _get_available_ports(self, port_ids, client):
         """Return a port list available for the tenant."""
 
