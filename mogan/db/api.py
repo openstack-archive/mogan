@@ -269,3 +269,8 @@ class Connection(object):
     def server_group_get_all(self, context, project_id=None):
         """Get server groups."""
         return IMPL.server_group_get_all(context, project_id)
+
+    @abc.abstractmethod
+    def server_group_members_add(self, context, group_uuid, members):
+        """Add a list of members to a server group"""
+        return IMPL.server_group_members_add(context, group_uuid, members)

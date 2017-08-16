@@ -213,7 +213,7 @@ class API(object):
         return [_decode(f) for f in injected_files]
 
     def _provision_servers(self, context, base_options,
-                           min_count, max_count):
+                           min_count, max_count, server_group):
         # Return num_servers according quota
         num_servers = self._check_num_servers_quota(
             context, min_count, max_count)
@@ -235,6 +235,9 @@ class API(object):
 
                 server.create()
                 servers.append(server)
+                if server_group:
+                    objects.ServerGroup.add_members(
+                        context, server_group.uuid, [server.uuid])
         except Exception:
             with excutils.save_and_reraise_exception():
                 try:
@@ -261,6 +264,15 @@ class API(object):
 
         return self.network_api.validate_networks(context, requested_networks,
                                                   max_count)
+
+    @staticmethod
+    def _get_requested_server_group(context, scheduler_hints):
+        if not scheduler_hints:
+            return
+        group_hint = scheduler_hints.get('group')
+        if not group_hint:
+            return
+        return objects.ServerGroup.get_by_uuid(context, group_hint)
 
     def _create_server(self, context, flavor, image_uuid,
                        name, description, availability_zone, metadata,
@@ -296,9 +308,10 @@ class API(object):
         # TODO(zhenguo): Check injected file quota
         # b64 decode the files to inject:
         decoded_files = self._decode_files(injected_files)
-
+        server_group = self._get_requested_server_group(context,
+                                                        scheduler_hints)
         servers = self._provision_servers(context, base_options,
-                                          min_count, max_count)
+                                          min_count, max_count, server_group)
         request_spec = {
             'server_properties': {
                 'flavor_uuid': servers[0].flavor_uuid,
