@@ -74,6 +74,10 @@ class ServerGroup(base.MoganObject, object_base.VersionedObjectDictCompat):
         self.dbapi.server_group_delete(self._context, self.uuid)
         self.obj_reset_changes()
 
+    @classmethod
+    def add_members(cls, context, group_uuid, members):
+        cls.dbapi.server_group_members_add(context, group_uuid, members)
+
     def save(self, context=None):
         updates = self.obj_get_changes()
         self.dbapi.server_group_update(context, self.uuid, updates)
