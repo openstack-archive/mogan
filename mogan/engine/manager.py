@@ -535,11 +535,19 @@ class EngineManager(base_manager.BaseEngineManager):
                 'port': parsed_url.port,
                 'internal_access_path': None}
 
-    def attach_interface(self, context, server, net_id=None):
+    def attach_interface(self, context, server, net_id, port_id):
         try:
-            vif = self.network_api.create_port(context, net_id, server.uuid)
-            vif_port = vif['port']
-            self.driver.plug_vif(server.node_uuid, vif_port['id'])
+            if port_id:
+                vif_port = self.network_api.show_port(context, port_id)
+                if vif_port['binding:host_id']:
+                    raise exception.PortInUse(port_id=port_id)
+            else:
+                vif = self.network_api.create_port(context,
+                                                   net_id, server.uuid)
+                vif_port = vif['port']
+
+            vif_id = vif_port['id']
+            self.driver.plug_vif(server.node_uuid, vif_id)
             nics_obj = objects.ServerNics(context)
             nic_dict = {'port_id': vif_port['id'],
                         'network_id': vif_port['network_id'],
