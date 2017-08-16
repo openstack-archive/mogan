@@ -148,6 +148,10 @@ class TestServers(v1_test.APITestV1):
                                               mock_create):
         mocked_uuid.return_value = self.SERVER_UUIDS[0]
         mock_create.return_value = mock.MagicMock()
+        headers = self.gen_headers(self.context, roles="admin")
+        group_body = {"name": "group1", "policies": ["affinity"]}
+        group = self.post_json('/server_groups', group_body, headers=headers,
+                               status=201).json
         body = {
             "server": {
                 "name": "test_server_with_hints",
@@ -159,7 +163,7 @@ class TestServers(v1_test.APITestV1):
                      'port_type': 'Ethernet'}],
                 'metadata': {'fake_key': 'fake_value'}
             },
-            "scheduler_hints": {"group": 'group1'}
+            "scheduler_hints": {"group": group['uuid']}
         }
         headers = self.gen_headers(self.context)
         response = self.post_json('/servers', body, headers=headers,

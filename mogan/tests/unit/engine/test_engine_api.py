@@ -107,7 +107,8 @@ class ComputeAPIUnitTest(base.DbTestCase):
         min_count = 1
         max_count = 2
         self.engine_api._provision_servers(self.context, base_options,
-                                           min_count, max_count)
+                                           min_count, max_count,
+                                           server_group=None)
         calls = [mock.call() for i in range(max_count)]
         mock_server_create.assert_has_calls(calls)
 
