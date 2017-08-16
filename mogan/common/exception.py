@@ -306,6 +306,11 @@ class InterfaceAttachFailed(Conflict):
                 "%(server_uuid)s")
 
 
+class InterfaceAlreadyAttached(Conflict):
+    msg_fmt = _("Port %(port_id) is already attached to server"
+                "%(server_uuid)s")
+
+
 class InterfaceNotFoundForServer(NotFound):
     _msg_fmt = _("Interface not found for server %(server)s.")
 

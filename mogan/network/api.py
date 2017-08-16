@@ -204,6 +204,14 @@ class API(object):
 
         return nets
 
+    def validate_port(self, port, server):
+        if port['device_id'] == server.uuid:
+            raise exception.InterfaceAlreadyAttached(port_id=port['id'],
+                                                     server_uuid=server.uuid)
+        elif port['device_id'] or port['binding:host_id']\
+                or port['binding:profile']:
+            raise exception.PortInUse(port_id=port['id'])
+
     def _get_available_ports(self, port_ids, client):
         """Return a port list available for the tenant."""
 

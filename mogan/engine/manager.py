@@ -535,10 +535,22 @@ class EngineManager(base_manager.BaseEngineManager):
                 'port': parsed_url.port,
                 'internal_access_path': None}
 
-    def attach_interface(self, context, server, net_id=None):
-        try:
+    @wrap_server_fault
+    def attach_interface(self, context, server, net_id, port_id):
+        # prepare port to be attached
+        if port_id:
+            try:
+                vif_port = self.network_api.show_port(context, port_id)
+            except Exception:
+                raise exception.PortNotFound(port_id=port_id)
+
+            self.network_api.validate_port(vif_port, server)
+
+        else:
             vif = self.network_api.create_port(context, net_id, server.uuid)
             vif_port = vif['port']
+
+        try:
             self.driver.plug_vif(server.node_uuid, vif_port['id'])
             nics_obj = objects.ServerNics(context)
             nic_dict = {'port_id': vif_port['id'],
@@ -551,8 +563,12 @@ class EngineManager(base_manager.BaseEngineManager):
             server.nics = nics_obj
             server.save()
         except Exception as e:
+            # Delete port when attach interface fails
+            # Maybe deallocate port is better
+            self.network_api.delete_port(context, vif_port['id'], server.uuid)
             raise exception.InterfaceAttachFailed(message=six.text_type(e))
 
+    @wrap_server_fault
     def detach_interface(self, context, server, port_id):
         LOG.info('Detaching interface...', server=server)
         try:
@@ -565,7 +581,7 @@ class EngineManager(base_manager.BaseEngineManager):
         else:
             try:
                 self.network_api.delete_port(context, port_id, server.uuid)
-            except Exception as e:
+            except Exception:
                 raise exception.InterfaceDetachFailed(server_uuid=server.uuid)
 
         for nic in server.nics:
