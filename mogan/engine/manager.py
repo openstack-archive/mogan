@@ -24,6 +24,7 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import six
 import six.moves.urllib.parse as urlparse
+from webob import exc
 
 from mogan.baremetal.ironic import ironic_states
 from mogan.common import exception
@@ -535,11 +536,22 @@ class EngineManager(base_manager.BaseEngineManager):
                 'port': parsed_url.port,
                 'internal_access_path': None}
 
-    def attach_interface(self, context, server, net_id=None):
+    def attach_interface(self, context, server, net_id, port_id):
         try:
-            vif = self.network_api.create_port(context, net_id, server.uuid)
-            vif_port = vif['port']
-            self.driver.plug_vif(server.node_uuid, vif_port['id'])
+            if port_id:
+                vif_port = self.network_api.show_port(context, port_id)
+                if vif_port['binding:host_id']:
+                    raise exception.PortInUse(port_id=port_id)
+                if net_id and vif_port['network_id'] != net_id:
+                    msg = _("port_id and net_id mismatched")
+                    raise exc.HTTPBadRequest(explanation=msg)
+            else:
+                vif = self.network_api.create_port(context,
+                                                   net_id, server.uuid)
+                vif_port = vif['port']
+
+            vif_id = vif_port['id']
+            self.driver.plug_vif(server.node_uuid, vif_id)
             nics_obj = objects.ServerNics(context)
             nic_dict = {'port_id': vif_port['id'],
                         'network_id': vif_port['network_id'],

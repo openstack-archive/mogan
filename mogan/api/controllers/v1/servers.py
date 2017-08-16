@@ -325,6 +325,7 @@ class FloatingIPController(ServerControllerBase):
 class InterfaceController(ServerControllerBase):
     def __init__(self, *args, **kwargs):
         super(InterfaceController, self).__init__(*args, **kwargs)
+        self.network_api = network.API()
 
     @policy.authorize_wsgi("mogan:server", "attach_interface")
     @expose.expose(None, types.uuid, body=types.jsontype,
@@ -337,15 +338,16 @@ class InterfaceController(ServerControllerBase):
         """
         validation.check_schema(interface, interface_schemas.attach_interface)
 
+        port_id = interface.get('port_id', None)
         net_id = interface.get('net_id', None)
 
-        if not net_id:
-            msg = _("Must input network_id")
+        if not net_id and not port_id:
+            msg = _("Must input network_id or port_id")
             raise exc.HTTPBadRequest(explanation=msg)
 
         server = self._resource or self._get_resource(server_uuid)
         pecan.request.engine_api.attach_interface(pecan.request.context,
-                                                  server, net_id)
+                                                  server, net_id, port_id)
 
     @policy.authorize_wsgi("mogan:server", "detach_interface")
     @expose.expose(None, types.uuid, types.uuid,
