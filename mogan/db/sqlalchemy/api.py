@@ -273,6 +273,10 @@ class Connection(api.Connection):
                 context,
                 models.ServerFault).filter_by(server_uuid=server_id)
             faults_query.delete()
+            server_group_query = model_query(
+                context, models.ServerGroupMember).filter_by(
+                server_uuid=server_id)
+            server_group_query.delete()
             count = query.delete()
             if count != 1:
                 raise exception.ServerNotFound(server=server_id)
@@ -1056,6 +1060,14 @@ class Connection(api.Connection):
         if project_id is not None:
             query = query.filter_by(project_id=project_id)
         return query.all()
+
+    def server_group_members_add(self, context, group_uuid, members):
+        query = model_query(context, models.ServerGroup).filter_by(
+            uuid=group_uuid)
+        group = query.first()
+        if not group:
+            raise exception.ServerGroupNotFound(group_uuid=group_uuid)
+        self._server_group_members_add(context, group.id, members)
 
 
 def _get_id_from_flavor_query(context, type_id):
