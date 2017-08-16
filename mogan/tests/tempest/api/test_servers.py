@@ -172,7 +172,7 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         nics_before = self.baremetal_compute_client.server_get_networks(
             self.server_ids[0])
         self.baremetal_compute_client.server_attach_interface(
-            self.server_ids[0], net_id=self.net_id)
+            self.server_ids[0], net_id=self.net_id, port_id=None)
         nics_after = self.baremetal_compute_client.server_get_networks(
             self.server_ids[0])
         self.assertEqual(len(nics_before) + 1, len(nics_after))

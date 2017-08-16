@@ -205,6 +205,20 @@ class API(object):
 
         return nets
 
+    def bind_port(self, context, port, server):
+        client = get_client(context.auth_token)
+        req_body = {
+            'port': {
+                'device_id': server.uuid,
+            }
+        }
+        port = client.update_port(port, req_body)
+        return port
+
+    def check_port_availability(self, port):
+        if port['device_id']:
+            raise exception.PortInUse(port_id=port['id'])
+
     def _get_available_ports(self, port_ids, client):
         """Return a port list available for the tenant."""
 
