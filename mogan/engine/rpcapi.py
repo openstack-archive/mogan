@@ -83,10 +83,10 @@ class EngineAPI(object):
         return cctxt.call(context, 'get_serial_console',
                           server=server)
 
-    def attach_interface(self, context, server, net_id):
+    def attach_interface(self, context, server, net_id, port_id):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         cctxt.call(context, 'attach_interface',
-                   server=server, net_id=net_id)
+                   server=server, net_id=net_id, port_id=port_id)
 
     def detach_interface(self, context, server, port_id):
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)

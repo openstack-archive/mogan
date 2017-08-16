@@ -21,7 +21,11 @@ attach_interface = {
     'type': 'object',
     'properties': {
         'net_id': parameter_types.network_id,
+        'port_id': parameter_types.network_port_id
     },
-    'required': ['net_id'],
+    'oneOf': [
+        {'required': ['net_id']},
+        {'required': ['port_id']}
+    ],
     'additionalProperties': False
 }
