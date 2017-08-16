@@ -15,6 +15,9 @@
 You can customize this scheduler by specifying your own node Filters and
 Weighing Functions.
 """
+import itertools
+import random
+
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -114,7 +117,52 @@ class FilterScheduler(driver.Scheduler):
 
         return filters
 
-    def _get_filtered_nodes(self, context, request_spec):
+    @staticmethod
+    def _get_server_group_obj(context, request_spec):
+        server_group = request_spec.get('scheduler_hints', {}).get('group')
+        if not server_group:
+            return
+        server_group = objects.ServerGroup.get_by_uuid(context, server_group)
+        return server_group
+
+    def _get_affinity_available_nodes(self, context, sg_obj):
+        if not sg_obj.members:
+            return
+        member = sg_obj.members[0]
+        server = object.Server.get(context, member)
+        affinity_zone = server.affinity_zone
+        aggregates = objects.AggregateList.get_by_metadata(
+            context, 'affinity_zone', affinity_zone)
+        agg_uuids = [agg.uuid for agg in aggregates]
+        query_filters = {'member_of': 'in:' + ','.join(agg_uuids)}
+        aff_filtered_nodes = self.reportclient.get_filtered_resource_providers(
+            query_filters)
+        return [rp['uuid'] for rp in aff_filtered_nodes]
+
+    def _get_anti_affinity_available_nodes(self, context, sg_obj):
+        affinity_zones = []
+        for member in sg_obj.members:
+            server = object.Server.get(context, member)
+            affinity_zone = server.affinity_zone
+            affinity_zones.append(affinity_zone)
+        all_aggs = object.AggregateList.get_all(context)
+        all_aggs = sorted(all_aggs, key=lambda a: a.metadata.get(
+            'affinity_zone'))
+        grouped_aggs = itertools.groupby(
+            all_aggs, lambda a: a.metadata.get('affinity_zone'))
+        available_az_nodes = {}
+        for az, aggs in grouped_aggs:
+            if az in affinity_zones:
+                continue
+            agg_uuids = [agg.uuid for agg in aggs]
+            query_filters = {'member_of': 'in:' + ','.join(agg_uuids)}
+            az_rps = self.reportclient.get_filtered_resource_providers(
+                query_filters)
+            az_nodes = [rp['uuid'] for rp in az_rps]
+            available_az_nodes.update({az: az_nodes})
+        return available_az_nodes
+
+    def _get_filtered_nodes(self, context, request_spec, server_group=None):
         resources_filter = self._get_res_cls_filters(request_spec)
         aggs_filters = self._get_res_aggregates_filters(context, request_spec)
 
@@ -145,9 +193,23 @@ class FilterScheduler(driver.Scheduler):
             query_filters = {'resources': resources_filter}
             filtered_nodes = self.reportclient.\
                 get_filtered_resource_providers(query_filters)
-            return [node['uuid'] for node in filtered_nodes]
+            filtered_nodes = set([node['uuid'] for node in filtered_nodes])
+        if not server_group:
+            return list(filtered_nodes)
 
-        return list(filtered_nodes)
+        if 'affinity' in server_group.policies:
+            aff_available_nodes = self._get_affinity_available_nodes(
+                context, server_group)
+            return list(filtered_nodes & set(aff_available_nodes))
+        elif 'anti-affinity' in server_group.policies:
+            anti_filtered_nodes = []
+            anti_available_nodes = self._get_anti_affinity_available_nodes(
+                context, server_group)
+            for aff_zone_nodes in anti_available_nodes.values():
+                filtered_aff_zone_nodes = filtered_nodes & set(aff_zone_nodes)
+                if filtered_aff_zone_nodes:
+                    anti_filtered_nodes.append(filtered_aff_zone_nodes)
+            return anti_filtered_nodes
 
     def schedule(self, context, request_spec, filter_properties=None):
 
@@ -159,13 +221,16 @@ class FilterScheduler(driver.Scheduler):
         @utils.synchronized('schedule')
         def _schedule(self, context, request_spec, filter_properties):
             self._populate_retry(filter_properties, request_spec)
-            filtered_nodes = self._get_filtered_nodes(context, request_spec)
+            server_group = self._get_server_group_obj(context, request_spec)
+            filtered_nodes = self._get_filtered_nodes(context, request_spec,
+                                                      server_group)
             if not filtered_nodes:
                 LOG.warning('No filtered nodes found for server '
                             'with properties: %s',
                             request_spec.get('flavor'))
                 raise exception.NoValidNode(_("No filtered nodes available"))
-            dest_nodes = self._choose_nodes(filtered_nodes, request_spec)
+            dest_nodes = self._choose_nodes(context, filtered_nodes,
+                                            request_spec, server_group)
             for server_id, node in zip(request_spec['server_ids'], dest_nodes):
                 server_obj = objects.Server.get(
                     context, server_id)
@@ -177,12 +242,24 @@ class FilterScheduler(driver.Scheduler):
 
         return _schedule(self, context, request_spec, filter_properties)
 
-    def _choose_nodes(self, weighed_nodes, request_spec):
+    def _choose_nodes(self, context, filtered_nodes, request_spec,
+                      server_group=None):
         num_servers = request_spec['num_servers']
-        if num_servers > len(weighed_nodes):
+        if server_group and 'anti-affinity' in server_group.policies:
+            if num_servers > len(filtered_nodes):
+                msg = ('Not enough available affinity zones found for servers '
+                       'request with anti-affinity requirement, request '
+                       '%s servers in different affinity zones, but only '
+                       '%s available affinity zones'
+                       % (str(num_servers), str(len(filtered_nodes))))
+                raise exception.NoValidNode(_("Choose Node: %s") % msg)
+            selected = random.sample(filtered_nodes, num_servers)
+            return [nodes[0] for nodes in selected]
+
+        if num_servers > len(filtered_nodes):
             msg = 'Not enough nodes found for servers, request ' \
                   'servers: %s, but only available nodes: %s' \
-                  % (str(num_servers), str(len(weighed_nodes)))
+                  % (str(num_servers), str(len(filtered_nodes)))
             raise exception.NoValidNode(_("Choose Node: %s") % msg)
 
-        return weighed_nodes[:num_servers]
+        return filtered_nodes[:num_servers]
