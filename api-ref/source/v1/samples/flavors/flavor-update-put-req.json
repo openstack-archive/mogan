@@ -8,5 +8,14 @@
       "op": "replace",
       "path": "/is_public",
       "value": false
+   },
+   {
+      "op": "add",
+      "path": "/projects/-",
+      "value": "fake_tenant"
+   },
+   {
+      "op": "remove",
+      "path": "/projects/0"
    }
 ]

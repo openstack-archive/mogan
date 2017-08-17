@@ -22,13 +22,11 @@ from wsme import types as wtypes
 from mogan.api.controllers import base
 from mogan.api.controllers import link
 from mogan.api.controllers.v1.schemas import flavor as flavor_schema
-from mogan.api.controllers.v1.schemas import flavor_access
 from mogan.api.controllers.v1 import types
 from mogan.api.controllers.v1 import utils as api_utils
 from mogan.api import expose
 from mogan.api import validation
 from mogan.common import exception
-from mogan.common.i18n import _
 from mogan.common import policy
 from mogan import objects
 
@@ -78,10 +76,18 @@ class Flavor(base.APIBase):
     links = wsme.wsattr([link.Link], readonly=True)
     """A list containing a self link"""
 
+    projects = types.jsontype
+    """A list containing the access projects"""
+
     def __init__(self, **kwargs):
         self.fields = []
         for field in objects.Flavor.fields:
             # Skip fields we do not expose.
+            if field == 'projects':
+                if pecan.request.context.is_admin:
+                    access_projects = kwargs.get(field, None)
+                    setattr(self, 'projects', access_projects)
+                    continue
             if not hasattr(self, field):
                 continue
             self.fields.append(field)
@@ -113,7 +119,8 @@ class FlavorPatchType(types.JsonPatchType):
         defaults = types.JsonPatchType.internal_attrs()
         return defaults + ['/description', '/resources',
                            '/resource_traits',
-                           '/resource_aggregates']
+                           '/resource_aggregates'
+                           ]
 
 
 class FlavorCollection(base.APIBase):
@@ -130,64 +137,8 @@ class FlavorCollection(base.APIBase):
         return collection
 
 
-class FlavorAccessController(rest.RestController):
-    """REST controller for flavor access."""
-
-    @policy.authorize_wsgi("mogan:flavor_access", "get_all")
-    @expose.expose(wtypes.text, types.uuid)
-    def get_all(self, flavor_uuid):
-        """Retrieve a list of extra specs of the queried flavor."""
-
-        flavor = objects.Flavor.get(pecan.request.context,
-                                    flavor_uuid)
-
-        # public flavor to all projects
-        if flavor.is_public:
-            msg = _("Access list not available for public flavors.")
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.NOT_FOUND)
-
-        # private flavor to listed projects only
-        return _marshall_flavor_access(flavor)
-
-    @policy.authorize_wsgi("mogan:flavor_access", "add_tenant_access")
-    @expose.expose(None, types.uuid, body=types.jsontype,
-                   status_code=http_client.NO_CONTENT)
-    def post(self, flavor_uuid, tenant):
-        """Add flavor access for the given tenant."""
-        validation.check_schema(tenant, flavor_access.add_tenant_access)
-
-        flavor = objects.Flavor.get(pecan.request.context,
-                                    flavor_uuid)
-        if flavor.is_public:
-            msg = _("Can not add access to a public flavor.")
-            raise wsme.exc.ClientSideError(
-                msg, status_code=http_client.CONFLICT)
-
-        flavor.projects.append(tenant['tenant_id'])
-        flavor.save()
-
-    @policy.authorize_wsgi("mogan:flavor_access", "remove_tenant_access")
-    @expose.expose(None, types.uuid, types.uuid,
-                   status_code=http_client.NO_CONTENT)
-    def delete(self, flavor_uuid, tenant_id):
-        """Remove flavor access for the given tenant."""
-
-        flavor = objects.Flavor.get(pecan.request.context,
-                                    flavor_uuid)
-        # TODO(zhenguo): this should be synchronized.
-        if tenant_id in flavor.projects:
-            flavor.projects.remove(tenant_id)
-            flavor.save()
-        else:
-            raise exception.FlavorAccessNotFound(flavor_id=flavor.uuid,
-                                                 project_id=tenant_id)
-
-
 class FlavorsController(rest.RestController):
     """REST controller for Flavors."""
-
-    access = FlavorAccessController()
 
     @policy.authorize_wsgi("mogan:flavor", "get_all")
     @expose.expose(FlavorCollection)

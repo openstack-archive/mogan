@@ -315,7 +315,8 @@ class Connection(api.Connection):
         return access_ref
 
     @oslo_db_api.retry_on_deadlock
-    def flavor_access_remove(self, context, flavor_id, project_id):
+    def flavor_access_remove(self, context, flavor_uuid, project_id):
+        flavor_id = _get_id_from_flavor(context, flavor_uuid)
         with _session_for_write():
             count = _flavor_access_query(context, flavor_id). \
                 filter_by(project_id=project_id). \
