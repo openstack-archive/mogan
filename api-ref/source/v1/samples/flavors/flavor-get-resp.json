@@ -24,5 +24,6 @@
     "updated_at": null,
     "is_public": true,
     "disabled": false,
-    "name": "test_flavor"
+    "name": "test_flavor",
+    "projects": ["fake_project_1","fake_project_2"]
 }

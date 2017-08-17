@@ -234,10 +234,10 @@ fixed_address:
   type: string
 flavor_access:
   description: |
-    A list of tenants.
+    The project that the flavor is accessible to.
   in: body
-  required: true
-  type: array
+  required: false
+  type: string
 flavor_aggregates:
   description: |
     A dict of key and value pairs associate with the flavor including the resources

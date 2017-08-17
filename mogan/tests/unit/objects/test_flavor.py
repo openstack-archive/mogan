@@ -43,25 +43,37 @@ class TestFlavorObject(base.DbTestCase):
                 self.assertEqual(self.context, flavor._context)
 
     def test_list(self):
+        uuid = self.fake_flavor['uuid']
         with mock.patch.object(self.dbapi, 'flavor_get_all',
                                autospec=True) as mock_flavor_get_all:
-            mock_flavor_get_all.return_value = [self.fake_flavor]
+            with mock.patch.object(self.dbapi, 'flavor_access_get',
+                                   autospec=True) as mock_access_get:
+                mock_flavor_get_all.return_value = [self.fake_flavor]
+                mock_access_get.return_value = []
 
-            flavors = objects.Flavor.list(self.context)
+                flavors = objects.Flavor.list(self.context)
 
-            mock_flavor_get_all.assert_called_once_with(self.context)
-            self.assertIsInstance(flavors[0], objects.Flavor)
-            self.assertEqual(self.context, flavors[0]._context)
+                mock_flavor_get_all.assert_called_once_with(self.context)
+                mock_access_get.assert_called_once_with(self.context, uuid)
+                self.assertIsInstance(flavors[0], objects.Flavor)
+                self.assertEqual(self.context, flavors[0]._context)
 
     def test_create(self):
+        uuid = self.fake_flavor['uuid']
         with mock.patch.object(self.dbapi, 'flavor_create',
                                autospec=True) as mock_flavor_create:
-            mock_flavor_create.return_value = self.fake_flavor
-            flavor = objects.Flavor(self.context, **self.fake_flavor)
-            values = flavor.obj_get_changes()
-            flavor.create(self.context)
-            mock_flavor_create.assert_called_once_with(self.context, values)
-            self.assertEqual(self.fake_flavor['uuid'], flavor['uuid'])
+            with mock.patch.object(self.dbapi, 'flavor_access_get',
+                                   autospec=True) as mock_access_get:
+                mock_flavor_create.return_value = self.fake_flavor
+                mock_access_get.return_value = []
+
+                flavor = objects.Flavor(self.context, **self.fake_flavor)
+                values = flavor.obj_get_changes()
+                flavor.create(self.context)
+                mock_flavor_create.assert_called_once_with(self.context,
+                                                           values)
+                mock_access_get.assert_called_once_with(self.context, uuid)
+                self.assertEqual(self.fake_flavor['uuid'], flavor['uuid'])
 
     def test_destroy(self):
         uuid = self.fake_flavor['uuid']

@@ -42,13 +42,17 @@ class RPCAPITestCase(base.DbTestCase):
 
     def setUp(self):
         super(RPCAPITestCase, self).setUp()
+
         self.fake_server = dbutils.get_test_server()
         self.fake_server_obj = objects.Server._from_db_object(
             objects.Server(self.context), self.fake_server)
         self.fake_type = dbutils.get_test_flavor()
         self.fake_type['extra_specs'] = {}
-        self.fake_type_obj = objects.Flavor._from_db_object(
-            self.context, objects.Flavor(self.context), self.fake_type)
+        with mock.patch.object(self.dbapi, 'flavor_access_get',
+                               autospec=True) as mock_access_get:
+            mock_access_get.return_value = []
+            self.fake_type_obj = objects.Flavor._from_db_object(
+                self.context, objects.Flavor(self.context), self.fake_type)
 
     def test_serialized_server_has_uuid(self):
         self.assertIn('uuid', self.fake_server)

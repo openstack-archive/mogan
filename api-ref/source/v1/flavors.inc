@@ -149,6 +149,7 @@ Response
    - updated_at: updated_at
    - is_public: flavor_is_public
    - disabled: flavor_disabled
+   - project: flavor_access
 
 **Example Update flavor**
 
@@ -189,6 +190,7 @@ Response
    - updated_at: updated_at
    - is_public: flavor_is_public
    - disabled: flavor_disabled
+   - projects: flavor_access
 
 **Example Show Flavor Details**
 

@@ -21,9 +21,6 @@ from mogan.objects import base
 from mogan.objects import fields as object_fields
 
 
-OPTIONAL_FIELDS = ['projects']
-
-
 @base.MoganObjectRegistry.register
 class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
@@ -48,20 +45,16 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         self._orig_projects = {}
 
     @staticmethod
-    def _from_db_object(context, flavor, db_flavor, expected_attrs=None):
-        if expected_attrs is None:
-            expected_attrs = []
-
+    def _from_db_object(context, flavor, db_flavor):
         for name, field in flavor.fields.items():
-            if name in OPTIONAL_FIELDS:
+            if name == 'projects':
                 continue
             value = db_flavor[name]
             if isinstance(field, object_fields.IntegerField):
                 value = value if value is not None else 0
             flavor[name] = value
 
-        if 'projects' in expected_attrs:
-            flavor._load_projects(context)
+        flavor._load_projects(context)
 
         flavor.obj_reset_changes()
         return flavor
@@ -102,8 +95,7 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         """Find a Flavor and return a Flavor object."""
         db_flavor = cls.dbapi.flavor_get(context, flavor_uuid)
         flavor = Flavor._from_db_object(
-            context, cls(context), db_flavor,
-            expected_attrs=['projects'])
+            context, cls(context), db_flavor)
         return flavor
 
     def create(self, context=None):
