@@ -8,5 +8,14 @@
       "op": "replace",
       "path": "/is_public",
       "value": false
+   },
+   {
+      "op": "add",
+      "path": "/projects/-",
+      "value": "fake_project"
+   },
+   {
+      "op": "remove",
+      "path": "/projects/0"
    }
 ]
