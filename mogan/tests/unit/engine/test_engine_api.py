@@ -70,26 +70,6 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertEqual('test_az', base_opts['availability_zone'])
         self.assertIsNone(key_pair)
 
-    def test__validate_and_build_base_options_flavor_disabled(self):
-        flavor = self._create_flavor()
-        flavor.disabled = True
-        flavor.save()
-
-        self.assertRaises(
-            exception.FlavorNotFound,
-            self.engine_api._validate_and_build_base_options,
-            self.context,
-            flavor,
-            'fake-uuid',
-            'fake-name',
-            'fake-descritpion',
-            'test_az',
-            {'k1', 'v1'},
-            [{'uuid': 'fake'}],
-            None,
-            None,
-            1)
-
     @mock.patch('mogan.network.api.get_client')
     def test__check_requested_networks(self, mock_get_client):
         mock_get_client.return_value = mock.MagicMock()
