@@ -45,26 +45,6 @@ def _get_fake_image(**kwargs):
     return type('Image', (object,), attrs)
 
 
-def _get_fake_node(**kwargs):
-    fake_node = {
-        u'server_uuid': u'dc18e1a6-4177-4b64-8a00-1974696dd049',
-        u'power_state': u'power on',
-        u'links': [
-            {
-                u'href': u'http: //10.3.150.100: 6385/v1/nodes/3b8b50e2-f29'
-                         u'2-45a7-a587-89ad35aa888b',
-                u'rel': u'self'
-            },
-            {
-                u'href': u'http: //10.3.150.100: 6385/nodes/3b8b50e2-f292-45a'
-                         u'7-a587-89ad35aa888b',
-                u'rel': u'bookmark'
-            }]
-    }
-    fake_node.update(kwargs)
-    return fake_node
-
-
 class TestServers(v1_test.APITestV1):
     FLAVOR_UUID = 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b'
 
