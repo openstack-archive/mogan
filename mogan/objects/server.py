@@ -121,6 +121,11 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
         data = dict(self.items())
         if 'nics' in data:
             data.update(nics=data['nics'].as_list_of_dict())
+        if 'fault' in data:
+            if data['fault'] is not None:
+                data.update(fault=data['fault'].as_fault_dict())
+            else:
+                data.update(fault={})
         return data
 
     @classmethod
