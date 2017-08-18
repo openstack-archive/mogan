@@ -445,8 +445,8 @@ class Server(base.APIBase):
     metadata = {wtypes.text: types.jsontype}
     """The meta data of the server"""
 
-    fault_info = {wtypes.text: types.jsontype}
-    """The fault info of the server"""
+    fault = {wtypes.text: types.jsontype}
+    """The fault of the server"""
 
     node_uuid = types.uuid
     """The node UUID of the server"""
@@ -461,11 +461,13 @@ class Server(base.APIBase):
                 setattr(self, field, nics)
                 continue
             if field == 'fault':
-                if kwargs.get('status', None) == 'error':
-                    fault_info = kwargs.get(field, None)
-                    if fault_info is not None:
-                        fault_info = fault_info.return_dict()
-                        setattr(self, 'fault_info', fault_info)
+                if kwargs.get('status') == 'error':
+                    fault = kwargs.get(field)
+                    if fault:
+                        setattr(self, field, fault.return_dict())
+                        continue
+                setattr(self, field, wtypes.Unset)
+                continue
             if field == 'node_uuid':
                 if not pecan.request.context.is_admin:
                     setattr(self, field, wtypes.Unset)
