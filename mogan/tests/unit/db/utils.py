@@ -62,6 +62,7 @@ def get_test_server(**kw):
         'created_at': kw.get('created_at'),
         'locked': kw.get('locked', False),
         'locked_by': kw.get('locked_by', None),
+        'affinity_zone': 'ZON1',
     }
 
 
