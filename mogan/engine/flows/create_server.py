@@ -152,25 +152,25 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 if vif.get('net_id'):
                     port = self.manager.network_api.create_port(
                         context, vif['net_id'], server.uuid)
-                    port_dict = port['port']
                 elif vif.get('port_id'):
-                    port_dict = self.manager.network_api.show_port(
+                    port = self.manager.network_api.show_port(
                         context, vif.get('port_id'))
 
-                nic_dict = {'port_id': port_dict['id'],
-                            'network_id': port_dict['network_id'],
-                            'mac_address': port_dict['mac_address'],
-                            'fixed_ips': port_dict['fixed_ips'],
+                nic_dict = {'port_id': port['id'],
+                            'network_id': port['network_id'],
+                            'network_name': port['network_name'],
+                            'mac_address': port['mac_address'],
+                            'fixed_ips': port['fixed_ips'],
                             'server_uuid': server.uuid}
 
                 server_nic = objects.ServerNic(context, **nic_dict)
                 nics_obj.objects.append(server_nic)
 
                 self.manager.driver.plug_vif(server.node_uuid,
-                                             port_dict['id'])
+                                             port['id'])
                 # Get updated VIF info
                 port_dict = self.manager.network_api.show_port(
-                    context, port_dict.get('id'))
+                    context, port.get('id'))
 
                 # Update the real physical mac address from ironic.
                 server_nic.mac_address = port_dict['mac_address']
