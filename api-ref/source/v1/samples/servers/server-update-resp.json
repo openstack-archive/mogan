@@ -22,24 +22,14 @@
     "updated_at": null,
     "project_id": "2f15c3524826465a9afbd150478b3b76",
     "user_id": "a6205fcab03d4a289251f420456b1289",
-    "nics": [
-        {
-            "network_id": "f31af5a2-f14d-4007-b2e5-abeb82429b87",
-            "port_id": "99845c22-6268-46c1-b068-1dbcb8adaf68",
-            "floating_ip": null,
-            "mac_address": "52:54:00:cc:ed:87",
-            "fixed_ips": [
-                {
-                    "subnet_id": "5a324b29-9aca-43d8-a6c3-31986dda95b5",
-                    "ip_address": "11.0.0.6"
-                },
-                {
-                    "subnet_id": "9baceab1-40ec-4c53-ad83-530a625bddb1",
-                    "ip_address": "fdaa:67c7:e09e:0:5054:ff:fecc:ed87"
-                }
-            ]
-        }
-    ],
+    "addresses": {
+        "private": [
+            {
+                "type": "fixed",
+                "addr": "192.168.0.3"
+            }
+        ]
+    },
     "metadata": {
         "k1": "v1",
         "k2": "v2"

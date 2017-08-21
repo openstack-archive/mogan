@@ -433,8 +433,8 @@ class Server(base.APIBase):
     image_uuid = types.uuid
     """The image UUID of the server"""
 
-    nics = types.jsontype
-    """The nics information of the server"""
+    addresses = types.jsontype
+    """The addresses of the server"""
 
     links = wsme.wsattr([link.Link], readonly=True)
     """A list containing a self link"""
@@ -456,9 +456,8 @@ class Server(base.APIBase):
         self.fields = []
         for field in objects.Server.fields:
             if field == 'nics':
-                self.fields.append(field)
-                nics = api_utils.show_nics(kwargs.get('nics') or [])
-                setattr(self, field, nics)
+                addresses = api_utils.show_addresses(kwargs.get('nics') or [])
+                setattr(self, 'addresses', addresses)
                 continue
             if field == 'fault':
                 if kwargs.get('status', None) == 'error':

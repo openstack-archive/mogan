@@ -133,12 +133,11 @@ class TestServers(v1_test.APITestV1):
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
         self.assertIsNone(resp['availability_zone'])
-        self.assertEqual([], resp['nics'])
+        self.assertEqual({}, resp['addresses'])
         self.assertEqual({'fake_key': 'fake_value'}, resp['metadata'])
         self.assertIn('links', resp)
         self.assertIn('created_at', resp)
         self.assertIn('updated_at', resp)
-        self.assertIn('nics', resp)
         self.assertIn('project_id', resp)
         self.assertIn('launched_at', resp)
 
@@ -155,12 +154,12 @@ class TestServers(v1_test.APITestV1):
         self.assertEqual('b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                          resp['image_uuid'])
         self.assertIsNone(resp['availability_zone'])
-        self.assertEqual([], resp['nics'])
+        self.assertEqual({}, resp['addresses'])
         self.assertEqual({'fake_key': 'fake_value'}, resp['metadata'])
         self.assertIn('links', resp)
         self.assertIn('created_at', resp)
         self.assertIn('updated_at', resp)
-        self.assertIn('nics', resp)
+        self.assertIn('addresses', resp)
         self.assertIn('project_id', resp)
         self.assertIn('launched_at', resp)
 

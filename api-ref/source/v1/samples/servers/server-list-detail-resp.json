@@ -17,24 +17,14 @@
                 }
             ],
             "name": "test_server",
-            "nics": [
-                {
-                    "network_id": "f31af5a2-f14d-4007-b2e5-abeb82429b87",
-                    "port_id": "43cb1111-63c5-45d2-8bcf-3443d94b34f3",
-                    "floating_ip": null,
-                    "mac_address": "52:54:00:d0:f9:2c",
-                    "fixed_ips": [
-                        {
-                            "subnet_id": "5a324b29-9aca-43d8-a6c3-31986dda95b5",
-                            "ip_address": "11.0.0.10"
-                        },
-                        {
-                            "subnet_id": "9baceab1-40ec-4c53-ad83-530a625bddb1",
-                            "ip_address": "fdaa:67c7:e09e:0:5054:ff:fed0:f92c"
-                        }
-                    ]
-                }
-            ],
+            "addresses": {
+                "private": [
+                    {
+                        "type": "fixed",
+                        "addr": "192.168.0.3"
+                    }
+                ]
+            },
             "power_state": "power on",
             "project_id": "c18e8a1a870d4c08a0b51ced6e0b6459",
             "status": "building",

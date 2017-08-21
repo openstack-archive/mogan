@@ -22,7 +22,7 @@
     "updated_at": null,
     "project_id": "2f15c3524826465a9afbd150478b3b76",
     "user_id": "a6205fcab03d4a289251f420456b1289",
-    "nics": [],
+    "addresses": {},
     "metadata": {
         "My Server Name" : "Apache1"
     }

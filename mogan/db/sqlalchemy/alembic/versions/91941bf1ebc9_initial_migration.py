@@ -93,6 +93,7 @@ def upgrade():
         sa.Column('port_id', sa.String(length=36), nullable=False),
         sa.Column('mac_address', sa.String(length=36), nullable=True),
         sa.Column('network_id', sa.String(length=36), nullable=True),
+        sa.Column('network_name', sa.String(length=255), nullable=True),
         sa.Column('floating_ip', sa.String(length=64), nullable=True),
         sa.Column('fixed_ips', sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(['server_uuid'], ['servers.uuid'], ),

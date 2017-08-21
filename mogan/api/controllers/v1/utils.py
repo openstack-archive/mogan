@@ -56,6 +56,21 @@ def apply_jsonpatch(doc, patch):
     return jsonpatch.apply_patch(doc, jsonpatch.JsonPatch(patch))
 
 
+def show_addresses(nics):
+    addresses = {}
+    for nic in nics:
+        address = []
+        for fixed_ip in nic.get('fixed_ips', []):
+            address.append({'addr': fixed_ip['ip_address'],
+                            'type': 'fixed'})
+        if nic.get('floating_ip'):
+            address.append({'addr': nic['floating_ip'],
+                            'type': 'floating'})
+        key = nic.get('network_name') or nic.get('network_id')
+        addresses[key] = address
+    return addresses
+
+
 def show_nics(nics):
     show_keys = ['port_id', 'network_id', 'mac_address',
                  'fixed_ips', 'floating_ip', 'extra']
