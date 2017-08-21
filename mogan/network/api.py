@@ -74,6 +74,7 @@ class API(object):
         }
 
         try:
+            network = client.show_network(network_uuid)
             port = client.create_port(body)
         except neutron_exceptions.NeutronClientException as e:
             msg = (_("Could not create neutron port on network %(net)s for "
@@ -81,6 +82,9 @@ class API(object):
                    {'net': network_uuid, 'server': server_uuid, 'exc': e})
             LOG.exception(msg)
             raise exception.NetworkError(msg)
+
+        port = port['port']
+        port['network_name'] = network['network']['name']
         return port
 
     def show_port(self, context, port_uuid):

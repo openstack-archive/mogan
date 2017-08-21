@@ -104,6 +104,7 @@ class ServerNic(Base):
     port_id = Column(String(36), primary_key=True)
     mac_address = Column(String(32), nullable=False)
     network_id = Column(String(36), nullable=True)
+    network_name = Column(String(255), nullable=True)
     fixed_ips = Column(db_types.JsonEncodedList)
     floating_ip = Column(String(64), nullable=True)
     _server = orm.relationship(
