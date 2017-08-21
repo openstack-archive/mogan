@@ -100,7 +100,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
             raise exception.ServerNotFound(server=server.uuid)
 
     def _add_server_info_to_node(self, node, server):
-
         patch = list()
         # Associate the node with a server
         patch.append({'path': '/instance_uuid', 'op': 'add',
@@ -437,10 +436,14 @@ class IronicDriver(base_driver.BaseEngineDriver):
         """
         LOG.debug('Rebuild called for server', server=server)
 
+        node_uuid = server.node_uuid
+        node = self._get_node(node_uuid)
+        self._add_server_info_to_node(node, server)
+
         # trigger the node rebuild
         try:
             self.ironicclient.call("node.set_provision_state",
-                                   server.node_uuid,
+                                   node_uuid,
                                    ironic_states.REBUILD)
         except (ironic_exc.InternalServerError,
                 ironic_exc.BadRequest) as e:
