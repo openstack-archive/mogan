@@ -90,6 +90,7 @@ class Server(Base):
     extra = Column(db_types.JsonEncodedDict)
     locked = Column(Boolean)
     locked_by = Column(Enum('owner', 'admin'))
+    affinity_zone = Column(String(255), nullable=True)
 
 
 class ServerNic(Base):

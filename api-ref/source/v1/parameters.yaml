@@ -142,6 +142,12 @@ address:
   in: body
   required: true
   type: string
+affinity_zone:
+  description: |
+    The affinity zone which the server belongs to.
+  in: body
+  required: false
+  type: string
 aggregate_metadata:
   description: |
     Metadata key and value pairs associate with the aggregate.
