@@ -58,7 +58,7 @@ Response
   - flavor_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
-  - nics: nics
+  - addresses: addresses
   - links: links
   - uuid: server_uuid
   - status: server_status
@@ -208,7 +208,7 @@ Response
   - flavor_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
-  - nics: nics
+  - addresses: addresses
   - links: links
   - uuid: server_uuid
   - status: server_status
@@ -259,7 +259,7 @@ Response
   - flavor_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
-  - nics: nics
+  - addresses: addresses
   - node_uuid: node_uuid
   - links: links
   - uuid: server_uuid
@@ -322,7 +322,7 @@ Response
   - flavor_uuid: flavorRef
   - image_uuid: imageRef
   - availability_zone: availability_zone
-  - nics: nics
+  - addresses: addresses
   - links: links
   - uuid: server_uuid
   - status: server_status

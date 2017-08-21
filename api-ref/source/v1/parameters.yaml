@@ -142,6 +142,12 @@ address:
   in: body
   required: true
   type: string
+addresses:
+  description: |
+    The addresses for the server.
+  in: body
+  required: true
+  type: object
 affinity_zone:
   description: |
     The affinity zone which the server belongs to.
@@ -477,7 +483,7 @@ nics:
     network uuid
   in: body
   required: true
-  type: dict
+  type: object
 node_uuid:
   description: |
     The UUID of the node which our server associated with. Only visible for admin users.
@@ -489,7 +495,7 @@ nodes:
     The compute node name list.
   in: body
   required: true
-  type: dict
+  type: object
 personality:
   description: |
     The file path and contents, text only, to inject into the server at launch. The
