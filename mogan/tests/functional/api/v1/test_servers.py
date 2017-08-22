@@ -71,19 +71,12 @@ class TestServers(v1_test.APITestV1):
         self.network_api.validate_networks.return_value = 100
         super(TestServers, self).setUp()
         self._prepare_flavor()
-        self.addCleanup(self._clean_servers)
-        self.addCleanup(self._clean_flavor)
 
     def _clean_servers(self):
         for server_uuid in self.SERVER_UUIDS:
             # TODO(liusheng) should catch the NotFound exception
             self.delete('/servers/' + server_uuid, status=204,
                         expect_errors=True)
-
-    def _clean_flavor(self):
-        headers = self.gen_headers(self.context, roles="admin")
-        self.delete('/flavors/' + self.FLAVOR_UUID,
-                    headers=headers, status=204)
 
     def _make_app(self):
         return super(TestServers, self)._make_app()
@@ -111,7 +104,7 @@ class TestServers(v1_test.APITestV1):
             test_body = {
                 "name": "test_server_" + str(i),
                 "description": "just test server " + str(i),
-                'flavor_uuid': 'ff28b5a2-73e5-431c-b4b7-1b96b74bca7b',
+                'flavor_uuid': self.FLAVOR_UUID,
                 'image_uuid': 'b8f82429-3a13-4ffe-9398-4d1abdc256a8',
                 'networks': [
                     {'net_id': 'c1940655-8b8e-4370-b8f9-03ba1daeca31'}
@@ -141,6 +134,12 @@ class TestServers(v1_test.APITestV1):
         self.assertIn('nics', resp)
         self.assertIn('project_id', resp)
         self.assertIn('launched_at', resp)
+
+    def test_destroy_flavor_in_use(self):
+        self._prepare_server(1)
+        headers = self.gen_headers(self.context, roles="admin")
+        self.delete('/flavors/' + self.FLAVOR_UUID,
+                    headers=headers, status=409)
 
     def test_server_show(self):
         self._prepare_server(1)
