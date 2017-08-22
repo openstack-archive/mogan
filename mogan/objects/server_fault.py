@@ -40,7 +40,7 @@ class ServerFault(base.MoganObject, object_base.VersionedObjectDictCompat):
         'detail': object_fields.StringField(nullable=True),
     }
 
-    def return_dict(self):
+    def as_fault_dict(self):
         return dict((k, getattr(self, k))
                     for k in ['code', 'message', 'detail']
                     if hasattr(self, k))
