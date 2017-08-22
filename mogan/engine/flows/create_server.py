@@ -21,7 +21,6 @@ import traceback
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_service import loopingcall
 from oslo_utils import excutils
 import six
 import taskflow.engines
@@ -101,6 +100,10 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                              filter_properties=filter_properties)
 
     def revert(self, context, result, flow_failures, server, **kwargs):
+        # Clean up associated node uuid
+        server.node_uuid = None
+        server.save()
+
         # Check if we have a cause which can tell us not to reschedule and
         # set the server's status to error.
         for failure in flow_failures.values():
@@ -109,8 +112,6 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                           server.uuid)
                 return False
 
-        server.node_uuid = None
-        server.save()
         cause = list(flow_failures.values())[0]
         try:
             self._reschedule(context, cause, server=server, **kwargs)
@@ -263,11 +264,6 @@ class CreateServerTask(flow_utils.MoganTask):
         super(CreateServerTask, self).__init__(addons=[ACTION],
                                                requires=requires)
         self.driver = driver
-        # These exception types will trigger the server to be cleaned.
-        self.server_cleaned_exc_types = [
-            exception.ServerDeployFailure,
-            loopingcall.LoopingCallTimeOut,
-        ]
 
     def execute(self, context, server, configdrive):
         configdrive_value = configdrive.get('value')
@@ -276,14 +272,9 @@ class CreateServerTask(flow_utils.MoganTask):
                  server.node_uuid)
 
     def revert(self, context, result, flow_failures, server, **kwargs):
-        # Check if we have a cause which need to clean up server.
-        for failure in flow_failures.values():
-            if failure.check(*self.server_cleaned_exc_types):
-                LOG.debug("Server %s: destroy ironic node", server.uuid)
-                self.driver.destroy(context, server)
-                return True
-
-        return False
+        LOG.debug("Server %s: destroy backend node", server.uuid)
+        self.driver.destroy(context, server)
+        return True
 
 
 def get_flow(context, manager, server, requested_networks, user_data,
