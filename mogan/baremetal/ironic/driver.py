@@ -566,12 +566,14 @@ class IronicDriver(base_driver.BaseEngineDriver):
             return []
 
         bad_power_states = [ironic_states.ERROR, ironic_states.NOSTATE]
+        bad_provision_states = [ironic_states.ENROLL]
         # keep NOSTATE around for compatibility
         good_provision_states = [
             ironic_states.AVAILABLE, ironic_states.NOSTATE]
         for node_obj in node_list:
             if ((node_obj.resource_class is None) or
                 node_obj.power_state in bad_power_states or
+                node_obj.provision_state in bad_provision_states or
                 (node_obj.provision_state in good_provision_states and
                     node_obj.instance_uuid is not None)):
                 continue

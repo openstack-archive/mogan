@@ -44,6 +44,12 @@ when the node was available for provisioning. During Kilo cycle, this was
 changed to the AVAILABLE state.
 """
 
+ENROLL = 'enroll'
+""" Node is enrolled.
+
+This state indicates that Ironic is aware of a node, but is not managing it.
+"""
+
 MANAGEABLE = 'manageable'
 """ Node is in a manageable state.
 This state indicates that Ironic has verified, at least once, that it had
