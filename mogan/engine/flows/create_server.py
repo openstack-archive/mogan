@@ -203,6 +203,8 @@ class BuildNetworkTask(flow_utils.MoganTask):
             self.manager.destroy_networks(context, server)
             # Unset nics here as we have destroyed it.
             server.nics = None
+            for vif in server.nics:
+                self.driver.unplug_vif(context, server, vif['port_id'])
             return True
 
         return False
