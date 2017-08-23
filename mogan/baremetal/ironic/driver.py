@@ -196,24 +196,16 @@ class IronicDriver(base_driver.BaseEngineDriver):
                    'server_nics': str(server.nics),
                    'port_id': port_id})
         node = self._get_node(server.node_uuid)
-        self._unplug_vif(node, server, port_id)
+        self._unplug_vif(node, port_id)
 
-    def _unplug_vif(self, node, server, port_id):
-        for vif in server.nics:
-            if port_id == vif['port_id']:
-                try:
-                    self.ironicclient.call("node.vif_detach", node.uuid,
-                                           port_id)
-                except ironic.exc.BadRequest:
-                    LOG.debug(
-                        "VIF %(vif)s isn't attached to Ironic node %(node)s",
-                        {'vif': port_id, 'node': node.uuid})
-
-    def _cleanup_deploy(self, context, node, server):
-        # NOTE(liusheng): here we may need to stop firewall if we have
-        # implemented in ironic like what Nova dose.
-        for vif in server.nics:
-            self.unplug_vif(context, server, vif['port_id'])
+    def _unplug_vif(self, node, port_id):
+        try:
+            self.ironicclient.call("node.vif_detach", node.uuid,
+                                   port_id)
+        except ironic.exc.BadRequest:
+            LOG.debug(
+                "VIF %(vif)s isn't attached to Ironic node %(node)s",
+                {'vif': port_id, 'node': node.uuid})
 
     def spawn(self, context, server, configdrive_value):
         """Deploy a server.
@@ -241,7 +233,6 @@ class IronicDriver(base_driver.BaseEngineDriver):
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
             # something is wrong. undo what we have done
-            self._cleanup_deploy(context, node, server)
             raise exception.ValidationError(_(
                 "Ironic node: %(id)s failed to validate."
                 " (deploy: %(deploy)s, power: %(power)s)")
