@@ -284,9 +284,8 @@ class EngineManager(base_manager.BaseEngineManager):
 
     def destroy_networks(self, context, server):
         ports = server.nics.get_port_ids()
-        server.nics.delete(context)
         for port in ports:
-            self.network_api.delete_port(context, port, server.uuid)
+            self._detach_interface(context, server, port):
 
     def _rollback_servers_quota(self, context, number):
         reserve_opts = {'servers': number}
@@ -432,8 +431,6 @@ class EngineManager(base_manager.BaseEngineManager):
                 LOG.error("Destroy networks for server %(uuid)s failed. "
                           "Exception: %(exception)s",
                           {"uuid": server.uuid, "exception": e})
-        for vif in server.nics:
-            self.driver.unplug_vif(context, server, vif['port_id'])
         self.driver.destroy(context, server)
 
     @wrap_server_fault
@@ -551,8 +548,7 @@ class EngineManager(base_manager.BaseEngineManager):
         except Exception as e:
             raise exception.InterfaceAttachFailed(message=six.text_type(e))
 
-    def detach_interface(self, context, server, port_id):
-        LOG.info('Detaching interface...', server=server)
+    def _detach_interface(self, context, server, port_id):
         try:
             self.driver.unplug_vif(context, server, port_id)
         except exception.MoganException as e:
@@ -566,9 +562,14 @@ class EngineManager(base_manager.BaseEngineManager):
             except Exception as e:
                 raise exception.InterfaceDetachFailed(server_uuid=server.uuid)
 
-        for nic in server.nics:
-            if nic.port_id == port_id:
-                nic.delete(context)
+        try:
+            objects.ServerNic.delete_by_port_id(context, port_id)
+        except exception.PortNotFound:
+            pass
+
+    def detach_interface(self, context, server, port_id):
+        LOG.info('Detaching interface...', server=server)
+        self._detach_interface(context, server, port_id):
 
         LOG.info('Interface was successfully detached')
 
