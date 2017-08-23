@@ -37,31 +37,30 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
                            tests_db_base.DbTestCase):
 
     @mock.patch.object(network_api.API, 'delete_port')
-    def test_destroy_networks(self, delete_port_mock):
+    @mock.patch.object(IronicDriver, 'unplug_vif')
+    def test_destroy_networks(self, unplug_vif_mock, delete_port_mock):
         server = obj_utils.create_test_server(self.context)
         server_port_id = server.nics[0].port_id
         delete_port_mock.side_effect = None
-        port = mock.MagicMock()
-        port.extra = {'vif_port_id': 'fake-vif'}
-        port.uuid = 'fake-uuid'
+        unplug_vif_mock.side_effect = None
         self._start_service()
 
         self.service.destroy_networks(self.context, server)
         self._stop_service()
 
+        unplug_vif_mock.assert_called_once_with(
+            self.context, server, server_port_id)
         delete_port_mock.assert_called_once_with(
             self.context, server_port_id, server.uuid)
 
     @mock.patch.object(IronicDriver, 'destroy')
-    @mock.patch.object(IronicDriver, 'unplug_vif')
     @mock.patch.object(manager.EngineManager, 'destroy_networks')
-    def _test__delete_server(self, destroy_networks_mock, unplug_mock,
+    def _test__delete_server(self, destroy_networks_mock,
                              destroy_node_mock, state=None):
         fake_node = mock.MagicMock()
         fake_node.provision_state = state
         server = obj_utils.create_test_server(self.context)
         destroy_networks_mock.side_effect = None
-        unplug_mock.side_effect = None
         destroy_node_mock.side_effect = None
         self._start_service()
 
@@ -69,7 +68,6 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
         self._stop_service()
 
         destroy_networks_mock.assert_called_once_with(self.context, server)
-        self.assertEqual(unplug_mock.call_count, len(server.nics))
         destroy_node_mock.assert_called_once_with(self.context, server)
 
     def test__delete_server_cleaning(self):
