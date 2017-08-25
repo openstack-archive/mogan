@@ -46,6 +46,8 @@ import re
 _DEFAULT_SERVER_RETURN_FIELDS = ('uuid', 'name', 'description',
                                  'status', 'power_state')
 
+_ONLY_ADMIN_VISIBLE_SEVER_FIELDS = ('node_uuid', 'affinity_zone',)
+
 LOG = log.getLogger(__name__)
 
 
@@ -451,6 +453,9 @@ class Server(base.APIBase):
     node_uuid = types.uuid
     """The node UUID of the server"""
 
+    affinity_zone = wtypes.text
+    """The affinity zone of the server"""
+
     def __init__(self, **kwargs):
         super(Server, self).__init__(**kwargs)
         self.fields = []
@@ -464,7 +469,7 @@ class Server(base.APIBase):
                 if kwargs.get('status') != 'error':
                     setattr(self, field, wtypes.Unset)
                     continue
-            if field == 'node_uuid':
+            if field in _ONLY_ADMIN_VISIBLE_SEVER_FIELDS:
                 if not pecan.request.context.is_admin:
                     setattr(self, field, wtypes.Unset)
                     continue
@@ -503,7 +508,7 @@ class ServerPatchType(types.JsonPatchType):
         return defaults + ['/project_id', '/user_id', '/status',
                            '/power_state', '/availability_zone',
                            '/flavor_uuid', '/image_uuid',
-                           '/nics', '/launched_at']
+                           '/nics', '/launched_at', '/affinity_zone']
 
 
 class ServerCollection(base.APIBase):
