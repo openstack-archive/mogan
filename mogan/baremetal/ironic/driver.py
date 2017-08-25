@@ -591,3 +591,12 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 'step_size': 1,
                 'allocation_ratio': 1.0,
                 }
+
+    @staticmethod
+    def is_node_consumable(node):
+        """Check if a node is consumable
+
+        :param node: node to check if it is consumable.
+        """
+        return (not node.instance_uuid and node.provision_state ==
+                ironic_states.AVAILABLE)

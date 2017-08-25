@@ -129,6 +129,14 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
+    @staticmethod
+    def is_node_consumable(node):
+        """Check if a node is consumable
+
+        :param node: node to check if it is consumable.
+        """
+        raise NotImplementedError()
+
 
 def load_engine_driver(engine_driver):
     """Load a engine driver module.
