@@ -110,7 +110,7 @@ class EngineManager(base_manager.BaseEngineManager):
                     rp['uuid'])
 
         for node in all_nodes:
-            if node.provision_state == ironic_states.AVAILABLE:
+            if self.driver.is_node_consumable(node):
                 self.scheduler_client.reportclient \
                     .delete_allocations_for_resource_provider(node.uuid)
             resource_class = sched_utils.ensure_resource_class_name(
