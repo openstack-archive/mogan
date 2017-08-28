@@ -81,7 +81,8 @@ class API(object):
                    {'net': network_uuid, 'server': server_uuid, 'exc': e})
             LOG.exception(msg)
             raise exception.NetworkError(msg)
-        return port
+
+        return port['port']
 
     def show_port(self, context, port_uuid):
         client = get_client(context.auth_token)

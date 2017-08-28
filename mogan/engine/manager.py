@@ -534,14 +534,13 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.debug("Attaching interface %(net_id) to server %(server)s",
                   {'net_id': net_id, 'server': server})
         try:
-            vif = self.network_api.create_port(context, net_id, server.uuid)
-            vif_port = vif['port']
-            self.driver.plug_vif(server.node_uuid, vif_port['id'])
+            port = self.network_api.create_port(context, net_id, server.uuid)
+            self.driver.plug_vif(server.node_uuid, port['id'])
             nics_obj = objects.ServerNics(context)
-            nic_dict = {'port_id': vif_port['id'],
-                        'network_id': vif_port['network_id'],
-                        'mac_address': vif_port['mac_address'],
-                        'fixed_ips': vif_port['fixed_ips'],
+            nic_dict = {'port_id': port['id'],
+                        'network_id': port['network_id'],
+                        'mac_address': port['mac_address'],
+                        'fixed_ips': port['fixed_ips'],
                         'server_uuid': server.uuid}
             nics_obj.objects.append(objects.ServerNic(
                 context, **nic_dict))
