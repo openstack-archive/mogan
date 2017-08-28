@@ -102,12 +102,14 @@ class Connection(object):
         This query the Nics info of the specified server.
         """
 
+    @abc.abstractmethod
     def server_nic_update_or_create(self, context, port_id, values):
         """Update/Create a nic db entry.
 
         This creates or updates a nic db entry.
         """
 
+    @abc.abstractmethod
     def server_nic_delete(self, context, port_id):
         """Delete a nic db entry.
 
