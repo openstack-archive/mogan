@@ -58,6 +58,9 @@ flavor_id = {
     'type': 'string', 'format': 'uuid'
 }
 
+server_group_id = {
+    'type': 'string', 'format': 'uuid'
+}
 
 metadata = {
     'type': 'object',
