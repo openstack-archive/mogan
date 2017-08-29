@@ -237,7 +237,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         try:
             self.ironicclient.call("node.vif_detach", node.uuid,
                                    port_id)
-        except ironic.exc.BadRequest:
+        except ironic_exc.BadRequest:
             LOG.debug(
                 "VIF %(vif)s isn't attached to Ironic node %(node)s",
                 {'vif': port_id, 'node': node.uuid})

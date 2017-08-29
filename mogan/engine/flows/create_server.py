@@ -223,7 +223,6 @@ class GenerateConfigDriveTask(flow_utils.MoganTask):
 
         i_meta = server_metadata.ServerMetadata(
             server, content=files, user_data=user_data, key_pair=key_pair)
-
         with tempfile.NamedTemporaryFile() as uncompressed:
             with configdrive.ConfigDriveBuilder(server_md=i_meta) as cdb:
                 cdb.make_drive(uncompressed.name)
