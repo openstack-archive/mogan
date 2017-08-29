@@ -55,6 +55,7 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
         'locked': object_fields.BooleanField(default=False),
         'locked_by': object_fields.StringField(nullable=True),
         'affinity_zone': object_fields.StringField(nullable=True),
+        'key_name': object_fields.StringField(nullable=True),
     }
 
     def __init__(self, context=None, **kwargs):

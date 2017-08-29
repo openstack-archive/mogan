@@ -79,6 +79,7 @@ def upgrade():
         sa.Column('locked', sa.Boolean(), nullable=True),
         sa.Column('affinity_zone', sa.String(length=255), nullable=True),
         sa.Column('locked_by', sa.Enum('admin', 'owner'), nullable=True),
+        sa.Column('key_name', sa.String(length=255), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('uuid', name='uniq_servers0uuid'),
         mysql_ENGINE='InnoDB',

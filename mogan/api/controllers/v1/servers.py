@@ -456,6 +456,9 @@ class Server(base.APIBase):
     affinity_zone = wtypes.text
     """The affinity zone of the server"""
 
+    key_name = wtypes.text
+    """The ssh key name of the server"""
+
     def __init__(self, **kwargs):
         super(Server, self).__init__(**kwargs)
         self.fields = []
@@ -472,7 +475,6 @@ class Server(base.APIBase):
                 if not pecan.request.context.is_admin:
                     setattr(self, field, wtypes.Unset)
                     continue
-
             # Skip fields we do not expose.
             if not hasattr(self, field):
                 continue
@@ -703,7 +705,6 @@ class ServerController(ServerControllerBase):
         flavor = objects.Flavor.get(pecan.request.context, flavor_uuid)
         if flavor.disabled:
             raise exception.FlavorDisabled(flavor_id=flavor.uuid)
-
         servers = pecan.request.engine_api.create(
             pecan.request.context,
             flavor,

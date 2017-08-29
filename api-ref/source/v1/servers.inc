@@ -71,6 +71,7 @@ Response
   - created_at: created_at
   - metadata: metadata
   - affinity_zone: affinity_zone
+  - key_name: key_name
 
 **Example Create Server: JSON response**
 
@@ -222,6 +223,7 @@ Response
   - launched_at: launched_at
   - metadata: metadata
   - affinity_zone: affinity_zone
+  - key_name: key_name
 
 **Example Detailed list of Servers: JSON response**
 
@@ -275,6 +277,7 @@ Response
   - launched_at: launched_at
   - metadata: metadata
   - affinity_zone: affinity_zone
+  - key_name: key_name
 
 **Example Server Details: JSON response**
 
@@ -335,6 +338,7 @@ Response
   - created_at: created_at
   - metadata: metadata
   - affinity_zone: affinity_zone
+  - key_name: key_name
 
 **Example Update Server: JSON response**
 

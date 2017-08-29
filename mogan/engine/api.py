@@ -119,7 +119,8 @@ class API(object):
             'description': description,
             'locked': False,
             'metadata': metadata or {},
-            'availability_zone': availability_zone}
+            'availability_zone': availability_zone,
+            'key_name': key_name}
 
         # return the validated options
         return base_options, max_network_count, key_pair
@@ -335,7 +336,6 @@ class API(object):
             azs = self.list_availability_zones(context)
             if availability_zone not in azs['availability_zones']:
                 raise exception.AZNotFound
-
         return self._create_server(context, flavor,
                                    image_uuid, name, description,
                                    availability_zone, metadata,
