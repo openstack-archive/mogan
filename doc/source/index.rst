@@ -59,7 +59,7 @@ Advanced testing and guides
 .. toctree::
     :maxdepth: 1
 
-   dev/gmr
+    dev/gmr
 
 
 Administrator's Guide
