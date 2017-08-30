@@ -29,6 +29,7 @@ from mogan.common import ironic
 from mogan.common import states
 from mogan.conf import CONF
 
+
 LOG = logging.getLogger(__name__)
 
 _POWER_STATE_MAP = {
