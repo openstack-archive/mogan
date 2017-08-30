@@ -297,6 +297,7 @@ class EngineManager(base_manager.BaseEngineManager):
                                     user_data,
                                     injected_files,
                                     key_pair,
+                                    partitions,
                                     request_spec=None,
                                     filter_properties=None):
 
@@ -350,13 +351,14 @@ class EngineManager(base_manager.BaseEngineManager):
                               user_data,
                               injected_files,
                               key_pair,
+                              partitions,
                               request_spec,
                               filter_properties)
 
     @wrap_server_fault
     def _create_server(self, context, server, requested_networks,
-                       user_data, injected_files, key_pair, request_spec=None,
-                       filter_properties=None):
+                       user_data, injected_files, key_pair, partitions,
+                       request_spec=None, filter_properties=None):
         """Perform a deployment."""
         LOG.debug("Creating server: %s", server)
         notifications.notify_about_server_action(
@@ -376,6 +378,7 @@ class EngineManager(base_manager.BaseEngineManager):
                 user_data,
                 injected_files,
                 key_pair,
+                partitions,
                 request_spec,
                 filter_properties,
             )

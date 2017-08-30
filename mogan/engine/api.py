@@ -22,6 +22,7 @@ import binascii
 from oslo_log import log
 from oslo_serialization import base64 as base64utils
 from oslo_utils import excutils
+from oslo_utils import units
 from oslo_utils import uuidutils
 import six
 
@@ -252,6 +253,41 @@ class API(object):
 
         return servers
 
+    def _is_whole_disk_image(self, context, image):
+        """Find out if the image is a partition image or a
+        whole disk image.
+        """
+        iproperties = image.get('properties', {})
+        is_whole_disk_image = (not iproperties.get('kernel_id') and
+                               not iproperties.get('ramdisk_id'))
+        return is_whole_disk_image
+
+    def _check_requested_image(self, context, image, partitions):
+        """Check if the requested image meets the requirements"""
+        if image['status'] != 'active':
+            raise exception.ImageNotActive(image_id=image.uuid)
+
+        image_properties = image.get('properties', {})
+        config_drive_option = image_properties.get(
+            'img_config_drive', 'optional')
+        if config_drive_option not in ['optional', 'mandatory']:
+            raise exception.InvalidImageConfigDrive(
+                config_drive=config_drive_option)
+
+        if partitions:
+            # Image min_disk is in gb, size is in bytes. For sanity, have
+            # them both in bytes.
+            image_min_disk = int(image.get('min_disk') or 0) * units.Gi
+            image_size = int(image.get('size') or 0)
+            dest_size = int(partitions.get('root_gb') or 0) * units.Gi
+
+            if image_size > dest_size:
+                raise exception.DiskSmallerThanImage(
+                    root_size=dest_size, image_size=image_size)
+            if image_min_disk > dest_size:
+                raise exception.DiskSmallerThanMinDisk(
+                    root_size=dest_size, image_min_disk=image_min_disk)
+
     def _check_requested_networks(self, context, requested_networks,
                                   max_count):
         """Check if the networks requested belongs to the project
@@ -265,12 +301,15 @@ class API(object):
     def _create_server(self, context, flavor, image_uuid,
                        name, description, availability_zone, metadata,
                        requested_networks, user_data, injected_files,
-                       key_name, min_count, max_count, scheduler_hints):
+                       key_name, min_count, max_count, partitions,
+                       scheduler_hints):
         """Verify all the input parameters"""
 
-        # Verify the specified image exists
-        if image_uuid:
-            self._get_image(context, image_uuid)
+        image = self._get_image(context, image_uuid)
+        if self._is_whole_disk_image(context, image) and partitions:
+            raise exception.PartitionsNotSupport(image_id=image.uuid)
+
+        self._check_requested_image(context, image, partitions)
 
         if not availability_zone:
             availability_zone = CONF.engine.default_schedule_zone
@@ -314,6 +353,7 @@ class API(object):
                                                        user_data,
                                                        decoded_files,
                                                        key_pair,
+                                                       partitions,
                                                        request_spec,
                                                        filter_properties=None)
         return servers
@@ -322,7 +362,7 @@ class API(object):
                name=None, description=None, availability_zone=None,
                metadata=None, requested_networks=None, user_data=None,
                injected_files=None, key_name=None, min_count=None,
-               max_count=None, scheduler_hints=None):
+               max_count=None, partitions=None, scheduler_hints=None):
         """Provision servers
 
         Sending server information to the engine and will handle
@@ -341,7 +381,8 @@ class API(object):
                                    availability_zone, metadata,
                                    requested_networks, user_data,
                                    injected_files, key_name,
-                                   min_count, max_count, scheduler_hints)
+                                   min_count, max_count, partitions,
+                                   scheduler_hints)
 
     def _delete_server(self, context, server):
 
