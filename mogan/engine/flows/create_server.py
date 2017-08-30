@@ -264,9 +264,9 @@ class CreateServerTask(flow_utils.MoganTask):
                                                requires=requires)
         self.driver = driver
 
-    def execute(self, context, server, configdrive):
+    def execute(self, context, server, configdrive, partitions):
         configdrive_value = configdrive.get('value')
-        self.driver.spawn(context, server, configdrive_value)
+        self.driver.spawn(context, server, configdrive_value, partitions)
         LOG.info('Successfully provisioned Ironic node %s',
                  server.node_uuid)
 
@@ -277,7 +277,7 @@ class CreateServerTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, server, requested_networks, user_data,
-             injected_files, key_pair, request_spec,
+             injected_files, key_pair, partitions, request_spec,
              filter_properties):
 
     """Constructs and returns the manager entrypoint flow
@@ -305,6 +305,7 @@ def get_flow(context, manager, server, requested_networks, user_data,
         'user_data': user_data,
         'injected_files': injected_files,
         'key_pair': key_pair,
+        'partitions': partitions,
         'configdrive': {}
     }
 

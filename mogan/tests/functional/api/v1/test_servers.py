@@ -42,7 +42,7 @@ def _get_fake_image(**kwargs):
              u'protected': False,
              u'schema': u'/v2/schemas/image'}
     attrs.update(kwargs)
-    return type('Image', (object,), attrs)
+    return attrs
 
 
 class TestServers(v1_test.APITestV1):
