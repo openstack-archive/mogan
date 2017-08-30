@@ -550,6 +550,13 @@ nodes:
   in: body
   required: true
   type: object
+partitions:
+  description: |
+    The partitions info for root disk, this is only allowed when using partition images
+    with root_gb(required), ephemeral_gb, and swap_mb.
+  in: body
+  required: false
+  type: object
 personality:
   description: |
     The file path and contents, text only, to inject into the server at launch. The

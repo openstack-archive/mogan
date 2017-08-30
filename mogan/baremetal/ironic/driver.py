@@ -134,7 +134,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         }
         return dic
 
-    def _add_server_info_to_node(self, node, server):
+    def _add_server_info_to_node(self, node, server, partitions=None):
         patch = list()
         # Associate the node with a server
         patch.append({'path': '/instance_uuid', 'op': 'add',
@@ -142,9 +142,13 @@ class IronicDriver(base_driver.BaseEngineDriver):
         # Add the required fields to deploy a node.
         patch.append({'path': '/instance_info/image_source', 'op': 'add',
                       'value': server.image_uuid})
-        # TODO(zhenguo) Add partition support
-        patch.append({'path': '/instance_info/root_gb', 'op': 'add',
-                      'value': str(node.properties.get('local_gb', 0))})
+        if partitions:
+            patch.append({'path': '/instance_info/root_gb', 'op': 'add',
+                          'value': str(partitions.get('root_gb', 0))})
+            patch.append({'path': '/instance_info/ephemeral_gb', 'op': 'add',
+                          'value': str(partitions.get('ephemeral_gb', 0))})
+            patch.append({'path': '/instance_info/swap_mb', 'op': 'add',
+                          'value': str(partitions.get('swap_mb', 0))})
 
         try:
             # FIXME(lucasagomes): The "retry_on_conflict" parameter was added
@@ -242,12 +246,13 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 "VIF %(vif)s isn't attached to Ironic node %(node)s",
                 {'vif': port_id, 'node': node.uuid})
 
-    def spawn(self, context, server, configdrive_value):
+    def spawn(self, context, server, configdrive_value, partitions):
         """Deploy a server.
 
         :param context: The security context.
         :param server: The server object.
-        :param configdrive_value: The configdrive value to be injected.
+        :param configdrive_value: configdrive value to be injected.
+        :param partitions: root disk partitions.
         """
         LOG.debug('Spawn called for server', server=server)
 
@@ -261,7 +266,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         # add server info to node
         node = self._get_node(node_uuid)
-        self._add_server_info_to_node(node, server)
+        self._add_server_info_to_node(node, server, partitions)
 
         # validate we are ready to do the deploy
         validate_chk = self.ironicclient.call("node.validate", node_uuid)
