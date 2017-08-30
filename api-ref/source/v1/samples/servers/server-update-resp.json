@@ -31,6 +31,11 @@
             }
         ]
     },
+    "partitions" : {
+        "root_gb": 100,
+        "ephemeral_gb": 400,
+        "swap_mb": 40960
+    },
     "metadata": {
         "k1": "v1",
         "k2": "v2"

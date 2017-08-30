@@ -52,6 +52,7 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
         'node': object_fields.StringField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'metadata': object_fields.FlexibleDictField(nullable=True),
+        'partitions': object_fields.FlexibleDictField(nullable=True),
         'locked': object_fields.BooleanField(default=False),
         'locked_by': object_fields.StringField(nullable=True),
         'affinity_zone': object_fields.StringField(nullable=True),

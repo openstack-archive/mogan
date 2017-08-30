@@ -84,12 +84,13 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def spawn(self, context, server, configdrive_value):
+    def spawn(self, context, server, configdrive_value, partitions):
         """Create a new server on the provision platform.
 
         :param context: security context
         :param server: moga server object.
-        :param configdrive_value: The configdrive value to be injected.
+        :param configdrive_value: configdrive value to be injected.
+        :param partitions: root disk partitions
         """
         raise NotImplementedError()
 

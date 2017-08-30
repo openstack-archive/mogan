@@ -43,6 +43,7 @@ Request
   - user_data: user_data
   - personality: personality
   - key_name: key_name
+  - partitions: partitions
   - scheduler_hints: scheduler_hints
 
 **Example Create Server: JSON request**
@@ -73,6 +74,7 @@ Response
   - metadata: metadata
   - affinity_zone: affinity_zone
   - key_name: key_name
+  - partitions: partitions
 
 **Example Create Server: JSON response**
 
@@ -226,6 +228,7 @@ Response
   - metadata: metadata
   - affinity_zone: affinity_zone
   - key_name: key_name
+  - partitions: partitions
 
 **Example Detailed list of Servers: JSON response**
 
@@ -280,6 +283,7 @@ Response
   - metadata: metadata
   - affinity_zone: affinity_zone
   - key_name: key_name
+  - partitions: partitions
 
 **Example Server Details: JSON response**
 
@@ -342,6 +346,7 @@ Response
   - metadata: metadata
   - affinity_zone: affinity_zone
   - key_name: key_name
+  - partitions: partitions
 
 **Example Update Server: JSON response**
 

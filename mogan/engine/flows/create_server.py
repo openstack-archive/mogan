@@ -49,7 +49,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
     def __init__(self, engine_rpcapi):
         requires = ['filter_properties', 'request_spec', 'server',
                     'requested_networks', 'user_data', 'injected_files',
-                    'key_pair', 'context']
+                    'key_pair', 'partitions', 'context']
         super(OnFailureRescheduleTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
         self.engine_rpcapi = engine_rpcapi
@@ -68,7 +68,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
     def _reschedule(self, context, cause, request_spec, filter_properties,
                     server, requested_networks, user_data, injected_files,
-                    key_pair):
+                    key_pair, partitions):
         """Actions that happen during the rescheduling attempt occur here."""
 
         create_server = self.engine_rpcapi.schedule_and_create_servers
@@ -96,6 +96,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                              user_data=user_data,
                              injected_files=injected_files,
                              key_pair=key_pair,
+                             partitions=partitions,
                              request_spec=request_spec,
                              filter_properties=filter_properties)
 
@@ -262,9 +263,9 @@ class CreateServerTask(flow_utils.MoganTask):
                                                requires=requires)
         self.driver = driver
 
-    def execute(self, context, server, configdrive):
+    def execute(self, context, server, configdrive, partitions):
         configdrive_value = configdrive.get('value')
-        self.driver.spawn(context, server, configdrive_value)
+        self.driver.spawn(context, server, configdrive_value, partitions)
         LOG.info('Successfully provisioned Ironic node %s',
                  server.node)
 
@@ -275,7 +276,7 @@ class CreateServerTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, server, requested_networks, user_data,
-             injected_files, key_pair, request_spec,
+             injected_files, key_pair, partitions, request_spec,
              filter_properties):
 
     """Constructs and returns the manager entrypoint flow
@@ -303,6 +304,7 @@ def get_flow(context, manager, server, requested_networks, user_data,
         'user_data': user_data,
         'injected_files': injected_files,
         'key_pair': key_pair,
+        'partitions': partitions,
         'configdrive': {}
     }
 

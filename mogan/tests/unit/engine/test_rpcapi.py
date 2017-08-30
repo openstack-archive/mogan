@@ -110,6 +110,7 @@ class RPCAPITestCase(base.DbTestCase):
                           user_data=None,
                           injected_files=None,
                           key_pair=None,
+                          partitions=None,
                           request_spec=None,
                           filter_properties=None)
 

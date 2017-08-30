@@ -60,7 +60,8 @@ class ComputeAPIUnitTest(base.DbTestCase):
                 requested_networks=None,
                 user_data=None,
                 key_name=None,
-                max_count=2)
+                max_count=2,
+                partitions={'root_gb': 100})
 
         self.assertEqual('fake-user', base_opts['user_id'])
         self.assertEqual('fake-project', base_opts['project_id'])
@@ -132,7 +133,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         min_count = 1
         max_count = 2
         mock_validate.return_value = (base_options, max_count, None)
-        mock_get_image.side_effect = None
+        mock_get_image.return_value = {'status': 'active'}
         mock_create.return_value = mock.MagicMock()
         mock_list_az.return_value = {'availability_zones': ['test_az']}
         mock_select_dest.return_value = \
@@ -160,7 +161,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         mock_validate.assert_called_once_with(
             self.context, flavor, 'fake-uuid', 'fake-name',
             'fake-descritpion', 'test_az', {'k1', 'v1'}, requested_networks,
-            None, None, max_count)
+            None, None, max_count, None)
         self.assertTrue(mock_create.called)
         self.assertTrue(mock_get_image.called)
         res = self.dbapi._get_quota_usages(self.context, self.project_id)
@@ -205,7 +206,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
         min_count = 11
         max_count = 20
         mock_validate.return_value = (base_options, max_count, None)
-        mock_get_image.side_effect = None
+        mock_get_image.return_value = {'status': 'active'}
         mock_list_az.return_value = {'availability_zones': ['test_az']}
         requested_networks = [{'uuid': 'fake'}]
 

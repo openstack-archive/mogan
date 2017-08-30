@@ -48,11 +48,21 @@ create_server = {
                 'min_count': {'type': 'integer', 'minimum': 1},
                 'max_count': {'type': 'integer', 'minimum': 1},
                 'metadata': parameter_types.metadata,
+                'partitions': {
+                    'type': 'object',
+                    'properties': {
+                        'root_gb': parameter_types.positive_integer,
+                        'ephemeral_gb': parameter_types.non_negative_integer,
+                        'swap_mb': parameter_types.non_negative_integer,
+                    },
+                    'required': ['root_gb'],
+                    'additionalProperties': False,
+                },
             },
             'required': ['name', 'image_uuid', 'flavor_uuid', 'networks'],
             'additionalProperties': False,
         },
-        "scheduler_hints": {
+        'scheduler_hints': {
             'type': 'object',
             'properties': {
                 'group': parameter_types.server_group_id
