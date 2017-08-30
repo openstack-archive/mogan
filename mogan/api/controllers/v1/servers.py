@@ -693,6 +693,7 @@ class ServerController(ServerControllerBase):
         image_uuid = server.get('image_uuid')
         user_data = server.get('user_data')
         key_name = server.get('key_name')
+        partitions = server.get('partitions')
         personality = server.pop('personality', None)
 
         injected_files = []
@@ -718,6 +719,7 @@ class ServerController(ServerControllerBase):
             key_name=key_name,
             min_count=min_count,
             max_count=max_count,
+            partitions=partitions,
             scheduler_hints=scheduler_hints)
         # Set the HTTP Location Header for the first server.
         pecan.response.location = link.build_url('server', servers[0].uuid)
