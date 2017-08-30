@@ -15,6 +15,8 @@
 You can customize this scheduler by specifying your own node Filters and
 Weighing Functions.
 """
+import itertools
+
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -110,9 +112,126 @@ class FilterScheduler(driver.Scheduler):
                 # if no aggregates match with the key/value,
                 # fail the scheduling.
                 return None
-            filters.append([agg.uuid for agg in aggregates])
+            filters.append(aggregates)
 
         return filters
+
+    @staticmethod
+    def _get_server_group_obj(context, request_spec):
+        server_group = request_spec.get('scheduler_hints', {}).get('group')
+        if not server_group:
+            return
+        server_group = objects.ServerGroup.get_by_uuid(context, server_group)
+        return server_group
+
+    def _get_nodes_of_aggregates(self, aggregates):
+        agg_uuids = [agg.uuid for agg in aggregates]
+        query_filters = {'member_of': 'in:' + ','.join(agg_uuids)}
+        rps = self.reportclient.get_filtered_resource_providers(query_filters)
+        return [rp['uuid'] for rp in rps]
+
+    def _get_filtered_affzs_nodes(self, context, server_group, filtered_nodes,
+                                  num_servers):
+        """Get the filtered affinity zone and nodes.
+
+        If affinity specified in request, this method will return a tuple
+        including filtered affinity zone and filtered nodes. e.g.
+        [(zone1, [node-1, node-2, node-3])].
+        If anti-affinity specified, this will return a list of tuples of
+        affinity zone and nodes list. e.g.
+        [(zone1, node-1]), (zone2, node-2), (zone3, node-3)]
+
+        """
+
+        def _log_and_raise_error(policy):
+            LOG.error("No enough nodes filtered, request %(num_svr)s "
+                      "server(s) with server group %(group)s with %(policy)s "
+                      "policy specified.",
+                      {"num_svr": num_servers, "group": server_group.name,
+                       "policy": policy})
+            msg = (_("No enough nodes filtered, request %(num_svr)s server(s) "
+                     "with %(policy)s policy specified.") %
+                   {"num_svr": num_servers, "policy": policy})
+            raise exception.NoValidNode(msg)
+
+        if 'affinity' in server_group.policies:
+            selected_affz = None
+            if server_group.members:
+                for member in server_group.members:
+                    server = objects.Server.get(context, member)
+                    if server.affinity_zone:
+                        selected_affz = server.affinity_zone
+                        break
+            if selected_affz:
+                aggs = objects.AggregateList.get_by_metadata(
+                    context, 'affinity_zone', selected_affz)
+                affz_nodes = self._get_nodes_of_aggregates(aggs)
+                selected_nodes = list(set(filtered_nodes) & set(affz_nodes))
+                if len(selected_nodes) < num_servers:
+                    _log_and_raise_error('affinity')
+                return selected_affz, selected_nodes[:num_servers]
+
+        all_aggs = objects.AggregateList.get_all(context)
+        all_aggs = sorted(all_aggs, key=lambda a: a.metadata.get(
+            'affinity_zone'))
+        grouped_aggs = itertools.groupby(
+            all_aggs, lambda a: a.metadata.get('affinity_zone'))
+
+        if 'affinity' in server_group.policies:
+            for affz, aggs in grouped_aggs:
+                affz_nodes = self._get_nodes_of_aggregates(aggs)
+                affz_nodes = list(set(filtered_nodes) & set(affz_nodes))
+                if len(affz_nodes) >= num_servers:
+                    return affz, affz_nodes[:num_servers]
+            _log_and_raise_error('affinity')
+
+        elif 'anti-affinity' in server_group.policies:
+            affinity_zones = []
+            for member in server_group.members:
+                server = objects.Server.get(context, member)
+                affinity_zone = server.affinity_zone
+                affinity_zones.append(affinity_zone)
+            selected_affz_nodes = []
+            for affz, aggs in grouped_aggs:
+                if affz in affinity_zones:
+                    continue
+                affz_nodes = self._get_nodes_of_aggregates(aggs)
+                affz_nodes = list(set(filtered_nodes) & set(affz_nodes))
+                if affz_nodes:
+                    selected_affz_nodes.append((affz, affz_nodes[0]))
+                if len(selected_affz_nodes) >= num_servers:
+                    return selected_affz_nodes
+            _log_and_raise_error('anti-affinity')
+
+    def _consume_per_server(self, context, request_spec, node, server_id,
+                            affinity_zone=None):
+        server_obj = objects.Server.get(context, server_id)
+        if affinity_zone:
+            server_obj.affinity_zone = affinity_zone
+            server_obj.save(context)
+        alloc_data = self._get_res_cls_filters(request_spec)
+        self.reportclient.put_allocations(
+            node, server_obj.uuid, alloc_data,
+            server_obj.project_id, server_obj.user_id)
+
+    def _consume_nodes_with_server_group(self, context, request_spec,
+                                         filtered_affzs_nodes, server_group):
+        if 'affinity' in server_group.policies:
+            affinity_zone, dest_nodes = filtered_affzs_nodes
+            for server_id, node in zip(request_spec['server_ids'],
+                                       dest_nodes):
+                self._consume_per_server(
+                    context, request_spec, node, server_id, affinity_zone)
+            return dest_nodes
+        elif 'anti-affinity' in server_group.policies:
+            dest_nodes = []
+            for server_id, affz_node in zip(request_spec['server_ids'],
+                                            filtered_affzs_nodes):
+                affinity_zone, node = affz_node
+                dest_nodes.append(node)
+                self._consume_per_server(
+                    context, request_spec, node, server_id, affinity_zone)
+            return dest_nodes
 
     def _get_filtered_nodes(self, context, request_spec):
         resources_filter = self._get_res_cls_filters(request_spec)
@@ -125,14 +244,10 @@ class FilterScheduler(driver.Scheduler):
         if aggs_filters:
             filtered_nodes = set()
             for agg_filter in aggs_filters:
-                query_filters = {'resources': resources_filter,
-                                 'member_of': 'in:' + ','.join(agg_filter)}
-                filtered_rps = self.reportclient.\
-                    get_filtered_resource_providers(query_filters)
+                filtered_rps = set(self._get_nodes_of_aggregates(agg_filter))
                 if not filtered_rps:
                     # if got empty, just break here.
                     return []
-                filtered_rps = set([rp['uuid'] for rp in filtered_rps])
                 if not filtered_nodes:
                     # initialize the filtered_nodes
                     filtered_nodes = filtered_rps
@@ -160,29 +275,36 @@ class FilterScheduler(driver.Scheduler):
         def _schedule(self, context, request_spec, filter_properties):
             self._populate_retry(filter_properties, request_spec)
             filtered_nodes = self._get_filtered_nodes(context, request_spec)
+
             if not filtered_nodes:
                 LOG.warning('No filtered nodes found for server '
                             'with properties: %s',
                             request_spec.get('flavor'))
-                raise exception.NoValidNode(_("No filtered nodes available"))
+                raise exception.NoValidNode(
+                    _("No filtered nodes available"))
             dest_nodes = self._choose_nodes(filtered_nodes, request_spec)
-            for server_id, node in zip(request_spec['server_ids'], dest_nodes):
-                server_obj = objects.Server.get(
-                    context, server_id)
-                alloc_data = self._get_res_cls_filters(request_spec)
-                self.reportclient.put_allocations(
-                    node, server_obj.uuid, alloc_data,
-                    server_obj.project_id, server_obj.user_id)
-            return dest_nodes
+            server_group = self._get_server_group_obj(context, request_spec)
+            if not server_group:
+                for server_id, node in zip(request_spec['server_ids'],
+                                           dest_nodes):
+                    self._consume_per_server(context, request_spec, node,
+                                             server_id)
+                return dest_nodes
+            else:
+                filtered_affzs_nodes = self._get_filtered_affzs_nodes(
+                    context, server_group, filtered_nodes,
+                    request_spec['num_servers'])
+                return self._consume_nodes_with_server_group(
+                    context, request_spec, filtered_affzs_nodes, server_group)
 
         return _schedule(self, context, request_spec, filter_properties)
 
-    def _choose_nodes(self, weighed_nodes, request_spec):
+    def _choose_nodes(self, filtered_nodes, request_spec):
         num_servers = request_spec['num_servers']
-        if num_servers > len(weighed_nodes):
+        if num_servers > len(filtered_nodes):
             msg = 'Not enough nodes found for servers, request ' \
                   'servers: %s, but only available nodes: %s' \
-                  % (str(num_servers), str(len(weighed_nodes)))
+                  % (str(num_servers), str(len(filtered_nodes)))
             raise exception.NoValidNode(_("Choose Node: %s") % msg)
 
-        return weighed_nodes[:num_servers]
+        return filtered_nodes[:num_servers]
