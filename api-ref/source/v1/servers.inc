@@ -43,6 +43,7 @@ Request
   - user_data: user_data
   - personality: personality
   - key_name: key_name
+  - partitions: partitions
   - scheduler_hints: scheduler_hints
 
 **Example Create Server: JSON request**

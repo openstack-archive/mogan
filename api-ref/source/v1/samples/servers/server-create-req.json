@@ -16,6 +16,11 @@
         "metadata" : {
             "My Server Name" : "Apache1"
         },
+        "partitions" : {
+            "root_gb": 100,
+            "ephemeral_gb": 400,
+            "swap_mb": 40960
+        },
         "personality": [
             {
                 "path": "/etc/banner.txt",

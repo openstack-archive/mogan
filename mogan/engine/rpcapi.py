@@ -51,7 +51,8 @@ class EngineAPI(object):
 
     def schedule_and_create_servers(self, context, servers, requested_networks,
                                     user_data, injected_files, key_pair,
-                                    request_spec, filter_properties):
+                                    partitions, request_spec,
+                                    filter_properties):
         """Signal to engine service to perform a deployment."""
         cctxt = self.client.prepare(topic=self.topic, server=CONF.host)
         cctxt.cast(context, 'schedule_and_create_servers', servers=servers,
@@ -59,6 +60,7 @@ class EngineAPI(object):
                    user_data=user_data,
                    injected_files=injected_files,
                    key_pair=key_pair,
+                   partitions=partitions,
                    request_spec=request_spec,
                    filter_properties=filter_properties)
 

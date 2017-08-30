@@ -58,6 +58,7 @@ def get_test_server(**kw):
                             'f978ef48-d4af-4dad-beec-e6174309bc71'),
         'launched_at': kw.get('launched_at'),
         'extra': kw.get('extra', {}),
+        'partitions': kw.get('partitions', {}),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),
         'locked': kw.get('locked', False),

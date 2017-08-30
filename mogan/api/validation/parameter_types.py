@@ -20,7 +20,13 @@ Common parameter types for validating request Body.
 
 positive_integer = {
     'type': ['integer', 'string'],
-    'pattern': '^[0-9]*$', 'minimum': 1
+    'pattern': '^[0-9]*$', 'minimum': 1, 'minLength': 1
+}
+
+
+non_negative_integer = {
+    'type': ['integer', 'string'],
+    'pattern': '^[0-9]*$', 'minimum': 0, 'minLength': 1
 }
 
 
