@@ -63,7 +63,11 @@ Possible values:
     cfg.StrOpt('engine_driver',
                default='ironic.IronicDriver',
                choices=['ironic.IronicDriver'],
-               help=_("Which driver to use, default to ironic driver."))
+               help=_("Which driver to use, default to ironic driver.")),
+    cfg.IntOpt('default_root_partition',
+               default=10,
+               help=_("The default root partition size(GB) for partition "
+                      "images."))
 ]
 
 
