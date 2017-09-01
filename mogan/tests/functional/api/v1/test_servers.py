@@ -208,7 +208,7 @@ class TestServers(v1_test.APITestV1):
         resps = self.get_json('/servers/detail',
                               headers=headers)['servers']
         self.assertEqual(4, len(resps))
-        self.assertEqual(16, len(resps[0].keys()))
+        self.assertEqual(17, len(resps[0].keys()))
         self.assertEqual('test_server_0', resps[0]['name'])
         self.assertEqual('just test server 0', resps[0]['description'])
         self.assertEqual('building', resps[0]['status'])
