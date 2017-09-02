@@ -111,3 +111,4 @@ Installation and Setup
    :maxdepth: 1
 
    installation/uwsgi
+   installation/image-requirements
