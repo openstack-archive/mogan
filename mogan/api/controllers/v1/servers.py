@@ -161,8 +161,9 @@ class ServerStatesController(ServerControllerBase):
 
     @policy.authorize_wsgi("mogan:server", "set_provision_state")
     @expose.expose(None, types.uuid, wtypes.text, types.uuid,
-                   status_code=http_client.ACCEPTED)
-    def provision(self, server_uuid, target, image_uuid=None):
+                   types.boolean, status_code=http_client.ACCEPTED)
+    def provision(self, server_uuid, target, image_uuid=None,
+                  preserve_ephemeral=None):
         """Asynchronous trigger the provisioning of the server.
 
         This will set the target provision state of the server, and
@@ -174,6 +175,8 @@ class ServerStatesController(ServerControllerBase):
 
         :param server_uuid: UUID of a server.
         :param target: The desired provision state of the server or verb.
+        :param image_uuid: UUID of the image rebuilt with.
+        :param preserve_ephemeral: whether preserve the ephemeral parition.
         """
 
         # Currently we only support rebuild target
@@ -184,7 +187,7 @@ class ServerStatesController(ServerControllerBase):
         db_server = self._resource or self._get_resource(server_uuid)
         if target == states.REBUILD:
             pecan.request.engine_api.rebuild(pecan.request.context, db_server,
-                                             image_uuid)
+                                             image_uuid, preserve_ephemeral)
 
         # Set the HTTP Location Header
         url_args = '/'.join([server_uuid, 'states'])
