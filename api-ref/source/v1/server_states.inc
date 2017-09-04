@@ -130,6 +130,7 @@ Request
     - server_uuid: server_ident
     - target: provision_state
     - image_uuid: image_ident
+    - preserve_ephemeral: preserve_ephemeral
 
 **Example request to rebuild a Server:**
 

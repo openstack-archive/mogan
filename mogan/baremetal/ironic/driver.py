@@ -136,7 +136,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
         }
         return dic
 
-    def _add_server_info_to_node(self, node, server):
+    def _add_server_info_to_node(self, node, server, preserve_ephemeral=None):
         patch = list()
         # Associate the node with a server
         patch.append({'path': '/instance_uuid', 'op': 'add',
@@ -147,6 +147,9 @@ class IronicDriver(base_driver.BaseEngineDriver):
         # TODO(zhenguo) Add partition support
         patch.append({'path': '/instance_info/root_gb', 'op': 'add',
                       'value': str(node.properties.get('local_gb', 0))})
+        if preserve_ephemeral is not None:
+            patch.append({'path': '/instance_info/preserve_ephemeral',
+                          'op': 'add', 'value': str(preserve_ephemeral)})
 
         try:
             # FIXME(lucasagomes): The "retry_on_conflict" parameter was added
@@ -516,17 +519,18 @@ class IronicDriver(base_driver.BaseEngineDriver):
             self._wait_for_power_state, server, state)
         timer.start(interval=CONF.ironic.api_retry_interval).wait()
 
-    def rebuild(self, context, server):
+    def rebuild(self, context, server, preserve_ephemeral):
         """Rebuild/redeploy a server.
 
         :param context: The security context.
         :param server: The server object.
+        :param preserve_ephemeral: whether preserve ephemeral partition
         """
         LOG.debug('Rebuild called for server', server=server)
 
         node_uuid = server.node_uuid
         node = self._get_node(node_uuid)
-        self._add_server_info_to_node(node, server)
+        self._add_server_info_to_node(node, server, preserve_ephemeral)
 
         # trigger the node rebuild
         try:
