@@ -130,4 +130,5 @@ class RPCAPITestCase(base.DbTestCase):
         self._test_rpcapi('rebuild_server',
                           'cast',
                           version='1.0',
-                          server=self.fake_server_obj)
+                          server=self.fake_server_obj,
+                          preserve_ephemeral=True)
