@@ -580,6 +580,13 @@ power_state_target:
   in: body
   required: true
   type: string
+preserve_ephemeral:
+  description: |
+    Indicates whether the server is rebuilt with the preservation of the ephemeral
+    partition (``true``).
+  in: body
+  required: false
+  type: boolean
 project_id_body:
   description: |
     The UUID of the project in a multi-tenancy cloud.

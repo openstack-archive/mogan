@@ -397,7 +397,8 @@ class API(object):
 
     @check_server_lock
     @check_server_maintenance
-    def rebuild(self, context, server, image_uuid=None):
+    def rebuild(self, context, server, image_uuid=None,
+                preserve_ephemeral=None):
         """Rebuild a server."""
         LOG.debug("Going to try to rebuild server %s", server.uuid)
         if not image_uuid:
@@ -417,7 +418,7 @@ class API(object):
                       server=server)
             return
 
-        self.engine_rpcapi.rebuild_server(context, server)
+        self.engine_rpcapi.rebuild_server(context, server, preserve_ephemeral)
 
     def list_availability_zones(self, context):
         """Get availability zone list."""

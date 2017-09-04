@@ -515,26 +515,27 @@ class EngineManager(base_manager.BaseEngineManager):
         LOG.info('Successfully set node power state: %s',
                  state, server=server)
 
-    def _rebuild_server(self, context, server):
+    def _rebuild_server(self, context, server, preserve_ephemeral):
         """Perform rebuild action on the specified server."""
 
-        # TODO(zhenguo): Add delete notification
+        # TODO(zhenguo): Add rebuild notification
 
-        self.driver.rebuild(context, server)
+        self.driver.rebuild(context, server, preserve_ephemeral)
 
     @wrap_server_fault
-    def rebuild_server(self, context, server):
+    def rebuild_server(self, context, server, preserve_ephemeral):
         """Destroy and re-make this server.
 
         :param context: mogan request context
         :param server: server object
+        :param preserve_ephemeral: whether preserve ephemeral partition
         """
         LOG.debug('Rebuilding server: %s', server)
 
         fsm = utils.get_state_machine(start_state=server.status)
 
         try:
-            self._rebuild_server(context, server)
+            self._rebuild_server(context, server, preserve_ephemeral)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 utils.process_event(fsm, server, event='error')
