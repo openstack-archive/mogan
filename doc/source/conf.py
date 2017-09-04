@@ -67,7 +67,7 @@ pygments_style = 'sphinx'
 # Sphinx are currently 'default' and 'sphinxdoc'.
 # html_theme_path = ["."]
 # html_theme = '_theme'
-# html_theme = 'openstackdocs'
+html_theme = 'openstackdocs'
 # html_static_path = ['static']
 
 html_last_updated_fmt = '%Y-%m-%d %H:%M'
