@@ -128,7 +128,7 @@ class FilterScheduler(driver.Scheduler):
         agg_uuids = [agg.uuid for agg in aggregates]
         query_filters = {'member_of': 'in:' + ','.join(agg_uuids)}
         rps = self.reportclient.get_filtered_resource_providers(query_filters)
-        return [rp['uuid'] for rp in rps]
+        return [rp['name'] for rp in rps]
 
     def _get_filtered_affzs_nodes(self, context, server_group, filtered_nodes,
                                   num_servers):
@@ -260,7 +260,7 @@ class FilterScheduler(driver.Scheduler):
             query_filters = {'resources': resources_filter}
             filtered_nodes = self.reportclient.\
                 get_filtered_resource_providers(query_filters)
-            return [node['uuid'] for node in filtered_nodes]
+            return [node['name'] for node in filtered_nodes]
 
         return list(filtered_nodes)
 
