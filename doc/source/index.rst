@@ -87,6 +87,18 @@ Sample Policy file
 
     sample_policy
 
+
+User's Guide
+============
+
+Root Disk Partitions
+--------------------
+
+.. toctree::
+    :maxdepth: 1
+
+    user/root-disk-partitions
+
 Command References
 ==================
 
@@ -96,11 +108,6 @@ Here are references for commands not elsewhere documented.
   :maxdepth: 1
 
   cmds/mogan-dbsync
-
-Indices and tables
-==================
-
-* :ref:`search`
 
 Running tests of Mogan
 ======================
@@ -118,3 +125,8 @@ Installation and Setup
 
    installation/uwsgi
    installation/image-requirements
+
+Indices and tables
+==================
+
+* :ref:`search`
