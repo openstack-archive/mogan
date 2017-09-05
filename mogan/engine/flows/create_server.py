@@ -156,27 +156,34 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 elif vif.get('port_id'):
                     port = self.manager.network_api.show_port(
                         context, vif.get('port_id'))
+                    self.manager.network_api.check_port_availability(port)
+                    vif = self.manager.network_api.bind_port(context,
+                                                             port['id'],
+                                                             server)
+                    port = vif['port']
 
-                nic_dict = {'port_id': port['id'],
-                            'network_id': port['network_id'],
-                            'mac_address': port['mac_address'],
-                            'fixed_ips': port['fixed_ips'],
-                            'server_uuid': server.uuid}
+                self.manager.driver.plug_vif(server.node_uuid, port['id'])
 
-                server_nic = objects.ServerNic(context, **nic_dict)
-                nics_obj.objects.append(server_nic)
-
-                self.manager.driver.plug_vif(server.node_uuid,
-                                             port['id'])
                 # Get updated VIF info
                 port_dict = self.manager.network_api.show_port(
-                    context, port.get('id'))
-
+                    context, port['id'])
                 # Update the real physical mac address from ironic.
-                server_nic.mac_address = port_dict['mac_address']
+                nic_dict = {'port_id': port_dict['id'],
+                            'network_id': port_dict['network_id'],
+                            'mac_address': port_dict['mac_address'],
+                            'fixed_ips': port_dict['fixed_ips'],
+                            'server_uuid': server.uuid}
+                server_nic = objects.ServerNic(context, **nic_dict)
+
+                nics_obj.objects.append(server_nic)
             except Exception as e:
                 # Set nics here, so we can clean up the
                 # created networks during reverting.
+                if vif.get('net_id'):
+                    self.manager.network_api.delete_port(context, port['id'],
+                                                         server.uuid)
+                elif vif.get('port_id'):
+                    self.manager.network_api.unbind_port(context, port)
                 server.nics = nics_obj
                 LOG.error("Server %(server)s: create or get network "
                           "failed. The reason is %(reason)s",
