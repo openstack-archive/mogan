@@ -149,31 +149,10 @@ class BuildNetworkTask(flow_utils.MoganTask):
         nics_obj = objects.ServerNics(context)
 
         for vif in requested_networks:
+            net_id = vif.get('net_id')
+            port_id = vif.get('port_id')
             try:
-                if vif.get('net_id'):
-                    port = self.manager.network_api.create_port(
-                        context, vif['net_id'], server.uuid)
-                elif vif.get('port_id'):
-                    port = self.manager.network_api.show_port(
-                        context, vif.get('port_id'))
-
-                nic_dict = {'port_id': port['id'],
-                            'network_id': port['network_id'],
-                            'mac_address': port['mac_address'],
-                            'fixed_ips': port['fixed_ips'],
-                            'server_uuid': server.uuid}
-
-                server_nic = objects.ServerNic(context, **nic_dict)
-                nics_obj.objects.append(server_nic)
-
-                self.manager.driver.plug_vif(server.node_uuid,
-                                             port['id'])
-                # Get updated VIF info
-                port_dict = self.manager.network_api.show_port(
-                    context, port.get('id'))
-
-                # Update the real physical mac address from ironic.
-                server_nic.mac_address = port_dict['mac_address']
+                self.manager.attach_interface(context, server, net_id, port_id)
             except Exception as e:
                 # Set nics here, so we can clean up the
                 # created networks during reverting.

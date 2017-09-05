@@ -549,7 +549,7 @@ class EngineManager(base_manager.BaseEngineManager):
             except Exception:
                 raise exception.PortNotFound(port_id=port_id)
 
-            # self.network_api.check_port_availability(vif_port)
+            self.network_api.check_port_availability(vif_port)
 
         else:
             LOG.debug("Attaching network interface %(net_id) to server "
