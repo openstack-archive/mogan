@@ -74,7 +74,7 @@ def upgrade():
         sa.Column('image_uuid', sa.String(length=36), nullable=True),
         sa.Column('launched_at', sa.DateTime(), nullable=True),
         sa.Column('availability_zone', sa.String(length=255), nullable=True),
-        sa.Column('node_uuid', sa.String(length=36), nullable=True),
+        sa.Column('node', sa.String(length=255), nullable=True),
         sa.Column('extra', sa.Text(), nullable=True),
         sa.Column('locked', sa.Boolean(), nullable=True),
         sa.Column('affinity_zone', sa.String(length=255), nullable=True),
