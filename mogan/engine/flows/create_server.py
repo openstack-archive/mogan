@@ -101,7 +101,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
     def revert(self, context, result, flow_failures, server, **kwargs):
         # Clean up associated node uuid
-        server.node_uuid = None
+        server.node = None
         server.save()
 
         # Check if we have a cause which can tell us not to reschedule and
@@ -136,13 +136,13 @@ class BuildNetworkTask(flow_utils.MoganTask):
 
         # TODO(zhenguo): This seems not needed as our scheduler has already
         # guaranteed this.
-        ports = self.manager.driver.get_ports_from_node(server.node_uuid)
+        ports = self.manager.driver.get_ports_from_node(server.node)
         if len(requested_networks) > len(ports):
             raise exception.InterfacePlugException(_(
                 "Ironic node: %(id)s virtual to physical interface count"
                 "  mismatch"
                 " (Vif count: %(vif_count)d, Pif count: %(pif_count)d)")
-                % {'id': server.node_uuid,
+                % {'id': server.node,
                    'vif_count': len(requested_networks),
                    'pif_count': len(ports)})
 
@@ -166,8 +166,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 server_nic = objects.ServerNic(context, **nic_dict)
                 nics_obj.objects.append(server_nic)
 
-                self.manager.driver.plug_vif(server.node_uuid,
-                                             port['id'])
+                self.manager.driver.plug_vif(server.node, port['id'])
                 # Get updated VIF info
                 port_dict = self.manager.network_api.show_port(
                     context, port.get('id'))
@@ -267,7 +266,7 @@ class CreateServerTask(flow_utils.MoganTask):
         configdrive_value = configdrive.get('value')
         self.driver.spawn(context, server, configdrive_value)
         LOG.info('Successfully provisioned Ironic node %s',
-                 server.node_uuid)
+                 server.node)
 
     def revert(self, context, result, flow_failures, server, **kwargs):
         LOG.debug("Server %s: destroy backend node", server.uuid)

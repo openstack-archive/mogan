@@ -52,18 +52,18 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def set_power_state(self, context, node_uuid, state):
+    def set_power_state(self, context, node, state):
         """Set a node's power state.
 
-        :param node_uuid: node id to change power state.
+        :param node: node name or id to change power state.
         :param state: mogan states to change to.
         """
         raise NotImplementedError()
 
-    def get_ports_from_node(self, node_uuid, detail=True):
+    def get_ports_from_node(self, node, detail=True):
         """Get a node's ports info.
 
-        :param node_uuid: node id to get ports info.
+        :param node: node name or id to get ports info.
         :param detail: whether to get detailed info of all the ports,
             default to False.
         """

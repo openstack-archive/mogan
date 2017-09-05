@@ -85,7 +85,7 @@ class Server(Base):
     flavor_uuid = Column(String(36), nullable=True)
     availability_zone = Column(String(255), nullable=True)
     image_uuid = Column(String(36), nullable=True)
-    node_uuid = Column(String(36), nullable=True)
+    node = Column(String(255), nullable=True)
     launched_at = Column(DateTime, nullable=True)
     extra = Column(db_types.JsonEncodedDict)
     locked = Column(Boolean)

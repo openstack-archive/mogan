@@ -101,7 +101,7 @@ class EngineManager(base_manager.BaseEngineManager):
         for rp in all_rps:
             if rp['uuid'] not in node_uuids:
                 server_by_node = objects.Server.list(
-                    context, filters={'node_uuid': rp['uuid']})
+                    context, filters={'node': rp['name']})
                 if server_by_node:
                     continue
                 self.scheduler_client.reportclient.delete_resource_provider(
@@ -336,7 +336,7 @@ class EngineManager(base_manager.BaseEngineManager):
                      {"nodes": nodes})
 
             for (server, node) in six.moves.zip(servers, nodes):
-                server.node_uuid = node
+                server.node = node
                 server.save()
                 # Add a retry entry for the selected node
                 retry_nodes = retry['nodes']
@@ -458,7 +458,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
         # Issue delete request to driver only if server is associated with
         # a underlying node.
-        if server.node_uuid:
+        if server.node:
             do_delete_server(server)
 
         server.power_state = states.NOSTATE
@@ -560,7 +560,7 @@ class EngineManager(base_manager.BaseEngineManager):
         try:
             vif = self.network_api.bind_port(context, vif_port['id'], server)
             vif_port = vif['port']
-            self.driver.plug_vif(server.node_uuid, vif_port['id'])
+            self.driver.plug_vif(server.node, vif_port['id'])
             nics_obj = objects.ServerNics(context)
             nic_dict = {'port_id': vif_port['id'],
                         'network_id': vif_port['network_id'],

@@ -538,9 +538,9 @@ nics:
   in: body
   required: true
   type: object
-node_uuid:
+node:
   description: |
-    The UUID of the node which our server associated with. Only visible for admin users.
+    The name of the node which our server associated with. Only visible for admin users.
   in: body
   required: false
   type: string

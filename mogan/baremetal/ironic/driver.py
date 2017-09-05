@@ -88,9 +88,9 @@ class IronicDriver(base_driver.BaseEngineDriver):
         super(IronicDriver, self).__init__()
         self.ironicclient = ironic.IronicClientWrapper()
 
-    def _get_node(self, node_uuid):
-        """Get a node by its UUID."""
-        return self.ironicclient.call('node.get', node_uuid,
+    def _get_node(self, node):
+        """Get a node by its name."""
+        return self.ironicclient.call('node.get', node,
                                       fields=_NODE_FIELDS)
 
     def _validate_server_and_node(self, server):
@@ -215,16 +215,16 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         _log_ironic_polling(message, node, server)
 
-    def get_ports_from_node(self, node_uuid, detail=True):
+    def get_ports_from_node(self, node, detail=True):
         """List the MAC addresses and the port types from a node."""
         ports = self.ironicclient.call("node.list_ports",
-                                       node_uuid, detail=detail)
-        portgroups = self.ironicclient.call("portgroup.list", node=node_uuid,
+                                       node, detail=detail)
+        portgroups = self.ironicclient.call("portgroup.list", node=node,
                                             detail=detail)
         return ports + portgroups
 
-    def plug_vif(self, node_uuid, port_id):
-        self.ironicclient.call("node.vif_attach", node_uuid, port_id)
+    def plug_vif(self, node, port_id):
+        self.ironicclient.call("node.vif_attach", node, port_id)
 
     def unplug_vif(self, context, server, port_id):
         LOG.debug("unplug: server_uuid=%(uuid)s vif=%(server_nics)s "
@@ -232,7 +232,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
                   {'uuid': server.uuid,
                    'server_nics': str(server.nics),
                    'port_id': port_id})
-        node = self._get_node(server.node_uuid)
+        node = self._get_node(server.node)
         self._unplug_vif(node, port_id)
 
     def _unplug_vif(self, node, port_id):
@@ -255,30 +255,30 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         # The engine manager is meant to know the node uuid, so missing uuid
         # is a significant issue. It may mean we've been passed the wrong data.
-        node_uuid = server.node_uuid
-        if not node_uuid:
+        node_ident = server.node
+        if not node_ident:
             raise ironic_exc.BadRequest(
                 _("Ironic node uuid not supplied to "
                   "driver for server %s.") % server.uuid)
 
         # add server info to node
-        node = self._get_node(node_uuid)
+        node = self._get_node(node_ident)
         self._add_server_info_to_node(node, server)
 
         # validate we are ready to do the deploy
-        validate_chk = self.ironicclient.call("node.validate", node_uuid)
+        validate_chk = self.ironicclient.call("node.validate", node_ident)
         if (not validate_chk.deploy.get('result')
                 or not validate_chk.power.get('result')):
             raise exception.ValidationError(_(
                 "Ironic node: %(id)s failed to validate."
                 " (deploy: %(deploy)s, power: %(power)s)")
-                % {'id': server.node_uuid,
+                % {'id': server.node,
                    'deploy': validate_chk.deploy,
                    'power': validate_chk.power})
 
         # trigger the node deploy
         try:
-            self.ironicclient.call("node.set_provision_state", node_uuid,
+            self.ironicclient.call("node.set_provision_state", node_ident,
                                    ironic_states.ACTIVE,
                                    configdrive=configdrive_value)
         except Exception as e:
@@ -300,7 +300,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 LOG.error("Error deploying server %(server)s on "
                           "baremetal node %(node)s.",
                           {'server': server.uuid,
-                           'node': node_uuid})
+                           'node': node_ident})
 
     def _unprovision(self, server, node):
         """This method is called from destroy() to unprovision
@@ -524,14 +524,14 @@ class IronicDriver(base_driver.BaseEngineDriver):
         """
         LOG.debug('Rebuild called for server', server=server)
 
-        node_uuid = server.node_uuid
-        node = self._get_node(node_uuid)
+        node_ident = server.node_ident
+        node = self._get_node(node_ident)
         self._add_server_info_to_node(node, server)
 
         # trigger the node rebuild
         try:
             self.ironicclient.call("node.set_provision_state",
-                                   node_uuid,
+                                   node_ident,
                                    ironic_states.REBUILD)
         except (ironic_exc.InternalServerError,
                 ironic_exc.BadRequest) as e:
@@ -561,17 +561,17 @@ class IronicDriver(base_driver.BaseEngineDriver):
             for the server
         """
         node = self._validate_server_and_node(server)
-        node_uuid = node.uuid
+        node_ident = node.uuid
 
         def _get_console():
             """Request ironicclient to acquire node console."""
             try:
-                return self.ironicclient.call('node.get_console', node_uuid)
+                return self.ironicclient.call('node.get_console', node_ident)
             except (ironic_exc.InternalServerError,
                     ironic_exc.BadRequest) as e:
                 LOG.error('Failed to acquire console information for '
                           'node %(server)s: %(reason)s',
-                          {'server': node_uuid,
+                          {'server': node_ident,
                            'reason': e})
                 raise exception.ConsoleNotAvailable()
 
@@ -590,13 +590,13 @@ class IronicDriver(base_driver.BaseEngineDriver):
             """Request ironicclient to enable/disable node console."""
             try:
                 self.ironicclient.call(
-                    'node.set_console_mode', node_uuid, mode)
+                    'node.set_console_mode', node_ident, mode)
             except (ironic_exc.InternalServerError,  # Validations
                     ironic_exc.BadRequest) as e:  # Maintenance
                 LOG.error('Failed to set console mode to "%(mode)s" '
                           'for node %(node)s: %(reason)s',
                           {'mode': mode,
-                           'node': node_uuid,
+                           'node': node_ident,
                            'reason': e})
                 raise exception.ConsoleNotAvailable()
 
@@ -609,7 +609,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
                 LOG.error('Timeout while waiting for console mode to be '
                           'set to "%(mode)s" on node %(node)s',
                           {'mode': mode,
-                           'node': node_uuid})
+                           'node': node_ident})
                 raise exception.ConsoleNotAvailable()
 
         # Acquire the console
@@ -637,7 +637,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
             return {'node': node,
                     'console_info': console['console_info']}
         else:
-            LOG.debug('Console is disabled for node %s', node_uuid)
+            LOG.debug('Console is disabled for node %s', node_ident)
             raise exception.ConsoleNotAvailable()
 
     def get_serial_console(self, context, server, console_type):

@@ -61,6 +61,7 @@ Response
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - addresses: addresses
+  - node: node
   - links: links
   - uuid: server_uuid
   - status: server_status
@@ -212,6 +213,7 @@ Response
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - addresses: addresses
+  - node: node
   - links: links
   - uuid: server_uuid
   - status: server_status
@@ -264,7 +266,7 @@ Response
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - addresses: addresses
-  - node_uuid: node_uuid
+  - node: node
   - links: links
   - uuid: server_uuid
   - status: server_status
@@ -328,6 +330,7 @@ Response
   - image_uuid: imageRef
   - availability_zone: availability_zone
   - addresses: addresses
+  - node: node
   - links: links
   - uuid: server_uuid
   - status: server_status

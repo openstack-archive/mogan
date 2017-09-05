@@ -49,7 +49,7 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
         'image_uuid': object_fields.UUIDField(nullable=True),
         'nics': object_fields.ObjectField('ServerNics', nullable=True),
         'fault': object_fields.ObjectField('ServerFault', nullable=True),
-        'node_uuid': object_fields.UUIDField(nullable=True),
+        'node': object_fields.StringField(nullable=True),
         'launched_at': object_fields.DateTimeField(nullable=True),
         'metadata': object_fields.FlexibleDictField(nullable=True),
         'locked': object_fields.BooleanField(default=False),
