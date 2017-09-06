@@ -15,8 +15,8 @@
       under the License.
 
 
-Running Mogan API using uWSGI
-=============================
+Configure Mogan API with uWSGI
+==============================
 The recommended way to deploy Mogan is have a web server such as Apache
 or nginx to handle http requests and proxy these requests to Mogan WSGI
 app running in uWSGI. Mogan comes with some configuration templates on

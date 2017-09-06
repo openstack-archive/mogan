@@ -15,33 +15,58 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-===========================================
-Welcome to Mogan's developer documentation!
-===========================================
+====================================
+OpenStack Bare Metal Compute (mogan)
+====================================
 
 Introduction
 ============
 
-Mogan is an OpenStack project dedicated for bare metal computing management,
-which is designed specifically for bare metals, so compared with Nova, we can
-provide a more lightweight and convenient platform with more advanced features
-by leveraging Ironic. Besides this, we also plan to support RSD, then we can
-not only provide Pre-set Configuration Servers, but also Custom Servers.
+Mogan is an OpenStack project which offers bare metals as first class
+resources to users, supporting variety of bare metal provisioning drivers
+including Ironic.
 
-Site Notes
-----------
+Installation Guide
+==================
 
-This site is primarily intended to provide documentation for developers
-interested in contributing to or working with mogan. It *also* contains
-references and guides for administrators which are not yet hosted elsewhere on
-the OpenStack documentation sites.
+.. toctree::
+  :maxdepth: 1
+
+  installation/configure-mogan-api-uwsgi
+  installation/build-user-images
 
 
-Developer's Guide
+User Guide
+==========
+
+.. toctree::
+  :maxdepth: 1
+
+  user/states
+  user/root-disk-partitions
+
+
+Administrator Guide
+===================
+
+.. toctree::
+  :maxdepth: 1
+
+  admin/gmr
+
+
+Configuration Guide
+===================
+
+.. toctree::
+  :maxdepth: 1
+
+  configuration/sample_config
+  configuration/sample_policy
+
+
+Contributor Guide
 =================
-
-Getting Started
----------------
 
 If you are new to mogan, this section contains information that should help
 you get started as a developer working on the project or contributing to the
@@ -50,54 +75,10 @@ project.
 .. toctree::
   :maxdepth: 1
 
-  Developer Contribution Guide <dev/code-contribution-guide>
-  Setting Up Your Development Environment <dev/dev-quickstart>
+  contributor/code-contribution-guide
+  contributor/dev-quickstart
+  contributor/testing
 
-The following pages describe the architecture of the service.
-
-.. toctree::
-  :maxdepth: 1
-
-  States and Transitions <states>
-
-Advanced testing and guides
----------------------------
-
-.. toctree::
-    :maxdepth: 1
-
-    dev/gmr
-
-Administrator's Guide
-=====================
-
-Sample Configuration File
--------------------------
-
-.. toctree::
-    :maxdepth: 1
-
-    sample_config
-
-Sample Policy file
-------------------
-
-.. toctree::
-    :maxdepth: 1
-
-    sample_policy
-
-
-User's Guide
-============
-
-Root Disk Partitions
---------------------
-
-.. toctree::
-    :maxdepth: 1
-
-    user/root-disk-partitions
 
 Command References
 ==================
@@ -109,22 +90,6 @@ Here are references for commands not elsewhere documented.
 
   cmds/mogan-dbsync
 
-Running tests of Mogan
-======================
-
-.. toctree::
-   :maxdepth: 1
-
-   dev/testing
-
-Installation and Setup
-======================
-
-.. toctree::
-   :maxdepth: 1
-
-   installation/uwsgi
-   installation/image-requirements
 
 Indices and tables
 ==================
