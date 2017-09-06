@@ -9,7 +9,7 @@ for this to work, the partition image being deployed with Mogan **must**
 contain ``grub2`` installed within it.
 
 Config Drive
-------------
+************
 
 The configuration drive is used to store server specific metadata.
 ``Cloud-init`` has a collection of data source modules, so when building the
