@@ -88,6 +88,7 @@ class Server(Base):
     node = Column(String(255), nullable=True)
     launched_at = Column(DateTime, nullable=True)
     extra = Column(db_types.JsonEncodedDict)
+    partitions = Column(db_types.JsonEncodedDict)
     locked = Column(Boolean)
     locked_by = Column(Enum('owner', 'admin'))
     affinity_zone = Column(String(255), nullable=True)

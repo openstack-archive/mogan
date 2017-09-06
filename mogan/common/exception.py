@@ -273,6 +273,29 @@ class ImageNotFound(NotFound):
     _msg_fmt = _("Image %(image_id)s could not be found.")
 
 
+class ImageNotActive(Invalid):
+    _msg_fmt = _("Image %(image_id)s is not active.")
+
+
+class InvalidImageConfigDrive(Invalid):
+    _msg_fmt = _("Image's config drive option '%(config_drive)s' is invalid")
+
+
+class PartitionsNotSupport(Invalid):
+    _msg_fmt = _("Request of image %(image_id)s doesn't support partitions.")
+
+
+class PartitionSmallerThanImage(Invalid):
+    _msg_fmt = _("Partition is too small for requested image. Root disk "
+                 "is %(root_size)i bytes, image is %(image_size)i bytes.")
+
+
+class PartitionSmallerThanMinDisk(Invalid):
+    _msg_fmt = _("Partition is smaller than the minimum size specified in "
+                 "image metadata. Root disk is %(root_size)i bytes, "
+                 "minimum size is %(image_min_disk)i bytes.")
+
+
 class GlanceConnectionFailed(Invalid):
     _msg_fmt = _("Connection to glance host %(server)s failed: "
                  "%(reason)s")

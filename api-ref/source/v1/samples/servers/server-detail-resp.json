@@ -23,6 +23,11 @@
             }
         ]
     },
+    "partitions" : {
+        "root_gb": 100,
+        "ephemeral_gb": 400,
+        "swap_mb": 40960
+    },
     "power_state": "power on",
     "project_id": "c18e8a1a870d4c08a0b51ced6e0b6459",
     "status": "building",

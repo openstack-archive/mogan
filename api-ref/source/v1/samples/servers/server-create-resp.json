@@ -24,6 +24,11 @@
     "project_id": "2f15c3524826465a9afbd150478b3b76",
     "user_id": "a6205fcab03d4a289251f420456b1289",
     "addresses": {},
+    "partitions" : {
+        "root_gb": 100,
+        "ephemeral_gb": 400,
+        "swap_mb": 40960
+    },
     "metadata": {
         "My Server Name" : "Apache1"
     }

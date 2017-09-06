@@ -508,8 +508,9 @@ class ServerPatchType(types.JsonPatchType):
         defaults = types.JsonPatchType.internal_attrs()
         return defaults + ['/project_id', '/user_id', '/status',
                            '/power_state', '/availability_zone',
-                           '/flavor_uuid', '/image_uuid',
-                           '/nics', '/launched_at', '/affinity_zone']
+                           '/flavor_uuid', '/image_uuid', '/addresses',
+                           '/launched_at', '/affinity_zone', '/key_name',
+                           '/partitions', '/fault', '/node']
 
 
 class ServerCollection(base.APIBase):
@@ -720,6 +721,7 @@ class ServerController(ServerControllerBase):
         image_uuid = server.get('image_uuid')
         user_data = server.get('user_data')
         key_name = server.get('key_name')
+        partitions = server.get('partitions')
         personality = server.pop('personality', None)
 
         injected_files = []
@@ -744,6 +746,7 @@ class ServerController(ServerControllerBase):
             key_name=key_name,
             min_count=min_count,
             max_count=max_count,
+            partitions=partitions,
             scheduler_hints=scheduler_hints)
         # Set the HTTP Location Header for the first server.
         pecan.response.location = link.build_url('server', servers[0].uuid)
