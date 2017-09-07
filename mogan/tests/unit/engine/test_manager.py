@@ -98,7 +98,7 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
         fake_node = mock.MagicMock()
         fake_node.provision_state = ironic_states.ACTIVE
         server = obj_utils.create_test_server(
-            self.context, status=states.DELETING, node=None)
+            self.context, status=states.DELETING, node_uuid=None)
         self._start_service()
 
         self.service.delete_server(self.context, server)
@@ -204,7 +204,7 @@ class ManageServerTestCase(mgr_utils.ServiceSetUpMixin,
         fake_node = mock.MagicMock()
         fake_node.provision_state = ironic_states.ACTIVE
         server = obj_utils.create_test_server(
-            self.context, status=states.ACTIVE, node=None)
+            self.context, status=states.ACTIVE, node_uuid=None)
         port_id = server['nics'][0]['port_id']
         self._start_service()
         self.service.detach_interface(self.context, server, port_id)

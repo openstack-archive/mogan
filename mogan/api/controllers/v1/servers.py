@@ -46,7 +46,7 @@ import re
 _DEFAULT_SERVER_RETURN_FIELDS = ('uuid', 'name', 'description',
                                  'status', 'power_state')
 
-_ONLY_ADMIN_VISIBLE_SEVER_FIELDS = ('node', 'affinity_zone',)
+_ONLY_ADMIN_VISIBLE_SEVER_FIELDS = ('node_uuid', 'affinity_zone',)
 
 LOG = log.getLogger(__name__)
 
@@ -450,8 +450,8 @@ class Server(base.APIBase):
     fault = {wtypes.text: types.jsontype}
     """The fault of the server"""
 
-    node = wtypes.text
-    """The backend node of the server"""
+    node_uuid = types.uuid
+    """The node UUID of the server"""
 
     affinity_zone = wtypes.text
     """The affinity zone of the server"""
