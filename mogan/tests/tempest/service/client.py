@@ -315,12 +315,12 @@ class BaremetalNodeClient(rest_client.RestClient):
         body = self.deserialize(body)['nodes']
         return rest_client.ResponseBodyList(resp, body)
 
-    def show_bm_node(self, node_ident=None, service_id=None):
+    def show_bm_node(self, node_uuid=None, service_id=None):
         if service_id:
             uri = '%s/nodes/detail?instance_uuid=%s' % (self.uri_prefix,
                                                         service_id)
         else:
-            uri = '%s/nodes/%s' % (self.uri_prefix, node_ident)
+            uri = '%s/nodes/%s' % (self.uri_prefix, node_uuid)
         resp, body = self.get(uri)
         self.expected_success(200, resp.status)
         body = self.deserialize(body)

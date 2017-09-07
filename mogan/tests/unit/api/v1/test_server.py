@@ -138,7 +138,7 @@ class TestServerAuthorization(v1_test.APITestV1):
         headers = self.gen_headers(self.context, roles="no-admin")
         resp = self.get_json('/servers/%s' % self.server1.uuid,
                              headers=headers)
-        self.assertNotIn('node', resp)
+        self.assertNotIn('node_uuid', resp)
 
     def test_server_get_one_by_admin(self):
         # when the evil tenant is admin, he can do everything.
@@ -146,7 +146,7 @@ class TestServerAuthorization(v1_test.APITestV1):
         headers = self.gen_headers(self.context, roles="admin")
         resp = self.get_json('/servers/%s' % self.server1.uuid,
                              headers=headers)
-        self.assertIn('node', resp)
+        self.assertIn('node_uuid', resp)
 
     def test_server_get_one_unauthorized(self):
         # not admin and not the owner
