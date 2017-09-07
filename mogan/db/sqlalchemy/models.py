@@ -103,7 +103,8 @@ class ServerNic(Base):
         Index('server_nics_server_uuid_idx', 'server_uuid'),
         table_args()
     )
-    server_uuid = Column(String(36), ForeignKey('servers.uuid'))
+    server_uuid = Column(String(36), ForeignKey('servers.uuid'),
+                         nullable=False)
     port_id = Column(String(36), primary_key=True)
     mac_address = Column(String(32), nullable=False)
     network_id = Column(String(36), nullable=True)
@@ -175,7 +176,7 @@ class FlavorProjects(Base):
     )
     id = Column(Integer, primary_key=True)
     flavor_id = Column(Integer, ForeignKey('flavors.id'),
-                       nullable=True)
+                       nullable=False)
     project_id = Column(String(36), nullable=True)
     flavors = orm.relationship(
         Flavors,
@@ -207,13 +208,13 @@ class QuotaUsage(Base):
     __tablename__ = 'quota_usages'
     __table_args__ = (
         schema.UniqueConstraint('resource_name', 'project_id',
-                                name='uniq_quotas0resource_name'),
+                                name='uniq_quota_usages0resource_name'),
         Index('quota_usage_project_id_idx', 'project_id'),
         table_args()
     )
 
     id = Column(Integer, primary_key=True)
-    project_id = Column(String(255), index=True)
+    project_id = Column(String(255))
     resource_name = Column(String(255))
     in_use = Column(Integer)
     reserved = Column(Integer)
@@ -238,7 +239,7 @@ class Reservation(Base):
     uuid = Column(String(36), nullable=False)
     usage_id = Column(Integer, ForeignKey('quota_usages.id'), nullable=True)
     allocated_id = Column(Integer, ForeignKey('quotas.id'), nullable=True)
-    project_id = Column(String(255), index=True)
+    project_id = Column(String(255))
     resource_name = Column(String(255))
     delta = Column(Integer)
     expire = Column(DateTime, nullable=False)
@@ -295,7 +296,6 @@ class Aggregate(Base):
 
     __tablename__ = 'aggregates'
     __table_args__ = (
-        Index('aggregate_uuid_idx', 'uuid'),
         table_args()
     )
     id = Column(Integer, primary_key=True)
@@ -356,7 +356,7 @@ class ServerGroup(Base):
     user_id = Column(String(255))
     project_id = Column(String(255))
     uuid = Column(String(36), nullable=False)
-    name = Column(String(255))
+    name = Column(String(255), nullable=False)
     _policies = orm.relationship(
         ServerGroupPolicy,
         primaryjoin='ServerGroup.id == ServerGroupPolicy.group_id')

@@ -39,9 +39,11 @@ def upgrade():
         sa.Column('resources', sa.Text(), nullable=True),
         sa.Column('resource_traits', sa.Text(), nullable=True),
         sa.Column('resource_aggregates', sa.Text(), nullable=True),
-        sa.Column('is_public', sa.Boolean(), nullable=False),
-        sa.Column('disabled', sa.Boolean(), nullable=False),
+        sa.Column('is_public', sa.Boolean(), nullable=True),
+        sa.Column('disabled', sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('uuid', name='uniq_flavors0uuid'),
+        sa.UniqueConstraint('name', name='uniq_flavors0name'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
@@ -55,6 +57,8 @@ def upgrade():
         sa.ForeignKeyConstraint(['flavor_id'],
                                 ['flavors.id']),
         sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('flavor_id', 'project_id',
+                            name='uniq_flavor_projects0flavor_id0project_id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
@@ -62,11 +66,11 @@ def upgrade():
         'servers',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('uuid', sa.String(length=36), nullable=True),
+        sa.Column('uuid', sa.String(length=36), nullable=False),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.String(length=36), nullable=True),
         sa.Column('project_id', sa.String(length=36), nullable=True),
-        sa.Column('name', sa.String(length=255), nullable=True),
+        sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('description', sa.String(length=255), nullable=True),
         sa.Column('status', sa.String(length=255), nullable=True),
         sa.Column('power_state', sa.String(length=15), nullable=True),
@@ -83,28 +87,26 @@ def upgrade():
         sa.Column('key_name', sa.String(length=255), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('uuid', name='uniq_servers0uuid'),
+        sa.Index('servers_project_id_idx', 'project_id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
-    op.create_index('servers_project_id_idx', 'servers', ['project_id'],
-                    unique=False)
     op.create_table(
         'server_nics',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('server_uuid', sa.String(length=36), nullable=False),
+        sa.Column('server_uuid', sa.String(length=36),
+                  sa.ForeignKey('servers.uuid'), nullable=False),
         sa.Column('port_id', sa.String(length=36), nullable=False),
-        sa.Column('mac_address', sa.String(length=36), nullable=True),
+        sa.Column('mac_address', sa.String(length=36), nullable=False),
         sa.Column('network_id', sa.String(length=36), nullable=True),
         sa.Column('floating_ip', sa.String(length=64), nullable=True),
         sa.Column('fixed_ips', sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(['server_uuid'], ['servers.uuid'], ),
         sa.PrimaryKeyConstraint('port_id'),
+        sa.Index('server_nics_server_uuid_idx', 'server_uuid'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
-    op.create_index('server_nics_server_uuid_idx', 'server_nics',
-                    ['server_uuid'], unique=False)
     op.create_table(
         'server_faults',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -116,18 +118,17 @@ def upgrade():
         sa.Column('detail', sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(['server_uuid'], ['servers.uuid']),
         sa.PrimaryKeyConstraint('id'),
+        sa.Index('server_faults_server_uuid_idx', 'server_uuid'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
-    op.create_index('server_faults_server_uuid_idx', 'server_faults',
-                    ['server_uuid'], unique=False)
     op.create_table(
         'quotas',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('project_id', sa.String(length=36), nullable=True),
-        sa.Column('resource_name', sa.String(length=255), nullable=True),
+        sa.Column('project_id', sa.String(length=36), nullable=False),
+        sa.Column('resource_name', sa.String(length=255), nullable=False),
         sa.Column('hard_limit', sa.Integer(), nullable=True),
         sa.Column('allocated', sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
@@ -148,43 +149,41 @@ def upgrade():
         sa.Column('until_refresh', sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('resource_name', 'project_id',
-                            name='uniq_quotas_usages0resource_name'),
+                            name='uniq_quota_usages0resource_name'),
+        sa.Index('quota_usage_project_id_idx', 'project_id'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
-    op.create_index('quota_usage_project_id_idx', 'quota_usages',
-                    ['project_id'], unique=False)
     op.create_table(
         'reservations',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('uuid', sa.String(length=36), nullable=True),
+        sa.Column('uuid', sa.String(length=36), nullable=False),
         sa.Column('usage_id', sa.Integer(), nullable=True),
         sa.Column('allocated_id', sa.Integer(), nullable=True),
         sa.Column('project_id', sa.String(length=36), nullable=True),
         sa.Column('resource_name', sa.String(length=255), nullable=True),
         sa.Column('delta', sa.Integer(), nullable=True),
-        sa.Column('expire', sa.DateTime(), nullable=True),
+        sa.Column('expire', sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(['usage_id'],
                                 ['quota_usages.id']),
         sa.ForeignKeyConstraint(['allocated_id'],
                                 ['quotas.id']),
         sa.PrimaryKeyConstraint('id'),
+        sa.Index('reservations_project_id_idx', 'project_id'),
         sa.UniqueConstraint('uuid', name='uniq_reservation0uuid'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
-    op.create_index('reservations_project_id_idx', 'reservations',
-                    ['project_id'], unique=False)
     op.create_table(
         'key_pairs',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
-        sa.Column('user_id', sa.String(length=255), nullable=True),
-        sa.Column('project_id', sa.String(length=36), nullable=True),
+        sa.Column('user_id', sa.String(length=255), nullable=False),
+        sa.Column('project_id', sa.String(length=36), nullable=False),
         sa.Column('fingerprint', sa.String(255)),
         sa.Column('public_key', sa.Text()),
         sa.Column('type', sa.Enum('ssh', 'x509'), nullable=False,
@@ -216,18 +215,18 @@ def upgrade():
         sa.PrimaryKeyConstraint('id'),
         sa.ForeignKeyConstraint(['aggregate_id'],
                                 ['aggregates.id']),
+        sa.UniqueConstraint('aggregate_id', 'key',
+                            name='uniq_aggregate_metadata0aggregate_id0key'),
+        sa.Index('aggregate_metadata_key_idx', 'key'),
         mysql_ENGINE='InnoDB',
         mysql_DEFAULT_CHARSET='UTF8'
     )
-    op.create_index('aggregate_metadata_key_idx', 'aggregate_metadata',
-                    ['key'], unique=False)
-
     op.create_table(
         'server_groups',
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
-        sa.Column('uuid', sa.String(length=36), nullable=True),
+        sa.Column('uuid', sa.String(length=36), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('user_id', sa.String(length=255), nullable=True),
         sa.Column('project_id', sa.String(length=255), nullable=True),
@@ -242,7 +241,8 @@ def upgrade():
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
         sa.Column('policy', sa.String(length=36), nullable=True),
-        sa.Column('group_id', sa.String(length=255), nullable=False),
+        sa.Column('group_id', sa.Integer, sa.ForeignKey('server_groups.id'),
+                  nullable=False),
         sa.Index('server_group_policy_policy_idx', 'policy'),
         sa.PrimaryKeyConstraint('id'),
         mysql_engine='InnoDB',
