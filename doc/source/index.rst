@@ -26,6 +26,21 @@ Mogan is an OpenStack project which offers bare metals as first class
 resources to users, supporting variety of bare metal provisioning drivers
 including Ironic.
 
+Contributor Guide
+=================
+
+If you are new to mogan, this section contains information that should help
+you get started as a developer working on the project or contributing to the
+project.
+
+.. toctree::
+  :maxdepth: 1
+
+  contributor/code-contribution-guide
+  contributor/dev-quickstart
+  contributor/make-changes-to-database
+  contributor/testing
+
 Installation Guide
 ==================
 
@@ -63,21 +78,6 @@ Configuration Guide
 
   configuration/sample_config
   configuration/sample_policy
-
-
-Contributor Guide
-=================
-
-If you are new to mogan, this section contains information that should help
-you get started as a developer working on the project or contributing to the
-project.
-
-.. toctree::
-  :maxdepth: 1
-
-  contributor/code-contribution-guide
-  contributor/dev-quickstart
-  contributor/testing
 
 
 Command References
