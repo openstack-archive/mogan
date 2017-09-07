@@ -90,7 +90,6 @@ class TestServers(v1_test.APITestV1):
                 "resources": {"CUSTOM_GOLD": 1}}
         self.post_json('/flavors', body, headers=headers, status=201)
 
-    @mock.patch('mogan.scheduler.rpcapi.SchedulerAPI.select_destinations')
     @mock.patch('oslo_utils.uuidutils.generate_uuid')
     def _prepare_server(self, amount, mocked, mock_select_dest):
         # NOTE(wanghao): Since we added quota reserve in creation option,
