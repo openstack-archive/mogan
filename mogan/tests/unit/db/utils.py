@@ -21,6 +21,7 @@ from mogan.db import api as db_api
 
 
 def get_test_server(**kw):
+    server_uuid = uuidutils.generate_uuid()
     fake_server_nics = [{
         'port_id': uuidutils.generate_uuid(),
         'network_id': 'bf942f63-c284-4eb8-925b-c2fa1a89ed33',
@@ -40,7 +41,7 @@ def get_test_server(**kw):
 
     return {
         'id': kw.get('id', 123),
-        'uuid': kw.get('uuid', uuidutils.generate_uuid()),
+        'uuid': kw.get('uuid', server_uuid),
         'name': kw.get('name', 'test'),
         'description': kw.get('description', 'test'),
         'project_id': kw.get('project_id',
