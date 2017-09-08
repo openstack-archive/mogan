@@ -37,6 +37,7 @@ def get_test_server(**kw):
             }
         ],
         'floating_ip': '',
+        'preserve_on_delete': False,
     }, ]
 
     return {
