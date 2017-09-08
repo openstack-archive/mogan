@@ -67,7 +67,9 @@ def show_addresses(nics):
             address.append({'addr': nic['floating_ip'],
                             'type': 'floating'})
         key = nic.get('network_id')
-        if key:
+        if addresses.get(key):
+            addresses[key] = addresses[key] + address
+        else:
             addresses[key] = address
     return addresses
 
