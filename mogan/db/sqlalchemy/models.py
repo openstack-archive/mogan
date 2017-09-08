@@ -110,6 +110,7 @@ class ServerNic(Base):
     network_id = Column(String(36), nullable=True)
     fixed_ips = Column(db_types.JsonEncodedList)
     floating_ip = Column(String(64), nullable=True)
+    preserve_on_delete = Column(Boolean)
     _server = orm.relationship(
         Server,
         backref=orm.backref('server_nics', uselist=False),

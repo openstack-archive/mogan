@@ -289,9 +289,9 @@ class EngineManager(base_manager.BaseEngineManager):
                 server.save()
 
     def destroy_networks(self, context, server):
-        ports = server.nics.get_port_ids()
-        for port in ports:
-            self._detach_interface(context, server, port)
+        for nic in server.nics:
+            self._detach_interface(context, server, nic.port_id,
+                                   nic.preserve_on_delete)
 
     def _rollback_servers_quota(self, context, number):
         reserve_opts = {'servers': number}
@@ -582,24 +582,28 @@ class EngineManager(base_manager.BaseEngineManager):
                 vif_port = self.network_api.show_port(context, port_id)
             except Exception:
                 raise exception.PortNotFound(port_id=port_id)
-
-            self.network_api.check_port_availability(vif_port)
+            try:
+                self.network_api.check_port_availability(vif_port)
+                self.network_api.bind_port(context, port_id, server)
+            except Exception as e:
+                raise exception.InterfaceAttachFailed(message=six.text_type(e))
+            preserve_on_delete = True
 
         else:
             LOG.debug("Attaching network interface %(net_id) to server "
                       "%(server)s", {'net_id': net_id, 'server': server})
             vif_port = self.network_api.create_port(context, net_id,
                                                     server.uuid)
+            preserve_on_delete = False
 
         try:
-            vif = self.network_api.bind_port(context, vif_port['id'], server)
-            vif_port = vif['port']
             self.driver.plug_vif(server.node_uuid, vif_port['id'])
             nics_obj = objects.ServerNics(context)
             nic_dict = {'port_id': vif_port['id'],
                         'network_id': vif_port['network_id'],
                         'mac_address': vif_port['mac_address'],
                         'fixed_ips': vif_port['fixed_ips'],
+                        'preserve_on_delete': preserve_on_delete,
                         'server_uuid': server.uuid}
             nics_obj.objects.append(objects.ServerNic(
                 context, **nic_dict))
@@ -614,7 +618,7 @@ class EngineManager(base_manager.BaseEngineManager):
             raise exception.InterfaceAttachFailed(message=six.text_type(e))
         LOG.info('Attaching interface successfully')
 
-    def _detach_interface(self, context, server, port_id):
+    def _detach_interface(self, context, server, port_id, preserve=False):
         try:
             self.driver.unplug_vif(context, server, port_id)
         except exception.MoganException as e:
@@ -624,7 +628,11 @@ class EngineManager(base_manager.BaseEngineManager):
             raise exception.InterfaceDetachFailed(server_uuid=server.uuid)
         else:
             try:
-                self.network_api.delete_port(context, port_id, server.uuid)
+                if preserve:
+                    vif_port = self.network_api.show_port(context, port_id)
+                    self.network_api.unbind_port(context, vif_port)
+                else:
+                    self.network_api.delete_port(context, port_id, server.uuid)
             except Exception as e:
                 raise exception.InterfaceDetachFailed(server_uuid=server.uuid)
 
@@ -637,7 +645,12 @@ class EngineManager(base_manager.BaseEngineManager):
     def detach_interface(self, context, server, port_id):
         LOG.debug("Detaching interface %(port_id) from server %(server)s",
                   {'port_id': port_id, 'server': server.uuid})
-        self._detach_interface(context, server, port_id)
+        try:
+            db_nic = objects.ServerNic.get_by_port_id(context, port_id)
+            preserve = db_nic['preserve_on_delete']
+        except exception.PortNotFound:
+            preserve = False
+        self._detach_interface(context, server, port_id, preserve)
 
         LOG.info('Interface was successfully detached')
 

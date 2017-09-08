@@ -117,6 +117,13 @@ class Connection(object):
         This delete a nic db entry.
         """
 
+    @abc.abstractmethod
+    def server_nic_get(self, context, port_id):
+        """Get a nic db entry.
+
+        This gets a nic db entry.
+        """
+
     # Servers Faults
     @abc.abstractmethod
     def server_fault_create(self, context, values):
