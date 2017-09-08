@@ -98,6 +98,7 @@ def upgrade():
         sa.Column('network_id', sa.String(length=36), nullable=True),
         sa.Column('floating_ip', sa.String(length=64), nullable=True),
         sa.Column('fixed_ips', sa.Text(), nullable=True),
+        sa.Column('preserve_on_delete', sa.Boolean(), nullable=True),
         sa.ForeignKeyConstraint(['server_uuid'], ['servers.uuid'], ),
         sa.PrimaryKeyConstraint('port_id'),
         mysql_ENGINE='InnoDB',
