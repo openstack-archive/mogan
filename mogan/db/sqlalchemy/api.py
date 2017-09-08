@@ -344,6 +344,14 @@ class Connection(api.Connection):
         if count != 1:
             raise exception.PortNotFound(port_id=port_id)
 
+    def server_nic_get(self, context, port_id):
+        query = model_query(context, models.ServerNic).filter_by(
+            port_id=port_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.PortNotFound(port_id=port_id)
+
     @oslo_db_api.retry_on_deadlock
     def server_nic_update_or_create(self, context, port_id, values):
         with _session_for_write() as session:
