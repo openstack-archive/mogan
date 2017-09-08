@@ -157,6 +157,10 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 elif vif.get('port_id'):
                     port = self.manager.network_api.show_port(
                         context, vif.get('port_id'))
+                    self.manager.network_api.check_port_availability(port)
+                    self.manager.network_api.bind_port(context,
+                                                       port['id'],
+                                                       server)
 
                 nic_dict = {'port_id': port['id'],
                             'network_id': port['network_id'],
