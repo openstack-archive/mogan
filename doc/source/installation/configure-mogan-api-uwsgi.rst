@@ -59,7 +59,7 @@ Steps to use these sample configuration files:
    automatically create a socket dir::
 
       $ sudo mkdir -p /etc/tmpfiles.d/
-      $ echo "d /var/run/uwsgi 0755 <STACK_USER> root" | sudo tee/etc/tmpfiles.d/uwsgi.conf
+      $ echo "d /var/run/uwsgi 0755 <STACK_USER> root" | sudo tee /etc/tmpfiles.d/uwsgi.conf
       $ sudo systemd-tmpfiles --create /etc/tmpfiles.d/uwsgi.conf
 
 3. Enable Mogan site. On deb-based systems::
