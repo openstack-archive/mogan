@@ -346,6 +346,7 @@ class EngineManager(base_manager.BaseEngineManager):
 
             for (server, node) in six.moves.zip(servers, nodes):
                 server.node_uuid = node
+                server.node = self.driver.get_node_name(context, node)
                 server.save()
                 # Add a retry entry for the selected node
                 retry_nodes = retry['nodes']
