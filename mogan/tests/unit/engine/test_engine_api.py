@@ -395,3 +395,26 @@ class ComputeAPIUnitTest(base.DbTestCase):
             self.context,
             self.user_id,
             'test_keypair')
+
+    @mock.patch.object(engine_rpcapi.EngineAPI, 'manage_server')
+    @mock.patch.object(engine_api.API, '_check_num_servers_quota')
+    def test_manage(self, check_quota_mock, mock_manage_server):
+        node_uuid = 'aacdbd78-d670-409e-95aa-ecfcfb94fee2'
+        mock_manage_server.return_value = mock.MagicMock()
+
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        before_in_use = 0
+        if res.get('servers') is not None:
+            before_in_use = res.get('servers').in_use
+
+        self.engine_api.manage(self.context,
+                               node_uuid=node_uuid,
+                               name='fake-name',
+                               description='fake-descritpion',
+                               metadata={'k1', 'v1'})
+
+        check_quota_mock.assert_called_once_with(self.context, 1, 1)
+        self.assertTrue(mock_manage_server.called)
+        res = self.dbapi._get_quota_usages(self.context, self.project_id)
+        after_in_use = res.get('servers').in_use
+        self.assertEqual(before_in_use + 1, after_in_use)

@@ -68,6 +68,10 @@ server_group_id = {
     'type': 'string', 'format': 'uuid'
 }
 
+node_uuid = {
+    'type': 'string', 'format': 'uuid'
+}
+
 metadata = {
     'type': 'object',
     'patternProperties': {
