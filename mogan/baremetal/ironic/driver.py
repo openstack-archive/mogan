@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 from ironicclient import exc as ironic_exc
 from ironicclient import exceptions as client_e
 from oslo_log import log as logging
@@ -227,13 +229,23 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         _log_ironic_polling(message, node, server)
 
-    def get_ports_from_node(self, node_uuid, detail=True):
-        """List the MAC addresses and the port types from a node."""
-        ports = self.ironicclient.call("node.list_ports",
-                                       node_uuid, detail=detail)
-        portgroups = self.ironicclient.call("portgroup.list", node=node_uuid,
-                                            detail=detail)
-        return ports + portgroups
+    def get_portgroups_and_ports(self, node_uuid):
+        """List ports and portgroups of a node."""
+        free_ports = []
+        ports_by_portgroup = collections.defaultdict(list)
+        ports = self.ironicclient.call("node.list_ports", node_uuid)
+        for p in ports:
+            if p.portgroup_id is None:
+                free_ports.append(p)
+            else:
+                ports_by_portgroup[p.portgroup_id].append(p)
+
+        portgroups = self.ironicclient.call("portgroup.list", node=node_uuid)
+        for pg in portgroups:
+            if ports_by_portgroup[pg.id]:
+                free_ports.append(pg)
+
+        return free_ports
 
     def plug_vif(self, node_uuid, port_id):
         self.ironicclient.call("node.vif_attach", node_uuid, port_id)
