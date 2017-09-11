@@ -379,17 +379,16 @@ class ComputeAPIUnitTest(base.DbTestCase):
         self.assertEqual(before_in_use + 1, after_in_use)
 
     def test_create_key_pairs_with_over_quota_limit(self):
+        self.config(keypairs_hard_limit=1, group='quota')
         res = self.dbapi._get_quota_usages(self.context, self.project_id)
         before_in_use = 0
         if res.get('keypairs') is not None:
             before_in_use = res.get('keypairs').in_use
-        for i in range(1, 101):
-            key_name = 'test_keypair_%s' % str(i)
-            self.engine_api.create_key_pair(self.context, self.user_id,
-                                            key_name)
+        self.engine_api.create_key_pair(self.context, self.user_id,
+                                        'test_keypair')
         res = self.dbapi._get_quota_usages(self.context, self.project_id)
         after_in_use = res.get('keypairs').in_use
-        self.assertEqual(before_in_use + 100, after_in_use)
+        self.assertEqual(before_in_use + 1, after_in_use)
         self.assertRaises(
             exception.OverQuota,
             self.engine_api.create_key_pair,
