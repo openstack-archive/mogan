@@ -139,6 +139,13 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
+    def get_node_name(node):
+        """Get the name of a node.
+
+        :param node: the uuid of the node.
+        """
+        raise NotImplementedError()
+
     def get_manageable_nodes(self):
         """Retrieve all manageable nodes information.
 
