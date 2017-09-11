@@ -134,10 +134,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
         self.manager = manager
 
     def _build_networks(self, context, server, requested_networks):
-
-        # TODO(zhenguo): This seems not needed as our scheduler has already
-        # guaranteed this.
-        ports = self.manager.driver.get_ports_from_node(server.node_uuid)
+        ports = self.manager.driver.get_portgroups_and_ports(server.node_uuid)
         if len(requested_networks) > len(ports):
             raise exception.InterfacePlugException(_(
                 "Ironic node: %(id)s virtual to physical interface count"
