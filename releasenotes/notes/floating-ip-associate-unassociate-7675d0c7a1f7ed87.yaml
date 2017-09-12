@@ -1,4 +1,0 @@
----
-features:
-  - Add floating IP related methods, so users can associate/disassociate FIP
-    to their servers.

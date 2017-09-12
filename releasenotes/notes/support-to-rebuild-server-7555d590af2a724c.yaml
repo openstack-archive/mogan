@@ -1,4 +1,0 @@
----
-features:
-  - Support to rebuild the baremetal server in Mogan. This feature allows
-    users to redeploy their servers.
