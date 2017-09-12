@@ -67,6 +67,7 @@ Administrator Guide
 .. toctree::
   :maxdepth: 1
 
+  admin/flavors
   admin/gmr
 
 
