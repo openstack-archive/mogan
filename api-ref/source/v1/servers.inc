@@ -120,7 +120,7 @@ These are the parameters beyond single create that are supported.
 Response
 --------
 
-The first server will be returned. The returned paramaters is same to creating
+The first server will be returned. The returned parameters is same to creating
 a single server's.
 
 **Example Create Multiple Server: JSON response**
@@ -301,7 +301,7 @@ Update Server
 
 .. rest_method:: PATCH /servers/{server_uuid}
 
-Updates the infromation stored about a server.
+Updates the information stored about a server.
 
 Normal response codes: 200
 
