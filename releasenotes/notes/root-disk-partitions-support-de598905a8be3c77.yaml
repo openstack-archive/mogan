@@ -1,0 +1,5 @@
+---
+features:
+    Add root disk partitions support, allow users to specify root, ephemeral
+    and swap partitions when claiming a server. This feature is only available
+    for partition images.
