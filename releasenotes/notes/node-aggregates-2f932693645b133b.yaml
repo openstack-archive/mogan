@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Node aggregate allows the partition of bare metal nodes into logical groups
+    for server distribution. Which is quite like Nova host aggregate, but we
+    are based on bare metal nodes.

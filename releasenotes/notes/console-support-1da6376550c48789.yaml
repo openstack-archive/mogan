@@ -1,4 +1,0 @@
----
-features:
-  - Support to get console from bms, introduce the console API, consoleauth
-    manager and shellinabox console proxy.

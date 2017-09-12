@@ -1,0 +1,4 @@
+---
+features:
+    Add support for serial protocol console, there are two connection types,
+    shellinabox and socat.
