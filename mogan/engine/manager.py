@@ -393,6 +393,10 @@ class EngineManager(base_manager.BaseEngineManager):
             with excutils.save_and_reraise_exception():
                 utils.process_event(fsm, server, event='error')
                 self._rollback_servers_quota(context, -1)
+                notifications.notify_about_server_action(
+                    context, server, self.host,
+                    action=fields.NotificationAction.CREATE,
+                    phase=fields.NotificationPhase.ERROR)
                 msg = _("Create manager server flow failed.")
                 LOG.exception(msg)
 
@@ -411,19 +415,26 @@ class EngineManager(base_manager.BaseEngineManager):
                 server.power_state = states.NOSTATE
                 utils.process_event(fsm, server, event='error')
                 self._rollback_servers_quota(context, -1)
+                notifications.notify_about_server_action(
+                    context, server, self.host,
+                    action=fields.NotificationAction.CREATE,
+                    phase=fields.NotificationPhase.ERROR)
                 LOG.error("Created server %(uuid)s failed."
                           "Exception: %(exception)s",
                           {"uuid": server.uuid,
                            "exception": e})
-        else:
-            # Advance the state model for the given event. Note that this
-            # doesn't alter the server in any way. This may raise
-            # InvalidState, if this event is not allowed in the current state.
-            server.power_state = self.driver.get_power_state(context,
-                                                             server.uuid)
-            server.launched_at = timeutils.utcnow()
-            utils.process_event(fsm, server, event='done')
-            LOG.info("Created server %s successfully.", server.uuid)
+        # Advance the state model for the given event. Note that this
+        # doesn't alter the server in any way. This may raise
+        # InvalidState, if this event is not allowed in the current state.
+        server.power_state = self.driver.get_power_state(context,
+                                                         server.uuid)
+        server.launched_at = timeutils.utcnow()
+        utils.process_event(fsm, server, event='done')
+        notifications.notify_about_server_action(
+            context, server, self.host,
+            action=fields.NotificationAction.CREATE,
+            phase=fields.NotificationPhase.END)
+        LOG.info("Created server %s successfully.", server.uuid)
 
     def _delete_server(self, context, server):
         """Delete a server
@@ -431,8 +442,6 @@ class EngineManager(base_manager.BaseEngineManager):
         :param context: mogan request context
         :param server: server object
         """
-        # TODO(zhenguo): Add delete notification
-
         try:
             self.destroy_networks(context, server)
         except Exception as e:
@@ -446,7 +455,10 @@ class EngineManager(base_manager.BaseEngineManager):
     def delete_server(self, context, server):
         """Delete a server."""
         LOG.debug("Deleting server: %s.", server.uuid)
-
+        notifications.notify_about_server_action(
+            context, server, self.host,
+            action=fields.NotificationAction.DELETE,
+            phase=fields.NotificationPhase.START)
         fsm = utils.get_state_machine(start_state=server.status,
                                       target_state=states.DELETED)
 
@@ -475,6 +487,10 @@ class EngineManager(base_manager.BaseEngineManager):
         server.power_state = states.NOSTATE
         utils.process_event(fsm, server, event='done')
         server.destroy()
+        notifications.notify_about_server_action(
+            context, server, self.host,
+            action=fields.NotificationAction.DELETE,
+            phase=fields.NotificationPhase.END)
         LOG.info("Deleted server successfully.")
 
     @wrap_server_fault
