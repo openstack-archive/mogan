@@ -60,12 +60,10 @@ class BaseEngineDriver(object):
         """
         raise NotImplementedError()
 
-    def get_ports_from_node(self, node_uuid, detail=True):
-        """Get a node's ports info.
+    def get_portgroups_and_ports(self, node_uuid):
+        """Get a node's portgroups and ports info.
 
         :param node_uuid: node id to get ports info.
-        :param detail: whether to get detailed info of all the ports,
-            default to False.
         """
         raise NotImplementedError()
 
