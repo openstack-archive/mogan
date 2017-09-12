@@ -720,6 +720,7 @@ class EngineManager(base_manager.BaseEngineManager):
                             'network_id': port_dict['network_id'],
                             'mac_address': port_dict['mac_address'],
                             'fixed_ips': port_dict['fixed_ips'],
+                            'preserve_on_delete': False,
                             'server_uuid': server.uuid}
 
                 # Check if the neutron port's mac address matches the port
@@ -749,6 +750,7 @@ class EngineManager(base_manager.BaseEngineManager):
         # Set the server information
         server.image_uuid = image_uuid
         server.node_uuid = node['uuid']
+        server.node = node['name']
         server.nics = nics_obj
         server.power_state = node['power_state']
         server.launched_at = timeutils.utcnow()
