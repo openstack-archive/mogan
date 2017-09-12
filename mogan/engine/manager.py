@@ -749,6 +749,7 @@ class EngineManager(base_manager.BaseEngineManager):
         # Set the server information
         server.image_uuid = image_uuid
         server.node_uuid = node['uuid']
+        server.node = node['name']
         server.nics = nics_obj
         server.power_state = node['power_state']
         server.launched_at = timeutils.utcnow()
