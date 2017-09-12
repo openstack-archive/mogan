@@ -101,8 +101,9 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
                              filter_properties=filter_properties)
 
     def revert(self, context, result, flow_failures, server, **kwargs):
-        # Clean up associated node uuid
+        # Clean up associated node
         server.node_uuid = None
+        server.node = None
         server.save()
 
         # Check if we have a cause which can tell us not to reschedule and

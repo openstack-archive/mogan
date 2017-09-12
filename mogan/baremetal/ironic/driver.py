@@ -753,6 +753,19 @@ class IronicDriver(base_driver.BaseEngineDriver):
         return (not node.instance_uuid and node.provision_state ==
                 ironic_states.AVAILABLE)
 
+    def get_node_name(self, node):
+        """Get the name of a node.
+
+        :param node: the uuid of the node.
+        """
+        try:
+            node = self.ironicclient.call(
+                'node.get', node, fields=('name',))
+        except Exception:
+            return None
+
+        return node.name
+
     def get_manageable_nodes(self):
         nodes = self._get_manageable_nodes()
         manageable_nodes = []
