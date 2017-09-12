@@ -42,6 +42,7 @@ class ServerNic(base.MoganObject, object_base.VersionedObjectDictCompat):
         'fixed_ips': object_fields.ListOfDictOfNullableStringsField(
             nullable=True),
         'floating_ip': object_fields.StringField(nullable=True),
+        'preserve_on_delete': object_fields.BooleanField(),
     }
 
     @staticmethod
@@ -61,6 +62,10 @@ class ServerNic(base.MoganObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def delete_by_port_id(cls, context, port_id):
         cls.dbapi.server_nic_delete(context, port_id)
+
+    @classmethod
+    def get_by_port_id(cls, context, port_id):
+        return cls.dbapi.server_nic_get(context, port_id)
 
     def save(self, context):
         updates = self.obj_get_changes()

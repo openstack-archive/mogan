@@ -151,6 +151,7 @@ class BuildNetworkTask(flow_utils.MoganTask):
                 if vif.get('net_id'):
                     port = self.manager.network_api.create_port(
                         context, vif['net_id'], server.uuid)
+                    preserve_on_delete = False
                 elif vif.get('port_id'):
                     port = self.manager.network_api.show_port(
                         context, vif.get('port_id'))
@@ -158,11 +159,13 @@ class BuildNetworkTask(flow_utils.MoganTask):
                     self.manager.network_api.bind_port(context,
                                                        port['id'],
                                                        server)
+                    preserve_on_delete = True
 
                 nic_dict = {'port_id': port['id'],
                             'network_id': port['network_id'],
                             'mac_address': port['mac_address'],
                             'fixed_ips': port['fixed_ips'],
+                            'preserve_on_delete': preserve_on_delete,
                             'server_uuid': server.uuid}
 
                 server_nic = objects.ServerNic(context, **nic_dict)
