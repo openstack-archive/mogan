@@ -69,6 +69,7 @@ Administrator Guide
   :maxdepth: 1
 
   admin/flavors
+  admin/aggregates
   admin/gmr
 
 
