@@ -289,13 +289,6 @@ flavor_name:
   in: body
   required: true
   type: string
-flavor_resource_traits:
-  description: |
-    A dict of key and value pairs associate with the flavor including the resource
-    name and the qualities.
-  in: body
-  required: false
-  type: object
 flavor_resources:
   description: |
     A dict of key and value pairs associate with the flavor including the resource

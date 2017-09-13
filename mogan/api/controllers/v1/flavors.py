@@ -69,9 +69,6 @@ class Flavor(base.APIBase):
     resources = {wtypes.text: types.jsontype}
     """The resources of the flavor"""
 
-    resource_traits = {wtypes.text: types.jsontype}
-    """The resource traits of the flavor"""
-
     resource_aggregates = {wtypes.text: types.jsontype}
     """The resource aggregates of the flavor"""
 
@@ -112,7 +109,6 @@ class FlavorPatchType(types.JsonPatchType):
     def internal_attrs():
         defaults = types.JsonPatchType.internal_attrs()
         return defaults + ['/description', '/resources',
-                           '/resource_traits',
                            '/resource_aggregates']
 
 
