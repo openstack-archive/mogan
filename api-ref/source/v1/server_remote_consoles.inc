@@ -16,7 +16,7 @@ get a URL to connect the console from this API. The URL includes the token
 which is used to get permission to access the console. Servers may support
 different console protocols. To return a remote console using a specific
 protocol, such as serial, set the ``protocol`` parameter to ``serial``. For the
-same protocol, there may be different connection types such as ``serial protocal
+same protocol, there may be different connection types such as ``serial protocol
 and socat type`` or ``serial protocol and shellinabox type``.
 
 Normal response code: 200
