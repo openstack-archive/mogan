@@ -56,8 +56,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         resource_class = CONF.baremetal_compute_plugin.baremetal_resource_class
         body = {"name": data_utils.rand_name('tempest-flavor'),
                 "description": "flavor to be used by tempest",
-                'is_public': True, 'resources': {resource_class: 1},
-                'resource_traits': {resource_class: 'foo'}}
+                'is_public': True, 'resources': {resource_class: 1}}
         tempest_flavor = cls.baremetal_compute_client.create_flavor(**body)
         return tempest_flavor['uuid']
 

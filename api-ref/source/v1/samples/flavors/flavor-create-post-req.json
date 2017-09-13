@@ -4,9 +4,6 @@
     "resources": {
         "CUSTOM_BAREMETAL_GOLD": 1
     },
-    "resource_traits": {
-        "CUSTOM_BAREMETAL_GOLD": "FPGA"
-    },
     "resource_aggregates": {
         "high_mem": "true"
     },

@@ -34,7 +34,6 @@ class TestFlavorAuthorization(v1_test.APITestV1):
         self.assertIn('description', resp)
         self.assertIn('links', resp)
         self.assertNotIn('resources', resp)
-        self.assertNotIn('resource_traits', resp)
 
     def test_flavor_get_one_by_admin(self):
         # role is admin, he can get everything.
@@ -47,4 +46,3 @@ class TestFlavorAuthorization(v1_test.APITestV1):
         self.assertIn('description', resp)
         self.assertIn('links', resp)
         self.assertIn('resources', resp)
-        self.assertIn('resource_traits', resp)
