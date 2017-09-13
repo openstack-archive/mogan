@@ -32,9 +32,6 @@ class ExceptionPayload(base.NotificationPayloadBase):
     @classmethod
     def from_exception(cls, fault):
         trace = inspect.trace()[-1]
-        # TODO(gibi): apply strutils.mask_password on exception_message and
-        # consider emitting the exception_message only if the safe flag is
-        # true in the exception like in the REST API
         module = inspect.getmodule(trace[0])
         module_name = module.__name__ if module else 'unknown'
         return cls(
