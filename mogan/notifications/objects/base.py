@@ -76,8 +76,8 @@ class NotificationPayloadBase(NotificationObject):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
-    def __init__(self, **kwargs):
-        super(NotificationPayloadBase, self).__init__(**kwargs)
+    def __init__(self):
+        super(NotificationPayloadBase, self).__init__()
         self.populated = not self.SCHEMA
 
     def populate_schema(self, **kwargs):
