@@ -21,10 +21,6 @@ Normal response codes: 200
 
 Error response codes: unauthorized(401), forbidden(403)
 
-Request
--------
-
-
 Response
 --------
 
