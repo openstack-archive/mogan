@@ -1,0 +1,43 @@
+{
+    "event_type": "server.create.error",
+    "payload": {
+        "mogan_object.name": "ServerActionPayload",
+        "mogan_object.namespace": "mogan",
+        "mogan_object.version": "1.0",
+        "mogan_object.data": {
+            "status": "error",
+            "node": "node-0",
+            "locked": false,
+            "uuid": "c6e12c34-8917-4b95-938e-e146faf1de97",
+            "availability_zone": null,
+            "fault": {
+                "mogan_object.name": "ExceptionPayload",
+                "mogan_object.namespace": "mogan",
+                "mogan_object.version": "1.0",
+                "mogan_object.data": {
+                    "module_name": "mogan.engine.manager",
+                    "exception": "ServerDeployAborted",
+                    "exception_message": "Server c6e12c34-8917-4b95-938e-e146faf1de97 provisioning was aborted",
+                    "function_name": "_create_server"
+                }
+            },
+            "created_at": "2017-09-14T01:31:48Z",
+            "locked_by": null,
+            "updated_at": null,
+            "description": null,
+            "metadata": {},
+            "user_id": "9851baf53c75452dad7951bca7b3dbac",
+            "affinity_zone": null,
+            "power_state": null,
+            "flavor_uuid": "737ea130-153b-4599-b7b2-dc4c82480a31",
+            "image_uuid": "91d3f6fd-012d-4d19-8140-abfe39d1c332",
+            "project_id": "b5f8b7e5429449a8a1366088abede8d1",
+            "partitions": {},
+            "launched_at": null,
+            "key_name": null,
+            "name": "test"
+        }
+    },
+    "priority": "ERROR",
+    "publisher_id": "mogan-engine:localhost"
+}
