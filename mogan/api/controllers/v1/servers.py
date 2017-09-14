@@ -459,6 +459,9 @@ class Server(base.APIBase):
     key_name = wtypes.text
     """The ssh key name of the server"""
 
+    partitions = types.jsontype
+    """The partitions of the server"""
+
     def __init__(self, **kwargs):
         super(Server, self).__init__(**kwargs)
         self.fields = []
