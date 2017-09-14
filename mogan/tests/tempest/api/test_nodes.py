@@ -15,14 +15,6 @@ from mogan.tests.tempest.api import base
 
 
 class BaremetalComputeAPINodesTest(base.BaseBaremetalComputeTest):
-    @classmethod
-    def resource_setup(cls):
-        pass
-
-    @classmethod
-    def resource_cleanup(cls):
-        pass
-
     def test_nodes_list(self):
         nodes = self.baremetal_compute_client.list_nodes()
         self.assertIsInstance(nodes, list)
