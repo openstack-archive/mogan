@@ -226,8 +226,9 @@ class TestNotificationBase(test_base.TestCase):
 
 
 notification_object_data = {
-    'ServerPayload': '1.0-6a060a6bebc672c105c14b4cef979527',
-    'ServerActionPayload': '1.0-b558fd2bcce6388507b67a834f09689f',
+    'ServerPayload': '1.0-55ce3a2c615a32c80b152aaf2b905703',
+    'ServerAddressesPayload': '1.0-69caf4c36f36756bb1f6970d093ee1f6',
+    'ServerActionPayload': '1.0-a22c2f18b8dd17a3990e5b4c64989d26',
     'ServerActionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
     'ExceptionPayload': '1.0-7c31986d8d78bed910c324965c431e18',
     'ExceptionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',

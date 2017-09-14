@@ -30,7 +30,14 @@ class ServerPayload(base.NotificationPayloadBase):
         'status': ('server', 'status'),
         'power_state': ('server', 'power_state'),
         'flavor_uuid': ('server', 'flavor_uuid'),
-        'description': ('server', 'description')
+        'description': ('server', 'description'),
+        'locked': ('server', 'locked'),
+        'locked_by': ('server', 'locked_by'),
+        'affinity_zone': ('server', 'affinity_zone'),
+        'metadata': ('server', 'metadata'),
+        'partitions': ('server', 'partitions'),
+        'key_name': ('server', 'key_name'),
+        'node': ('server', 'node')
     }
     # Version 1.0: Initial version
     VERSION = '1.0'
@@ -48,13 +55,60 @@ class ServerPayload(base.NotificationPayloadBase):
         'launched_at': fields.DateTimeField(nullable=True),
         'updated_at': fields.DateTimeField(nullable=True),
         'status': fields.StringField(nullable=True),
-        # 'network_info'
-        # 'extra'
+        'locked': fields.BooleanField(nullable=True),
+        'locked_by': fields.StringField(nullable=True),
+        'affinity_zone': fields.StringField(nullable=True),
+        'metadata': fields.FlexibleDictField(nullable=True),
+        'partitions': fields.FlexibleDictField(nullable=True),
+        'key_name': fields.StringField(nullable=True),
+        'node': fields.StringField(nullable=True),
+        'addresses': fields.ListOfObjectsField('ServerAddressesPayload',
+                                               nullable=True)
     }
 
-    def __init__(self, server, **kwargs):
-        super(ServerPayload, self).__init__(**kwargs)
+    def __init__(self, server):
+        super(ServerPayload, self).__init__()
         self.populate_schema(server=server)
+        self.addresses = ServerAddressesPayload.from_server_obj(server)
+
+
+@mogan_base.MoganObjectRegistry.register_notification
+class ServerAddressesPayload(base.NotificationPayloadBase):
+    # Version 1.0: Initial version
+    VERSION = '1.0'
+    fields = {
+        'port_id': fields.UUIDField(nullable=True),
+        'mac_address': fields.MACAddressField(),
+        'fixed_ips': fields.ListOfDictOfNullableStringsField(
+            nullable=True),
+        'network_id': fields.UUIDField(nullable=True),
+        'floating_ip': fields.StringField(nullable=True),
+        'preserve_on_delete': fields.BooleanField(nullable=True)
+    }
+
+    SCHEMA = {
+        'port_id': ('nic', 'port_id'),
+        'mac_address': ('nic', 'mac_address'),
+        'fixed_ips': ('nic', 'fixed_ips'),
+        'network_id': ('nic', 'network_id'),
+        'floating_ip': ('nic', 'floating_ip'),
+        'preserve_on_delete': ('nic', 'preserve_on_delete'),
+    }
+
+    def __init__(self, nic_obj):
+        super(ServerAddressesPayload, self).__init__()
+        self.populate_schema(nic=nic_obj)
+
+    @classmethod
+    def from_server_obj(cls, server):
+        """Returns a list of a server's addresses.
+        """
+        if not server.nics:
+            return []
+        addresses = []
+        for nic in server.nics:
+            addresses.append(cls(nic))
+        return addresses
 
 
 @mogan_base.MoganObjectRegistry.register_notification
@@ -66,11 +120,9 @@ class ServerActionPayload(ServerPayload):
         'fault': fields.ObjectField('ExceptionPayload', nullable=True),
     }
 
-    def __init__(self, server, fault, **kwargs):
-        super(ServerActionPayload, self).__init__(
-            server=server,
-            fault=fault,
-            **kwargs)
+    def __init__(self, server, fault):
+        super(ServerActionPayload, self).__init__(server=server)
+        self.fault = fault
 
 
 @mogan_base.MoganObjectRegistry.register_notification
