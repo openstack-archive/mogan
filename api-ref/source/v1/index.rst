@@ -16,3 +16,4 @@ Baremetal Compute API V1 (CURRENT)
 .. include:: availability_zones.inc
 .. include:: aggregates.inc
 .. include:: server_groups.inc
+.. include:: manageable_servers.inc

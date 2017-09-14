@@ -32,8 +32,6 @@ Response
   - portgroups: manageable_servers_portgroups
   - image_source: manageable_servers_image_source
 
-|
-
 **Example List manageable servers information**
 
 .. literalinclude:: samples/manageable_servers/manageable-servers-list-resp.json
@@ -65,7 +63,7 @@ Request
 
 **Example Manage Server: JSON request**
 
-.. literalinclude:: samples/servers/manageable-server-create-req.json
+.. literalinclude:: samples/manageable_servers/server-manage-req.json
    :language: javascript
 
 Response
@@ -96,5 +94,5 @@ Response
 
 **Example Manage Server: JSON response**
 
-.. literalinclude:: samples/servers/manageable-server-manage-resp.json
+.. literalinclude:: samples/manageable_servers/server-manage-resp.json
    :language: javascript

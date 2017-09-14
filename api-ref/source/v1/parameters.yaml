@@ -109,6 +109,13 @@ flavor_query:
   in: query
   required: false
   type: string
+group_all_tenants:
+  description: |
+    Specify the ``all_tenants=1`` query parameter to list server groups
+    for all projects. By default this is only allowed by admin users.
+  in: query
+  required: false
+  type: integer
 image_query:
   description: |
     Filters the server list by image's UUID.

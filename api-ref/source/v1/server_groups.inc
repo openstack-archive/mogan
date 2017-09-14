@@ -22,7 +22,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - all_tenants: all_tenants
+  - all_tenants: group_all_tenants
 
 Response
 --------
