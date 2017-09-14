@@ -198,7 +198,7 @@ function create_flavor {
     fi
     name="baremetal_${ironic_node_cpu}cpu_${ironic_node_ram}mbram_${ironic_node_disk}gbdisk"
     description="CPU: ${ironic_node_cpu}, RAM: ${ironic_node_ram}MB, DISK: ${ironic_node_disk}GB"
-    openstack baremetalcompute flavor create ${name} --description "${description}" --resources $IRONIC_DEFAULT_RESOURCE_CLASS=1
+    openstack baremetalcompute flavor create ${name} --description "${description}" --resource $IRONIC_DEFAULT_RESOURCE_CLASS=1
 }
 
 
