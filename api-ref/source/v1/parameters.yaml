@@ -427,7 +427,7 @@ links:
   type: array
 lock_state:
   description: |
-    The request to lock/unlock servers.
+    The lock state of a server.
   in: body
   required: true
   type: boolean

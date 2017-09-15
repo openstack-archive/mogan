@@ -75,6 +75,7 @@ Response
   - affinity_zone: affinity_zone
   - key_name: key_name
   - partitions: partitions
+  - locked: lock_state
 
 **Example Create Server: JSON response**
 
@@ -229,6 +230,7 @@ Response
   - affinity_zone: affinity_zone
   - key_name: key_name
   - partitions: partitions
+  - locked: lock_state
 
 **Example Detailed list of Servers: JSON response**
 
@@ -284,6 +286,7 @@ Response
   - affinity_zone: affinity_zone
   - key_name: key_name
   - partitions: partitions
+  - locked: lock_state
 
 **Example Server Details: JSON response**
 
@@ -347,6 +350,7 @@ Response
   - affinity_zone: affinity_zone
   - key_name: key_name
   - partitions: partitions
+  - locked: lock_state
 
 **Example Update Server: JSON response**
 
