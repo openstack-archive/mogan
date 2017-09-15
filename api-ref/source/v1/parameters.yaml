@@ -572,14 +572,6 @@ port_uuid:
   in: body
   required: false
   type: string
-power_state:
-  description: |
-    The current power state of this Server. Usually, "power on" or
-    "power off", but may be "None" if Mogan is unable to determine the power
-    state (eg, due to hardware failure).
-  in: body
-  required: true
-  type: string
 power_state_target:
   description: |
     This field represents the requested state either "on", "off", "soft_off",
