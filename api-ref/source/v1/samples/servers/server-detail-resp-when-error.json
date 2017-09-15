@@ -14,6 +14,7 @@
     "power_state": "power on",
     "project_id": "c18e8a1a870d4c08a0b51ced6e0b6459",
     "status": "error",
+    "locked": false,
     "fault": {
         "code": 500,
         "message": "fault message",
