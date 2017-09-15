@@ -1,0 +1,4 @@
+---
+features:
+    Allow mogan to manage running nodes from backend drivers, which permits
+    an operator to migrate bare metal nodes to openstack.
