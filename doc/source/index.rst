@@ -59,6 +59,7 @@ User Guide
 
   user/states
   user/root-disk-partitions
+  user/server-groups
 
 
 Administrator Guide
