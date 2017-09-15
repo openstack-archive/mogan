@@ -133,13 +133,6 @@ class BaremetalComputeClient(rest_client.RestClient):
             body = self.deserialize(body)
         return rest_client.ResponseBody(resp, body)
 
-    def server_get_state(self, server_id):
-        uri = '%s/servers/%s/states' % (self.uri_prefix, server_id)
-        resp, body = self.get(uri)
-        self.expected_success(200, resp.status)
-        body = self.deserialize(body)
-        return rest_client.ResponseBody(resp, body)
-
     def server_set_power_state(self, server_id, target):
         uri = '%s/servers/%s/states/power' % (self.uri_prefix, server_id)
         target_body = {'target': target}
