@@ -31,6 +31,7 @@
                 "swap_mb": 40960
             },
             "power_state": "power on",
+            "locked": false,
             "project_id": "c18e8a1a870d4c08a0b51ced6e0b6459",
             "status": "building",
             "updated_at": "2016-10-17T04:12:44+00:00",

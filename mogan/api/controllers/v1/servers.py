@@ -462,6 +462,9 @@ class Server(base.APIBase):
     partitions = types.jsontype
     """The partitions of the server"""
 
+    locked = types.boolean
+    """Represent the current lock state of the server"""
+
     def __init__(self, **kwargs):
         super(Server, self).__init__(**kwargs)
         self.fields = []
@@ -513,7 +516,7 @@ class ServerPatchType(types.JsonPatchType):
                            '/power_state', '/availability_zone',
                            '/flavor_uuid', '/image_uuid', '/addresses',
                            '/launched_at', '/affinity_zone', '/key_name',
-                           '/partitions', '/fault', '/node']
+                           '/partitions', '/fault', '/node', '/locked']
 
 
 class ServerCollection(base.APIBase):
