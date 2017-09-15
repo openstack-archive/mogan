@@ -58,6 +58,7 @@ User Guide
   :maxdepth: 1
 
   user/states
+  user/availability-zones
   user/root-disk-partitions
 
 
