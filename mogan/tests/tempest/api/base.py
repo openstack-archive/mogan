@@ -115,7 +115,7 @@ class BaseBaremetalComputeTest(tempest.test.BaseTestCase):
         while not _condition():
             time.sleep(wait_interval)
             try:
-                body = cls.baremetal_compute_client.server_get_state(server_id)
+                body = cls.baremetal_compute_client.show_server(server_id)
                 server_status = body['status']
                 server_power_state = body['power_state']
                 server_locked = body['locked']

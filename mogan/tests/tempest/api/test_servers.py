@@ -81,14 +81,11 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         pass
 
     def _ensure_states_before_test(self):
-        resp = self.baremetal_compute_client.server_get_state(
+        server = self.baremetal_compute_client.show_server(
             self.server_ids[0])
-        self.assertEqual('active', resp['status'])
-        self.assertFalse(resp['locked'])
-        self.assertEqual('power on', resp['power_state'])
-
-    def test_get_server_power_status(self):
-        self._ensure_states_before_test()
+        self.assertEqual('active', server['status'])
+        self.assertFalse(server['locked'])
+        self.assertEqual('power on', server['power_state'])
 
     def test_server_stop_start(self):
         self._ensure_states_before_test()

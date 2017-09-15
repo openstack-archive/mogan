@@ -10,36 +10,6 @@ A Server can be rebooted, turned on, or turned off by requesting a change to
 its power state.
 
 
-Server State Summary
-======================
-
-.. rest_method:: GET /v1/servers/{server_uuid}/states
-
-Get a summary of the Server's current states.
-
-Normal response code: 200
-
-Request
--------
-
-.. rest_parameters:: parameters.yaml
-
-    - server_uuid: server_ident
-
-Response
---------
-
-.. rest_parameters:: parameters.yaml
-
-  - power_state: power_state
-  - locked: lock_state
-  - status: server_status
-
-**Example server state:**
-
-.. literalinclude:: samples/server_states/server-get-state-response.json
-
-
 Change Server Power State
 ===========================
 
