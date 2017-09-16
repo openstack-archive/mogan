@@ -60,6 +60,7 @@ User Guide
   user/states
   user/availability-zones
   user/root-disk-partitions
+  user/server-groups
 
 
 Administrator Guide
