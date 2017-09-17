@@ -231,7 +231,6 @@ notification_object_data = {
     'ServerActionPayload': '1.0-a22c2f18b8dd17a3990e5b4c64989d26',
     'ServerActionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
     'ExceptionPayload': '1.0-7c31986d8d78bed910c324965c431e18',
-    'ExceptionNotification': '1.0-20087e599436bd9db62ae1fb5e2dfef2',
     'EventType': '1.0-93493dd78bdfed806fca70c91d85cbb4',
     'NotificationPublisher': '1.0-4b0b0d662b21eeed0b23617f3f11794b'
 }

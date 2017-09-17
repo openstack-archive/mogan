@@ -15,6 +15,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('../'))
 # -- General configuration ----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -25,6 +26,7 @@ extensions = [
     'oslo_config.sphinxconfiggen',
     'oslo_policy.sphinxpolicygen',
     'sphinx.ext.graphviz',
+    'ext.versioned_notifications',
 ]
 
 # openstackdocstheme options
