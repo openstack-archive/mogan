@@ -40,6 +40,7 @@ project.
   contributor/dev-quickstart
   contributor/make-changes-to-database
   contributor/testing
+  contributor/notifications
 
 Installation Guide
 ==================
