@@ -39,12 +39,3 @@ class ExceptionPayload(base.NotificationPayloadBase):
             module_name=module_name,
             exception=fault.__class__.__name__,
             exception_message=six.text_type(fault))
-
-
-@moban_base.MoganObjectRegistry.register_notification
-class ExceptionNotification(base.NotificationBase):
-    # Version 1.0: Initial version
-    VERSION = '1.0'
-    fields = {
-        'payload': fields.ObjectField('ExceptionPayload')
-    }
