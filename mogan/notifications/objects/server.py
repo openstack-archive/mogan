@@ -125,6 +125,11 @@ class ServerActionPayload(ServerPayload):
         self.fault = fault
 
 
+@base.notification_sample('server-create-start.json')
+@base.notification_sample('server-create-end.json')
+@base.notification_sample('server-create-error.json')
+@base.notification_sample('server-delete-start.json')
+@base.notification_sample('server-delete-end.json')
 @mogan_base.MoganObjectRegistry.register_notification
 class ServerActionNotification(base.NotificationBase):
     # Version 1.0: Initial version
