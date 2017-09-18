@@ -3,7 +3,7 @@
     "description": "this is a test server",
     "flavor_uuid": "0607b5f3-6111-424d-ba46-f5de39a6fa69",
     "image_uuid": "efe0a06f-ca95-4808-b41e-9f55b9c5eb98",
-    "availability_zone" : "Beijing-01",
+    "availability_zone": "Beijing-01",
     "status": "active",
     "power_state": "on",
     "links": [
@@ -25,12 +25,12 @@
     "project_id": "2f15c3524826465a9afbd150478b3b76",
     "user_id": "a6205fcab03d4a289251f420456b1289",
     "addresses": {},
-    "partitions" : {
+    "partitions": {
         "root_gb": 100,
         "ephemeral_gb": 400,
         "swap_mb": 40960
     },
     "metadata": {
-        "My Server Name" : "Apache1"
+        "My Server Name": "Apache1"
     }
 }

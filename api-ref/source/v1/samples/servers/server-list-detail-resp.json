@@ -25,7 +25,7 @@
                     }
                 ]
             },
-            "partitions" : {
+            "partitions": {
                 "root_gb": 100,
                 "ephemeral_gb": 400,
                 "swap_mb": 40960
@@ -40,7 +40,7 @@
             "user_id": "cdbf77d47f1d4d04ad9b7ff62b672467",
             "uuid": "f978ef48-d4af-4dad-beec-e6174309bc71",
             "metadata": {
-                "My Server Name" : "Apache1"
+                "My Server Name": "Apache1"
             }
         }
     ]

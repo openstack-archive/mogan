@@ -32,7 +32,7 @@
             }
         ]
     },
-    "partitions" : {
+    "partitions": {
         "root_gb": 100,
         "ephemeral_gb": 400,
         "swap_mb": 40960

@@ -13,10 +13,10 @@
                 "net_id": "8e8ceb07-4641-4188-9b22-840755e92ee2"
             }
         ],
-        "metadata" : {
-            "My Server Name" : "Apache1"
+        "metadata": {
+            "My Server Name": "Apache1"
         },
-        "partitions" : {
+        "partitions": {
             "root_gb": 100,
             "ephemeral_gb": 400,
             "swap_mb": 40960
@@ -30,5 +30,7 @@
         "user_data": "IyEvYmluL2Jhc2gKL2Jpbi9zdQplY2hvICJJIGFtIGluIHlvdSEiCg==",
         "key_name": "test_key"
     },
-    "scheduler_hints": {"group": "group1"}
+    "scheduler_hints": {
+        "group": "group1"
+    }
 }
