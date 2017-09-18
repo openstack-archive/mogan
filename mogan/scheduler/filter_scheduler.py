@@ -125,6 +125,8 @@ class FilterScheduler(driver.Scheduler):
         return server_group
 
     def _get_nodes_of_aggregates(self, aggregates):
+        if not aggregates:
+            return []
         agg_uuids = [agg.uuid for agg in aggregates]
         query_filters = {'member_of': 'in:' + ','.join(agg_uuids)}
         rps = self.reportclient.get_filtered_resource_providers(query_filters)
@@ -171,7 +173,8 @@ class FilterScheduler(driver.Scheduler):
                     _log_and_raise_error('affinity')
                 return selected_affz, selected_nodes[:num_servers]
 
-        all_aggs = objects.AggregateList.get_all(context)
+        all_aggs = objects.AggregateList.get_by_metadata_key(
+            context, 'affinity_zone')
         all_aggs = sorted(all_aggs, key=lambda a: a.metadata.get(
             'affinity_zone'))
         grouped_aggs = itertools.groupby(
