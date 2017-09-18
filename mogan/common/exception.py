@@ -454,7 +454,7 @@ class Base64Exception(Invalid):
 
 
 class KeypairExists(Conflict):
-    _msg_fmt = _("KeyPaire with key name %(key_name)s already exists.")
+    _msg_fmt = _("Keypair with key name %(key_name)s already exists.")
 
 
 class KeypairNotFound(NotFound):
