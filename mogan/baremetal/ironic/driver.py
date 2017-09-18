@@ -289,7 +289,7 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         # add server info to node
         node = self._get_node(node_uuid)
-        self._add_server_info_to_node(node, server, partitions)
+        self._add_server_info_to_node(node, server, None, partitions)
         # validate we are ready to do the deploy
         validate_chk = self.ironicclient.call("node.validate", node_uuid)
         if (not validate_chk.deploy.get('result')
