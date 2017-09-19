@@ -6,7 +6,7 @@
     "server_type_uuid": "28708dff-283c-449e-9bfa-a48c93480c86",
     "name": "test_server",
     "addresses": {},
-    "partitions" : {
+    "partitions": {
         "root_gb": 100,
         "ephemeral_gb": 400,
         "swap_mb": 40960
@@ -20,12 +20,12 @@
         "message": "fault message",
         "detail": "fault detail"
     },
-    "launched_at" : null,
+    "launched_at": null,
     "affinity_zone": null,
     "updated_at": "2016-10-17T04:12:44+00:00",
     "user_id": "cdbf77d47f1d4d04ad9b7ff62b672467",
     "uuid": "f978ef48-d4af-4dad-beec-e6174309bc71",
     "metadata": {
-        "My Server Name" : "Apache1"
+        "My Server Name": "Apache1"
     }
 }
