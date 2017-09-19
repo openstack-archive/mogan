@@ -131,7 +131,8 @@ class Flavor(base.MoganObject, object_base.VersionedObjectDictCompat):
         if added_projects or deleted_projects:
             self.save_projects(context, added_projects, deleted_projects)
 
-        self.dbapi.flavor_update(context, self.uuid, updates)
+        if updates:
+            self.dbapi.flavor_update(context, self.uuid, updates)
 
     def save_projects(self, context, to_add=None, to_delete=None):
         """Add or delete projects.
