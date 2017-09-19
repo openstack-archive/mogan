@@ -553,7 +553,11 @@ class API(object):
         keypair.fingerprint = fingerprint
         keypair.public_key = public_key
         keypair.project_id = context.tenant
-        keypair.create()
+        try:
+            keypair.create()
+        except Exception:
+            with excutils.save_and_reraise_exception():
+                self.quota.rollback(context, reservations)
         # Commit keypairs reservations
         if reservations:
             self.quota.commit(context, reservations)
@@ -577,7 +581,11 @@ class API(object):
         keypair.fingerprint = fingerprint
         keypair.public_key = public_key
         keypair.project_id = context.tenant
-        keypair.create()
+        try:
+            keypair.create()
+        except Exception:
+            with excutils.save_and_reraise_exception():
+                self.quota.rollback(context, reservations)
         # Commit keypairs reservations
         if reservations:
             self.quota.commit(context, reservations)
