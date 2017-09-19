@@ -538,16 +538,25 @@ class API(object):
     def import_key_pair(self, context, user_id, key_name, public_key,
                         key_type=keypair_obj.KEYPAIR_TYPE_SSH):
         """Import a key pair using an existing public key."""
+        LOG.debug('Going to import an existing key pair')
         self._validate_new_key_pair(context, user_id, key_name, key_type)
         fingerprint = self._generate_fingerprint(public_key, key_type)
 
+        # Create the keypair reservations
+        num_keypairs = self._check_num_keypairs_quota(context, 1)
+        reserve_opts = {'keypairs': num_keypairs}
+        reservations = self.quota.reserve(context, **reserve_opts)
         keypair = objects.KeyPair(context)
         keypair.user_id = user_id
         keypair.name = key_name
         keypair.type = key_type
         keypair.fingerprint = fingerprint
         keypair.public_key = public_key
+        keypair.project_id = context.tenant
         keypair.create()
+        # Commit keypairs reservations
+        if reservations:
+            self.quota.commit(context, reservations)
         return keypair
 
     def create_key_pair(self, context, user_id, key_name,
