@@ -1,0 +1,12 @@
+Code-Review+1: Xinran WANG <xin-ran.wang@intel.com>
+Code-Review+2: Zhenguo Niu <Niu.ZGlinux@gmail.com>
+Code-Review+1: Tao Li <litao3721@126.com>
+Code-Review+1: wanghao <sxmatch1986@gmail.com>
+Code-Review+2: ShaoHe Feng <shaohe.feng@intel.com>
+Workflow+1: ShaoHe Feng <shaohe.feng@intel.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 19 Sep 2017 03:45:44 +0000
+Reviewed-on: https://review.openstack.org/504926
+Project: openstack/mogan
+Branch: refs/heads/master
