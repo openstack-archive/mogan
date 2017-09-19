@@ -171,13 +171,7 @@ class FlavorAccessController(rest.RestController):
 
         flavor = objects.Flavor.get(pecan.request.context,
                                     flavor_uuid)
-        # TODO(zhenguo): this should be synchronized.
-        if tenant_id in flavor.projects:
-            flavor.projects.remove(tenant_id)
-            flavor.save()
-        else:
-            raise exception.FlavorAccessNotFound(flavor_id=flavor.uuid,
-                                                 project_id=tenant_id)
+        flavor.save_projects(pecan.request.context, to_delete=[tenant_id])
 
 
 class FlavorsController(rest.RestController):
