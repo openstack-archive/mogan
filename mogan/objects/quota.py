@@ -1,5 +1,8 @@
 # Copyright 2017 Fiberhome Integration Technologies Co.,LTD
 # All Rights Reserved.
+# Copyright 2010 United States Government as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# All Rights Reserved.
 #
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,7 +17,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Quotas for servers."""
+'''
+Quotas for servers.
+Leverages cinder/quota.py
+'''
 
 import datetime
 
