@@ -13,6 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+'''
+Leverages nova/scheduler/client/report.py
+'''
+
 import functools
 import re
 import time

@@ -14,7 +14,7 @@
 #    under the License.
 
 '''
-Websocket proxy that is compatible with OpenStack Mogan.
+Websocket proxy that is based on websocketproxy.py from Nova.
 Leverages websockify.py by Joel Martin
 '''
 

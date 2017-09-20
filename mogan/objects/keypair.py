@@ -1,4 +1,5 @@
-# Copyright 2017 Huawei Technologies Co.,LTD.
+#    Copyright 2017 Huawei Technologies Co.,LTD.
+#    Copyright 2013 IBM Corp.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,6 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+'''
+Leverages nova/objects/keypair.py
+'''
 
 from oslo_versionedobjects import base as object_base
 

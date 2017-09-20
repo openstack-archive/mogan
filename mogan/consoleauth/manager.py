@@ -13,6 +13,10 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+'''
+Leverages nova/consoleauth/manager.py
+'''
+
 """Auth Components for Consoles."""
 
 import time

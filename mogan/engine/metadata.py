@@ -14,6 +14,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+'''
+Leverages nova/api/metadata.py
+'''
+
 """Server Metadata information."""
 
 import posixpath

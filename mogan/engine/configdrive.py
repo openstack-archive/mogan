@@ -13,6 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+'''
+Leverages nova/virt/configdrive.py by Michael Still
+'''
+
 """Config Drive v2 helper."""
 
 import os
