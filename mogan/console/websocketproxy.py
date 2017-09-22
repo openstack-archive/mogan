@@ -14,30 +14,30 @@
 #    under the License.
 
 '''
-Websocket proxy that is compatible with OpenStack Nova.
+Websocket proxy that is based on websocketproxy.py from Nova.
 Leverages websockify.py by Joel Martin
 '''
 
 import socket
 import sys
 
-from oslo_log import log as logging
+from oslo_context import context
+from oslo_log import log
 from six.moves import http_cookies as Cookie
 import six.moves.urllib.parse as urlparse
 import websockify
 
-import nova.conf
-from nova.consoleauth import rpcapi as consoleauth_rpcapi
-from nova import context
-from nova import exception
-from nova.i18n import _
+from mogan.common import exception
+from mogan.common.i18n import _
+from mogan.consoleauth import rpcapi as consoleauth_rpcapi
 
-LOG = logging.getLogger(__name__)
-
-CONF = nova.conf.CONF
+LOG = log.getLogger(__name__)
 
 
-class NovaProxyRequestHandlerBase(object):
+class MoganProxyRequestHandler(websockify.ProxyRequestHandler):
+    def socket(self, *args, **kwargs):
+        return websockify.WebSocketServer.socket(*args, **kwargs)
+
     def address_string(self):
         # NOTE(rpodolyaka): override the superclass implementation here and
         # explicitly disable the reverse DNS lookup, which might fail on some
@@ -48,7 +48,7 @@ class NovaProxyRequestHandlerBase(object):
         access_url = connection_info.get('access_url')
         if not access_url:
             detail = _("No access_url in connection_info. "
-                        "Cannot validate protocol")
+                       "Cannot validate protocol")
             raise exception.ValidationError(detail=detail)
         expected_protos = [urlparse.urlparse(access_url).scheme]
         # NOTE: For serial consoles the expected protocol could be ws or
@@ -68,7 +68,7 @@ class NovaProxyRequestHandlerBase(object):
         from eventlet import hubs
         hubs.use_hub()
 
-        # The nova expected behavior is to have token
+        # The expected behavior is to have token
         # passed to the method GET of the request
         parse = urlparse.urlparse(self.path)
         if parse.scheme not in ('http', 'https'):
@@ -107,32 +107,6 @@ class NovaProxyRequestHandlerBase(object):
         if not connect_info:
             raise exception.InvalidToken(token=token)
 
-        # Verify Origin
-        expected_origin_hostname = self.headers.get('Host')
-        if ':' in expected_origin_hostname:
-            e = expected_origin_hostname
-            if '[' in e and ']' in e:
-                expected_origin_hostname = e.split(']')[0][1:]
-            else:
-                expected_origin_hostname = e.split(':')[0]
-        expected_origin_hostnames = CONF.console.allowed_origins
-        expected_origin_hostnames.append(expected_origin_hostname)
-        origin_url = self.headers.get('Origin')
-        # missing origin header indicates non-browser client which is OK
-        if origin_url is not None:
-            origin = urlparse.urlparse(origin_url)
-            origin_hostname = origin.hostname
-            origin_scheme = origin.scheme
-            if origin_hostname == '' or origin_scheme == '':
-                detail = _("Origin header not valid.")
-                raise exception.ValidationError(detail=detail)
-            if origin_hostname not in expected_origin_hostnames:
-                detail = _("Origin header does not match this host.")
-                raise exception.ValidationError(detail=detail)
-            if not self.verify_origin_proto(connect_info, origin_scheme):
-                detail = _("Origin header protocol does not match this host.")
-                raise exception.ValidationError(detail=detail)
-
         self.msg(_('connect info: %s'), str(connect_info))
         host = connect_info['host']
         port = int(connect_info['port'])
@@ -145,16 +119,13 @@ class NovaProxyRequestHandlerBase(object):
         # Handshake as necessary
         if connect_info.get('internal_access_path'):
             tsock.send("CONNECT %s HTTP/1.1\r\n\r\n" %
-                        connect_info['internal_access_path'])
-            end_token = "\r\n\r\n"
+                       connect_info['internal_access_path'])
             while True:
                 data = tsock.recv(4096, socket.MSG_PEEK)
-                token_loc = data.find(end_token)
-                if token_loc != -1:
+                if data.find("\r\n\r\n") != -1:
                     if data.split("\r\n")[0].find("200") == -1:
                         raise exception.InvalidConnectionInfo()
-                    # remove the response from recv buffer
-                    tsock.recv(token_loc + len(end_token))
+                    tsock.recv(len(data))
                     break
 
         # Start proxying
@@ -170,16 +141,7 @@ class NovaProxyRequestHandlerBase(object):
             raise
 
 
-class NovaProxyRequestHandler(NovaProxyRequestHandlerBase,
-                              websockify.ProxyRequestHandler):
-    def __init__(self, *args, **kwargs):
-        websockify.ProxyRequestHandler.__init__(self, *args, **kwargs)
-
-    def socket(self, *args, **kwargs):
-        return websockify.WebSocketServer.socket(*args, **kwargs)
-
-
-class NovaWebSocketProxy(websockify.WebSocketProxy):
+class MoganWebSocketProxy(websockify.WebSocketProxy):
     @staticmethod
     def get_logger():
         return LOG

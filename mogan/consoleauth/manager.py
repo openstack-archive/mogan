@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) 2012 OpenStack Foundation
 # All Rights Reserved.
 #
@@ -14,60 +13,83 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+'''
+Leverages nova/consoleauth/manager.py
+'''
+
 """Auth Components for Consoles."""
 
 import time
 
+from eventlet import greenpool
+import oslo_cache
 from oslo_log import log as logging
 import oslo_messaging as messaging
 from oslo_serialization import jsonutils
 
-from nova import cache_utils
-from nova.cells import rpcapi as cells_rpcapi
-from nova.compute import rpcapi as compute_rpcapi
-import nova.conf
-from nova import context as nova_context
-from nova import manager
-from nova import objects
-
+import mogan.conf
+from mogan.engine import rpcapi
 
 LOG = logging.getLogger(__name__)
 
-CONF = nova.conf.CONF
+CONF = mogan.conf.CONF
 
 
-class ConsoleAuthManager(manager.Manager):
+class ConsoleAuthManager(object):
     """Manages token based authentication."""
 
-    target = messaging.Target(version='2.1')
+    target = messaging.Target(version='1.0')
 
-    def __init__(self, scheduler_driver=None, *args, **kwargs):
-        super(ConsoleAuthManager, self).__init__(service_name='consoleauth',
-                                                 *args, **kwargs)
-        self._mc = None
-        self._mc_instance = None
-        self.compute_rpcapi = compute_rpcapi.ComputeAPI()
-        self.cells_rpcapi = cells_rpcapi.CellsAPI()
+    def __init__(self, host, topic):
+        super(ConsoleAuthManager, self).__init__()
+        self.host = host
+        self.topic = topic
+        self._started = False
+        self._cache = None
+        self._cache_server = None
+        self.engine_rpcapi = rpcapi.EngineAPI()
+
+    def init_host(self):
+        self._worker_pool = greenpool.GreenPool(
+            size=CONF.engine.workers_pool_size)
+        self._started = True
+
+    def del_host(self):
+        self._worker_pool.waitall()
+        self._started = False
+
+    def periodic_tasks(self, context, raise_on_error=False):
+        pass
 
     @property
-    def mc(self):
-        if self._mc is None:
-            self._mc = cache_utils.get_client(CONF.consoleauth.token_ttl)
-        return self._mc
+    def cache(self):
+        if self._cache is None:
+            CONF.set_default('backend', 'dogpile.cache.memcached', 'cache')
+            CONF.set_default('enabled', True, 'cache')
+            cache_region = oslo_cache.create_region()
+            self._cache = oslo_cache.configure_cache_region(CONF, cache_region)
+        return self._cache
 
     @property
-    def mc_instance(self):
-        if self._mc_instance is None:
-            self._mc_instance = cache_utils.get_client()
-        return self._mc_instance
+    def cache_server(self):
+        """Init a permanent cache region for server token storage."""
+        if self._cache_server is None:
+            cache_ttl = CONF.cache.expiration_time
+            try:
+                CONF.set_override('expiration_time', None, 'cache')
+                cache_region = oslo_cache.create_region()
+                self._cache_server = oslo_cache.configure_cache_region(
+                    CONF, cache_region)
+            finally:
+                CONF.set_override('expiration_time', cache_ttl, 'cache')
+        return self._cache_server
 
     def reset(self):
-        LOG.info('Reloading compute RPC API')
-        compute_rpcapi.LAST_VERSION = None
-        self.compute_rpcapi = compute_rpcapi.ComputeAPI()
+        LOG.info('Reloading Mogan engine RPC API')
+        self.engine_rpcapi = rpcapi.EngineAPI()
 
-    def _get_tokens_for_instance(self, instance_uuid):
-        tokens_str = self.mc_instance.get(instance_uuid.encode('UTF-8'))
+    def _get_tokens_for_server(self, server_uuid):
+        tokens_str = self.cache_server.get(server_uuid.encode('UTF-8'))
         if not tokens_str:
             tokens = []
         else:
@@ -75,11 +97,11 @@ class ConsoleAuthManager(manager.Manager):
         return tokens
 
     def authorize_console(self, context, token, console_type, host, port,
-                          internal_access_path, instance_uuid,
+                          internal_access_path, server_uuid,
                           access_url=None):
 
         token_dict = {'token': token,
-                      'instance_uuid': instance_uuid,
+                      'server_uuid': server_uuid,
                       'console_type': console_type,
                       'host': host,
                       'port': port,
@@ -88,48 +110,34 @@ class ConsoleAuthManager(manager.Manager):
                       'last_activity_at': time.time()}
         data = jsonutils.dumps(token_dict)
 
-        self.mc.set(token.encode('UTF-8'), data)
-        tokens = self._get_tokens_for_instance(instance_uuid)
+        self.cache.set(token.encode('UTF-8'), data)
+        tokens = self._get_tokens_for_server(server_uuid)
 
         # Remove the expired tokens from cache.
-        token_values = self.mc.get_multi(
+        token_values = self.cache.get_multi(
             [tok.encode('UTF-8') for tok in tokens])
         tokens = [name for name, value in zip(tokens, token_values)
-                  if value is not None]
+                  if value]
         tokens.append(token)
 
-        self.mc_instance.set(instance_uuid.encode('UTF-8'),
-                             jsonutils.dumps(tokens))
+        self.cache_server.set(server_uuid.encode('UTF-8'),
+                              jsonutils.dumps(tokens))
 
         LOG.info("Received Token: %(token)s, %(token_dict)s",
                  {'token': token, 'token_dict': token_dict})
 
     def _validate_token(self, context, token):
-        instance_uuid = token['instance_uuid']
-        if instance_uuid is None:
+        server_uuid = token['server_uuid']
+        if server_uuid is None:
             return False
-
-        # NOTE(comstud): consoleauth was meant to run in API cells.  So,
-        # if cells is enabled, we must call down to the child cell for
-        # the instance.
-        if CONF.cells.enable:
-            return self.cells_rpcapi.validate_console_port(context,
-                    instance_uuid, token['port'], token['console_type'])
-
-        mapping = objects.InstanceMapping.get_by_instance_uuid(context,
-                                                               instance_uuid)
-        with nova_context.target_cell(context, mapping.cell_mapping) as cctxt:
-            instance = objects.Instance.get_by_uuid(cctxt, instance_uuid)
-
-            return self.compute_rpcapi.validate_console_port(
-                cctxt,
-                instance,
-                token['port'],
-                token['console_type'])
+        return True
+        # TODO(need to validate the console port)
+        # return self.compute_rpcapi.validate_console_port(
+        # context, server, token['port'], token['console_type'])
 
     def check_token(self, context, token):
-        token_str = self.mc.get(token.encode('UTF-8'))
-        token_valid = (token_str is not None)
+        token_str = self.cache.get(token.encode('UTF-8'))
+        token_valid = bool(token_str)
         LOG.info("Checking Token: %(token)s, %(token_valid)s",
                  {'token': token, 'token_valid': token_valid})
         if token_valid:
@@ -137,8 +145,8 @@ class ConsoleAuthManager(manager.Manager):
             if self._validate_token(context, token):
                 return token
 
-    def delete_tokens_for_instance(self, context, instance_uuid):
-        tokens = self._get_tokens_for_instance(instance_uuid)
-        self.mc.delete_multi(
-                [tok.encode('UTF-8') for tok in tokens])
-        self.mc_instance.delete(instance_uuid.encode('UTF-8'))
+    def delete_tokens_for_server(self, context, server_uuid):
+        tokens = self._get_tokens_for_server(server_uuid)
+        self.cache.delete_multi(
+            [tok.encode('UTF-8') for tok in tokens])
+        self.cache_server.delete(server_uuid.encode('UTF-8'))

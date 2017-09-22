@@ -1,0 +1,5 @@
+---
+features:
+    Migrate resources tracking to placement service, that makes each bare metal
+    node a "resource provider" with a custom resource class that references the
+    flavor.

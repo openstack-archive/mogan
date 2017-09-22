@@ -13,6 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+'''
+Leverages nova/virt/configdrive.py by Michael Still
+'''
+
 """Config Drive v2 helper."""
 
 import os
@@ -22,13 +26,11 @@ from oslo_utils import fileutils
 from oslo_utils import units
 import six
 
-import nova.conf
-from nova import exception
-from nova.objects import fields
-from nova import utils
-from nova import version
+from mogan.common import exception
+from mogan.common import utils
+from mogan.conf import CONF
+from mogan import version
 
-CONF = nova.conf.CONF
 
 # Config drives are 64mb, if we can't size to the exact size of the data
 CONFIGDRIVESIZE_BYTES = 64 * units.Mi
@@ -37,12 +39,12 @@ CONFIGDRIVESIZE_BYTES = 64 * units.Mi
 class ConfigDriveBuilder(object):
     """Build config drives, optionally as a context manager."""
 
-    def __init__(self, instance_md=None):
+    def __init__(self, server_md=None):
         self.imagefile = None
         self.mdfiles = []
 
-        if instance_md is not None:
-            self.add_instance_metadata(instance_md)
+        if server_md is not None:
+            self.add_server_metadata(server_md)
 
     def __enter__(self):
         return self
@@ -66,8 +68,8 @@ class ConfigDriveBuilder(object):
                 data = data.encode('utf-8')
             f.write(data)
 
-    def add_instance_metadata(self, instance_md):
-        for (path, data) in instance_md.metadata_for_config_drive():
+    def add_server_metadata(self, server_md):
+        for (path, data) in server_md.metadata_for_config_drive():
             self.mdfiles.append((path, data))
 
     def _write_md_files(self, basedir):
@@ -77,10 +79,9 @@ class ConfigDriveBuilder(object):
     def _make_iso9660(self, path, tmpdir):
         publisher = "%(product)s %(version)s" % {
             'product': version.product_string(),
-            'version': version.version_string_with_package()
-            }
+            'version': version.version_string_with_package()}
 
-        utils.execute(CONF.mkisofs_cmd,
+        utils.execute(CONF.configdrive.mkisofs_cmd,
                       '-o', path,
                       '-ldots',
                       '-allow-lowercase',
@@ -139,13 +140,13 @@ class ConfigDriveBuilder(object):
         with utils.tempdir() as tmpdir:
             self._write_md_files(tmpdir)
 
-            if CONF.config_drive_format == 'iso9660':
+            if CONF.configdrive.config_drive_format == 'iso9660':
                 self._make_iso9660(path, tmpdir)
-            elif CONF.config_drive_format == 'vfat':
+            elif CONF.configdrive.config_drive_format == 'vfat':
                 self._make_vfat(path, tmpdir)
             else:
                 raise exception.ConfigDriveUnknownFormat(
-                    format=CONF.config_drive_format)
+                    format=CONF.configdrive.config_drive_format)
 
     def cleanup(self):
         if self.imagefile:
@@ -153,26 +154,3 @@ class ConfigDriveBuilder(object):
 
     def __repr__(self):
         return "<ConfigDriveBuilder: " + str(self.mdfiles) + ">"
-
-
-def required_by(instance):
-
-    image_prop = instance.image_meta.properties.get(
-        "img_config_drive",
-        fields.ConfigDrivePolicy.OPTIONAL)
-
-    return (instance.config_drive or
-            CONF.force_config_drive or
-            image_prop == fields.ConfigDrivePolicy.MANDATORY
-            )
-
-
-def update_instance(instance):
-    """Update the instance config_drive setting if necessary
-
-    The image or configuration file settings may override the default instance
-    setting. In this case the instance needs to mirror the actual
-    virtual machine configuration.
-    """
-    if not instance.config_drive and required_by(instance):
-        instance.config_drive = True

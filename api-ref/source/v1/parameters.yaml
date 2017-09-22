@@ -1,0 +1,741 @@
+# variables in header
+openstack-request-id:
+  description: >
+    A unique ID for tracking the request. The request ID associated with the request
+    appears in the log lines for that request. By default, the middleware configuration
+    ensures that the request ID appears in the log files.
+  in: header
+  required: true
+  type: string
+
+# variables in path
+address_path:
+  description: |
+    The floating IP address.
+  in: path
+  required: true
+  type: string
+aggregate_node_path:
+  description: |
+    The name of the node.
+  in: path
+  required: true
+  type: string
+aggregate_uuid_path:
+  description: |
+    The UUID of the aggregate.
+  in: path
+  required: true
+  type: string
+api_version:
+  in: path
+  required: true
+  type: string
+  description: >
+    The API version as returned in the links from the ``GET /`` call.
+flavor_uuid_path:
+  description: |
+    The UUID of the flavor.
+  in: path
+  required: true
+  type: string
+port_ident:
+  description: |
+    The UUID of a network port.
+  in: path
+  required: true
+  type: string
+server_group_uuid_path:
+  description: |
+    The UUID of the server group.
+  in: path
+  required: true
+  type: string
+server_ident:
+  description: |
+    The UUID of the server.
+  in: path
+  required: true
+  type: string
+spec_key_path:
+  description: |
+    The key of the extra spec.
+  in: path
+  required: true
+  type: string
+tenant_id_path:
+  description: |
+    The UUID of the tenant in a multi-tenancy cloud.
+  in: path
+  required: true
+  type: string
+
+# variables in query
+all_tenants:
+  description: |
+    Specify the ``all_tenants=1`` query parameter to list all servers
+    for all projects. By default this is only allowed by admin users.
+  in: query
+  required: false
+  type: integer
+fields:
+  description: |
+    One or more fields to be returned in the response.
+
+    For example, the following request returns only the ``uuid``
+    and ``name`` fields for each server:
+
+    ::
+
+       GET /v1/servers?fields=uuid,name
+  in: query
+  required: false
+  type: array
+fixed_ip_query:
+  description: |
+    Filters the server list result by fixed ip. Users can filter by prefix of ip address.
+  in: query
+  required: false
+  type: string
+flavor_name_query:
+  description: |
+    Filters the server list by flavor's name.
+  in: query
+  required: false
+  type: string
+flavor_query:
+  description: |
+    Filters the server list by flavor's UUID.
+  in: query
+  required: false
+  type: string
+group_all_tenants:
+  description: |
+    Specify the ``all_tenants=1`` query parameter to list server groups
+    for all projects. By default this is only allowed by admin users.
+  in: query
+  required: false
+  type: integer
+image_query:
+  description: |
+    Filters the server list by image's UUID.
+  in: query
+  required: false
+  type: string
+server_name_query:
+  description: |
+    Filters the server list by name. Users can filter by prefix of server's name.
+  in: query
+  required: false
+  type: string
+status_query:
+  description: |
+    Filters the server list by the server's status.
+  in: query
+  required: false
+  type: string
+user_id:
+  description: |
+    Filters the response by a user, by ID.
+  in: query
+  required: false
+  type: string
+
+# variables in body
+
+address:
+  description: |
+    The floating IP address.
+  in: body
+  required: true
+  type: string
+addresses:
+  description: |
+    The addresses for the server.
+  in: body
+  required: true
+  type: object
+affinity_zone:
+  description: |
+    The affinity zone which the server belongs to.
+  in: body
+  required: false
+  type: string
+aggregate_metadata:
+  description: |
+    Metadata key and value pairs associate with the aggregate.
+  in: body
+  required: true
+  type: object
+aggregate_name:
+  description: |
+    The name of the node aggregate.
+  in: body
+  required: true
+  type: string
+aggregate_node:
+  description: |
+    The name of the node.
+  in: body
+  required: true
+  type: string
+aggregate_nodes:
+  description: |
+    An array of node information.
+  in: body
+  required: true
+  type: array
+aggregate_uuid:
+  description: |
+    The UUID of the node aggregate.
+  in: body
+  required: true
+  type: string
+aggregates:
+  description: |
+    The list of existing aggregates.
+  in: body
+  required: true
+  type: array
+availability_zone:
+  description: |
+    The availability zone from which to launch the server. When you provision resources,
+    you specify from which availability zone you want your server to be built.  Typically,
+    you use availability zones to arrange bare metal nodes into logical groups.
+    An availability zone provides a form of physical isolation and redundancy from
+    other availability zones. For server, if some racks in your data center are
+    on a separate power source, you can put servers in those racks in their own availability
+    zone. Availability zones can also help separate different classes of hardware.  By
+    segregating resources into availability zones, you can ensure that your application
+    resources are spread across disparate machines to achieve high availability in
+    the event of hardware or other failure.
+  in: body
+  required: false
+  type: string
+availability_zones:
+  description: |
+    An array of availability zone name.
+  in: body
+  required: true
+  type: array
+console_info:
+  description: |
+    The remote console object.
+  in: body
+  required: true
+  type: object
+console_url:
+  description: |
+    The URL is used to connect the console.
+  in: body
+  required: true
+  type: string
+created_at:
+  description: |
+    The date and time when the resource was created. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+    ::
+
+      CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``. The ``±hh:mm``
+    value, if included, is the time zone as an offset from UTC.  In
+    the previous example, the offset value is ``-05:00``.
+  in: body
+  required: true
+  type: string
+fixed_address:
+  description: |
+    The fixed IP address with which you want to associate the floating IP address.
+  in: body
+  required: false
+  type: string
+flavor_access:
+  description: |
+    A list of tenants.
+  in: body
+  required: true
+  type: array
+flavor_aggregates:
+  description: |
+    A dict of key and value pairs associate with the flavor including the resources
+    aggregate metadata.
+  in: body
+  required: true
+  type: object
+flavor_description:
+  description: |
+    The description of the flavor.
+  in: body
+  required: true
+  type: string
+flavor_disabled:
+  description: |
+    Whether or not the flavor has been administratively disabled.
+  in: body
+  required: false
+  type: boolean
+flavor_is_public:
+  description: |
+    Whether the flavor is public (available to all projects) or scoped
+    to a set of projects. Default is True if not specified.
+  in: body
+  required: true
+  type: boolean
+flavor_is_public_not_required:
+  description: |
+    Whether the flavor is public (available to all projects) or scoped
+    to a set of projects. Default is True if not specified.
+  in: body
+  required: false
+  type: boolean
+flavor_name:
+  description: |
+    The name of the flavor.
+  in: body
+  required: true
+  type: string
+flavor_resources:
+  description: |
+    A dict of key and value pairs associate with the flavor including the resource
+    name and the quantity.
+  in: body
+  required: true
+  type: object
+flavor_uuid:
+  description: |
+    The UUID of the flavor.
+  in: body
+  required: true
+  type: string
+flavorRef:
+  description: |
+    The flavor reference, as a UUID for the flavor for your server server.
+  in: body
+  required: true
+  type: string
+flavors:
+  description: |
+    An array of flavor objects.
+  in: body
+  required: true
+  type: array
+image_ident:
+  description: |
+    The UUID of the image to apply to rebuild your server.
+  in: body
+  required: false
+  type: string
+imageRef:
+  description: |
+    The UUID of the image to use for your server.
+  in: body
+  required: true
+  type: string
+key_name:
+  description: |
+    Key pair name.
+  in: body
+  required: false
+  type: string
+keypair_fingerprint:
+  in: body
+  required: true
+  type: string
+  description: |
+    The fingerprint for the keypair.
+keypair_name:
+  in: body
+  required: true
+  type: string
+  description: |
+    A name for the keypair which will be used to reference it later.
+keypair_private_key:
+  description: |
+    If you do not provide a public key on create, a new keypair will
+    be built for you, and the private key will be returned during the
+    initial create call. Make sure to save this, as there is no way to
+    get this private key again in the future.
+  in: body
+  required: false
+  type: string
+keypair_public_key:
+  description: |
+    The keypair public key.
+  in: body
+  required: true
+  type: string
+keypair_public_key_in:
+  description: |
+    The public ssh key to import. If you omit this value, a keypair is
+    generated for you.
+  in: body
+  required: false
+  type: string
+keypair_type:
+  in: body
+  required: true
+  type: string
+  description: |
+    The type of the keypair. Allowed values are ``ssh`` or ``x509``.
+keypair_type_in:
+  in: body
+  required: false
+  type: string
+  description: |
+    The type of the keypair. Allowed values are ``ssh`` or ``x509``.
+keypair_userid:
+  in: body
+  required: true
+  type: string
+  description: |
+    The user_id for a keypair.
+keypair_userid_in:
+  in: body
+  required: false
+  type: string
+  description: |
+    The user_id for a keypair. This allows administrative users to
+    upload keys for other users than themselves.
+keypairs:
+  in: body
+  type: array
+  required: true
+  description: |
+    Array of Keypair objects
+launched_at:
+  description: |
+    The date and time when the server was launched. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+    ::
+
+      CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``. The ``±hh:mm``
+    value, if included, is the time zone as an offset from UTC.  In
+    the previous example, the offset value is ``-05:00``.
+  in: body
+  required: true
+  type: string
+links:
+  description: |
+    A list of relative links. Includes the self and bookmark links.
+  in: body
+  required: true
+  type: array
+lock_state:
+  description: |
+    The lock state of a server.
+  in: body
+  required: true
+  type: boolean
+manageable_servers:
+  description: |
+    An array of manageable servers information.
+  in: body
+  required: true
+  type: array
+manageable_servers_image_source:
+  description: |
+    Image source uuid of manageable server.
+  in: body
+  required: true
+  type: string
+manageable_servers_name:
+  description: |
+    Name of manageable server.
+  in: body
+  required: true
+  type: string
+manageable_servers_portgroups:
+  description: |
+    The portgroups of manageable server.
+  in: body
+  required: true
+  type: array
+manageable_servers_ports:
+  description: |
+    The ports of manageable server.
+  in: body
+  required: true
+  type: array
+manageable_servers_power_state:
+  description: |
+    The power state of manageable server.
+  in: body
+  required: true
+  type: string
+manageable_servers_provision_state:
+  description: |
+    The provision state of manageable server.
+  in: body
+  required: true
+  type: string
+manageable_servers_resource_class:
+  description: |
+    Resource class of manageable server.
+  in: body
+  required: true
+  type: string
+manageable_servers_uuid:
+  description: |
+    UUID of manageable server.
+  in: body
+  required: true
+  type: string
+max_count_body:
+  description: |
+      The max number of servers to be created. Defaults to the value of ``min_count``.
+  in: body
+  required: false
+  type: integer
+metadata:
+  description: |
+    Metadata key and value pairs. The maximum size of the metadata key and value is
+    255 bytes each.
+  in: body
+  required: false
+  type: object
+min_count_body:
+  description: |
+    The min number of servers to be created. Defaults to 1.
+  in: body
+  required: false
+  type: integer
+multi_server_name_body:
+  description: |
+    A base name for creating unique names during multiple create. A unique
+    string will be appended to the end of this base name for every instacne
+    created.
+  in: body
+  required: true
+  type: string
+network_uuid:
+  description: |
+    To provision the server with a NIC for a network, specify the UUID of
+    the network with the ``net_id`` key in a dict in ``networks`` list.
+  in: body
+  required: false
+  type: string
+networks:
+  description: |
+    A list of networks of the tenant. Optionally, you can create one or more NICs on the server.
+    To provision the server with a NIC for a network, specify the UUID of the network
+    with the ``net_id`` key in a dict in ``networks`` list. To provision the server with a
+    specified type of NIC, specify the port-type key in a dict in a ``networks`` list.
+    To provision the server with a NIC for an already existing port, specify the port_id in
+    a ``networks`` list. Now net_id and port_id are exclusive, so you should use only one of
+    them at one time.
+  in: body
+  required: true
+  type: array
+nics:
+  description: |
+    The port info in the requested network for the server, with fixed_ip, mac_address, and
+    network uuid
+  in: body
+  required: true
+  type: object
+node:
+  description: |
+    The node which our server associated with. Only visible for admin users.
+  in: body
+  required: false
+  type: string
+nodes:
+  description: |
+    The compute node name list.
+  in: body
+  required: true
+  type: object
+partitions:
+  description: |
+    The partitions info for root disk, this is only allowed when using partition images
+    with root_gb(required), ephemeral_gb, and swap_mb.
+  in: body
+  required: false
+  type: object
+personality:
+  description: |
+    The file path and contents, text only, to inject into the server at launch. The
+    maximum size of the file path data is 255 bytes. The maximum limit is the number
+    of allowed bytes in the decoded, rather than encoded, data.
+  in: body
+  required: false
+  type: string
+port_uuid:
+  description: |
+    To provision the server with a NIC for an already existing port,
+    specify the port_id in a ``networks`` list.
+  in: body
+  required: false
+  type: string
+power_state_target:
+  description: |
+    This field represents the requested state either "on", "off", "soft_off",
+    "reboot", or "soft_reboot".
+  in: body
+  required: true
+  type: string
+preserve_ephemeral:
+  description: |
+    Indicates whether the server is rebuilt with the preservation of the ephemeral
+    partition (``true``).
+  in: body
+  required: false
+  type: boolean
+project_id_body:
+  description: |
+    The UUID of the project in a multi-tenancy cloud.
+  in: body
+  required: true
+  type: string
+provision_state:
+  description: |
+    One of the provisioning verbs, currently only support rebuild.
+  in: body
+  required: true
+  type: string
+remote_console_protocol:
+  description: |
+    The protocol of remote console. The valid value is ``serial`` now.
+  in: body
+  required: true
+  type: string
+remote_console_type:
+  description: |
+    The type of remote console. The valid values are ``socat``, and
+    ``shellinabox``.
+  in: body
+  required: true
+  type: string
+remote_console_url:
+  description: |
+    The URL is used to connect the console.
+  in: body
+  required: true
+  type: string
+scheduler_hints:
+  description: |
+    The dictionary of data send to the scheduler, it represents scheduling
+    options will be passed to scheduler.
+  in: body
+  required: false
+  type: object
+server:
+  description: |
+    The dictionary of data represent a server creation request.
+  in: body
+  required: true
+  type: object
+server_description:
+  description: |
+    A free form description of the server. Limited to 255 characters
+    in length.
+  in: body
+  required: false
+  type: string
+server_fault:
+  description: |
+    A fault object. Only displayed in the failed response.
+    Default keys are ``code``, ``message``, and ``detail``
+    (response code, message, and detail respectively).
+  in: body
+  required: false
+  type: object
+server_group_members:
+  description: |
+    A list of uuids of servers which belong to this server group.
+  in: body
+  required: false
+  type: array
+server_group_name:
+  description: |
+    The server group name.
+  in: body
+  required: true
+  type: string
+server_group_policies:
+  description: |
+    A list of exactly one policy name to associate with the server group. The
+    current valid policy names are:
+
+    - ``anti-affinity`` - servers in this group must be scheduled to
+      different affinity-zones.
+    - ``affinity`` - servers in this group must be scheduled to the same
+      affinity-zone.
+  in: body
+  required: true
+  type: array
+server_group_uuid:
+  description: |
+    The UUID of the server group.
+  in: body
+  required: true
+  type: string
+server_groups:
+  description: |
+    The list of existing server groups.
+  in: body
+  required: true
+  type: array
+server_name:
+  description: |
+    The server name.
+  in: body
+  required: true
+  type: string
+server_power_state:
+  description: |
+    The current power state of this server. Usually, “power on” or “power off”, but may be “None”
+    if Mogan is unable to determine the power state (eg, due to hardware failure)
+  in: body
+  required: true
+  type: string
+server_status:
+  description: |
+    The status of this server. Usually, "building", "active", "error", or "None".
+  in: body
+  required: true
+  type: string
+server_uuid:
+  description: |
+    The UUID of the server
+  in: body
+  required: true
+  type: string
+tenant_id_body:
+  description: |
+    The UUID of the tenant in a multi-tenancy cloud.
+  in: body
+  required: true
+  type: string
+updated_at:
+  description: |
+    The date and time when the resource was updated. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+    ::
+
+      CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``. The ``±hh:mm``
+    value, if included, is the time zone as an offset from UTC.  In
+    the previous example, the offset value is ``-05:00``.
+  in: body
+  required: true
+  type: string
+user_data:
+  description: |
+    Configuration information or scripts to use upon launch. Must be Base64 encoded.
+  in: body
+  required: false
+  type: string
+user_id_body:
+  description: |
+    The user ID of the user who owns the server.
+  in: body
+  required: true
+  type: string

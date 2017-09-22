@@ -1,0 +1,2 @@
+SetEnv proxy-sendcl 1
+ProxyPass "/baremetal_compute" "unix:/var/run/uwsgi/mogan-api-wsgi.socket|uwsgi://uwsgi-uds-mogan-api-wsgi/" retry=0

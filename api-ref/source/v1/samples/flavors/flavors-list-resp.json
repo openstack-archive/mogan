@@ -1,0 +1,54 @@
+{
+    "flavors": [
+        {
+            "description": "this is a test flavor1",
+            "links": [
+                {
+                    "href": "http://10.3.150.17:6688/v1/flavors/2ce3df6b-f571-42e8-b6a8-8f7fa1c019ce",
+                    "rel": "self"
+                },
+                {
+                    "href": "http://10.3.150.17:6688/flavors/2ce3df6b-f571-42e8-b6a8-8f7fa1c019ce",
+                    "rel": "bookmark"
+                }
+            ],
+            "resources": {
+                "CUSTOM_BAREMETAL_GOLD": 1
+            },
+            "resource_aggregates": {
+                "high_mem": "true"
+            },
+            "created_at": "2016-09-22T03:21:57+00:00",
+            "uuid": "2ce3df6b-f571-42e8-b6a8-8f7fa1c019ce",
+            "updated_at": null,
+            "is_public": true,
+            "disabled": false,
+            "name": "new_test1"
+        },
+        {
+            "description": "this is a test flavor2",
+            "links": [
+                {
+                    "href": "http://10.3.150.17:6688/v1/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+                    "rel": "self"
+                },
+                {
+                    "href": "http://10.3.150.17:6688/flavors/7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+                    "rel": "bookmark"
+                }
+            ],
+            "resources": {
+                "CUSTOM_BAREMETAL_GOLD": 1
+            },
+            "resource_aggregates": {
+                "high_mem": "true"
+            },
+            "created_at": "2016-09-27T02:37:21+00:00",
+            "uuid": "7de2859d-ec6d-42c7-bb86-9d630ba5ac94",
+            "updated_at": null,
+            "is_public": true,
+            "disabled": false,
+            "name": "new_test2"
+        }
+    ]
+}

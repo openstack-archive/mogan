@@ -1,0 +1,12 @@
+{
+    "name": "test_flavor",
+    "description": "this is a test flavor",
+    "resources": {
+        "CUSTOM_BAREMETAL_GOLD": 1
+    },
+    "resource_aggregates": {
+        "high_mem": "true"
+    },
+    "is_public": true,
+    "disabled": true
+}

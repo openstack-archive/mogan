@@ -13,25 +13,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-The FilterScheduler is for creating instances locally.
-You can customize this scheduler by specifying your own Host Filters and
+'''
+Leverages nova/scheduler/filter_scheduler.py
+'''
+
+"""The FilterScheduler is for creating servers.
+
+You can customize this scheduler by specifying your own node Filters and
 Weighing Functions.
 """
+import itertools
 
-import random
-
+from oslo_config import cfg
 from oslo_log import log as logging
-from six.moves import range
 
-import nova.conf
-from nova import exception
-from nova.i18n import _
-from nova import rpc
-from nova.scheduler import client
-from nova.scheduler import driver
+from mogan.common import exception
+from mogan.common.i18n import _
+from mogan.common import utils
+from mogan import objects
+from mogan.scheduler import client
+from mogan.scheduler import driver
+from mogan.scheduler import utils as sched_utils
 
-CONF = nova.conf.CONF
+CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -39,299 +43,278 @@ class FilterScheduler(driver.Scheduler):
     """Scheduler that can be used for filtering and weighing."""
     def __init__(self, *args, **kwargs):
         super(FilterScheduler, self).__init__(*args, **kwargs)
-        self.notifier = rpc.get_notifier('scheduler')
-        scheduler_client = client.SchedulerClient()
-        self.placement_client = scheduler_client.reportclient
+        self.max_attempts = self._max_attempts()
+        self.reportclient = client.SchedulerClient().reportclient
 
-    def select_destinations(self, context, spec_obj, instance_uuids,
-            alloc_reqs_by_rp_uuid, provider_summaries):
-        """Returns a sorted list of HostState objects that satisfy the
-        supplied request_spec.
+    def _max_attempts(self):
+        max_attempts = CONF.scheduler.scheduler_max_attempts
+        if max_attempts < 1:
+            raise exception.InvalidParameterValue(
+                err=_("Invalid value for 'scheduler_max_attempts', "
+                      "must be >=1"))
+        return max_attempts
 
-        These hosts will have already had their resources claimed in Placement.
+    def _log_server_error(self, server_id, retry):
+        """Log requests with exceptions from previous server operations."""
+        exc = retry.pop('exc', None)  # string-ified exception from server
+        if not exc:
+            return  # no exception info from a previous attempt, skip
 
-        :param context: The RequestContext object
-        :param spec_obj: The RequestSpec object
-        :param instance_uuids: List of UUIDs, one for each value of the spec
-                               object's num_instances attribute
-        :param alloc_reqs_by_rp_uuid: Optional dict, keyed by resource provider
-                                      UUID, of the allocation requests that may
-                                      be used to claim resources against
-                                      matched hosts. If None, indicates either
-                                      the placement API wasn't reachable or
-                                      that there were no allocation requests
-                                      returned by the placement API. If the
-                                      latter, the provider_summaries will be an
-                                      empty dict, not None.
-        :param provider_summaries: Optional dict, keyed by resource provider
-                                   UUID, of information that will be used by
-                                   the filters/weighers in selecting matching
-                                   hosts for a request. If None, indicates that
-                                   the scheduler driver should grab all compute
-                                   node information locally and that the
-                                   Placement API is not used. If an empty dict,
-                                   indicates the Placement API returned no
-                                   potential matches for the requested
-                                   resources.
+        nodes = retry.get('nodes', None)
+        if not nodes:
+            return  # no previously attempted nodes, skip
+
+        last_node = nodes[-1]
+        LOG.error("Error scheduling %(server_id)s from last node: "
+                  "%(last_node)s : %(exc)s",
+                  {'server_id': server_id,
+                   'last_node': last_node,
+                   'exc': exc})
+
+    def _populate_retry(self, filter_properties, request_spec):
+        """Populate filter properties with history of retries for request.
+
+        If maximum retries is exceeded, raise NoValidNode.
         """
-        self.notifier.info(
-            context, 'scheduler.select_destinations.start',
-            dict(request_spec=spec_obj.to_legacy_request_spec_dict()))
+        max_attempts = self.max_attempts
+        retry = filter_properties.pop('retry', {})
 
-        num_instances = spec_obj.num_instances
-        selected_hosts = self._schedule(context, spec_obj, instance_uuids,
-            alloc_reqs_by_rp_uuid, provider_summaries)
-
-        # Couldn't fulfill the request_spec
-        if len(selected_hosts) < num_instances:
-            # NOTE(Rui Chen): If multiple creates failed, set the updated time
-            # of selected HostState to None so that these HostStates are
-            # refreshed according to database in next schedule, and release
-            # the resource consumed by instance in the process of selecting
-            # host.
-            for host in selected_hosts:
-                host.updated = None
-
-            # Log the details but don't put those into the reason since
-            # we don't want to give away too much information about our
-            # actual environment.
-            LOG.debug('There are %(hosts)d hosts available but '
-                      '%(num_instances)d instances requested to build.',
-                      {'hosts': len(selected_hosts),
-                       'num_instances': num_instances})
-
-            reason = _('There are not enough hosts available.')
-            raise exception.NoValidHost(reason=reason)
-
-        self.notifier.info(
-            context, 'scheduler.select_destinations.end',
-            dict(request_spec=spec_obj.to_legacy_request_spec_dict()))
-        return selected_hosts
-
-    def _schedule(self, context, spec_obj, instance_uuids,
-            alloc_reqs_by_rp_uuid, provider_summaries):
-        """Returns a list of hosts that meet the required specs, ordered by
-        their fitness.
-
-        These hosts will have already had their resources claimed in Placement.
-
-        :param context: The RequestContext object
-        :param spec_obj: The RequestSpec object
-        :param instance_uuids: List of instance UUIDs to place or move.
-        :param alloc_reqs_by_rp_uuid: Optional dict, keyed by resource provider
-                                      UUID, of the allocation requests that may
-                                      be used to claim resources against
-                                      matched hosts. If None, indicates either
-                                      the placement API wasn't reachable or
-                                      that there were no allocation requests
-                                      returned by the placement API. If the
-                                      latter, the provider_summaries will be an
-                                      empty dict, not None.
-        :param provider_summaries: Optional dict, keyed by resource provider
-                                   UUID, of information that will be used by
-                                   the filters/weighers in selecting matching
-                                   hosts for a request. If None, indicates that
-                                   the scheduler driver should grab all compute
-                                   node information locally and that the
-                                   Placement API is not used. If an empty dict,
-                                   indicates the Placement API returned no
-                                   potential matches for the requested
-                                   resources.
-        """
-        elevated = context.elevated()
-
-        # Find our local list of acceptable hosts by repeatedly
-        # filtering and weighing our options. Each time we choose a
-        # host, we virtually consume resources on it so subsequent
-        # selections can adjust accordingly.
-
-        # Note: remember, we are using an iterator here. So only
-        # traverse this list once. This can bite you if the hosts
-        # are being scanned in a filter or weighing function.
-        hosts = self._get_all_host_states(elevated, spec_obj,
-            provider_summaries)
-
-        # A list of the instance UUIDs that were successfully claimed against
-        # in the placement API. If we are not able to successfully claim for
-        # all involved instances, we use this list to remove those allocations
-        # before returning
-        claimed_instance_uuids = []
-
-        selected_hosts = []
-
-        # NOTE(sbauza): The RequestSpec.num_instances field contains the number
-        # of instances created when the RequestSpec was used to first boot some
-        # instances. This is incorrect when doing a move or resize operation,
-        # so prefer the length of instance_uuids unless it is None.
-        num_instances = (len(instance_uuids) if instance_uuids
-                         else spec_obj.num_instances)
-        for num in range(num_instances):
-            hosts = self._get_sorted_hosts(spec_obj, hosts, num)
-            if not hosts:
-                # NOTE(jaypipes): If we get here, that means not all instances
-                # in instance_uuids were able to be matched to a selected host.
-                # So, let's clean up any already-claimed allocations here
-                # before breaking and returning
-                self._cleanup_allocations(claimed_instance_uuids)
-                break
-
-            if (instance_uuids is None or
-                    not self.USES_ALLOCATION_CANDIDATES or
-                    alloc_reqs_by_rp_uuid is None):
-                # Unfortunately, we still need to deal with older conductors
-                # that may not be passing in a list of instance_uuids. In those
-                # cases, obviously we can't claim resources because we don't
-                # have instance UUIDs to claim with, so we just grab the first
-                # host in the list of sorted hosts. In addition to older
-                # conductors, we need to support the caching scheduler, which
-                # doesn't use the placement API (and has
-                # USES_ALLOCATION_CANDIDATE = False) and therefore we skip all
-                # the claiming logic for that scheduler driver. Finally, if
-                # there was a problem communicating with the placement API,
-                # alloc_reqs_by_rp_uuid will be None, so we skip claiming in
-                # that case as well
-                claimed_host = hosts[0]
-            else:
-                instance_uuid = instance_uuids[num]
-
-                # Attempt to claim the resources against one or more resource
-                # providers, looping over the sorted list of possible hosts
-                # looking for an allocation request that contains that host's
-                # resource provider UUID
-                claimed_host = None
-                for host in hosts:
-                    cn_uuid = host.uuid
-                    if cn_uuid not in alloc_reqs_by_rp_uuid:
-                        LOG.debug("Found host state %s that wasn't in "
-                                  "allocation requests. Skipping.", cn_uuid)
-                        continue
-
-                    alloc_reqs = alloc_reqs_by_rp_uuid[cn_uuid]
-                    if self._claim_resources(elevated, spec_obj, instance_uuid,
-                            alloc_reqs):
-                        claimed_host = host
-                        break
-
-                if claimed_host is None:
-                    # We weren't able to claim resources in the placement API
-                    # for any of the sorted hosts identified. So, clean up any
-                    # successfully-claimed resources for prior instances in
-                    # this request and return an empty list which will cause
-                    # select_destinations() to raise NoValidHost
-                    LOG.debug("Unable to successfully claim against any host.")
-                    self._cleanup_allocations(claimed_instance_uuids)
-                    return []
-
-                claimed_instance_uuids.append(instance_uuid)
-
-            LOG.debug("Selected host: %(host)s", {'host': claimed_host})
-            selected_hosts.append(claimed_host)
-
-            # Now consume the resources so the filter/weights will change for
-            # the next instance.
-            claimed_host.consume_from_request(spec_obj)
-            if spec_obj.instance_group is not None:
-                spec_obj.instance_group.hosts.append(claimed_host.host)
-                # hosts has to be not part of the updates when saving
-                spec_obj.instance_group.obj_reset_changes(['hosts'])
-        return selected_hosts
-
-    def _cleanup_allocations(self, instance_uuids):
-        """Removes allocations for the supplied instance UUIDs."""
-        if not instance_uuids:
+        if max_attempts == 1:
+            # re-scheduling is disabled.
             return
-        LOG.debug("Cleaning up allocations for %s", instance_uuids)
-        for uuid in instance_uuids:
-            self.placement_client.delete_allocation_for_instance(uuid)
 
-    def _claim_resources(self, ctx, spec_obj, instance_uuid, alloc_reqs):
-        """Given an instance UUID (representing the consumer of resources), the
-        HostState object for the host that was chosen for the instance, and a
-        list of allocation request JSON objects, attempt to claim resources for
-        the instance in the placement API. Returns True if the claim process
-        was successful, False otherwise.
+        server_id = request_spec.get('server_ids')[0]
+        self._log_server_error(server_id, retry)
 
-        :param ctx: The RequestContext object
-        :param spec_obj: The RequestSpec object
-        :param instance_uuid: The UUID of the consuming instance
-        :param cn_uuid: UUID of the host to allocate against
-        :param alloc_reqs: A list of allocation request JSON objects that
-                           allocate against (at least) the compute host
-                           selected by the _schedule() method. These allocation
-                           requests were constructed from a call to the GET
-                           /allocation_candidates placement API call.  Each
-                           allocation_request satisfies the original request
-                           for resources and can be supplied as-is (along with
-                           the project and user ID to the placement API's
-                           PUT /allocations/{consumer_uuid} call to claim
-                           resources for the instance
+        if retry['num_attempts'] > max_attempts:
+            raise exception.NoValidNode(
+                _("Exceeded max scheduling attempts %(max_attempts)d "
+                  "for server %(server_id)s") %
+                {'max_attempts': max_attempts,
+                 'server_id': server_id})
+
+    @staticmethod
+    def _get_res_cls_filters(request_spec):
+        flavor_dict = request_spec['flavor']
+        resources = dict([(sched_utils.ensure_resource_class_name(res[0]),
+                           int(res[1]))
+                          for res in flavor_dict['resources'].items()])
+        return resources
+
+    @staticmethod
+    def _get_res_aggregates_filters(context, request_spec):
+        flavor_dict = request_spec['flavor']
+        resource_aggregates = flavor_dict.get('resource_aggregates', {})
+        resource_aggregates_items = resource_aggregates.items()
+        # Add availability_zone aggregate
+        if request_spec['availability_zone']:
+            resource_aggregates_items.append(
+                ('availability_zone', request_spec['availability_zone']))
+
+        filters = []
+        for key, value in resource_aggregates_items:
+            aggregates = objects.AggregateList.get_by_metadata(
+                context, key, value)
+            if not aggregates:
+                # if no aggregates match with the key/value,
+                # fail the scheduling.
+                return None
+            filters.append(aggregates)
+
+        return filters
+
+    @staticmethod
+    def _get_server_group_obj(context, request_spec):
+        server_group = request_spec.get('scheduler_hints', {}).get('group')
+        if not server_group:
+            return
+        server_group = objects.ServerGroup.get_by_uuid(context, server_group)
+        return server_group
+
+    def _get_nodes_of_aggregates(self, aggregates):
+        if not aggregates:
+            return []
+        agg_uuids = [agg.uuid for agg in aggregates]
+        query_filters = {'member_of': 'in:' + ','.join(agg_uuids)}
+        rps = self.reportclient.get_filtered_resource_providers(query_filters)
+        return [rp['uuid'] for rp in rps]
+
+    def _get_filtered_affzs_nodes(self, context, server_group, filtered_nodes,
+                                  num_servers):
+        """Get the filtered affinity zone and nodes.
+
+        If affinity specified in request, this method will return a tuple
+        including filtered affinity zone and filtered nodes. e.g.
+        [(zone1, [node-1, node-2, node-3])].
+        If anti-affinity specified, this will return a list of tuples of
+        affinity zone and nodes list. e.g.
+        [(zone1, node-1]), (zone2, node-2), (zone3, node-3)]
+
         """
-        LOG.debug("Attempting to claim resources in the placement API for "
-                  "instance %s", instance_uuid)
 
-        project_id = spec_obj.project_id
+        def _log_and_raise_error(policy):
+            LOG.error("No enough nodes filtered, request %(num_svr)s "
+                      "server(s) with server group %(group)s with %(policy)s "
+                      "policy specified.",
+                      {"num_svr": num_servers, "group": server_group.name,
+                       "policy": policy})
+            msg = (_("No enough nodes filtered, request %(num_svr)s server(s) "
+                     "with %(policy)s policy specified.") %
+                   {"num_svr": num_servers, "policy": policy})
+            raise exception.NoValidNode(msg)
 
-        # NOTE(jaypipes): So, the RequestSpec doesn't store the user_id,
-        # only the project_id, so we need to grab the user information from
-        # the context. Perhaps we should consider putting the user ID in
-        # the spec object?
-        user_id = ctx.user_id
+        if 'affinity' in server_group.policies:
+            selected_affz = None
+            if server_group.members:
+                for member in server_group.members:
+                    server = objects.Server.get(context, member)
+                    if server.affinity_zone:
+                        selected_affz = server.affinity_zone
+                        break
+            if selected_affz:
+                aggs = objects.AggregateList.get_by_metadata(
+                    context, 'affinity_zone', selected_affz)
+                affz_nodes = self._get_nodes_of_aggregates(aggs)
+                selected_nodes = list(set(filtered_nodes) & set(affz_nodes))
+                if len(selected_nodes) < num_servers:
+                    _log_and_raise_error('affinity')
+                return selected_affz, selected_nodes[:num_servers]
 
-        # TODO(jaypipes): Loop through all allocation requests instead of just
-        # trying the first one. For now, since we'll likely want to order the
-        # allocation requests in the future based on information in the
-        # provider summaries, we'll just try to claim resources using the first
-        # allocation request
-        alloc_req = alloc_reqs[0]
+        all_aggs = objects.AggregateList.get_by_metadata_key(
+            context, 'affinity_zone')
+        all_aggs = sorted(all_aggs, key=lambda a: a.metadata.get(
+            'affinity_zone'))
+        grouped_aggs = itertools.groupby(
+            all_aggs, lambda a: a.metadata.get('affinity_zone'))
 
-        return self.placement_client.claim_resources(instance_uuid,
-            alloc_req, project_id, user_id)
+        if 'affinity' in server_group.policies:
+            for affz, aggs in grouped_aggs:
+                affz_nodes = self._get_nodes_of_aggregates(aggs)
+                affz_nodes = list(set(filtered_nodes) & set(affz_nodes))
+                if len(affz_nodes) >= num_servers:
+                    return affz, affz_nodes[:num_servers]
+            _log_and_raise_error('affinity')
 
-    def _get_sorted_hosts(self, spec_obj, host_states, index):
-        """Returns a list of HostState objects that match the required
-        scheduling constraints for the request spec object and have been sorted
-        according to the weighers.
-        """
-        filtered_hosts = self.host_manager.get_filtered_hosts(host_states,
-            spec_obj, index)
+        elif 'anti-affinity' in server_group.policies:
+            affinity_zones = []
+            for member in server_group.members:
+                server = objects.Server.get(context, member)
+                affinity_zone = server.affinity_zone
+                affinity_zones.append(affinity_zone)
+            selected_affz_nodes = []
+            for affz, aggs in grouped_aggs:
+                if affz in affinity_zones:
+                    continue
+                affz_nodes = self._get_nodes_of_aggregates(aggs)
+                affz_nodes = list(set(filtered_nodes) & set(affz_nodes))
+                if affz_nodes:
+                    selected_affz_nodes.append((affz, affz_nodes[0]))
+                if len(selected_affz_nodes) >= num_servers:
+                    return selected_affz_nodes
+            _log_and_raise_error('anti-affinity')
 
-        LOG.debug("Filtered %(hosts)s", {'hosts': filtered_hosts})
+    def _consume_per_server(self, context, request_spec, node, server_id,
+                            affinity_zone=None):
+        server_obj = objects.Server.get(context, server_id)
+        if affinity_zone:
+            server_obj.affinity_zone = affinity_zone
+            server_obj.save(context)
+        alloc_data = self._get_res_cls_filters(request_spec)
+        self.reportclient.put_allocations(
+            node, server_obj.uuid, alloc_data,
+            server_obj.project_id, server_obj.user_id)
 
-        if not filtered_hosts:
+    def _consume_nodes_with_server_group(self, context, request_spec,
+                                         filtered_affzs_nodes, server_group):
+        if 'affinity' in server_group.policies:
+            affinity_zone, dest_nodes = filtered_affzs_nodes
+            for server_id, node in zip(request_spec['server_ids'],
+                                       dest_nodes):
+                self._consume_per_server(
+                    context, request_spec, node, server_id, affinity_zone)
+            return dest_nodes
+        elif 'anti-affinity' in server_group.policies:
+            dest_nodes = []
+            for server_id, affz_node in zip(request_spec['server_ids'],
+                                            filtered_affzs_nodes):
+                affinity_zone, node = affz_node
+                dest_nodes.append(node)
+                self._consume_per_server(
+                    context, request_spec, node, server_id, affinity_zone)
+            return dest_nodes
+
+    def _get_filtered_nodes(self, context, request_spec):
+        resources_filter = self._get_res_cls_filters(request_spec)
+        aggs_filters = self._get_res_aggregates_filters(context, request_spec)
+
+        # None indicates no matching aggregates
+        if aggs_filters is None:
             return []
 
-        weighed_hosts = self.host_manager.get_weighed_hosts(filtered_hosts,
-            spec_obj)
-        # Strip off the WeighedHost wrapper class...
-        weighed_hosts = [h.obj for h in weighed_hosts]
-
-        LOG.debug("Weighed %(hosts)s", {'hosts': weighed_hosts})
-
-        # We randomize the first element in the returned list to alleviate
-        # congestion where the same host is consistently selected among
-        # numerous potential hosts for similar request specs.
-        host_subset_size = CONF.filter_scheduler.host_subset_size
-        if host_subset_size < len(weighed_hosts):
-            weighed_subset = weighed_hosts[0:host_subset_size]
+        if aggs_filters:
+            filtered_nodes = set()
+            for agg_filter in aggs_filters:
+                filtered_rps = set(self._get_nodes_of_aggregates(agg_filter))
+                if not filtered_rps:
+                    # if got empty, just break here.
+                    return []
+                if not filtered_nodes:
+                    # initialize the filtered_nodes
+                    filtered_nodes = filtered_rps
+                else:
+                    filtered_nodes &= filtered_rps
+                if not filtered_nodes:
+                    # if got empty, just break here.
+                    return []
         else:
-            weighed_subset = weighed_hosts
-        chosen_host = random.choice(weighed_subset)
-        weighed_hosts.remove(chosen_host)
-        return [chosen_host] + weighed_hosts
+            query_filters = {'resources': resources_filter}
+            filtered_nodes = self.reportclient.\
+                get_filtered_resource_providers(query_filters)
+            return [node['uuid'] for node in filtered_nodes]
 
-    def _get_all_host_states(self, context, spec_obj, provider_summaries):
-        """Template method, so a subclass can implement caching."""
-        # NOTE(jaypipes): provider_summaries being None is treated differently
-        # from an empty dict. provider_summaries is None when we want to grab
-        # all compute nodes, for instance when using the caching scheduler.
-        # The provider_summaries variable will be an empty dict when the
-        # Placement API found no providers that match the requested
-        # constraints, which in turn makes compute_uuids an empty list and
-        # get_host_states_by_uuids will return an empty tuple also, which will
-        # eventually result in a NoValidHost error.
-        compute_uuids = None
-        if provider_summaries is not None:
-            compute_uuids = list(provider_summaries.keys())
-        return self.host_manager.get_host_states_by_uuids(context,
-                                                          compute_uuids,
-                                                          spec_obj)
+        return list(filtered_nodes)
+
+    def schedule(self, context, request_spec, filter_properties=None):
+
+        # TODO(zhenguo): Scheduler API is inherently multi-threaded as every
+        # incoming RPC message will be dispatched in it's own green thread.
+        # So we add a syncronized here to make sure the shared node states
+        # consistent, but lock the whole schedule process is not a good choice,
+        # we need to improve this.
+        @utils.synchronized('schedule')
+        def _schedule(self, context, request_spec, filter_properties):
+            self._populate_retry(filter_properties, request_spec)
+            filtered_nodes = self._get_filtered_nodes(context, request_spec)
+
+            if not filtered_nodes:
+                LOG.warning('No filtered nodes found for server '
+                            'with properties: %s',
+                            request_spec.get('flavor'))
+                raise exception.NoValidNode(
+                    _("No filtered nodes available"))
+            dest_nodes = self._choose_nodes(filtered_nodes, request_spec)
+            server_group = self._get_server_group_obj(context, request_spec)
+            if not server_group:
+                for server_id, node in zip(request_spec['server_ids'],
+                                           dest_nodes):
+                    self._consume_per_server(context, request_spec, node,
+                                             server_id)
+                return dest_nodes
+            else:
+                filtered_affzs_nodes = self._get_filtered_affzs_nodes(
+                    context, server_group, filtered_nodes,
+                    request_spec['num_servers'])
+                return self._consume_nodes_with_server_group(
+                    context, request_spec, filtered_affzs_nodes, server_group)
+
+        return _schedule(self, context, request_spec, filter_properties)
+
+    def _choose_nodes(self, filtered_nodes, request_spec):
+        num_servers = request_spec['num_servers']
+        if num_servers > len(filtered_nodes):
+            msg = 'Not enough nodes found for servers, request ' \
+                  'servers: %s, but only available nodes: %s' \
+                  % (str(num_servers), str(len(filtered_nodes)))
+            raise exception.NoValidNode(_("Choose Node: %s") % msg)
+
+        return filtered_nodes[:num_servers]

@@ -1,0 +1,12 @@
+[
+    {
+        "op": "replace",
+        "path": "/name",
+        "value": "updated_flavor"
+    },
+    {
+        "op": "replace",
+        "path": "/is_public",
+        "value": false
+    }
+]

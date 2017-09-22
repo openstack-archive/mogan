@@ -1,0 +1,31 @@
+{
+    "availability_zone": null,
+    "created_at": "2016-10-17T04:12:41+00:00",
+    "description": "this is a test server",
+    "image_uuid": "ac3b2291-b9ef-45f6-8eeb-21ac568a64a5",
+    "server_type_uuid": "28708dff-283c-449e-9bfa-a48c93480c86",
+    "name": "test_server",
+    "addresses": {},
+    "partitions": {
+        "root_gb": 100,
+        "ephemeral_gb": 400,
+        "swap_mb": 40960
+    },
+    "power_state": "power on",
+    "project_id": "c18e8a1a870d4c08a0b51ced6e0b6459",
+    "status": "error",
+    "locked": false,
+    "fault": {
+        "code": 500,
+        "message": "fault message",
+        "detail": "fault detail"
+    },
+    "launched_at": null,
+    "affinity_zone": null,
+    "updated_at": "2016-10-17T04:12:44+00:00",
+    "user_id": "cdbf77d47f1d4d04ad9b7ff62b672467",
+    "uuid": "f978ef48-d4af-4dad-beec-e6174309bc71",
+    "metadata": {
+        "My Server Name": "Apache1"
+    }
+}

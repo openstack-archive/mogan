@@ -1,0 +1,12 @@
+Please see https://alembic.readthedocs.org/en/latest/index.html for general documentation
+
+To create alembic migrations use:
+$ mogan-dbsync revision --message --autogenerate
+
+Stamp db with most recent migration version, without actually running migrations
+$ mogan-dbsync stamp --revision head
+
+Upgrade can be performed by:
+$ mogan-dbsync - for backward compatibility
+$ mogan-dbsync upgrade
+# mogan-dbsync upgrade --revision head

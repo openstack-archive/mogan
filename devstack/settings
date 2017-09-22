@@ -1,0 +1,35 @@
+# Devstack settings
+
+# We have to add Mogan to enabled services for run_process to work
+# Now we just support to run services in separate processes and screens:
+# enable_service mogan mogan-api mogan-engine mogan-scheduler mogan-consoleauth mogan-shellinaboxproxy
+enable_service mogan mogan-api mogan-engine mogan-scheduler mogan-consoleauth mogan-shellinaboxproxy
+
+# Set up default repos
+MOGAN_REPO=${MOGAN_REPO:-${GIT_BASE}/openstack/mogan.git}
+MOGAN_BRANCH=${MOGAN_BRANCH:-master}
+
+MOGAN_PYTHONCLIENT_REPO=${MOGAN_PYTHONCLIENT_REPO:-${GIT_BASE}/openstack/python-moganclient.git}
+MOGAN_PYTHONCLIENT_BRANCH=${MOGAN_PYTHONCLIENT_BRANCH:-master}
+MOGAN_PYTHONCLIENT_DIR=${DEST}/python-moganclient
+
+# Set up default directories
+MOGAN_DIR=$DEST/mogan
+MOGAN_DASHBOARD_DIR=$DEST/mogan-dashboard
+MOGAN_CONF_DIR=${MOGAN_CONF_DIR:-/etc/mogan}
+MOGAN_CONF_FILE=${MOGAN_CONF_DIR}/mogan.conf
+MOGAN_DEBUG=${MOGAN_DEBUG:-True}
+
+MOGAN_SERVICE_HOST=${MOGAN_SERVICE_HOST:-$SERVICE_HOST}
+MOGAN_SERVICE_PROTOCOL=${MOGAN_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
+
+MOGAN_ADMIN_USER=${MOGAN_ADMIN_USER:-mogan}
+
+if [[ -d ${MOGAN_DIR}/bin ]]; then
+    MOGAN_BIN_DIR=${MOGAN_DIR}/bin
+else
+    MOGAN_BIN_DIR=$(get_python_exec_prefix)
+fi
+
+MOGAN_UWSGI_CONF=$MOGAN_CONF_DIR/mogan-uwsgi.ini
+MOGAN_UWSGI_APP=$MOGAN_BIN_DIR/mogan-api-wsgi

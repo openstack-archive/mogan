@@ -1,0 +1,5 @@
+---
+features:
+  - Introduce Guru to Mogan. Guru is a mechanism whereby developers and system
+    administrators can generate a report about the state of a running Mogan
+    executable. This report is called a *Guru Meditation Report*.
