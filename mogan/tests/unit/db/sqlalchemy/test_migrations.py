@@ -245,6 +245,21 @@ class MigrationCheckersMixin(object):
         self.assertIsInstance(nodes.c.resource_name.type,
                               sqlalchemy.types.String)
 
+    def _check_cf73c09d3ff2(self, engine, data):
+        server_tags = db_utils.get_table(engine, 'server_tags')
+        col_names = [column.name for column in server_tags.c]
+        self.assertIn('tag', col_names)
+        self.assertIsInstance(server_tags.c.tag.type,
+                              sqlalchemy.types.String)
+        servers = db_utils.get_table(engine, 'servers')
+        data = {'id': '123', 'name': 'server1'}
+        servers.insert().execute(data)
+        data = {'server_id': '123', 'tag': 'tag1'}
+        server_tags.insert().execute(data)
+        tag = server_tags.select(server_tags.c.server_id == '123').execute().\
+            first()
+        self.assertEqual('tag1', tag['tag'])
+
     def test_upgrade_and_version(self):
         with patch_with_engine(self.engine):
             self.migration_api.upgrade('head')
