@@ -373,3 +373,15 @@ class ServerGroup(Base):
     @property
     def members(self):
         return [m.server_uuid for m in self._members]
+
+
+class ServerTag(Base):
+    """Represents a tag of a bare metal server."""
+
+    __tablename__ = 'server_tags'
+    __table_args__ = (
+        Index('server_tags_tag_idx', 'tag'),
+        table_args())
+    server_id = Column(Integer, ForeignKey('servers.id'),
+                       primary_key=True, nullable=False)
+    tag = Column(String(255), primary_key=True, nullable=False)
