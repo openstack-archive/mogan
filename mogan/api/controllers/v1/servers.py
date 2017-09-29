@@ -698,6 +698,8 @@ class ServerController(ServerControllerBase):
         partitions = server.get('partitions')
         personality = server.pop('personality', None)
 
+        password = self._get_server_admin_password(server)
+
         injected_files = []
         if personality:
             for item in personality:
@@ -717,6 +719,7 @@ class ServerController(ServerControllerBase):
             requested_networks=requested_networks,
             user_data=user_data,
             injected_files=injected_files,
+            admin_password=password,
             key_name=key_name,
             min_count=min_count,
             max_count=max_count,
@@ -725,6 +728,14 @@ class ServerController(ServerControllerBase):
         # Set the HTTP Location Header for the first server.
         pecan.response.location = link.build_url('server', servers[0].uuid)
         return Server.convert_with_links(servers[0])
+
+    def _get_server_admin_password(self, server):
+        """Determine the admin password for a server on creation."""
+        if 'adminPass' in server:
+            password = server['adminPass']
+        else:
+            password = api_utils.generate_password()
+        return password
 
     @policy.authorize_wsgi("mogan:server", "update")
     @wsme.validate(types.uuid, [ServerPatchType])
