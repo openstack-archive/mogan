@@ -54,8 +54,8 @@ class InvalidMetadataPath(Exception):
 class ServerMetadata(object):
     """Server metadata."""
 
-    def __init__(self, server, content=None, user_data=None,
-                 key_pair=None, extra_md=None):
+    def __init__(self, server, content=None, user_data=None, key_pair=None,
+                 extra_md=None):
         """Creation of this object should basically cover all time consuming
         collection.  Methods after that should not cause time delays due to
         network operations or lengthy cpu operations.
@@ -66,8 +66,8 @@ class ServerMetadata(object):
         if not content:
             content = []
 
-        self.server = server
         self.extra_md = extra_md
+        self.server = server
         self.availability_zone = server.availability_zone
 
         if user_data is not None:

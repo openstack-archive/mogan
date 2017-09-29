@@ -77,6 +77,13 @@ utils_opts = [
                       'dir.')),
 ]
 
+password_length = [
+    cfg.IntOpt('password_length',
+               default=12,
+               min=0,
+               help='Length of generated server admin passwords.'),
+]
+
 
 def register_opts(conf):
     conf.register_opts(api_opts)
@@ -84,3 +91,4 @@ def register_opts(conf):
     conf.register_opts(service_opts)
     conf.register_opts(path_opts)
     conf.register_opts(utils_opts)
+    conf.register_opts(password_length)
