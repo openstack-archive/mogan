@@ -27,6 +27,10 @@ api_opts = [
                 help=_('Return server tracebacks in the API response for any '
                        'error responses. WARNING: this is insecure '
                        'and should not be used in a production environment.')),
+    cfg.IntOpt('password_length',
+               default=12,
+               min=0,
+               help='Length of generated server admin passwords.'),
 ]
 
 exc_log_opts = [

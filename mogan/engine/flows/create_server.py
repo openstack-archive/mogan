@@ -49,7 +49,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
     def __init__(self, engine_rpcapi):
         requires = ['filter_properties', 'request_spec', 'server',
                     'requested_networks', 'user_data', 'injected_files',
-                    'key_pair', 'partitions', 'context']
+                    'admin_password', 'key_pair', 'partitions', 'context']
         super(OnFailureRescheduleTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
         self.engine_rpcapi = engine_rpcapi
@@ -68,7 +68,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
 
     def _reschedule(self, context, cause, request_spec, filter_properties,
                     server, requested_networks, user_data, injected_files,
-                    key_pair, partitions):
+                    admin_password, key_pair, partitions):
         """Actions that happen during the rescheduling attempt occur here."""
 
         create_server = self.engine_rpcapi.schedule_and_create_servers
@@ -95,6 +95,7 @@ class OnFailureRescheduleTask(flow_utils.MoganTask):
         return create_server(context, [server], requested_networks,
                              user_data=user_data,
                              injected_files=injected_files,
+                             admin_password=admin_password,
                              key_pair=key_pair,
                              partitions=partitions,
                              request_spec=request_spec,
@@ -218,17 +219,22 @@ class GenerateConfigDriveTask(flow_utils.MoganTask):
     """Generate ConfigDrive value the server."""
 
     def __init__(self):
-        requires = ['server', 'user_data', 'injected_files', 'key_pair',
-                    'configdrive', 'context']
+        requires = ['server', 'user_data', 'injected_files', 'admin_password',
+                    'key_pair', 'configdrive', 'context']
         super(GenerateConfigDriveTask, self).__init__(addons=[ACTION],
                                                       requires=requires)
 
     def _generate_configdrive(self, context, server, user_data=None,
-                              files=None, key_pair=None):
+                              files=None, admin_password=None, key_pair=None):
         """Generate a config drive."""
+        extra_md = {}
+        if admin_password:
+            extra_md['admin_pass'] = admin_password
 
         i_meta = server_metadata.ServerMetadata(
-            server, content=files, user_data=user_data, key_pair=key_pair)
+            server, content=files, user_data=user_data, key_pair=key_pair,
+            extra_md=extra_md)
+
         with tempfile.NamedTemporaryFile() as uncompressed:
             with configdrive.ConfigDriveBuilder(server_md=i_meta) as cdb:
                 cdb.make_drive(uncompressed.name)
@@ -243,13 +249,12 @@ class GenerateConfigDriveTask(flow_utils.MoganTask):
                 compressed.seek(0)
                 return base64.b64encode(compressed.read())
 
-    def execute(self, context, server, user_data, injected_files, key_pair,
-                configdrive):
-
+    def execute(self, context, server, user_data, injected_files,
+                admin_password, key_pair, configdrive):
         try:
             configdrive['value'] = self._generate_configdrive(
                 context, server, user_data=user_data, files=injected_files,
-                key_pair=key_pair)
+                admin_password=admin_password, key_pair=key_pair)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 msg = ("Failed to build configdrive: %s" %
@@ -282,8 +287,8 @@ class CreateServerTask(flow_utils.MoganTask):
 
 
 def get_flow(context, manager, server, requested_networks, user_data,
-             injected_files, key_pair, partitions, request_spec,
-             filter_properties):
+             injected_files, admin_password, key_pair, partitions,
+             request_spec, filter_properties):
 
     """Constructs and returns the manager entrypoint flow
 
@@ -309,6 +314,7 @@ def get_flow(context, manager, server, requested_networks, user_data,
         'requested_networks': requested_networks,
         'user_data': user_data,
         'injected_files': injected_files,
+        'admin_password': admin_password,
         'key_pair': key_pair,
         'partitions': partitions,
         'configdrive': {}

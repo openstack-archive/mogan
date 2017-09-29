@@ -224,6 +224,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
             None,
             None,
             None,
+            None,
             min_count,
             max_count)
 
