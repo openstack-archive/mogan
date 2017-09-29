@@ -59,6 +59,14 @@ network_port_id = {
     'type': 'string', 'format': 'uuid'
 }
 
+admin_password = {
+    # NOTE: admin_password is the admin password of a server
+    # instance, and it is not stored into nova's data base.
+    # In addition, users set sometimes long/strange string
+    # as password. It is unnecessary to limit string length
+    # and string pattern.
+    'type': 'string',
+}
 
 flavor_id = {
     'type': 'string', 'format': 'uuid'
