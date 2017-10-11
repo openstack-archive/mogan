@@ -243,3 +243,27 @@ def create_test_server_group(context={}, **kw):
     policies = server_fault.pop('policies')
     return dbapi.server_group_create(context, server_fault, policies=policies,
                                      members=members)
+
+
+def get_test_server_tag(**kw):
+    return {
+        "tag": kw.get("tag", "tag1"),
+        "server_id": kw.get("server_id", "123"),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
+    }
+
+
+def create_test_server_tag(context, **kw):
+    """Create test node tag entry in DB and return NodeTag DB object.
+
+    Function to be used to create test NodeTag objects in the database.
+
+    :param context: Request context
+    :param kw: kwargs with overriding values for tag's attributes.
+    :returns: Test NodeTag DB object.
+
+    """
+    tag = get_test_server_tag(**kw)
+    dbapi = db_api.get_instance()
+    return dbapi.add_server_tag(context, tag['server_id'], tag['tag'])
