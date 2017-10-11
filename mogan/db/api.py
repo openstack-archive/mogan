@@ -289,3 +289,70 @@ class Connection(object):
     def server_group_members_add(self, context, group_uuid, members):
         """Add a list of members to a server group"""
         return IMPL.server_group_members_add(context, group_uuid, members)
+
+    @abc.abstractmethod
+    def set_server_tags(self, context, server_id, tags):
+        """Replace all of the server tags with specified list of tags.
+
+        This ignores duplicate tags in the specified list.
+
+        :param context: Request context
+        :param server_id: The id of a server.
+        :param tags: List of tags.
+        :returns: A list of ServerTag objects.
+        :raises: ServerNotFound if the server is not found.
+        """
+
+    @abc.abstractmethod
+    def unset_server_tags(self, context, server_id):
+        """Remove all tags of the server.
+
+        :param context: Request context
+        :param server_id: The id of a server.
+        :raises: ServerNotFound if the server is not found.
+        """
+
+    @abc.abstractmethod
+    def get_server_tags_by_server_id(self, context, server_id):
+        """Get server tags based on its id.
+
+        :param context: Request context
+        :param server_id: The id of a server.
+        :returns: A list of ServerTag objects.
+        :raises: ServerNotFound if the server is not found.
+        """
+
+    @abc.abstractmethod
+    def add_server_tag(self, context, server_id, tag):
+        """Add tag to the server.
+
+        If the server_id and tag pair already exists, this should still
+        succeed.
+
+        :param context: Request context
+        :param server_id: The id of a server.
+        :param tag: A tag string.
+        :returns: the ServerTag object.
+        :raises: ServerNotFound if the server is not found.
+        """
+
+    @abc.abstractmethod
+    def delete_server_tag(self, context, server_id, tag):
+        """Delete specified tag from the server.
+
+        :param context: Request context
+        :param server_id: The id of a server.
+        :param tag: A tag string.
+        :raises: ServerNotFound if the server is not found.
+        """
+
+    @abc.abstractmethod
+    def server_tag_exists(self, context, server_id, tag):
+        """Check if the specified tag exist on the server.
+
+        :param context: Request context
+        :param server_id: The id of a server.
+        :param tag: A tag string.
+        :returns: True if the tag exists otherwise False.
+        :raises: ServerTagNotFound if the tag is not found.
+        """

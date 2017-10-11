@@ -504,4 +504,8 @@ class NodeNotAllowedManaged(Forbidden):
     _msg_fmt = _("The bare metal node %(node_uuid)s is not allowed to "
                  "be managed")
 
+
+class ServerTagNotFound(NotFound):
+    _msg_fmt = _("Server %(server_id)s doesn't have a tag '%(tag)s'")
+
 ObjectActionError = obj_exc.ObjectActionError
