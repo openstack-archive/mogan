@@ -298,6 +298,89 @@ Create devstack/local.conf with minimal settings required to enable Mogan::
 
     END
 
+If you want the use the multi-tenancy network in ironic, the setting of local.conf
+should be as follows::
+
+    cd devstack
+    cat >local.conf <<END
+    [[local|localrc]]
+    PIP_UPGRADE=True
+
+    # Credentials
+    ADMIN_PASSWORD=password
+    DATABASE_PASSWORD=password
+    RABBIT_PASSWORD=password
+    SERVICE_PASSWORD=password
+    SERVICE_TOKEN=password
+    SWIFT_HASH=password
+    SWIFT_TEMPURL_KEY=password
+
+    # Enable Ironic plugin
+    enable_plugin ironic git://git.openstack.org/openstack/ironic
+
+    # Enable Mogan plugin
+    enable_plugin mogan git://git.openstack.org/openstack/mogan
+
+    # Install networking-generic-switch Neutron ML2 driver that interacts with OVS
+    enable_plugin networking-generic-switch https://git.openstack.org/openstack/networking-generic-switch
+
+    ENABLED_SERVICES=g-api,g-reg,q-agt,q-dhcp,q-l3,q-svc,key,mysql,rabbit,ir-api,ir-cond,s-account,s-container,s-object,s-proxy,tempest
+
+    # Swift temp URL's are required for agent_* drivers.
+    SWIFT_ENABLE_TEMPURLS=True
+
+    # Add link local info when registering Ironic node
+    IRONIC_USE_LINK_LOCAL=True
+    IRONIC_ENABLED_NETWORK_INTERFACES=neutron, flat
+    IRONIC_NETWORK_INTERFACE=neutron
+
+    #Networking configuration
+    OVS_PHYSICAL_BRIDGE=brbm
+    PHYSICAL_NETWORK=mynetwork
+    IRONIC_PROVISION_NETWORK_NAME=ironic-provision
+    IRONIC_PROVISION_SUBNET_PREFIX=10.0.5.0/24
+    IRONIC_PROVISION_SUBNET_GATEWAY=10.0.5.1
+    Q_PLUGIN=ml2
+    ENABLE_TENANT_VLANS=True
+    Q_ML2_TENANT_NETWORK_TYPE=vlan
+    TENANT_VLAN_RANGE=100:150
+    Q_USE_PROVIDERNET_FOR_PUBLIC=False
+
+    # Set resource_classes for nodes to use placement service
+    IRONIC_USE_RESOURCE_CLASSES=True
+
+    # Create 3 virtual machines to pose as Ironic's baremetal nodes.
+    IRONIC_VM_COUNT=3
+    IRONIC_VM_SSH_PORT=22
+    IRONIC_BAREMETAL_BASIC_OPS=True
+
+    # Enable Ironic drivers.
+    IRONIC_ENABLED_DRIVERS=fake,agent_ipmitool,pxe_ipmitool
+
+    # Change this to alter the default driver for nodes created by devstack.
+    # This driver should be in the enabled list above.
+    IRONIC_DEPLOY_DRIVER=agent_ipmitool
+
+    # Using Ironic agent deploy driver by default, so don't use whole disk
+    # image in tempest.
+    IRONIC_TEMPEST_WHOLE_DISK_IMAGE=False
+
+    # The parameters below represent the minimum possible values to create
+    # functional nodes.
+    IRONIC_VM_SPECS_RAM=1280
+    IRONIC_VM_SPECS_DISK=10
+
+    # To build your own IPA ramdisk from source, set this to True
+    IRONIC_BUILD_DEPLOY_RAMDISK=False
+
+    # Log all output to files
+    LOGFILE=$HOME/devstack.log
+    LOGDIR=$HOME/logs
+    LOG_COLOR=True
+    IRONIC_VM_LOG_DIR=$HOME/ironic-bm-logs
+
+    END
+
 .. note::
     Git protocol requires access to port 9418, which is not a standard port that
     corporate firewalls always allow. If you are behind a firewall or on a proxy that
