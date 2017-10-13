@@ -1,0 +1,44 @@
+- project:
+    name: openstack/mogan
+    check:
+      jobs:
+        - mogan-tox-functional
+        - mogan-dsvm-tempest-plugin
+    gate:
+      jobs:
+        - mogan-tox-functional
+        - mogan-dsvm-tempest-plugin
+
+- job:
+    name: mogan-dsvm-tempest-plugin
+    parent: legacy-dsvm-base
+    run: playbooks/legacy/mogan-dsvm-tempest-plugin/run
+    post-run: playbooks/legacy/mogan-dsvm-tempest-plugin/post
+    timeout: 3600
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/ironic
+      - openstack/ironic-lib
+      - openstack/ironic-python-agent
+      - openstack/mogan
+      - openstack/python-ironicclient
+      - openstack/python-moganclient
+      - openstack/tempest
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^api-ref/.*$
+      - ^doc/.*$
+      - ^mogan/tests/functional.*$
+      - ^mogan/tests/unit.*$
+      - ^releasenotes/.*$
+      - ^tools/.*$
+      - ^tox.ini$
+
+- job:
+    name: mogan-tox-functional
+    parent: legacy-base
+    run: playbooks/legacy/mogan-tox-functional/run
+    post-run: playbooks/legacy/mogan-tox-functional/post
+    timeout: 2400
+    required-projects:
+      - openstack/requirements

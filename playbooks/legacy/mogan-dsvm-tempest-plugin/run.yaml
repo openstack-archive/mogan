@@ -1,0 +1,69 @@
+- hosts: all
+  name: Autoconverted job legacy-mogan-dsvm-tempest-plugin from old job gate-mogan-dsvm-tempest-plugin
+  tasks:
+
+    - name: Ensure legacy workspace directory
+      file:
+        path: '{{ ansible_user_dir }}/workspace'
+        state: directory
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          cat > clonemap.yaml << EOF
+          clonemap:
+            - name: openstack-infra/devstack-gate
+              dest: devstack-gate
+          EOF
+          /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
+              git://git.openstack.org \
+              openstack-infra/devstack-gate
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          cat << 'EOF' >>"/tmp/dg-local.conf"
+          [[local|localrc]]
+          enable_plugin ironic git://git.openstack.org/openstack/ironic
+          enable_plugin mogan git://git.openstack.org/openstack/mogan
+          IRONIC_TEMPEST_WHOLE_DISK_IMAGE=True
+          IRONIC_USE_RESOURCE_CLASSES=True
+
+          EOF
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          export PYTHONUNBUFFERED=true
+          export DEVSTACK_GATE_TEMPEST=1
+          export DEVSTACK_GATE_TEMPEST_ALL_PLUGINS=1
+          # Run only mogan tests
+          export DEVSTACK_GATE_TEMPEST_REGEX="^mogan\."
+          export DEVSTACK_GATE_IRONIC=1
+          export DEVSTACK_GATE_NEUTRON=1
+          export DEVSTACK_GATE_VIRT_DRIVER=ironic
+          export DEVSTACK_GATE_CONFIGDRIVE=1
+          export DEVSTACK_GATE_IRONIC_BUILD_RAMDISK=0
+          export DEVSTACK_GATE_IRONIC_DRIVER=agent_ipmitool
+          export PROJECTS="openstack/mogan $PROJECTS"
+          export PROJECTS="openstack/python-moganclient $PROJECTS"
+          export PROJECTS="openstack/ironic $PROJECTS"
+          export PROJECTS="openstack/ironic-lib $PROJECTS"
+          export PROJECTS="openstack/ironic-python-agent $PROJECTS"
+          export PROJECTS="openstack/python-ironicclient $PROJECTS"
+          export OVERRIDE_ENABLED_SERVICES="g-api,g-reg,q-agt,q-dhcp,q-l3,q-svc,key,mysql,rabbit,ir-api,ir-cond,s-account,s-container,s-object,s-proxy,tempest"
+
+          cp devstack-gate/devstack-vm-gate-wrap.sh ./safe-devstack-vm-gate-wrap.sh
+          ./safe-devstack-vm-gate-wrap.sh
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
