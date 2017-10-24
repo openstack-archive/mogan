@@ -47,9 +47,16 @@ class TestServerObject(base.DbTestCase):
             mock_server_get_all.return_value = [self.fake_server]
             project_only = False
             filters = None
-            servers = objects.Server.list(self.context, project_only, filters)
+            marker = None
+            limit = None
+            sort_key = None
+            sort_dir = None
+            servers = objects.Server.list(self.context, limit, marker,
+                                          sort_key, sort_dir,
+                                          project_only, filters)
             mock_server_get_all.assert_called_once_with(
-                self.context, project_only, filters)
+                self.context, project_only, limit, marker, sort_key, sort_dir,
+                filters)
             self.assertIsInstance(servers[0], objects.Server)
             self.assertEqual(self.context, servers[0]._context)
 

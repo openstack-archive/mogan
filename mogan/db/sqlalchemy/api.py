@@ -84,6 +84,24 @@ def model_query(context, model, *args, **kwargs):
         return query
 
 
+def _paginate_query(context, model, limit=None, marker=None, sort_key=None,
+                    sort_dir=None, query=None):
+    if not query:
+        query = model_query(context, model)
+    sort_keys = ['id']
+    if sort_key and sort_key not in sort_keys:
+        sort_keys.insert(0, sort_key)
+    try:
+        query = sqlalchemyutils.paginate_query(query, model, limit, sort_keys,
+                                               marker=marker,
+                                               sort_dir=sort_dir)
+    except db_exc.InvalidSortKey:
+        raise exception.InvalidParameterValue(
+            _('The sort_key value "%(key)s" is an invalid field for sorting')
+            % {'key': sort_key})
+    return query.all()
+
+
 def add_identity_filter(query, value):
     """Adds an identity filter to a query.
 
@@ -253,11 +271,13 @@ class Connection(api.Connection):
         except NoResultFound:
             raise exception.ServerNotFound(server=server_id)
 
-    def server_get_all(self, context, project_only, filters=None):
+    def server_get_all(self, context, project_only, limit=None, marker=None,
+                       sort_key=None, sort_dir=None, filters=None):
         query = model_query(context, models.Server,
                             project_only=project_only)
         query = self._add_servers_filters(context, query, filters)
-        return query.all()
+        return _paginate_query(context, models.Server, limit, marker,
+                               sort_key, sort_dir, query)
 
     @oslo_db_api.retry_on_deadlock
     def server_destroy(self, context, server_id):
