@@ -157,6 +157,8 @@ Request
   - flavor_name: flavor_name_query
   - image_uuid: image_query
   - ip: fixed_ip_query
+  - limit: limit
+  - marker: marker
   - all_tenants: all_tenants
   - fields: fields
 
@@ -202,6 +204,8 @@ Request
   - flavor_name: flavor_name_query
   - image_uuid: image_query
   - ip: fixed_ip_query
+  - limit: limit
+  - marker: marker
   - all_tenants: all_tenants
 
 
