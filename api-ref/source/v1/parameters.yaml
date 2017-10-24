@@ -122,6 +122,23 @@ image_query:
   in: query
   required: false
   type: string
+limit:
+  description: |
+    Requests a page size of items. Returns a number of items up to a limit value.
+    Use the ``limit`` parameter to make an initial limited request and use the ID
+    of the last-seen item from the response as the ``marker`` parameter value in a
+    subsequent limited request.
+  in: query
+  required: false
+  type: integer
+marker:
+  description: |
+    The ID of the last-seen item. Use the ``limit`` parameter to make an initial limited
+    request and use the ID of the last-seen item from the response as the ``marker``
+    parameter value in a subsequent limited request.
+  in: query
+  required: false
+  type: string
 server_name_query:
   description: |
     Filters the server list by name. Users can filter by prefix of server's name.

@@ -72,7 +72,8 @@ class Connection(object):
         """Get server by name."""
 
     @abc.abstractmethod
-    def server_get_all(self, context, project_only, filters=None):
+    def server_get_all(self, context, project_only, limit=None, marker=None,
+                       filters=None):
         """Get all servers."""
 
     @abc.abstractmethod

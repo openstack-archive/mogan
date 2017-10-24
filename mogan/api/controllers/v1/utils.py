@@ -31,7 +31,7 @@ JSONPATCH_EXCEPTIONS = (jsonpatch.JsonPatchException,
 def validate_limit(limit):
     if limit is None:
         return CONF.api.max_limit
-
+    limit = int(limit)
     if limit <= 0:
         raise wsme.exc.ClientSideError(_("Limit must be positive"))
 
