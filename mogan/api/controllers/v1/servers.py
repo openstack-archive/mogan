@@ -568,11 +568,19 @@ class ServerController(ServerControllerBase):
     def _get_server_collection(self, name=None, status=None,
                                flavor_uuid=None, flavor_name=None,
                                image_uuid=None, ip=None,
+                               limit=None, marker=None,
+                               sort_key=None, sort_dir=None,
                                all_tenants=None, fields=None):
         context = pecan.request.context
         project_only = True
         if context.is_admin and all_tenants:
             project_only = False
+
+        limit = api_utils.validate_limit(limit)
+
+        marker_obj = None
+        if marker:
+            marker_obj = objects.Server.get(pecan.request.context, marker)
 
         filters = {}
         if name:
@@ -587,6 +595,8 @@ class ServerController(ServerControllerBase):
             filters['image_uuid'] = image_uuid
 
         servers = objects.Server.list(pecan.request.context,
+                                      limit, marker_obj,
+                                      sort_key=sort_key, sort_dir=sort_dir,
                                       project_only=project_only,
                                       filters=filters)
         if ip:
@@ -617,10 +627,12 @@ class ServerController(ServerControllerBase):
 
     @expose.expose(ServerCollection, wtypes.text, wtypes.text,
                    types.uuid, wtypes.text, types.uuid, wtypes.text,
-                   types.listtype, types.boolean)
+                   wtypes.text, types.uuid, types.listtype, wtypes.text,
+                   wtypes.text, types.boolean)
     def get_all(self, name=None, status=None,
                 flavor_uuid=None, flavor_name=None, image_uuid=None, ip=None,
-                fields=None, all_tenants=None):
+                limit=None, marker=None, fields=None, sort_key='id',
+                sort_dir='asc', all_tenants=None):
         """Retrieve a list of server.
 
         :param fields: Optional, a list with a specified set of fields
@@ -635,6 +647,8 @@ class ServerController(ServerControllerBase):
         return self._get_server_collection(name, status,
                                            flavor_uuid, flavor_name,
                                            image_uuid, ip,
+                                           limit, marker,
+                                           sort_key, sort_dir,
                                            all_tenants=all_tenants,
                                            fields=fields)
 
@@ -654,9 +668,11 @@ class ServerController(ServerControllerBase):
 
     @expose.expose(ServerCollection, wtypes.text, wtypes.text,
                    types.uuid, wtypes.text, types.uuid, wtypes.text,
+                   wtypes.text, types.uuid, wtypes.text, wtypes.text,
                    types.boolean)
     def detail(self, name=None, status=None,
                flavor_uuid=None, flavor_name=None, image_uuid=None, ip=None,
+               limit=None, marker=None, sort_key='id', sort_dir='asc',
                all_tenants=None):
         """Retrieve detail of a list of servers."""
         # /detail should only work against collections
@@ -668,6 +684,8 @@ class ServerController(ServerControllerBase):
         return self._get_server_collection(name, status,
                                            flavor_uuid, flavor_name,
                                            image_uuid, ip,
+                                           limit, marker,
+                                           sort_key, sort_dir,
                                            all_tenants=all_tenants)
 
     @policy.authorize_wsgi("mogan:server", "create", False)

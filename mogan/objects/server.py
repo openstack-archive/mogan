@@ -133,10 +133,16 @@ class Server(base.MoganObject, object_base.VersionedObjectDictCompat):
         return data
 
     @classmethod
-    def list(cls, context, project_only=False, filters=None):
+    def list(cls, context, limit=None, marker=None, sort_key=None,
+             sort_dir=None, project_only=False,
+             filters=None):
         """Return a list of Server objects."""
         db_servers = cls.dbapi.server_get_all(context,
                                               project_only=project_only,
+                                              limit=limit,
+                                              marker=marker,
+                                              sort_key=sort_key,
+                                              sort_dir=sort_dir,
                                               filters=filters)
         return Server._from_db_object_list(db_servers, cls, context)
 
