@@ -771,6 +771,7 @@ class EngineManager(base_manager.BaseEngineManager):
         server.power_state = node['power_state']
         server.launched_at = timeutils.utcnow()
         server.status = states.ACTIVE
+        server.system_metadata.update({"managed_server": "True"})
         if server.power_state == states.POWER_OFF:
             server.status = states.STOPPED
 
