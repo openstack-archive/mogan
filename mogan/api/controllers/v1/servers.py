@@ -457,6 +457,8 @@ class Server(base.APIBase):
 
     @classmethod
     def convert_with_links(cls, server_data, fields=None):
+        # Handler the system metadata from server's data.
+        server_data.pop('system_metadata', None)
         server = Server(**server_data)
         server_uuid = server.uuid
         if fields is not None:
