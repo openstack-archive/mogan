@@ -46,7 +46,8 @@ import re
 _DEFAULT_SERVER_RETURN_FIELDS = ('uuid', 'name', 'description',
                                  'status', 'power_state')
 
-_ONLY_ADMIN_VISIBLE_SEVER_FIELDS = ('node', 'affinity_zone',)
+_ONLY_ADMIN_VISIBLE_SERVER_FIELDS = ('node', 'affinity_zone',
+                                     'system_metadata')
 
 LOG = log.getLogger(__name__)
 
@@ -433,6 +434,9 @@ class Server(base.APIBase):
     locked = types.boolean
     """Represent the current lock state of the server"""
 
+    system_metadata = {wtypes.text: types.jsontype}
+    """The system meta data of the server"""
+
     def __init__(self, **kwargs):
         super(Server, self).__init__(**kwargs)
         self.fields = []
@@ -445,7 +449,7 @@ class Server(base.APIBase):
                 if kwargs.get('status') != 'error':
                     setattr(self, field, wtypes.Unset)
                     continue
-            if field in _ONLY_ADMIN_VISIBLE_SEVER_FIELDS:
+            if field in _ONLY_ADMIN_VISIBLE_SERVER_FIELDS:
                 if not pecan.request.context.is_admin:
                     setattr(self, field, wtypes.Unset)
                     continue
@@ -487,7 +491,8 @@ class ServerPatchType(types.JsonPatchType):
                            '/power_state', '/availability_zone',
                            '/flavor_uuid', '/image_uuid', '/addresses',
                            '/launched_at', '/affinity_zone', '/key_name',
-                           '/partitions', '/fault', '/node', '/locked']
+                           '/partitions', '/fault', '/node', '/locked',
+                           '/system_metadata']
 
 
 class ServerCollection(base.APIBase):
