@@ -67,7 +67,8 @@ def get_test_server(**kw):
         'locked': kw.get('locked', False),
         'locked_by': kw.get('locked_by', None),
         'affinity_zone': kw.get('affinity_zone', 'ZON1'),
-        'key_name': kw.get('key_name', 'test_key')
+        'key_name': kw.get('key_name', 'test_key'),
+        'system_metadata': kw.get('system_metadata', {})
     }
 
 
