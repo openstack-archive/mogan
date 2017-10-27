@@ -7,7 +7,6 @@
         "mogan_object.data": {
             "status": "error",
             "node": "node-0",
-            "locked": false,
             "uuid": "c6e12c34-8917-4b95-938e-e146faf1de97",
             "availability_zone": null,
             "fault": {

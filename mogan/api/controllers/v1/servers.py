@@ -449,6 +449,9 @@ class Server(base.APIBase):
                 if not pecan.request.context.is_admin:
                     setattr(self, field, wtypes.Unset)
                     continue
+            if field == 'locked_by':
+                setattr(self, 'locked', bool(kwargs.get('locked_by')))
+                continue
             # Skip fields we do not expose.
             if not hasattr(self, field):
                 continue
