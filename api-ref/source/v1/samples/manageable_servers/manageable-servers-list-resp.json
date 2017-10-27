@@ -17,6 +17,7 @@
                 {
                     "address": "a4:dc:be:0e:82:a6",
                     "uuid": "1ec01153-685a-49b5-a6d3-45a4e7dddf54",
+                    "mode": "active-backup",
                     "neutron_port_id": "a9b94592-1d8e-46bb-836b-c7ba935b0137"
                 }
             ],
