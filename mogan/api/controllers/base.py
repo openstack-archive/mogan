@@ -46,3 +46,16 @@ class APIBase(wtypes.Base):
         for k in self.as_dict():
             if k not in except_list:
                 setattr(self, k, wsme.Unset)
+
+    def unset_fields(self, unset_list=None):
+        """Unset fields so they don't appear in the message body.
+
+        :param unset_list: A list of fields that will be unset.
+
+        """
+        if unset_list is None:
+            unset_list = []
+
+        for k in self.as_dict():
+            if k in unset_list:
+                setattr(self, k, wsme.Unset)

@@ -461,6 +461,8 @@ class Server(base.APIBase):
         server_uuid = server.uuid
         if fields is not None:
             server.unset_fields_except(fields)
+        # Handler the system metadata from server's data.
+        server.unset_fields(['system_metadata'])
         url = pecan.request.public_url
         server.links = [link.Link.make_link('self',
                                             url,

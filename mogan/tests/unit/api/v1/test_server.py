@@ -185,6 +185,22 @@ class TestServerAuthorization(v1_test.APITestV1):
         headers = self.gen_headers(self.context)
         self.post_json('/servers', body, headers=headers, status=403)
 
+    def test_server_get_one_by_owner_without_system_metadata(self):
+        # not admin but the owner
+        self.context.tenant = self.server1.project_id
+        headers = self.gen_headers(self.context, roles="no-admin")
+        resp = self.get_json('/servers/%s' % self.server1.uuid,
+                             headers=headers)
+        self.assertNotIn('system_metadata', resp)
+
+    def test_server_get_one_by_admin_without_system_metadata(self):
+        # when the evil tenant is admin, he can do everything.
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context, roles="admin")
+        resp = self.get_json('/servers/%s' % self.server1.uuid,
+                             headers=headers)
+        self.assertNotIn('system_metadata', resp)
+
 
 class TestPatch(v1_test.APITestV1):
 

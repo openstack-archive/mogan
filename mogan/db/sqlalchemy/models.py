@@ -94,6 +94,7 @@ class Server(Base):
     locked_by = Column(Enum('owner', 'admin'))
     affinity_zone = Column(String(255), nullable=True)
     key_name = Column(String(255), nullable=True)
+    system_metadata = Column(db_types.JsonEncodedDict)
 
 
 class ServerNic(Base):
