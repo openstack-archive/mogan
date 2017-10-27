@@ -457,6 +457,13 @@ class Server(base.APIBase):
 
     @classmethod
     def convert_with_links(cls, server_data, fields=None):
+        # Handler the 'internal_metadata:XXX' from server's metadata.
+        metdata = server_data.get('metadata')
+        if metdata:
+            for key in metdata.keys():
+                if key.split(':')[0] == 'internal_metadata':
+                    metdata.pop(key)
+
         server = Server(**server_data)
         server_uuid = server.uuid
         if fields is not None:
