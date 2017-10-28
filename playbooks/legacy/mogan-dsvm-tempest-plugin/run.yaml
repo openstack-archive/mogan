@@ -31,7 +31,7 @@
           [[local|localrc]]
           enable_plugin ironic git://git.openstack.org/openstack/ironic
           enable_plugin mogan git://git.openstack.org/openstack/mogan
-          IRONIC_TEMPEST_WHOLE_DISK_IMAGE=True
+          IRONIC_TEMPEST_WHOLE_DISK_IMAGE=False
           IRONIC_USE_RESOURCE_CLASSES=True
 
           EOF
