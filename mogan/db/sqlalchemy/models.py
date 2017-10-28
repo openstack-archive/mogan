@@ -385,3 +385,10 @@ class ServerTag(Base):
     server_id = Column(Integer, ForeignKey('servers.id'),
                        primary_key=True, nullable=False)
     tag = Column(String(255), primary_key=True, nullable=False)
+
+    server = orm.relationship(
+        "Server",
+        backref='tags',
+        primaryjoin='and_(ServerTag.server_id == Server.id)',
+        foreign_keys=server_id
+    )

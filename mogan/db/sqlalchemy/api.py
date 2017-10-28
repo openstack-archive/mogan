@@ -234,6 +234,7 @@ class Connection(api.Connection):
             nic_ref = models.ServerNic()
             nic_ref.update(nic)
             nic_refs.append(nic_ref)
+
         with _session_for_write() as session:
             try:
                 session.add(server)
@@ -1074,6 +1075,70 @@ class Connection(api.Connection):
         if not group:
             raise exception.ServerGroupNotFound(group_uuid=group_uuid)
         self._server_group_members_add(context, group.id, members)
+
+    def _check_server_exists(self, context, server_id):
+        if not model_query(context, models.Server)\
+                .filter_by(id=server_id).scalar():
+            raise exception.ServerNotFound(server=server_id)
+
+    @oslo_db_api.retry_on_deadlock
+    def set_server_tags(self, context, server_id, tags):
+        # remove duplicate tags
+        tags = set(tags)
+        with _session_for_write() as session:
+            self.unset_server_tags(context, server_id)
+            server_tags = []
+            for tag in tags:
+                server_tag = models.ServerTag(tag=tag, server_id=server_id)
+                session.add(server_tag)
+                server_tags.append(server_tag)
+
+        return server_tags
+
+    @oslo_db_api.retry_on_deadlock
+    def unset_server_tags(self, context, server_id):
+        self._check_server_exists(context, server_id)
+        with _session_for_write():
+            model_query(context, models.ServerTag)\
+                .filter_by(server_id=server_id).delete()
+
+    def get_server_tags_by_server_id(self, context, server_id):
+        self._check_server_exists(context, server_id)
+        result = (model_query(context, models.ServerTag)
+                  .filter_by(server_id=server_id)
+                  .all())
+        return result
+
+    @oslo_db_api.retry_on_deadlock
+    def add_server_tag(self, context, server_id, tag):
+        self._check_server_exists(context, server_id)
+        server_tag = models.ServerTag(tag=tag, server_id=server_id)
+        try:
+            with _session_for_write() as session:
+                session.add(server_tag)
+                session.flush()
+        except db_exc.DBDuplicateEntry:
+            # NOTE(litao): ignore tags duplicates
+            pass
+
+        return server_tag
+
+    @oslo_db_api.retry_on_deadlock
+    def delete_server_tag(self, context, server_id, tag):
+        self._check_server_exists(context, server_id)
+        with _session_for_write():
+            result = model_query(context, models.ServerTag).filter_by(
+                server_id=server_id, tag=tag).delete()
+
+            if not result:
+                raise exception.ServerTagNotFound(server_id=server_id, tag=tag)
+
+    def server_tag_exists(self, context, server_id, tag):
+        self._check_server_exists(context, server_id)
+        q = model_query(context, models.ServerTag)\
+            .filter_by(server_id=server_id, tag=tag)
+
+        return q.scalar()
 
 
 def _get_id_from_flavor_query(context, type_id):

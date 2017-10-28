@@ -149,3 +149,25 @@ class DbServerTestCase(base.DbTestCase):
                           self.context,
                           server.uuid,
                           {'uuid': '12345678-9999-0000-aaaa-123456789012'})
+
+    def test_tags_get_destroyed_after_destroying_a_server(self):
+        server = utils.create_test_server(id=123)
+        tag = utils.create_test_server_tag(self.context, server_id=server.id)
+
+        self.assertTrue(self.dbapi.server_tag_exists(self.context,
+                                                     server.id, tag.tag))
+        self.dbapi.server_destroy(self.context, server.id)
+        self.assertRaises(exception.ServerNotFound,
+                          self.dbapi.server_tag_exists,
+                          self.context, server.id, tag.tag)
+
+    def test_tags_get_destroyed_after_destroying_a_server_by_uuid(self):
+        server = utils.create_test_server(id=124)
+        tag = utils.create_test_server_tag(self.context, server_id=server.id)
+
+        self.assertTrue(self.dbapi.server_tag_exists(self.context,
+                                                     server.id, tag.tag))
+        self.dbapi.server_destroy(self.context, server.uuid)
+        self.assertRaises(exception.ServerNotFound,
+                          self.dbapi.server_tag_exists,
+                          self.context, server.id, tag.tag)
