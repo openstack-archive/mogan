@@ -12,8 +12,8 @@
 - job:
     name: mogan-dsvm-tempest-plugin
     parent: legacy-dsvm-base
-    run: playbooks/legacy/mogan-dsvm-tempest-plugin/run
-    post-run: playbooks/legacy/mogan-dsvm-tempest-plugin/post
+    run: playbooks/legacy/mogan-dsvm-tempest-plugin/run.yaml
+    post-run: playbooks/legacy/mogan-dsvm-tempest-plugin/post.yaml
     timeout: 3600
     required-projects:
       - openstack-infra/devstack-gate
@@ -37,8 +37,8 @@
 - job:
     name: mogan-tox-functional
     parent: legacy-base
-    run: playbooks/legacy/mogan-tox-functional/run
-    post-run: playbooks/legacy/mogan-tox-functional/post
+    run: playbooks/legacy/mogan-tox-functional/run.yaml
+    post-run: playbooks/legacy/mogan-tox-functional/post.yaml
     timeout: 2400
     required-projects:
       - openstack/requirements
