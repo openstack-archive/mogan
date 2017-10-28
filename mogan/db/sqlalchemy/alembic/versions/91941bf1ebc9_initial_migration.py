@@ -250,7 +250,6 @@ def upgrade():
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
-
     op.create_table(
         'server_group_member',
         sa.Column('created_at', sa.DateTime(), nullable=True),
@@ -262,4 +261,17 @@ def upgrade():
         sa.Index('server_group_member_server_idx', 'server_uuid'),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
+    )
+    op.create_table(
+        'server_tags',
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('server_id', sa.Integer(), nullable=False),
+        sa.Column('tag', sa.String(length=255), nullable=False),
+        sa.PrimaryKeyConstraint('server_id', 'tag'),
+        sa.ForeignKeyConstraint(['server_id'],
+                                ['servers.id']),
+        sa.Index('server_tags_tag_idx', 'tag'),
+        mysql_ENGINE='InnoDB',
+        mysql_DEFAULT_CHARSET='UTF8'
     )
