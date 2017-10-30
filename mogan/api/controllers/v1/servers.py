@@ -635,8 +635,25 @@ class ServerController(ServerControllerBase):
                 sort_dir='asc', all_tenants=None):
         """Retrieve a list of server.
 
+        :param name: Optional, to get the servers with this name
+        :param status: Optional, to get the servers in this status
+        :param flavor_uuid: Optional, to get the servers built with this
+                            flavor.
+        :param flavor_name: Optional, to get the servers built with this
+                            flavor.
+        :param flavor_name: Optional, to get the servers built with this
+                            image.
+        :param ip: Optional, to get the servers with this ip address.
+        :param limit: Optional, to determinate the maximum number of servers to
+                      return.
+        :param marker: Optional, to display a list of servers after this
+                       marker.
         :param fields: Optional, a list with a specified set of fields
                        of the resource to be returned.
+        :param sort_key: Optional, to sort the returned server list by this
+                         specified key value.
+        :param sort_dir: Optional, to return a list of servers with this
+                         sort direction.
         :param all_tenants: Optional, allows administrators to see the
                             servers owned by all tenants, otherwise only the
                             servers associated with the calling tenant are
@@ -674,8 +691,31 @@ class ServerController(ServerControllerBase):
                flavor_uuid=None, flavor_name=None, image_uuid=None, ip=None,
                limit=None, marker=None, sort_key='id', sort_dir='asc',
                all_tenants=None):
-        """Retrieve detail of a list of servers."""
+        """Retrieve detail of a list of servers.
         # /detail should only work against collections
+
+        :param name: Optional, to get the servers with this name
+        :param status: Optional, to get the servers in this status
+        :param flavor_uuid: Optional, to get the servers built with this
+                            flavor.
+        :param flavor_name: Optional, to get the servers built with this
+                            flavor.
+        :param flavor_name: Optional, to get the servers built with this
+                            image.
+        :param ip: Optional, to get the servers with this ip address.
+        :param limit: Optional, to determinate the maximum number of servers to
+                      return.
+        :param marker: Optional, to display a list of servers after this
+                       marker.
+        :param sort_key: Optional, to sort the returned server list by this
+                         specified key value.
+        :param sort_dir: Optional, to return a list of servers with this
+                         sort direction.
+        :param all_tenants: Optional, allows administrators to see the
+                            servers owned by all tenants, otherwise only the
+                            servers associated with the calling tenant are
+                            included in the response.
+        """
         cdict = pecan.request.context.to_policy_values()
         policy.authorize('mogan:server:get', cdict, cdict)
         parent = pecan.request.path.split('/')[:-1][-1]
