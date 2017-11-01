@@ -26,10 +26,10 @@ import glanceclient
 import glanceclient.exc
 from glanceclient.v2 import schemas
 from oslo_log import log as logging
-from oslo_serialization import jsonutils
 from oslo_utils import timeutils
 import six
 from six.moves import range
+import ujson
 
 from mogan.common import exception
 from mogan import conf
@@ -183,13 +183,13 @@ def _convert_timestamps_to_datetimes(image_meta):
 def _json_loads(properties, attr):
     prop = properties[attr]
     if isinstance(prop, six.string_types):
-        properties[attr] = jsonutils.loads(prop)
+        properties[attr] = ujson.loads(prop)
 
 
 def _json_dumps(properties, attr):
     prop = properties[attr]
     if not isinstance(prop, six.string_types):
-        properties[attr] = jsonutils.dumps(prop)
+        properties[attr] = ujson.dumps(prop)
 
 
 _CONVERT_PROPS = ('block_device_mapping', 'mappings')

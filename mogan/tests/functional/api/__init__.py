@@ -17,9 +17,9 @@
 
 
 from oslo_config import cfg
-from oslo_serialization import jsonutils
 import pecan
 import pecan.testing
+import ujson
 
 from mogan import objects
 from mogan.tests.unit.db import base
@@ -249,5 +249,5 @@ class BaseApiTest(base.DbTestCase):
         Note: the error body just one nested json string, so we do not need
         a recursive function.
         """
-        body = jsonutils.loads(resp.body)
-        return jsonutils.loads(body["error_message"])
+        body = ujson.loads(resp.body)
+        return ujson.loads(body["error_message"])

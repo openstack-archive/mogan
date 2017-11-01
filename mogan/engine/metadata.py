@@ -24,8 +24,8 @@ import posixpath
 
 from oslo_log import log as logging
 from oslo_serialization import base64
-from oslo_serialization import jsonutils
 from oslo_utils import timeutils
+import ujson
 
 
 OCATA = '2017-02-22'
@@ -132,7 +132,7 @@ class ServerMetadata(object):
         metadata['name'] = self.server.name
         metadata['availability_zone'] = self.availability_zone
 
-        return jsonutils.dump_as_bytes(metadata)
+        return ujson.dump_as_bytes(metadata)
 
     def _handle_content(self, path_tokens):
         if len(path_tokens) == 1:

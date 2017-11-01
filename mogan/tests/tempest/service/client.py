@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
 from tempest import config
 from tempest.lib.common import rest_client
 from tempest.lib.services.image.v2 import images_client as image_cli
 from tempest.lib.services.network import floating_ips_client as fip_cli
 from tempest.lib.services.network import networks_client as network_cli
 from tempest import manager
+import ujson
 
 CONF = config.CONF
 
@@ -32,10 +32,10 @@ class BaremetalComputeClient(rest_client.RestClient):
     uri_prefix = ""
 
     def deserialize(self, body):
-        return json.loads(body.replace("\n", ""))
+        return ujson.loads(body.replace("\n", ""))
 
     def serialize(self, body):
-        return json.dumps(body)
+        return ujson.dumps(body)
 
     def list_flavors(self):
         uri = '%s/flavors' % self.uri_prefix
@@ -296,10 +296,10 @@ class BaremetalNodeClient(rest_client.RestClient):
     uri_prefix = "v1"
 
     def deserialize(self, body):
-        return json.loads(body.replace("\n", ""))
+        return ujson.loads(body.replace("\n", ""))
 
     def serialize(self, body):
-        return json.dumps(body)
+        return ujson.dumps(body)
 
     def list_bm_nodes(self):
         uri = '%s/nodes' % self.uri_prefix

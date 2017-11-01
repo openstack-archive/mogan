@@ -23,12 +23,12 @@ from oslo_config import fixture as config_fixture
 from oslo_context import context
 from oslo_db import options
 from oslo_log import log
-from oslo_serialization import jsonutils
 from oslotest import base
 import pecan
 import six
 import testscenarios
 import testtools
+import ujson
 
 from mogan.common import config as mogan_config
 from mogan.tests import policy_fixture
@@ -156,9 +156,9 @@ class TestCase(base.BaseTestCase):
 
         """
         if isinstance(expected, six.string_types):
-            expected = jsonutils.loads(expected)
+            expected = ujson.loads(expected)
         if isinstance(observed, six.string_types):
-            observed = jsonutils.loads(observed)
+            observed = ujson.loads(observed)
 
         def sort_key(x):
             if isinstance(x, (set, list)) or isinstance(x, datetime.datetime):
