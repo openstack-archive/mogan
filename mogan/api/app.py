@@ -17,12 +17,15 @@ import sys
 from oslo_config import cfg
 from oslo_reports import guru_meditation_report as gmr
 from oslo_reports import opts as gmr_opts
+import osprofiler.web as osprofiler_web
 import pecan
 
 from mogan.api import config
 from mogan.api import hooks
 from mogan.api import middleware
 from mogan.api.middleware import auth_token
+from mogan.common import profiler
+from mogan.conf import CONF
 from mogan import version
 
 
@@ -62,6 +65,9 @@ def setup_app(pecan_config=None, extra_hooks=None):
         app, dict(cfg.CONF),
         public_api_routes=pecan_config.app.acl_public_routes)
 
+    if CONF.profiler.enabled:
+        app = osprofiler_web.WsgiMiddleware(app)
+
     return app
 
 
@@ -77,4 +83,5 @@ class VersionSelectorApplication(object):
 def build_wsgi_app():
     from mogan.common import service as mogan_service
     mogan_service.prepare_service(sys.argv)
+    profiler.setup('mogan_uwsgi_api', CONF.host)
     return setup_app()

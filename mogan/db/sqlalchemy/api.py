@@ -25,6 +25,8 @@ from oslo_log import log as logging
 from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+from osprofiler import sqlalchemy as osp_sqlalchemy
+import sqlalchemy as sa
 from sqlalchemy import and_
 from sqlalchemy import or_
 from sqlalchemy import orm
@@ -36,6 +38,8 @@ from sqlalchemy.sql import true
 
 from mogan.common import exception
 from mogan.common.i18n import _
+from mogan.common import profiler
+from mogan.conf import CONF
 from mogan.db import api
 from mogan.db.sqlalchemy import models
 
@@ -50,14 +54,20 @@ def get_backend():
 
 
 def _session_for_read():
-    return enginefacade.reader.using(_CONTEXT)
+    return _wrap_session(enginefacade.reader.using(_CONTEXT))
 
 
 # Please add @oslo_db_api.retry_on_deadlock decorator to all methods using
 # _session_for_write (as deadlocks happen on write), so that oslo_db is able
 # to retry in case of deadlocks.
 def _session_for_write():
-    return enginefacade.writer.using(_CONTEXT)
+    return _wrap_session(enginefacade.writer.using(_CONTEXT))
+
+
+def _wrap_session(session):
+    if CONF.profiler.enabled and CONF.profiler.trace_sqlalchemy:
+        session = osp_sqlalchemy.wrap_session(sa, session)
+    return session
 
 
 def model_query(context, model, *args, **kwargs):
@@ -120,6 +130,7 @@ def add_identity_filter(query, value):
         raise exception.InvalidParameterValue(identity=value)
 
 
+@profiler.trace_cls("db_api")
 class Connection(api.Connection):
     """SqlAlchemy connection."""
 

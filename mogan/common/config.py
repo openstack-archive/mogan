@@ -14,6 +14,7 @@
 #    under the License.
 
 from oslo_config import cfg
+import osprofiler.opts as profiler_opts
 
 from mogan.common import rpc
 from mogan import version
@@ -26,3 +27,4 @@ def parse_args(argv, default_config_files=None):
              version=version.version_info.release_string(),
              default_config_files=default_config_files)
     rpc.init(cfg.CONF)
+    profiler_opts.set_defaults(cfg.CONF)

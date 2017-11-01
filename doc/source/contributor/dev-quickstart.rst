@@ -409,6 +409,16 @@ Source credentials, and spawn a server as the ``demo`` user::
     # spawn a server
     openstack baremetalcompute server create --flavor $MOGAN_DEFAULT_FLAVOR --nic net-id=$net --image $image test
 
+
+OSProfiler Tracing in Mogan
+============================
+
+OSProfiler is an OpenStack cross-project profiling library. It is being
+used among OpenStack projects to look at performance issues and detect
+bottlenecks. For details on how OSProfiler works and how to use it in mogan,
+please refer to `OSProfiler Support Documentation <osprofiler-support>`_.
+
+
 Building developer documentation
 ================================
 
