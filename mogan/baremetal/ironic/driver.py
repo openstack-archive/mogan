@@ -153,12 +153,13 @@ class IronicDriver(base_driver.BaseEngineDriver):
         # Add the required fields to deploy a node.
         patch.append({'path': '/instance_info/image_source', 'op': 'add',
                       'value': server.image_uuid})
+
+        root_gb = node.properties.get('local_gb', 0)
+
         if preserve_ephemeral is not None:
             patch.append({'path': '/instance_info/preserve_ephemeral',
                           'op': 'add', 'value': str(preserve_ephemeral)})
         if partitions:
-            patch.append({'path': '/instance_info/root_gb', 'op': 'add',
-                          'value': str(partitions.get('root_gb', 0))})
             patch.append({'path': '/instance_info/ephemeral_gb', 'op': 'add',
                           'value': str(partitions.get('ephemeral_gb', 0))})
             patch.append({'path': '/instance_info/swap_mb', 'op': 'add',
@@ -167,6 +168,13 @@ class IronicDriver(base_driver.BaseEngineDriver):
             # ``grub2`` installed within it
             patch.append({'path': '/instance_info/capabilities',
                           'op': 'add', 'value': '{"boot_option": "local"}'})
+
+            # If partitions is not None, use the root_gb in partitions instead
+            root_gb = partitions.get('root_gb', root_gb)
+
+        # root_gb is required not optional
+        patch.append({'path': '/instance_info/root_gb', 'op': 'add',
+                      'value': str(root_gb)})
 
         try:
             # FIXME(lucasagomes): The "retry_on_conflict" parameter was added
