@@ -292,6 +292,11 @@ class Connection(object):
         return IMPL.server_group_members_add(context, group_uuid, members)
 
     @abc.abstractmethod
+    def server_group_members_destroy_by_server(self, content, server_uuid):
+        """Delete members from server groups just by server uuid"""
+        return IMPL.server_group_members_destroy_by_server(content, server_uuid)
+
+    @abc.abstractmethod
     def set_server_tags(self, context, server_id, tags):
         """Replace all of the server tags with specified list of tags.
 

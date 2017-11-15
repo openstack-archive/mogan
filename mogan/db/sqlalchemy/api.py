@@ -1096,6 +1096,12 @@ class Connection(api.Connection):
             raise exception.ServerGroupNotFound(group_uuid=group_uuid)
         self._server_group_members_add(context, group.id, members)
 
+    def server_group_members_destroy_by_server(self, content, server_uuid):
+        members = model_query(content, models.ServerGroupMember).filter_by(
+                server_uuid=server_uuid)
+        with _session_for_write():
+            members.delete()
+
     def _check_server_exists(self, context, server_id):
         if not model_query(context, models.Server)\
                 .filter_by(id=server_id).scalar():
