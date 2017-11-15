@@ -828,3 +828,7 @@ class ServerController(ServerControllerBase):
         """
         db_server = self._resource or self._get_resource(server_uuid)
         pecan.request.engine_api.delete(pecan.request.context, db_server)
+
+        # clean up members from server groups
+        objects.ServerGroup.destroy_members_by_server(pecan.request.context,
+                                                      server_uuid)

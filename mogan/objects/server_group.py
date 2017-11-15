@@ -86,6 +86,10 @@ class ServerGroup(base.MoganObject, object_base.VersionedObjectDictCompat):
         self.dbapi.server_group_update(context, self.uuid, updates)
         self.obj_reset_changes()
 
+    @classmethod
+    def destroy_members_by_server(cls, content, server_uuid):
+        cls.dbapi.server_group_members_destroy_by_server(content, server_uuid)
+
 
 @base.MoganObjectRegistry.register
 class ServerGroupList(object_base.ObjectListBase, base.MoganObject,
