@@ -1,0 +1,11 @@
+Code-Review+1: wanghao <sxmatch1986@gmail.com>
+Code-Review+1: Xinran WANG <xin-ran.wang@intel.com>
+Code-Review+2: ShaoHe Feng <shaohe.feng@intel.com>
+Code-Review+2: liusheng <liusheng2048@gmail.com>
+Workflow+1: liusheng <liusheng2048@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Wed, 15 Nov 2017 10:21:03 +0000
+Reviewed-on: https://review.openstack.org/515565
+Project: openstack/mogan
+Branch: refs/heads/master
