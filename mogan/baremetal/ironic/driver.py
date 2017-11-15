@@ -128,18 +128,27 @@ class IronicDriver(base_driver.BaseEngineDriver):
 
         return dic
 
-    def _port_or_group_resource(self, port_or_pg):
-        """Helper method to create resource dict from port or portgroup
+    def _port_resource(self, port):
+        """Helper method to create resource dict from port stats."""
 
-        stats.
-
-        """
-
-        neutron_port_id = (port_or_pg.internal_info.get(TENANT_VIF_KEY) or
-                           port_or_pg.extra.get(VIF_KEY))
+        neutron_port_id = (port.internal_info.get(TENANT_VIF_KEY) or
+                           port.extra.get(VIF_KEY))
         dic = {
-            'address': port_or_pg.address,
-            'uuid': port_or_pg.uuid,
+            'address': port.address,
+            'uuid': port.uuid,
+            'neutron_port_id': neutron_port_id,
+        }
+        return dic
+
+    def _portgroup_resource(self, portgroup):
+        """Helper method to create resource dict from portgroup stats. """
+
+        neutron_port_id = (portgroup.internal_info.get(TENANT_VIF_KEY) or
+                           portgroup.extra.get(VIF_KEY))
+        dic = {
+            'address': portgroup.address,
+            'uuid': portgroup.uuid,
+            'mode': portgroup.mode,
             'neutron_port_id': neutron_port_id,
         }
         return dic
@@ -465,11 +474,11 @@ class IronicDriver(base_driver.BaseEngineDriver):
             if node.resource_class is None:
                 continue
             # Add ports to the associated node
-            node.ports = [self._port_or_group_resource(port)
+            node.ports = [self._port_resource(port)
                           for port in port_list
                           if node.uuid == port.node_uuid]
             # Add portgroups to the associated node
-            node.portgroups = [self._port_or_group_resource(portgroup)
+            node.portgroups = [self._portgroup_resource(portgroup)
                                for portgroup in portgroup_list
                                if node.uuid == portgroup.node_uuid]
             node_resources[node.uuid] = self._node_resource(node)
@@ -815,11 +824,11 @@ class IronicDriver(base_driver.BaseEngineDriver):
         portgroup_list = self.ironicclient.call("portgroup.list", **params)
 
         # Add ports to the associated node
-        node.ports = [self._port_or_group_resource(port)
+        node.ports = [self._port_resource(port)
                       for port in port_list
                       if node.uuid == port.node_uuid]
         # Add portgroups to the associated node
-        node.portgroups = [self._port_or_group_resource(portgroup)
+        node.portgroups = [self._portgroup_resource(portgroup)
                            for portgroup in portgroup_list
                            if node.uuid == portgroup.node_uuid]
         node.power_state = map_power_state(node.power_state)
