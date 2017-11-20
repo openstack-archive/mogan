@@ -28,7 +28,8 @@
             }
         ],
         "user_data": "IyEvYmluL2Jhc2gKL2Jpbi9zdQplY2hvICJJIGFtIGluIHlvdSEiCg==",
-        "key_name": "test_key"
+        "key_name": "test_key",
+        "adminPass": "Qv7Lsc35H4xM"
     },
     "scheduler_hints": {
         "group": "group1"

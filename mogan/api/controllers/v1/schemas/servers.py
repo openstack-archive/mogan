@@ -27,6 +27,7 @@ create_server = {
                 'availability_zone': parameter_types.availability_zone,
                 'image_uuid': parameter_types.image_id,
                 'flavor_uuid': parameter_types.flavor_id,
+                'adminPass': parameter_types.admin_password,
                 'networks': {
                     'type': 'array', 'minItems': 1,
                     'items': {

@@ -315,8 +315,8 @@ class API(object):
     def _create_server(self, context, flavor, image_uuid,
                        name, description, availability_zone, metadata,
                        requested_networks, user_data, injected_files,
-                       key_name, min_count, max_count, partitions,
-                       scheduler_hints):
+                       admin_password, key_name, min_count, max_count,
+                       partitions, scheduler_hints):
         """Verify all the input parameters"""
         image = self._get_image(context, image_uuid)
         iwdi = self._is_whole_disk_image(context, image)
@@ -369,6 +369,7 @@ class API(object):
                                                        requested_networks,
                                                        user_data,
                                                        decoded_files,
+                                                       admin_password,
                                                        key_pair,
                                                        partitions,
                                                        request_spec,
@@ -378,8 +379,9 @@ class API(object):
     def create(self, context, flavor, image_uuid,
                name=None, description=None, availability_zone=None,
                metadata=None, requested_networks=None, user_data=None,
-               injected_files=None, key_name=None, min_count=None,
-               max_count=None, partitions=None, scheduler_hints=None):
+               injected_files=None, admin_password=None, key_name=None,
+               min_count=None, max_count=None, partitions=None,
+               scheduler_hints=None):
         """Provision servers
 
         Sending server information to the engine and will handle
@@ -396,7 +398,7 @@ class API(object):
                                    image_uuid, name, description,
                                    availability_zone, metadata,
                                    requested_networks, user_data,
-                                   injected_files, key_name,
+                                   injected_files, admin_password, key_name,
                                    min_count, max_count, partitions,
                                    scheduler_hints)
 

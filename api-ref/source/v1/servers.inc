@@ -42,6 +42,7 @@ Request
   - metadata: metadata
   - user_data: user_data
   - personality: personality
+  - adminPass: adminPass
   - key_name: key_name
   - partitions: partitions
   - scheduler_hints: scheduler_hints
