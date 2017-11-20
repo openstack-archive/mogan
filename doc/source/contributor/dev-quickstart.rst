@@ -117,9 +117,9 @@ it, follow the instructions for installing prerequisites above and
 
 - On Fedora 23::
 
-    sudo dnf install -y dnf-plugins-core
-    sudo dnf copr enable -y mstuchli/Python3.5
-    dnf install -y python35-python3
+    sudo dnf install dnf-plugins-core
+    sudo dnf copr enable mstuchli/Python3.5
+    dnf install python35-python3
 
 Python Prerequisites
 --------------------
