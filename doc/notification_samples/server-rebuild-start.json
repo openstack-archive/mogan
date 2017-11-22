@@ -1,0 +1,56 @@
+{
+    "event_type": "server.rebuild.start",
+    "payload": {
+        "mogan_object.name": "ServerActionPayload",
+        "mogan_object.namespace": "mogan",
+        "mogan_object.version": "1.0",
+        "mogan_object.data": {
+            "node": "node-0",
+            "addresses": [
+                {
+                    "mogan_object.name": "ServerAddressesPayload",
+                    "mogan_object.namespace": "mogan",
+                    "mogan_object.version": "1.0",
+                    "mogan_object.data": {
+                        "preserve_on_delete": false,
+                        "network_id": "432c58a4-e616-48f2-a592-069350c8de4d",
+                        "fixed_ips": [
+                            {
+                                "subnet_id": "de7322f3-52aa-4007-92f7-65a94b42ae95",
+                                "ip_address": "10.0.0.11"
+                            },
+                            {
+                                "subnet_id": "50a1d493-d9f6-4d2b-bad8-0d7ce40e934a",
+                                "ip_address": "fdc1:111a:e65d:0:f816:3eff:fecf:d3da"
+                            }
+                        ],
+                        "floating_ip": null,
+                        "mac_address": "52:54:00:83:8f:a7",
+                        "port_id": "a9508283-e432-4404-a41f-edb718c60910"
+                    }
+                }
+            ],
+            "availability_zone": null,
+            "updated_at": "2017-11-22T08:45:56Z",
+            "image_uuid": "a765954c-92e6-4f3a-ad13-6412be6047b7",
+            "user_id": "a3efc47b85014843b93e06fa176c8ff1",
+            "uuid": "0a56733a-dba5-4fdc-8c0b-90ac9b299974",
+            "affinity_zone": null,
+            "power_state": "power on",
+            "flavor_uuid": "abad84a7-d4eb-4cae-9f7c-c39ebab7c55d",
+            "project_id": "dea7c33a22fd4e96b1b3a0afcbc17586",
+            "launched_at": "2017-11-22T08:45:56Z",
+            "metadata": {},
+            "status": "rebuilding",
+            "description": null,
+            "key_name": null,
+            "partitions": {},
+            "name": "test",
+            "fault": null,
+            "created_at": "2017-11-22T08:43:36Z",
+            "locked_by": null
+        }
+    },
+    "priority": "INFO",
+    "publisher_id": "mogan-engine:localhost"
+}
