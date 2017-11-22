@@ -150,8 +150,9 @@ class NotificationAction(BaseMoganEnum):
     SOFT_REBOOT = 'soft_reboot'
     SHUTDOWN = 'shutdown'
     CREATE = 'create'
+    REBUILD = 'rebuild'
 
-    ALL = (UPDATE, EXCEPTION, DELETE, CREATE, POWER_OFF)
+    ALL = (UPDATE, EXCEPTION, DELETE, CREATE, POWER_OFF, REBUILD)
 
 
 class NotificationPhaseField(object_fields.BaseEnumField):
