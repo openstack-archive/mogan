@@ -554,6 +554,11 @@ class EngineManager(base_manager.BaseEngineManager):
         """
         LOG.debug('Rebuilding server: %s', server)
 
+        notifications.notify_about_server_action(
+            context, server, self.host,
+            action=fields.NotificationAction.REBUILD,
+            phase=fields.NotificationPhase.START)
+
         fsm = utils.get_state_machine(start_state=server.status)
 
         try:
@@ -565,7 +570,15 @@ class EngineManager(base_manager.BaseEngineManager):
                           "Exception: %(exception)s",
                           {"uuid": server.uuid,
                            "exception": e})
+                notifications.notify_about_server_action(
+                    context, server, self.host,
+                    action=fields.NotificationAction.REBUILD,
+                    phase=fields.NotificationPhase.ERROR, exception=e)
         utils.process_event(fsm, server, event='done')
+        notifications.notify_about_server_action(
+            context, server, self.host,
+            action=fields.NotificationAction.REBUILD,
+            phase=fields.NotificationPhase.END)
         LOG.info('Server was successfully rebuilt')
 
     def get_serial_console(self, context, server, console_type):
