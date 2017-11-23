@@ -214,6 +214,13 @@ if is_service_enabled mogan; then
         if ! is_service_enabled placement; then
             install_placement
         fi
+        # Do not support fedora at present.
+        if [[ ${MOGAN_WITH_RSD_SIMULATOR} != False ]] && is_ubuntu; then
+            source $MOGAN_DIR/devstack/rsd_simulator
+            git_clone $INTEL_RSD_GIT $INTEL_RSD_PATH master
+            install_nodejs
+            install_nodejs_simulator_package
+        fi
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring mogan"
         if is_service_enabled tempest; then
@@ -248,6 +255,7 @@ if is_service_enabled mogan; then
     fi
 
     if [[ "$1" == "clean" ]]; then
+        clean_nodejs_simulator_package
         echo_summary "Cleaning mogan"
         # TODO(zhenguo): Remove this when placement is started as a separated service
         if ! is_service_enabled placement; then
