@@ -220,6 +220,7 @@ if is_service_enabled mogan; then
             git_clone $INTEL_RSD_GIT $INTEL_RSD_PATH master
             install_nodejs
             install_nodejs_simulator_package
+            start_psme_simulator
         fi
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring mogan"
@@ -248,6 +249,7 @@ if is_service_enabled mogan; then
     if [[ "$1" == "unstack" ]]; then
         echo_summary "Shutting down mogan"
         stop_mogan
+        stop_psme_simulator
         # TODO(zhenguo): Remove this when placement is started as a separated service
         if ! is_service_enabled placement; then
             stop_placement
