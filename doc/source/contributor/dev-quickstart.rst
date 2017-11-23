@@ -392,6 +392,10 @@ local.conf should be as follows::
       # Enable Mogan plugin
       enable_plugin mogan https://git.openstack.org/openstack/mogan
 
+If you want to enable RSD simulator for RSD feature testing, please append the
+follow configure in local.conf ::
+    MOGAN_WITH_RSD_SIMULATOR=True
+
 Run stack.sh::
 
     ./stack.sh
