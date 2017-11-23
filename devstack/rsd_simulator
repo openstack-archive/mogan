@@ -1,0 +1,41 @@
+#!/bin/bash
+# REF: https://github.com/intel/intelRSD/tree/master/Simulators
+
+NODEJS_SOURCE_REPO_URL="https://deb.nodesource.com/setup_6.x"
+NODEJS_SOURCE_REPO_SH="/tmp/install_nodejs_source"
+
+INTEL_RSD_GIT="https://github.com/intel/intelRSD.git"
+INTEL_RSD_PATH="/opt/stack/intelRSD"
+TRY_TIMES=10
+
+# install_nodejs - RSD simulator need nodejs.
+# Script to install the NodeSource Node.js v6.x repo onto a
+# Debian or Ubuntu system.
+function install_nodejs {
+    wget --tries=$TRY_TIMES -qO- $NODEJS_SOURCE_REPO_URL -O $NODEJS_SOURCE_REPO_SH
+    if [[ $? -ne 0 ]]; then
+        die $LINENO "Failed to get NodeSource repe install shell, please " \
+        "check the URL $NODEJS_SOURCE_REPO_URL is available."
+    fi
+
+    sudo bash $NODEJS_SOURCE_REPO_SH
+    if [[ $? -ne 0 ]]; then
+        die $LINENO "Failed to install NodeSource Node.js to apt-get repo."
+    fi
+
+    sudo apt-get install --yes nodejs
+    if [[ $? -ne 0 ]]; then
+        die $LINENO "Failed to install Node.js."
+    fi
+}
+
+# Install runtime environment Node.js JavaScript package.
+function install_nodejs_simulator_package {
+    sudo npm install npm -g
+    pushd $INTEL_RSD_PATH/Simulators/node-ssdp
+    npm install
+    popd
+    pushd $INTEL_RSD_PATH/Simulators/simulators
+    npm install
+    popd
+}
