@@ -254,6 +254,14 @@ if is_service_enabled mogan; then
             cleanup_placement
         fi
     fi
+
+    # Do not support fedora at present.
+    if [[ ${MOGAN_WITH_RSD_SIMULATOR} != False ]] && is_ubuntu; then
+        source $MOGAN_DIR/devstack/rsd_simulator
+        git_clone $INTEL_RSD_GIT $INTEL_RSD_PATH master
+        install_nodejs
+        install_nodejs_simulator_package
+    fi
 fi
 
 # Restore xtrace
