@@ -26,10 +26,10 @@ class TestKeyPairObject(base.DbTestCase):
         self.ctxt = context.get_admin_context()
         self.fake_keypair = {
             "id": 1,
-            "public_key": "fake-publick-key",
+            "public_key": "fake-admin-key",
             "user_id": "e78b60069fc9467e97fb4b74de9cadc1",
             "project_id": "c18e8a1a870d4c08a0b51ced6e0b6459",
-            "name": "test_key",
+            "name": "admin_key",
             "fingerprint": "f1:83:34:02:f9:63:79:d4:bd:2a:1d:50:16:61:1b:cc",
             "type": "ssh",
             "created_at": "2017-04-18T09:16:18.182631+00:00",
@@ -39,8 +39,7 @@ class TestKeyPairObject(base.DbTestCase):
     def test_get(self):
         with mock.patch.object(self.dbapi, 'key_pair_get',
                                autospec=True) as mock_keypair_get:
-            mock_keypair_get.return_value = self.fake_keypair
-
+            mock_keypair_get.return_value = [self.fake_keypair]
             keypair = objects.KeyPair.get_by_name(
                 self.context, self.fake_keypair['user_id'],
                 self.fake_keypair['name'])
@@ -70,7 +69,8 @@ class TestKeyPairObject(base.DbTestCase):
                 mock_keypair_create.assert_called_once_with(
                     self.context, values)
                 self.assertEqual(self.fake_keypair['name'], keypair.name)
-                self.assertEqual(self.fake_keypair['user_id'], keypair.user_id)
+                self.assertEqual(self.fake_keypair['user_id'],
+                                 keypair.user_id)
 
     def test_destroy(self):
         with mock.patch.object(self.dbapi, 'key_pair_destroy',

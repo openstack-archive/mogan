@@ -62,7 +62,9 @@ class KeyPair(base.MoganObject):
     @classmethod
     def get_by_name(cls, context, user_id, name):
         db_keypair = cls.dbapi.key_pair_get(context, user_id, name)
-        return cls._from_db_object(context, cls(), db_keypair)
+        if len(db_keypair) != 1:
+            raise exception.MultiKeypairsExist(key_name=name)
+        return cls._from_db_object(context, cls(), db_keypair[0])
 
     @classmethod
     def destroy_by_name(cls, context, user_id, name):
@@ -73,8 +75,10 @@ class KeyPair(base.MoganObject):
             raise exception.ObjectActionError(action='create',
                                               reason='already created')
         try:
-            self.dbapi.key_pair_get(self._context, self.user_id, self.name)
-            raise exception.KeypairExists(key_name=self.name)
+            res = self.dbapi.key_pair_get(self._context, self.user_id,
+                                          self.name)
+            if len(res) != 0:
+                raise exception.KeypairExists(key_name=self.name)
         except exception.KeypairNotFound:
             pass
         updates = self.obj_get_changes()
@@ -95,10 +99,6 @@ class KeyPairList(object_base.ObjectListBase, base.MoganObject):
     fields = {
         'objects': fields.ListOfObjectsField('KeyPair'),
     }
-
-    @classmethod
-    def get_count_from_db(cls, context, user_id):
-        return cls.dbapi.key_pair_count_by_user(context, user_id)
 
     @classmethod
     def get_by_user(cls, context, user_id):

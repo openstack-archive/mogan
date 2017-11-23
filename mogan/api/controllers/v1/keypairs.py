@@ -135,8 +135,6 @@ class KeyPairController(rest.RestController):
 
         :param key_name: the name of keypair to be deleted.
         """
-        # TODO(liusheng): the input user_id should be only suport by admin
-        # as default, need to add policy check here.
         user_id = user_id or pecan.request.context.user_id
         pecan.request.engine_api.delete_key_pair(
             pecan.request.context, user_id, key_name)
@@ -147,9 +145,6 @@ class KeyPairController(rest.RestController):
 
         :param key_name: the name of keypair to be queried.
         """
-        # TODO(liusheng): the input user_id should be only suport by admin
-        # as default, need to add policy check here.
-        user_id = user_id or pecan.request.context.user_id
         keypair = pecan.request.engine_api.get_key_pair(
             pecan.request.context, user_id, key_name)
         return KeyPair.convert_with_links(keypair)
@@ -157,8 +152,6 @@ class KeyPairController(rest.RestController):
     @expose.expose(KeyPairCollection, wtypes.text)
     def get_all(self, user_id=None):
         """Query all keypairs of current user."""
-        # TODO(liusheng): the input user_id should be only suport by admin
-        # as default, need to add policy check here.
         user_id = user_id or pecan.request.context.user_id
         keypairs = pecan.request.engine_api.get_key_pairs(
             pecan.request.context, user_id)
