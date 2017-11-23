@@ -465,6 +465,10 @@ class InvalidKeypair(Invalid):
     _msg_fmt = _("Keypair data is invalid: %(reason)s")
 
 
+class MultiKeypairsExist(Conflict):
+    _msg_fmt = ("Multi keypairs exist with the name %(key_name)s")
+
+
 class InvalidInventory(Invalid):
     _msg_fmt = _("Inventory for '%(resource_class)s' on "
                  "resource provider '%(resource_provider)s' invalid.")

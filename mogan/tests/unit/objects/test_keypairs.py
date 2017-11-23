@@ -24,7 +24,7 @@ class TestKeyPairObject(base.DbTestCase):
     def setUp(self):
         super(TestKeyPairObject, self).setUp()
         self.ctxt = context.get_admin_context()
-        self.fake_keypair = {
+        self.fake_keypair = [{
             "id": 1,
             "public_key": "fake-publick-key",
             "user_id": "e78b60069fc9467e97fb4b74de9cadc1",
@@ -34,7 +34,7 @@ class TestKeyPairObject(base.DbTestCase):
             "type": "ssh",
             "created_at": "2017-04-18T09:16:18.182631+00:00",
             "updated_at": None
-        }
+        }]
 
     def test_get(self):
         with mock.patch.object(self.dbapi, 'key_pair_get',
@@ -42,15 +42,15 @@ class TestKeyPairObject(base.DbTestCase):
             mock_keypair_get.return_value = self.fake_keypair
 
             keypair = objects.KeyPair.get_by_name(
-                self.context, self.fake_keypair['user_id'],
-                self.fake_keypair['name'])
+                self.context, self.fake_keypair[0]['user_id'],
+                self.fake_keypair[0]['name'])
 
             mock_keypair_get.assert_called_once_with(
-                self.context, self.fake_keypair['user_id'],
-                self.fake_keypair['name'])
+                self.context, self.fake_keypair[0]['user_id'],
+                self.fake_keypair[0]['name'])
             self.assertEqual(self.context, keypair._context)
-            self.assertEqual(self.fake_keypair['name'], keypair.name)
-            self.assertEqual(self.fake_keypair['user_id'], keypair.user_id)
+            self.assertEqual(self.fake_keypair[0]['name'], keypair.name)
+            self.assertEqual(self.fake_keypair[0]['user_id'], keypair.user_id)
 
     def test_create(self):
         with mock.patch.object(self.dbapi, 'key_pair_get',
@@ -58,10 +58,10 @@ class TestKeyPairObject(base.DbTestCase):
             with mock.patch.object(self.dbapi, 'key_pair_create',
                                    autospec=True) as mock_keypair_create:
                 mock_keypair_get.side_effect = exception.KeypairNotFound(
-                    user_id=self.fake_keypair['user_id'],
-                    name=self.fake_keypair['name'])
-                mock_keypair_create.return_value = self.fake_keypair
-                create_params = copy.copy(self.fake_keypair)
+                    user_id=self.fake_keypair[0]['user_id'],
+                    name=self.fake_keypair[0]['name'])
+                mock_keypair_create.return_value = self.fake_keypair[0]
+                create_params = copy.copy(self.fake_keypair[0])
                 create_params.pop('id')
                 keypair = objects.KeyPair(self.context,
                                           **create_params)
@@ -69,16 +69,17 @@ class TestKeyPairObject(base.DbTestCase):
                 keypair.create()
                 mock_keypair_create.assert_called_once_with(
                     self.context, values)
-                self.assertEqual(self.fake_keypair['name'], keypair.name)
-                self.assertEqual(self.fake_keypair['user_id'], keypair.user_id)
+                self.assertEqual(self.fake_keypair[0]['name'], keypair.name)
+                self.assertEqual(self.fake_keypair[0]['user_id'],
+                                 keypair.user_id)
 
     def test_destroy(self):
         with mock.patch.object(self.dbapi, 'key_pair_destroy',
                                autospec=True) as mock_keypair_destroy:
             mock_keypair_destroy.return_value = self.fake_keypair
             keypair = objects.KeyPair(self.context,
-                                      **self.fake_keypair)
+                                      **self.fake_keypair[0])
             keypair.destroy()
             mock_keypair_destroy.assert_called_once_with(
-                self.context, self.fake_keypair['user_id'],
-                self.fake_keypair['name'])
+                self.context, self.fake_keypair[0]['user_id'],
+                self.fake_keypair[0]['name'])
