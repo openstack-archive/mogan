@@ -769,19 +769,28 @@ class Connection(api.Connection):
     @oslo_db_api.retry_on_deadlock
     def key_pair_destroy(self, context, user_id, name):
         with _session_for_write():
-            result = model_query(context, models.KeyPair).filter_by(
-                user_id=user_id).filter_by(name=name).delete()
+            if context.is_admin:
+                result = model_query(context, models.KeyPair). filter_by(
+                    name=name).delete()
+            else:
+                result = model_query(context, models.KeyPair).filter_by(
+                    user_id=user_id).filter(name=name).delete()
         if not result:
             raise exception.KeypairNotFound(user_id=user_id, name=name)
 
     def key_pair_get(self, context, user_id, name):
-        result = model_query(context, models.KeyPair).filter_by(
-            user_id=user_id).filter_by(name=name).first()
+        if context.is_admin:
+            result = model_query(context, models.KeyPair).filter_by(name=name)
+        else:
+            result = model_query(context, models.KeyPair).filter_by(
+                user_id=user_id).filter_by(name=name)
         if not result:
             raise exception.KeypairNotFound(user_id=user_id, name=name)
         return result
 
     def key_pair_get_all_by_user(self, context, user_id):
+        if context.is_admin:
+            return model_query(context, models.KeyPair).all()
         query = model_query(context, models.KeyPair).filter_by(user_id=user_id)
         return query.all()
 
