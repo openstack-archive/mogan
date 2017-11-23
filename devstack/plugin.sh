@@ -120,6 +120,15 @@ function configure_mogan {
 
     # uWSGI configuration
     write_uwsgi_config "$MOGAN_UWSGI_CONF" "$MOGAN_UWSGI_APP" "/baremetal_compute"
+
+    # Setup rsd section
+    # Do not support fedora at present.
+    if [[ ${MOGAN_WITH_RSD_SIMULATOR} != False ]] && is_ubuntu; then
+        port=`get_rsd_simulator_port`
+        iniset ${MOGAN_CONF_FILE} rsd url "http://$SERVICE_HOST:$port/redfish/v1"
+        iniset ${MOGAN_CONF_FILE} rsd user "admin"
+        iniset ${MOGAN_CONF_FILE} rsd password "admin"
+    fi
 }
 
 
@@ -220,6 +229,7 @@ if is_service_enabled mogan; then
             git_clone $INTEL_RSD_GIT $INTEL_RSD_PATH master
             install_nodejs
             install_nodejs_simulator_package
+            start_psme_simulator
         fi
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring mogan"
@@ -248,6 +258,7 @@ if is_service_enabled mogan; then
     if [[ "$1" == "unstack" ]]; then
         echo_summary "Shutting down mogan"
         stop_mogan
+        stop_psme_simulator
         # TODO(zhenguo): Remove this when placement is started as a separated service
         if ! is_service_enabled placement; then
             stop_placement

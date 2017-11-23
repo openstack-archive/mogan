@@ -5,8 +5,14 @@ NODEJS_SOURCE_REPO_URL="https://deb.nodesource.com/setup_6.x"
 NODEJS_SOURCE_REPO_SH="/tmp/install_nodejs_source"
 
 INTEL_RSD_GIT="https://github.com/intel/intelRSD.git"
-INTEL_RSD_PATH="/opt/stack/intelRSD"
+INTEL_RSD_PATH=${DEST:-/opt/stack}/intelRSD
+PSME_EVENT_MOCK_PATH="Simulators/simulators/mock_entry_points"
 TRY_TIMES=10
+
+PSME_EVENT_MOCK_LOG=${DEST:-/opt/stack}/rsd_event_mock.log
+PSME_EVENT_MOCK_CMD="nodejs --harmony \
+    $INTEL_RSD_PATH/$PSME_EVENT_MOCK_PATH/psme_eventable_mock.js > \
+    $PSME_EVENT_MOCK_LOG"
 
 # install_nodejs - RSD simulator need nodejs.
 # Script to install the NodeSource Node.js v6.x repo onto a
@@ -40,12 +46,30 @@ function install_nodejs_simulator_package {
     popd
 }
 
-function clean_nodejs_simulator_package {
-    pushd $INTEL_RSD_PATH/Simulators/node-ssdp
-    npm uninstall
-    popd
-    pushd $INTEL_RSD_PATH/Simulators/simulators
-    npm uninstall
-    popd
-    sudo apt-get remove --yes nodejs
+
+function stop_psme_simulator {
+    psem_process=`ps -ef |grep -e '[0-9] nodejs --harmony.*psme_eventable_mock.js'\
+                  |grep -v "grep"`
+    psem_pid=`awk '{print $2}' <<< $psem_process`
+    if [ -n "$psem_pid" ]; then
+        kill -9 $psem_pid
+        rm -rf $PSME_EVENT_MOCK_LOG
+    fi
+}
+
+function start_psme_simulator {
+    rm -rf $PSME_EVENT_MOCK_LOG
+    bash -c "$PSME_EVENT_MOCK_CMD" &
+    if [[ $? -ne 0 ]]; then
+        echo $LINENO "Failed to start rsd PSME simulator."
+    fi
+    sleep 0.5
+}
+
+# grep nodejs to get tcp port. We can also get it from PSME_EVENT_MOCK_LOG.
+function get_rsd_simulator_port {
+    pid=`ps -ef |grep -e '[0-9] nodejs --harmony.*psme_eventable_mock.js' \
+        | tr -s ' ' | cut -d " " -f 2`
+    port=`sudo netstat -lpt --inet | grep " $pid/"  | awk '{print $4}' |cut -d ":" -f 2`
+    echo $port
 }
