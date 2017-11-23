@@ -46,7 +46,7 @@ MAX_USERDATA_SIZE = 65535
 def check_server_lock(function):
     @six.wraps(function)
     def inner(self, context, server, *args, **kwargs):
-        if server.locked and not context.is_admin:
+        if server.locked_by and not context.is_admin:
             raise exception.ServerIsLocked(server_uuid=server.uuid)
         return function(self, context, server, *args, **kwargs)
     return inner
@@ -118,7 +118,6 @@ class API(object):
             'flavor_uuid': flavor['uuid'],
             'name': name,
             'description': description,
-            'locked': False,
             'metadata': metadata or {},
             'partitions': partitions or {},
             'availability_zone': availability_zone,
@@ -478,11 +477,10 @@ class API(object):
         """Lock the given server."""
 
         is_owner = server.project_id == context.project_id
-        if server.locked and is_owner:
+        if server.locked_by and is_owner:
             return
 
         LOG.debug('Locking server: %s', server.uuid)
-        server.locked = True
         server.locked_by = 'owner' if is_owner else 'admin'
         server.save()
 
@@ -490,7 +488,6 @@ class API(object):
         """Unlock the given server."""
 
         LOG.debug('Unlocking server: %s', server.uuid)
-        server.locked = False
         server.locked_by = None
         server.save()
 
@@ -702,7 +699,6 @@ class API(object):
             'power_state': states.NOSTATE,
             'name': name,
             'description': description,
-            'locked': False,
             'metadata': metadata or {},
             'availability_zone': None}
 

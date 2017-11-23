@@ -64,7 +64,6 @@ def get_test_server(**kw):
         'partitions': kw.get('partitions', {}),
         'updated_at': kw.get('updated_at'),
         'created_at': kw.get('created_at'),
-        'locked': kw.get('locked', False),
         'locked_by': kw.get('locked_by', None),
         'affinity_zone': kw.get('affinity_zone', 'ZON1'),
         'key_name': kw.get('key_name', 'test_key')

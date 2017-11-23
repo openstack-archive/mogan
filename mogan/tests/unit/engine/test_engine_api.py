@@ -238,16 +238,14 @@ class ComputeAPIUnitTest(base.DbTestCase):
             user_id=self.user_id, project_id=self.project_id)
         fake_server_obj = self._create_fake_server_obj(fake_server)
         self.engine_api.lock(self.context, fake_server_obj)
-        self.assertTrue(fake_server_obj.locked)
         self.assertEqual('owner', fake_server_obj.locked_by)
 
     def test_unlock_by_owner(self):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
-            locked=True, locked_by='owner')
+            locked_by='owner')
         fake_server_obj = self._create_fake_server_obj(fake_server)
         self.engine_api.unlock(self.context, fake_server_obj)
-        self.assertFalse(fake_server_obj.locked)
         self.assertIsNone(fake_server_obj.locked_by)
 
     def test_lock_by_admin(self):
@@ -256,24 +254,22 @@ class ComputeAPIUnitTest(base.DbTestCase):
         fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
         self.engine_api.lock(admin_context, fake_server_obj)
-        self.assertTrue(fake_server_obj.locked)
         self.assertEqual('admin', fake_server_obj.locked_by)
 
     def test_unlock_by_admin(self):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
-            locked=True, locked_by='owner')
+            locked_by='owner')
         fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
         self.engine_api.unlock(admin_context, fake_server_obj)
-        self.assertFalse(fake_server_obj.locked)
         self.assertIsNone(fake_server_obj.locked_by)
 
     @mock.patch('mogan.engine.api.API._delete_server')
     def test_delete_locked_server_with_non_admin(self, mock_deleted):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
-            locked=True, locked_by='owner')
+            locked_by='owner')
         fake_server_obj = self._create_fake_server_obj(fake_server)
         self.assertRaises(exception.ServerIsLocked,
                           self.engine_api.delete,
@@ -284,7 +280,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
     def test_power_locked_server_with_non_admin(self, mock_powered):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
-            locked=True, locked_by='owner')
+            locked_by='owner')
         fake_server_obj = self._create_fake_server_obj(fake_server)
         self.assertRaises(exception.ServerIsLocked,
                           self.engine_api.power,
@@ -295,7 +291,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
     def test_delete_locked_server_with_admin(self, mock_deleted):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
-            locked=True, locked_by='owner')
+            locked_by='owner')
         fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
         self.engine_api.delete(admin_context, fake_server_obj)
@@ -305,7 +301,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
     def test_power_locked_server_with_admin(self, mock_powered):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
-            locked=True, locked_by='owner')
+            locked_by='owner')
         fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
         self.engine_api.power(admin_context, fake_server_obj, 'reboot')
@@ -315,7 +311,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
     def test_rebuild_locked_server_with_non_admin(self, mock_rebuild):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
-            locked=True, locked_by='owner')
+            locked_by='owner')
         fake_server_obj = self._create_fake_server_obj(fake_server)
         self.assertRaises(exception.ServerIsLocked,
                           self.engine_api.rebuild,
@@ -328,7 +324,7 @@ class ComputeAPIUnitTest(base.DbTestCase):
                                               mock_get_image):
         fake_server = db_utils.get_test_server(
             user_id=self.user_id, project_id=self.project_id,
-            locked=True, locked_by='owner')
+            locked_by='owner')
         fake_server_obj = self._create_fake_server_obj(fake_server)
         admin_context = context.get_admin_context()
         mock_get_image.side_effect = None
