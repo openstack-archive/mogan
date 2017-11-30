@@ -1,7 +1,5 @@
 {
-    "flavor_access": [
-        "tenant1",
-        "tenant2",
-        "tenant3"
-    ]
+  "flavor_access": [
+    "fake_tenant"
+  ]
 }

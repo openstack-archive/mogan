@@ -1,4 +1,4 @@
 {
     "protocol": "serial",
-    "type": "shellinabox"
+    "type": "socat"
 }

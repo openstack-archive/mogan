@@ -1,7 +1,5 @@
 {
-    "nodes": [
-        "node1",
-        "node2",
-        "node3"
-    ]
+  "nodes": [
+    "node-0"
+  ]
 }

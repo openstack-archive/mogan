@@ -1,20 +1,20 @@
 {
-    "nics": [
+  "nics": [
+    {
+      "fixed_ips": [
         {
-            "network_id": "f31af5a2-f14d-4007-b2e5-abeb82429b87",
-            "port_id": "99845c22-6268-46c1-b068-1dbcb8adaf68",
-            "floating_ip": null,
-            "mac_address": "52:54:00:cc:ed:87",
-            "fixed_ips": [
-                {
-                    "subnet_id": "5a324b29-9aca-43d8-a6c3-31986dda95b5",
-                    "ip_address": "11.0.0.6"
-                },
-                {
-                    "subnet_id": "9baceab1-40ec-4c53-ad83-530a625bddb1",
-                    "ip_address": "fdaa:67c7:e09e:0:5054:ff:fecc:ed87"
-                }
-            ]
+          "ip_address": "10.0.0.4",
+          "subnet_id": "d20d7e71-f27d-490c-a3a3-c49e5b825036"
+        },
+        {
+          "ip_address": "fdf4:3658:bd5a:0:f816:3eff:fe80:7aac",
+          "subnet_id": "51fcca38-1671-455c-b939-08b79b1b5443"
         }
-    ]
+      ],
+      "floating_ip": null,
+      "mac_address": "52:54:00:bc:02:5b",
+      "network_id": "879f6dbf-5831-40a5-8954-4385301d82b0",
+      "port_id": "8bf66f7b-e5cc-459e-b746-0f2e69086b13"
+    }
+  ]
 }
