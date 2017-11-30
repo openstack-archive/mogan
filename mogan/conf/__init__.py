@@ -26,6 +26,7 @@ from mogan.conf import keystone
 from mogan.conf import neutron
 from mogan.conf import placement
 from mogan.conf import quota
+from mogan.conf import rsd
 from mogan.conf import scheduler
 from mogan.conf import serial_console
 
@@ -44,3 +45,4 @@ scheduler.register_opts(CONF)
 serial_console.register_opts(CONF)
 cache.register_opts(CONF)
 placement.register_opts(CONF)
+rsd.register_opts(CONF)
