@@ -1006,7 +1006,7 @@ class Connection(api.Connection):
             try:
                 server_group_ref = models.ServerGroup()
                 server_group_ref.update(values)
-                server_group_ref.save(session)
+                server_group_ref.save(session=session)
             except db_exc.DBDuplicateEntry:
                 raise exception.ServerGroupExists(group_uuid=values['uuid'])
         if policies:
