@@ -237,6 +237,9 @@ def create_test_server_group(context={}, **kw):
 
     """
     server_fault = get_test_server_group(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del server_fault['id']
     dbapi = db_api.get_instance()
     members = server_fault.pop('members')
     policies = server_fault.pop('policies')
