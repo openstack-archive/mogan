@@ -32,7 +32,7 @@ class DbServerGroupTestCase(base.DbTestCase):
             members=['server1', 'server2'])
 
     def test_server_group_create(self):
-        sg = utils.create_test_aggregate(name='testing')
+        sg = utils.create_test_server_group(name='testing')
         self.assertEqual('testing', sg.name)
 
     def test_server_group_get(self):
@@ -78,3 +78,7 @@ class DbServerGroupTestCase(base.DbTestCase):
                               server_groups[0].policies)
         self.assertItemsEqual(['server1', 'server2'],
                               server_groups[0].members)
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()
