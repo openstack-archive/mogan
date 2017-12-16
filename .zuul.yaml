@@ -2,11 +2,11 @@
     name: openstack/mogan
     check:
       jobs:
-        - mogan-tox-functional
+        - openstack-tox-functional
         - mogan-dsvm-tempest-plugin
     gate:
       jobs:
-        - mogan-tox-functional
+        - openstack-tox-functional
         - mogan-dsvm-tempest-plugin
 
 - job:
@@ -34,11 +34,3 @@
       - ^tools/.*$
       - ^tox.ini$
 
-- job:
-    name: mogan-tox-functional
-    parent: legacy-base
-    run: playbooks/legacy/mogan-tox-functional/run.yaml
-    post-run: playbooks/legacy/mogan-tox-functional/post.yaml
-    timeout: 2400
-    required-projects:
-      - openstack/requirements
