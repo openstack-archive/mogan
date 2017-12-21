@@ -4,7 +4,7 @@ Select availability zones where servers are launched
 
 You can select which availability zone servers are launched on.
 
-#. To select the availabiilty zone where servers are launched, use the
+#. To select the availability zone where servers are launched, use the
    ``--availability-zone ZONE`` parameter on the :command:`openstack
    baremetalcompute server create` command.
 
