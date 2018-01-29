@@ -52,7 +52,8 @@ optional ``fixed_address`` parameter.
 
 Normal response code: 204
 
-Error codes: 400,401,403,404,409
+Error response codes: badRequest(400), unauthorized(401), forbidden(403),
+itemNotFound(404), conflict(409)
 
 Request
 -------
@@ -108,7 +109,8 @@ Adds an interface to a server.
 
 Normal response code: 204
 
-Error codes: 400,401,403,404,409
+Error response codes: badRequest(400), unauthorized(401), forbidden(403),
+itemNotFound(404), conflict(409)
 
 Request
 -------
