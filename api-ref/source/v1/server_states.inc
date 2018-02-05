@@ -19,10 +19,7 @@ Request a change to the Server's power state.
 
 Normal response code: 202
 
-Error codes:
-    - 409 (ClientError)
-    - 400 (InvalidState)
-    - 406 (NotAcceptable)
+Error response codes: badRequest(400), forbidden(403), conflict(409)
 
 Request
 -------
@@ -51,10 +48,7 @@ Request a change to the Server's lockstate.
 
 Normal response code: 202
 
-Error codes:
-    - 409 (ClientError)
-    - 400 (BadRequest)
-    - 403 (Forbidden)
+Error response codes: badRequest(400), forbidden(403), conflict(409)
 
 Request
 -------
@@ -87,10 +81,7 @@ Request a change to the Server's provision state.
 
 Normal response code: 202
 
-Error codes:
-    - 409 (ClientError)
-    - 400 (BadRequest)
-    - 403 (Forbidden)
+Error response codes: badRequest(400), forbidden(403), conflict(409)
 
 Request
 -------
