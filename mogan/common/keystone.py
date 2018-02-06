@@ -61,7 +61,7 @@ def get_session(group):
 
 
 # TODO(pas-ha) we actually should barely need this at all:
-# if we instantiate a identity.Token auth plugin from incoming
+# if we instantiate an identity.Token auth plugin from incoming
 # request context we could build a session with it, and each client
 # would know its service_type already, looking up the endpoint by itself
 @ks_exceptions
