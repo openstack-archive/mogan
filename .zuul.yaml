@@ -1,5 +1,4 @@
 - project:
-    name: openstack/mogan
     check:
       jobs:
         - openstack-tox-functional
