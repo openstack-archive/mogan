@@ -141,7 +141,7 @@ class EngineManager(base_manager.BaseEngineManager):
             LOG.warning(
                 ("Failed to retrieve node list when synchronizing power "
                  "states: %(msg)s") % {"msg": e})
-            # Just retrun if we fail to get nodes real power state.
+            # Just return if we fail to get nodes real power state.
             return
 
         node_dict = {node.instance_uuid: node for node in nodes
@@ -247,7 +247,7 @@ class EngineManager(base_manager.BaseEngineManager):
             LOG.warning(
                 "Failed to retrieve node list when synchronizing "
                 "maintenance states: %(msg)s" % {"msg": e})
-            # Just retrun if we fail to get nodes maintenance state.
+            # Just return if we fail to get nodes maintenance state.
             return
 
         node_dict = {node.instance_uuid: node for node in nodes}
