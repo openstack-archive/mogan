@@ -27,7 +27,7 @@ class BaremetalComputeAPIServersTest(base.BaseBaremetalComputeTest):
         # NOTE(liusheng) Since the moga server deployment is a
         # time-consuming operation and the ironic resource cleanup
         # will be performed after a server deleted, we'd better to
-        # put all test cases in a test. Additionally, since the the tests
+        # put all test cases in a test. Additionally, since the tests
         # can be run parallelly, this pre-created server should only be used
         # in the test cases which don't change this server.
         cls.creation_resp = cls.create_server()
