@@ -3,11 +3,13 @@
       jobs:
         - openstack-tox-functional
         - mogan-dsvm-tempest-plugin
+        - openstack-tox-lower-constraints
     gate:
       jobs:
         - openstack-tox-functional
         - mogan-dsvm-tempest-plugin
 
+        - openstack-tox-lower-constraints
 - job:
     name: mogan-dsvm-tempest-plugin
     parent: legacy-dsvm-base
