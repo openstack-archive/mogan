@@ -732,7 +732,7 @@ server_name:
   type: string
 server_power_state:
   description: |
-    The current power state of this server. Usually, “power on” or “power off”, but may be “None”
+    The current power state of this server. Usually, "power on" or "power off", but may be "None"
     if Mogan is unable to determine the power state (eg, due to hardware failure)
   in: body
   required: true
