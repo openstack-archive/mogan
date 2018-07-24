@@ -42,5 +42,5 @@ def main():
                                    'SchedulerManager',
                                    constants.SCHEDULER_TOPIC)
 
-    launcher = service.launch(CONF, mgr)
+    launcher = service.launch(CONF, mgr, restart_method='mutate')
     launcher.wait()
