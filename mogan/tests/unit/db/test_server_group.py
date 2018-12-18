@@ -35,6 +35,12 @@ class DbServerGroupTestCase(base.DbTestCase):
         sg = utils.create_test_server_group(name='testing')
         self.assertEqual('testing', sg.name)
 
+    def test_server_server_group_with_same_uuid(self):
+        self.assertRaises(exception.ServerGroupExists,
+                          self.dbapi.server_group_create, context={},
+                          values={'uuid': self.server_group.uuid,
+                                  'name': 'test_server_group2'})
+
     def test_server_group_get(self):
         server_group = self.dbapi.server_group_get(
             context={}, group_uuid=self.server_group.uuid)
@@ -43,6 +49,11 @@ class DbServerGroupTestCase(base.DbTestCase):
         self.assertEqual('fake_project_id', server_group.project_id)
         self.assertItemsEqual(['policy1', 'policy2'], server_group.policies)
         self.assertItemsEqual(['server1', 'server2'], server_group.members)
+
+    def test_server_group_get_not_exist(self):
+        self.assertRaises(exception.ServerGroupNotFound,
+                          self.dbapi.server_group_get, context={},
+                          group_uuid='12345678-9999-0000-aaaa-123456789012')
 
     def test_server_group_update(self):
         update_values = {'name': 'new_test_name',
@@ -59,6 +70,12 @@ class DbServerGroupTestCase(base.DbTestCase):
         self.assertItemsEqual(['policy2', 'policy3'], server_group.policies)
         self.assertItemsEqual(['server2', 'server3'], server_group.members)
 
+    def test_server_group_update_not_exist(self):
+        self.assertRaises(exception.ServerGroupNotFound,
+                          self.dbapi.server_group_update, context={},
+                          group_uuid='12345678-9999-0000-aaaa-123456789012',
+                          values={})
+
     def test_server_group_delete(self):
         self.dbapi.server_group_delete(context={},
                                        group_uuid=self.server_group.uuid)
@@ -66,6 +83,11 @@ class DbServerGroupTestCase(base.DbTestCase):
                           self.dbapi.server_group_get,
                           self.context,
                           self.server_group.uuid)
+
+    def test_server_group_delete_not_exist(self):
+        self.assertRaises(exception.ServerGroupNotFound,
+                          self.dbapi.server_group_delete, context={},
+                          group_uuid='12345678-9999-0000-aaaa-123456789012')
 
     def test_server_group_get_all(self):
         server_groups = self.dbapi.server_group_get_all(context={})
