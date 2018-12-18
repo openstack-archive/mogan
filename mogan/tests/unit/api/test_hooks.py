@@ -19,6 +19,7 @@ from oslo_config import cfg
 from oslo_context import context
 
 from mogan.api import hooks
+from mogan.common import policy
 from mogan.tests import base
 
 
@@ -92,10 +93,12 @@ def fake_headers(admin=False):
 
 class TestContextHook(base.TestCase):
     @mock.patch.object(context, 'RequestContext')
-    def test_context_hook(self, mock_ctx):
+    @mock.patch.object(policy, 'check')
+    def test_context_hook(self, mock_policy, mock_ctx, is_admin=True):
         headers = fake_headers(admin=True)
         reqstate = FakeRequestState(headers=headers)
         context_hook = hooks.ContextHook(None)
+        mock_policy.return_value = is_admin
         context_hook.before(reqstate)
         mock_ctx.assert_called_with(
             auth_token=headers['X-Auth-Token'],
@@ -109,11 +112,14 @@ class TestContextHook(base.TestCase):
             roles=headers['X-Roles'].split(','))
 
     @mock.patch.object(context, 'RequestContext')
-    def test_context_hook_public_api(self, mock_ctx):
+    @mock.patch.object(policy, 'check')
+    def test_context_hook_public_api(self, mock_policy, mock_ctx,
+                                     is_admin=True):
         headers = fake_headers(admin=True)
         env = {'is_public_api': True}
         reqstate = FakeRequestState(headers=headers, environ=env)
         context_hook = hooks.ContextHook(None)
+        mock_policy.return_value = is_admin
         context_hook.before(reqstate)
         mock_ctx.assert_called_with(
             auth_token=headers['X-Auth-Token'],
