@@ -150,6 +150,13 @@ class DbServerTestCase(base.DbTestCase):
                           server.uuid,
                           {'uuid': '12345678-9999-0000-aaaa-123456789012'})
 
+    def test_server_update_not_exist(self):
+        self.assertRaises(exception.ServerNotFound,
+                          self.dbapi.server_update,
+                          self.context,
+                          '12345678-9999-0000-aaaa-123456789012',
+                          {'foo': 'bar'})
+
     def test_tags_get_destroyed_after_destroying_a_server(self):
         server = utils.create_test_server(id=123)
         tag = utils.create_test_server_tag(self.context, server_id=server.id)
