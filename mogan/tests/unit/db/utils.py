@@ -270,3 +270,16 @@ def create_test_server_tag(context, **kw):
     tag = get_test_server_tag(**kw)
     dbapi = db_api.get_instance()
     return dbapi.add_server_tag(context, tag['server_id'], tag['tag'])
+
+
+def get_test_server_nic(**kw):
+    return {
+        "port_id": kw.get("port_id", "123"),
+        "server_uuid": kw.get("server_uuid"),
+        'mac_address': kw.get('mac_address'),
+        'network_id': kw.get('network_id'),
+        'fixed_ips': kw.get('fixed_ips', []),
+        'floating_ip': kw.get('floating_ip'),
+        'preserve_on_delete': kw.get('preserve_on_delete', False),
+    }
+
