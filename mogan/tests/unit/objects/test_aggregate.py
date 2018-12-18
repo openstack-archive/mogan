@@ -67,3 +67,30 @@ class TestAggregateObject(base.DbTestCase):
             mock_aggregate_update.return_value = self.fake_aggregate
             mock_aggregate_update.assert_called_once_with(
                 self.context, id, updates)
+
+    def test_save_metadata(self):
+        add_meta = {'add_meta': 'addval'}
+        del_meta = {'del_meta': 'delval'}
+        id = self.fake_aggregate['id']
+        with mock.patch.object(self.dbapi, 'aggregate_update',
+                               autospec=True) as mock_aggregate_update:
+            with mock.patch.object(
+                    self.dbapi, 'aggregate_metadata_update_or_create',
+                    autospec=True) as mock_aggregate_upcreate:
+                with mock.patch.object(
+                        self.dbapi, 'aggregate_metadata_delete',
+                        autospec=True) as mock_aggregate_delete:
+                    aggregate = objects.Aggregate(self.context,
+                                                  **self.fake_aggregate)
+                    aggregate._orig_metadata = del_meta
+                    aggregate.metadata = add_meta
+                    updates = aggregate.obj_get_changes()
+                    del updates['metadata']
+                    aggregate.save(self.context)
+                    mock_aggregate_update.return_value = self.fake_aggregate
+                    mock_aggregate_upcreate.assert_called_once_with(
+                        self.context, id, add_meta)
+                    mock_aggregate_delete.assert_called_once_with(
+                        self.context, id, 'del_meta')
+                    mock_aggregate_update.assert_called_once_with(
+                        self.context, id, updates)
