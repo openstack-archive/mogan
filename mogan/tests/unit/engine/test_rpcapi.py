@@ -134,3 +134,10 @@ class RPCAPITestCase(base.DbTestCase):
                           version='1.0',
                           server=self.fake_server_obj,
                           preserve_ephemeral=True)
+
+    def test_get_serial_console(self):
+        self._test_rpcapi('get_serial_console',
+                          'call',
+                          version='1.0',
+                          server=self.fake_server_obj,
+                          console_type='shellinabox')
