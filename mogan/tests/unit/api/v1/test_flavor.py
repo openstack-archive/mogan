@@ -12,6 +12,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from six.moves import http_client
 
 from mogan.tests.functional.api import v1 as v1_test
 from mogan.tests.unit.db import utils
@@ -46,3 +47,11 @@ class TestFlavorAuthorization(v1_test.APITestV1):
         self.assertIn('description', resp)
         self.assertIn('links', resp)
         self.assertIn('resources', resp)
+
+    def test_flavor_get_one_that_does_not_exist(self):
+        headers = self.gen_headers(self.context, roles="admin")
+        invalid_id = '00000000-0000-0000-0000-000000000000'
+        resp = self.get_json('/flavors/%s' % invalid_id, expect_errors=True,
+                             headers=headers)
+        self.assertEqual(http_client.NOT_FOUND, resp.status_int)
+        self.assertTrue(resp.json['error_message'])
