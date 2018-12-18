@@ -46,7 +46,7 @@ Bug tracker
     https://launchpad.net/mogan
 
 Mailing list (prefix Subject line with ``[mogan]``)
-    http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev
+    http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-discuss
 
 Wiki
     https://wiki.openstack.org/Mogan
