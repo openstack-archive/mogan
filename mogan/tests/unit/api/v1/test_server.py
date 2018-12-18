@@ -140,6 +140,14 @@ class TestServerAuthorization(v1_test.APITestV1):
                              headers=headers)
         self.assertNotIn('node', resp)
 
+    def test_server_get_one_by_owner_with_wrong_uuid(self):
+        # not admin but the owner
+        self.context.tenant = self.server1.project_id
+        headers = self.gen_headers(self.context, roles="no-admin")
+        resp = self.get_json('/servers/%s' % uuidutils.generate_uuid(),
+                             expect_errors=True, headers=headers)
+        self.assertEqual(resp.status_code, 404)
+
     def test_server_get_one_by_admin(self):
         # when the evil tenant is admin, he can do everything.
         self.context.tenant = self.evil_project
@@ -147,6 +155,14 @@ class TestServerAuthorization(v1_test.APITestV1):
         resp = self.get_json('/servers/%s' % self.server1.uuid,
                              headers=headers)
         self.assertIn('node', resp)
+
+    def test_server_get_one_by_admin_with_wrong_uuid(self):
+        # when the evil tenant is admin, he can do everything.
+        self.context.tenant = self.evil_project
+        headers = self.gen_headers(self.context, roles="admin")
+        resp = self.get_json('/servers/%s' % uuidutils.generate_uuid(),
+                             expect_errors=True, headers=headers)
+        self.assertEqual(resp.status_code, 404)
 
     def test_server_get_one_unauthorized(self):
         # not admin and not the owner
