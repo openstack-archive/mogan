@@ -104,6 +104,12 @@ class DbQuotaTestCase(base.DbTestCase):
                                       {'hard_limit': new_limit})
         self.assertEqual(new_limit, res.hard_limit)
 
+    def test_quota_update(self):
+        self.assertRaises(exception.QuotaNotFound,
+                          self.dbapi.quota_update,
+                          self.context,
+                          '123', 'fake')
+
     def test_quota_update_with_invalid_parameter_value(self):
         quota = utils.create_test_quota()
         self.assertRaises(exception.InvalidParameterValue,
