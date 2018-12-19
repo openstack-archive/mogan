@@ -194,6 +194,13 @@ def get_test_aggregate(**kw):
     }
 
 
+def get_test_aggregate_metadata(**kw):
+    return {
+        'aggregate_id': kw.get('aggregate_id', 123),
+        'metadata': kw.get('metadata', {'key1': 'value1'}),
+    }
+
+
 def create_test_aggregate(context={}, **kw):
     """Create test aggregate entry in DB and return the DB object.
 
@@ -211,6 +218,21 @@ def create_test_aggregate(context={}, **kw):
     dbapi = db_api.get_instance()
 
     return dbapi.aggregate_create(context, agg)
+
+
+def create_test_aggregate_metadata(context={}, **kw):
+    """Create test aggregate metadata entry in DB and return the DB object.
+
+        Function to be used to create test Aggregate metadata objects in the
+        database.
+
+        :param context: The request context, for access checks.
+        :param kw: kwargs with overriding values for metadata's attributes.
+        :returns: metadata dict object.
+    """
+    agg_meta = get_test_aggregate_metadata(**kw)
+    dbapi = db_api.get_instance()
+    return dbapi.aggregate_metadata_update_or_create(context, **agg_meta)
 
 
 def get_test_server_group(**kw):
