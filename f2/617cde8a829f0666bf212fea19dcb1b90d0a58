@@ -1,0 +1,9 @@
+Code-Review+2: Tao Li <litao3721@126.com>
+Code-Review+2: wanghao <sxmatch1986@gmail.com>
+Workflow+1: wanghao <sxmatch1986@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Wed, 19 Dec 2018 03:06:36 +0000
+Reviewed-on: https://review.openstack.org/626064
+Project: openstack/mogan
+Branch: refs/heads/master
