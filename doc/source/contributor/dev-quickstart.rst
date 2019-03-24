@@ -254,10 +254,10 @@ Create devstack/local.conf with minimal settings required to enable Mogan::
     SWIFT_TEMPURL_KEY=password
 
     # Enable Ironic plugin
-    enable_plugin ironic git://git.openstack.org/openstack/ironic
+    enable_plugin ironic https://git.openstack.org/openstack/ironic
 
     # Enable Mogan plugin
-    enable_plugin mogan git://git.openstack.org/openstack/mogan
+    enable_plugin mogan https://git.openstack.org/openstack/mogan
 
     ENABLED_SERVICES=g-api,g-reg,q-agt,q-dhcp,q-l3,q-svc,key,mysql,rabbit,ir-api,ir-cond,s-account,s-container,s-object,s-proxy,tempest
 
@@ -316,10 +316,10 @@ local.conf should be as follows::
     SWIFT_TEMPURL_KEY=password
 
     # Enable Ironic plugin
-    enable_plugin ironic git://git.openstack.org/openstack/ironic
+    enable_plugin ironic https://git.openstack.org/openstack/ironic
 
     # Enable Mogan plugin
-    enable_plugin mogan git://git.openstack.org/openstack/mogan
+    enable_plugin mogan https://git.openstack.org/openstack/mogan
 
     # Install networking-generic-switch Neutron ML2 driver that interacts with OVS
     enable_plugin networking-generic-switch https://git.openstack.org/openstack/networking-generic-switch
