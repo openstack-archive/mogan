@@ -1,4 +1,0 @@
----
-features:
-    Add server groups support with affinity and anti-affinity policies, which
-    based on a special aggregate metadata "affinity zone".

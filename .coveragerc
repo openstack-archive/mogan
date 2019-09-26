@@ -1,7 +1,0 @@
-[run]
-branch = True
-source = mogan
-omit = mogan/tests/*
-
-[report]
-ignore_errors = True
